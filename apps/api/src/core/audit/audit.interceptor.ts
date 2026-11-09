@@ -15,7 +15,12 @@ import {
 } from '../../shared/database/transaction-runner';
 import { AUDITED_KEY, type AuditedOptions } from './audited.decorator';
 import { AuditWriteError } from './audit-write.error';
-import { diffFirstLevel, resolveAuditDetail } from './audit-data';
+import {
+  diffFirstLevel,
+  normalizeAuditData,
+  redactAuditKeys,
+  resolveAuditDetail,
+} from './audit-data';
 import type { AuditSnapshotSource } from './audit-snapshot';
 import type { RequestUser } from './request-user';
 
@@ -77,6 +82,8 @@ export class AuditInterceptor implements NestInterceptor {
     // formatear campos.
     const after = entityId ? await source.load(entityId) : null;
     const changes = before && after ? diffFirstLevel(before, after) : { before, after };
+    const hide = (data: unknown) =>
+      options.redact && data ? redactAuditKeys(normalizeAuditData(data), options.redact) : data;
 
     try {
       await this.audit.record({
@@ -87,8 +94,8 @@ export class AuditInterceptor implements NestInterceptor {
         entity: options.entity,
         entityId: entityId ?? null,
         detail: resolveAuditDetail(options, request.body),
-        dataBefore: changes.before,
-        dataAfter: changes.after,
+        dataBefore: hide(changes.before),
+        dataAfter: hide(changes.after),
       });
     } catch (error) {
       throw new AuditWriteError(error);

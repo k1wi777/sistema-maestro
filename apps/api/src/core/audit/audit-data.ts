@@ -19,8 +19,10 @@ const SECRET_KEYS = new Set([
   'apikey',
 ]);
 
+const normalizeKey = (key: string): string => key.toLowerCase().replace(/[^a-z0-9]/g, '');
+
 function isSecretKey(key: string): boolean {
-  return SECRET_KEYS.has(key.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  return SECRET_KEYS.has(normalizeKey(key));
 }
 
 function redact(value: JsonValue): JsonValue {
@@ -45,6 +47,30 @@ export function normalizeAuditData(value: unknown): JsonValue {
     typeof inner === 'bigint' ? inner.toString() : inner,
   ) as string | undefined;
   return json === undefined ? null : redact(JSON.parse(json) as JsonValue);
+}
+
+/**
+ * Oculta como `[oculto]` el valor de las claves nombradas (en cualquier nivel, con la misma
+ * normalización de nombres que los secretos). Sirve a los endpoints cuyos datos son textos
+ * sobre menores: la bitácora conserva qué campos cambiaron, no su contenido.
+ */
+export function redactAuditKeys(value: JsonValue, keys: readonly string[]): JsonValue {
+  const hidden = new Set(keys.map(normalizeKey));
+  const walk = (inner: JsonValue): JsonValue => {
+    if (Array.isArray(inner)) {
+      return inner.map(walk);
+    }
+    if (inner !== null && typeof inner === 'object') {
+      return Object.fromEntries(
+        Object.entries(inner).map(([key, child]) => [
+          key,
+          hidden.has(normalizeKey(key)) ? REDACTED : walk(child),
+        ]),
+      );
+    }
+    return inner;
+  };
+  return walk(value);
 }
 
 /** Si el JSON supera el tope, se guarda solo la lista de campos en lugar de los datos. */

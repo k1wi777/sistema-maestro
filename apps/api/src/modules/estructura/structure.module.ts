@@ -73,6 +73,7 @@ import { SchoolYearsService } from './school-years/school-years.service';
     SchoolYearsService,
     TeacherAssignmentsService,
     AcademicPeriodsService,
+    GradesService,
     LevelsService,
     AreasService,
   ],

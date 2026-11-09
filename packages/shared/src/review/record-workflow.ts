@@ -56,6 +56,18 @@ export function allowedFrom(
   return WORKFLOW[operation][actor] ?? null;
 }
 
+/**
+ * Unión de los estados de origen de `operation` para varios papeles (p. ej. quien es dueño y
+ * coordinación a la vez); vacía si ninguno puede hacerla.
+ */
+export function allowedFromAny(
+  operation: RecordOperation,
+  actors: readonly RecordActor[],
+): RecordStatus[] {
+  const from = actors.flatMap((actor) => allowedFrom(operation, actor)?.from ?? []);
+  return [...new Set(from)];
+}
+
 /** `true` si alguno de los papeles puede hacer `operation` desde `status`. */
 export function canTransition(
   operation: RecordOperation,

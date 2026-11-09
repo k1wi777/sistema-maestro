@@ -3,15 +3,18 @@ import { isoDateTimeSchema } from '../api/iso-date-time';
 import { RecordStatus } from '../constants/record-status';
 import { CuriocityStage } from '../constants/planning';
 import { createListQuerySchema } from '../list-query/list-query';
-import { createApproveReviewSchema, createReturnReviewSchema } from '../review/review';
+import {
+  createApproveReviewSchema,
+  createReturnReviewSchema,
+  voidRecordSchema,
+  type VoidRecordInput,
+} from '../review/review';
 import { lessonPlanResourceSchema } from './lesson-plan-resource';
 
 export const LESSON_PLAN_TOPIC_MAX_LENGTH = 160;
 export const LESSON_PLAN_CORNER_MAX_LENGTH = 60;
 /** Protege el tamaño de la bitácora y de `revision.cambios`. */
 export const LESSON_PLAN_TEXT_MAX_LENGTH = 4000;
-export const VOID_REASON_MIN_LENGTH = 3;
-export const VOID_REASON_MAX_LENGTH = 300;
 
 const uuid = z.uuid({ error: 'debe ser un UUID' });
 
@@ -108,16 +111,9 @@ export type ApproveLessonPlanInput = z.output<typeof approveLessonPlanSchema>;
 export const returnLessonPlanSchema = createReturnReviewSchema(lessonPlanChangesSchema);
 export type ReturnLessonPlanInput = z.output<typeof returnLessonPlanSchema>;
 
-export const voidLessonPlanSchema = z
-  .object({
-    reason: z
-      .string({ error: 'debe ser texto' })
-      .trim()
-      .min(VOID_REASON_MIN_LENGTH, `debe tener al menos ${VOID_REASON_MIN_LENGTH} caracteres`)
-      .max(VOID_REASON_MAX_LENGTH, `debe tener como máximo ${VOID_REASON_MAX_LENGTH} caracteres`),
-  })
-  .strict();
-export type VoidLessonPlanInput = z.output<typeof voidLessonPlanSchema>;
+/** Mismo cuerpo que anular cualquier registro pedagógico (ver `voidRecordSchema`). */
+export const voidLessonPlanSchema = voidRecordSchema;
+export type VoidLessonPlanInput = VoidRecordInput;
 
 export const LESSON_PLAN_SORT_FIELDS = ['updatedAt', 'createdAt', 'submittedAt'] as const;
 export type LessonPlanSortField = (typeof LESSON_PLAN_SORT_FIELDS)[number];
