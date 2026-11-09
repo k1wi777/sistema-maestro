@@ -1,7 +1,8 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { Server } from 'node:http';
 import type { INestApplication } from '@nestjs/common';
-import { UserRole, UserStatus } from '@gns/shared';
+import { ConfigService } from '@nestjs/config';
+import { DATA_CONSENT_ITEMS, UserRole, UserStatus } from '@gns/shared';
 import request from 'supertest';
 import { CredentialsService } from '../../../src/modules/identidad/credentials/credentials.service';
 import { PrismaService } from '../../../src/shared/database/prisma.service';
@@ -25,7 +26,13 @@ export const randomPassword = (): string => randomBytes(12).toString('hex');
 /** Crea un usuario con credencial directamente en la base (sin pasar por la API). */
 export async function createTestUser(
   app: INestApplication,
-  options: { role?: UserRole; status?: UserStatus; withPassword?: boolean } = {},
+  options: {
+    role?: UserRole;
+    status?: UserStatus;
+    withPassword?: boolean;
+    /** Acepta la versión vigente del aviso de datos (por defecto sí). */
+    consent?: boolean;
+  } = {},
 ): Promise<TestUser> {
   const prisma = app.get(PrismaService);
   const role = options.role ?? UserRole.Teacher;
@@ -38,6 +45,16 @@ export async function createTestUser(
       status: options.status ?? UserStatus.Active,
     },
   });
+  if (options.consent ?? true) {
+    await prisma.dataConsent.create({
+      data: {
+        userId: user.id,
+        policyVersion: app.get(ConfigService).getOrThrow<string>('DATA_POLICY_VERSION'),
+        acceptedAt: new Date(),
+        checkedItems: [...DATA_CONSENT_ITEMS],
+      },
+    });
+  }
   const password = randomPassword();
   if (options.withPassword ?? true) {
     await app.get(CredentialsService, { strict: false }).assign(user.id, password);

@@ -55,8 +55,9 @@ describe('gestión de usuarios', () => {
   const emailExists = async (email: string) =>
     (await prisma.user.count({ where: { institutionalEmail: email.toLowerCase() } })) > 0;
 
+  // Solo la gestión de usuarios: los ingresos de la misma cuenta también llevan su id.
   const auditRows = (entityId: string) =>
-    prisma.auditLog.findMany({ where: { entityId }, orderBy: { id: 'asc' } });
+    prisma.auditLog.findMany({ where: { entityId, type: 'coordinacion' }, orderBy: { id: 'asc' } });
 
   /** Ningún campo de la fila de bitácora puede contener la contraseña ni algo parecido a un hash. */
   function expectNoSecrets(rows: unknown[], password?: string) {

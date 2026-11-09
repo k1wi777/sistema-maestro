@@ -1,9 +1,13 @@
 import type { SessionProvider } from '@gns/shared';
 
-/** Identidad ya verificada por un proveedor: lo único que la sesión necesita saber. */
-export interface AuthenticatedIdentity {
-  userId: string;
-}
+/**
+ * Resultado de un intento de autenticación. Un fallo identifica la cuenta (`userId`) cuando
+ * el proveedor la encontró, para que el registro de ingresos conozca usuario y rol; la
+ * respuesta HTTP no distingue los motivos.
+ */
+export type AuthAttempt =
+  | { ok: true; userId: string }
+  | { ok: false; reason: 'unknown_account' | 'wrong_password'; userId: string | null };
 
 /**
  * Estrategia de autenticación. Solo verifica quién es la persona; la emisión y la
@@ -13,8 +17,7 @@ export interface AuthenticatedIdentity {
 export interface AuthProvider {
   /** Valor guardado en `sesion.proveedor`. */
   readonly name: SessionProvider;
-  /** `null` si las credenciales no identifican a nadie. */
-  authenticate(input: unknown): Promise<AuthenticatedIdentity | null>;
+  authenticate(input: unknown): Promise<AuthAttempt>;
 }
 
 /** Proveedores registrados (multi-proveedor). */

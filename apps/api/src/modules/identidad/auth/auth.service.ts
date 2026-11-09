@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger, UnauthorizedException } from '@nestjs/commo
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import {
+  AuditLogType,
   SessionRevocationReason,
   UserStatus,
   type CurrentUserProfile,
@@ -13,8 +14,15 @@ import {
   TRANSACTION_RUNNER,
   type TransactionRunner,
 } from '../../../shared/database/transaction-runner';
+import { AuditLogService } from '../../auditoria/audit-log.service';
 import { CredentialsService } from '../credentials/credentials.service';
 import { UsersService } from '../users/users.service';
+import {
+  FAILED_LOGIN_DETAIL,
+  LoginAuditAction,
+  PASSWORD_CHANGED_DETAIL,
+  type FailedLoginReason,
+} from './login-audit';
 import { AUTH_PROVIDERS, type AuthProvider } from './providers/auth-provider';
 import { RefreshTokenCodec } from './refresh-token.codec';
 import type { SessionRecord, SessionWithOwner } from './session.repository';
@@ -63,6 +71,7 @@ export class AuthService {
     private readonly sessions: SessionsService,
     private readonly jwt: JwtService,
     @Inject(TRANSACTION_RUNNER) private readonly transactions: TransactionRunner,
+    private readonly audit: AuditLogService,
     config: ConfigService<Env, true>,
   ) {
     this.refreshTokens = new RefreshTokenCodec(config.get('REFRESH_TOKEN_SECRET', { infer: true }));
@@ -81,12 +90,33 @@ export class AuthService {
     if (!provider) {
       throw new Error(`Proveedor de autenticación no registrado: ${providerName}`);
     }
-    const identity = await provider.authenticate(input);
-    const user = identity ? await this.users.find(identity.userId) : null;
-    if (user?.status !== UserStatus.Active) {
+    const attempt = await provider.authenticate(input);
+    if (!attempt.ok) {
+      await this.recordFailedSignIn(attempt.reason, attempt.userId);
       throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
     }
-    const session = await this.sessions.create(user.id, provider.name, rememberMe, new Date());
+    const user = await this.users.find(attempt.userId);
+    if (user?.status !== UserStatus.Active) {
+      await this.recordFailedSignIn(
+        user ? 'inactive_account' : 'unknown_account',
+        user?.id ?? null,
+      );
+      throw new UnauthorizedException(INVALID_CREDENTIALS_MESSAGE);
+    }
+    // Sesión y fila de ingreso en una transacción: si la fila falla no se emite la sesión.
+    const session = await this.transactions.run(async () => {
+      const created = await this.sessions.create(user.id, provider.name, rememberMe, new Date());
+      await this.audit.record({
+        userId: user.id,
+        role: user.role,
+        type: AuditLogType.Login,
+        action: LoginAuditAction.SignedIn,
+        entity: 'sesion',
+        entityId: created.id,
+        detail: provider.name,
+      });
+      return created;
+    });
     return { issued: await this.issue(session, session.generation), user: toProfile(user) };
   }
 
@@ -196,6 +226,36 @@ export class AuthService {
         SessionRevocationReason.PasswordChange,
         actor.sessionId,
       );
+      // Sin contraseñas ni hashes; si la fila falla, la contraseña no cambia.
+      await this.audit.record({
+        userId: actor.id,
+        role: actor.role,
+        type: AuditLogType.Login,
+        action: LoginAuditAction.PasswordChanged,
+        entity: 'usuario',
+        entityId: actor.id,
+        detail: PASSWORD_CHANGED_DETAIL,
+      });
+    });
+  }
+
+  /**
+   * Fila de un intento fallido, en autocommit y antes de lanzar el 401 para que persista.
+   * Nunca recibe el correo ni la contraseña enviados.
+   */
+  private async recordFailedSignIn(
+    reason: FailedLoginReason,
+    userId: string | null,
+  ): Promise<void> {
+    const user = userId ? await this.users.find(userId) : null;
+    await this.audit.record({
+      userId: user?.id ?? null,
+      role: user?.role ?? null,
+      type: AuditLogType.Login,
+      action: LoginAuditAction.FailedAttempt,
+      entity: user ? 'usuario' : null,
+      entityId: user?.id ?? null,
+      detail: FAILED_LOGIN_DETAIL[reason],
     });
   }
 
@@ -207,8 +267,22 @@ export class AuthService {
     );
   }
 
-  private async revokeForReuse({ session }: SessionWithOwner): Promise<void> {
-    await this.sessions.revokeAllForUser(session.userId, SessionRevocationReason.TokenReuse);
+  /**
+   * Revoca todas las sesiones y deja la fila en una transacción propia que se confirma antes
+   * de que la petición responda 401 (la renovación no corre en la transacción de la petición).
+   */
+  private async revokeForReuse({ session, user }: SessionWithOwner): Promise<void> {
+    await this.transactions.run(async () => {
+      await this.sessions.revokeAllForUser(session.userId, SessionRevocationReason.TokenReuse);
+      await this.audit.record({
+        userId: user.id,
+        role: user.role,
+        type: AuditLogType.Login,
+        action: LoginAuditAction.TokenReuse,
+        entity: 'sesion',
+        entityId: session.id,
+      });
+    });
     // Solo identificadores: nunca el token.
     this.logger.warn({
       msg: 'Reutilización de un token de renovación: sesiones revocadas',

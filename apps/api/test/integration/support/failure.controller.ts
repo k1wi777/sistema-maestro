@@ -3,6 +3,7 @@ import { ConflictException, Controller, Get, Post } from '@nestjs/common';
 import { AuditLogType } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../src/core/audit/audited.decorator';
+import { Public } from '../../../src/modules/identidad/auth/access.decorators';
 import { PrismaService } from '../../../src/shared/database/prisma.service';
 import { FaqExampleAuditSnapshot } from '../example/faq-example.audit-snapshot';
 import { FaqExampleDto } from '../example/faq-example.dto';
@@ -18,6 +19,8 @@ const faqData = (category: string) => ({
   isActive: false,
 });
 
+// Solo pruebas: públicos a propósito, ejercitan la capa HTTP sin sesión.
+@Public()
 @Controller('failures')
 export class FailureController {
   constructor(private readonly prisma: PrismaService) {}

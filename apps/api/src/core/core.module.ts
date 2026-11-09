@@ -10,6 +10,7 @@ import {
   LOGIN_THROTTLER_NAME,
   skipUnlessLogin,
 } from '../modules/identidad/auth/login-throttle';
+import { AccessGuard } from '../modules/identidad/auth/access.guard';
 import { SessionGuard } from '../modules/identidad/auth/session.guard';
 import { IdentityModule } from '../modules/identidad/identity.module';
 import { DatabaseModule } from '../shared/database/database.module';
@@ -55,8 +56,11 @@ import { createLoggerOptions } from './logging/logger.options';
   providers: [
     // Corre antes que interceptores y pipes: una petición rechazada no abre transacción.
     { provide: APP_GUARD, useClass: ThrottlerGuard },
-    // Después del límite de peticiones: resuelve la sesión y aplica `@RequireRole`.
+    // Los tres guards se registran aquí, juntos: Nest ejecuta los APP_GUARD en el orden en que
+    // escanea los módulos, y repartirlos entre módulos haría depender el orden 429 -> 401 -> 403
+    // del orden de importación. Primero identifica la sesión y después decide el acceso.
     { provide: APP_GUARD, useClass: SessionGuard },
+    { provide: APP_GUARD, useClass: AccessGuard },
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
     { provide: APP_PIPE, useClass: AppZodValidationPipe },
     // Exterior al interceptor de auditoría: serializa cuando la transacción ya terminó.

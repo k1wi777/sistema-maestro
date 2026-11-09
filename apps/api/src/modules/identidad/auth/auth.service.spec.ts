@@ -11,10 +11,11 @@ import {
 } from '@gns/shared';
 import type { RequestUser } from '../../../core/audit/request-user';
 import type { TransactionRunner } from '../../../shared/database/transaction-runner';
+import type { AuditEntry, AuditLogService } from '../../auditoria/audit-log.service';
 import type { CredentialsService } from '../credentials/credentials.service';
 import type { UsersService } from '../users/users.service';
 import { AuthService, INVALID_CREDENTIALS_MESSAGE } from './auth.service';
-import type { AuthProvider } from './providers/auth-provider';
+import type { AuthAttempt, AuthProvider } from './providers/auth-provider';
 import type {
   NewSession,
   SessionOwner,
@@ -147,9 +148,16 @@ function setup(options: { idleHours?: number; graceSeconds?: number } = {}) {
   // Proveedor falso: demuestra que la sesión no depende de cómo se autenticó el usuario.
   const provider: AuthProvider = {
     name: SessionProvider.Password,
-    authenticate: jest.fn((input: unknown) =>
-      Promise.resolve(input === 'valido' ? { userId: user.id } : null),
-    ),
+    authenticate: jest.fn((input: unknown): Promise<AuthAttempt> => {
+      if (input === 'valido') {
+        return Promise.resolve({ ok: true, userId: user.id });
+      }
+      return Promise.resolve(
+        input === 'clave-mala'
+          ? { ok: false, reason: 'wrong_password', userId: user.id }
+          : { ok: false, reason: 'unknown_account', userId: null },
+      );
+    }),
   };
   const users = {
     find: (id: string) => Promise.resolve(id === user.id ? user : null),
@@ -157,7 +165,35 @@ function setup(options: { idleHours?: number; graceSeconds?: number } = {}) {
   const verify = jest.fn(() => Promise.resolve(true));
   const assign = jest.fn(() => Promise.resolve());
   const credentials = { verify, assign } as unknown as CredentialsService;
-  const transactions: TransactionRunner = { run: (fn) => fn() };
+  // Bitácora falsa: anota si la fila se escribió dentro de una transacción.
+  const rows: { entry: AuditEntry; inTransaction: boolean }[] = [];
+  let inTransaction = false;
+  const failAudit = { next: false };
+  const audit = {
+    record: jest.fn((entry: AuditEntry) => {
+      if (failAudit.next) {
+        return Promise.reject(new Error('bitácora caída'));
+      }
+      rows.push({ entry, inTransaction });
+      return Promise.resolve();
+    }),
+  } as unknown as AuditLogService;
+  // Una transacción que, como la real, deshace las sesiones si algo falla.
+  const transactions: TransactionRunner = {
+    run: async (fn) => {
+      const snapshot = new Map([...repository.sessions].map(([key, value]) => [key, { ...value }]));
+      inTransaction = true;
+      try {
+        return await fn();
+      } catch (error) {
+        repository.sessions.clear();
+        snapshot.forEach((value, key) => repository.sessions.set(key, value));
+        throw error;
+      } finally {
+        inTransaction = false;
+      }
+    },
+  };
   const sessions = new SessionsService(repository, config);
   const service = new AuthService(
     [provider],
@@ -166,9 +202,10 @@ function setup(options: { idleHours?: number; graceSeconds?: number } = {}) {
     sessions,
     new JwtService({ secret: ACCESS_SECRET, signOptions: { algorithm: 'HS256' } }),
     transactions,
+    audit,
     config,
   );
-  return { service, repository, user, provider, verify, assign };
+  return { service, repository, user, provider, verify, assign, rows, failAudit };
 }
 
 function advance(ms: number): void {
@@ -224,6 +261,83 @@ describe('AuthService', () => {
         expect(error).toMatchObject({ message: INVALID_CREDENTIALS_MESSAGE });
         expect(context.repository.sessions.size).toBe(0);
       }
+    });
+
+    it('writes an ingreso row with user, role and session in the same transaction as the session', async () => {
+      const { service, rows, user, repository } = setup();
+
+      await service.signIn(SessionProvider.Password, 'valido', false);
+
+      const [sessionId] = [...repository.sessions.keys()];
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.inTransaction).toBe(true);
+      expect(rows[0]?.entry).toMatchObject({
+        userId: user.id,
+        role: user.role,
+        type: 'ingreso',
+        action: 'Ingreso',
+        entity: 'sesion',
+        entityId: sessionId,
+      });
+    });
+
+    it('does not issue a session when the ingreso row cannot be written', async () => {
+      const { service, repository, failAudit } = setup();
+      failAudit.next = true;
+
+      await expect(service.signIn(SessionProvider.Password, 'valido', false)).rejects.toThrow(
+        'bitácora caída',
+      );
+      expect(repository.sessions.size).toBe(0);
+    });
+
+    it.each([
+      ['unknown account', 'invalido', false, 'Correo no registrado'],
+      ['wrong password', 'clave-mala', true, 'Contraseña incorrecta'],
+    ])(
+      'records a failed attempt (%s) outside any transaction before the 401',
+      async (_, input, known, detail) => {
+        const { service, rows, user } = setup();
+
+        await expect(service.signIn(SessionProvider.Password, input, false)).rejects.toBeInstanceOf(
+          UnauthorizedException,
+        );
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.inTransaction).toBe(false);
+        expect(rows[0]?.entry).toMatchObject({
+          userId: known ? user.id : null,
+          role: known ? user.role : null,
+          type: 'ingreso',
+          action: 'Intento de ingreso fallido',
+          detail,
+        });
+      },
+    );
+
+    it('records an inactive account with its user and role', async () => {
+      const { service, rows, user } = setup();
+      user.status = UserStatus.Inactive;
+
+      await expect(
+        service.signIn(SessionProvider.Password, 'valido', false),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(rows[0]?.entry).toMatchObject({
+        userId: user.id,
+        role: user.role,
+        detail: 'Cuenta inactiva',
+      });
+    });
+
+    it('never puts the submitted email, password or tokens in the rows', async () => {
+      const { service, rows } = setup();
+      const submitted = 'correo-enviado@gns.test';
+
+      await service.signIn(SessionProvider.Password, 'valido', false);
+      await service.signIn(SessionProvider.Password, submitted, false).catch(() => undefined);
+
+      expect(JSON.stringify(rows)).not.toContain(submitted);
     });
 
     it('has no absolute maximum without rememberMe and one of 7 days with it', async () => {
@@ -301,6 +415,27 @@ describe('AuthService', () => {
       expect(await service.refresh(other.issued.refreshToken)).toBeNull();
       expect(JSON.stringify(warn.mock.calls)).not.toContain(token0);
       expect(warn).toHaveBeenCalledTimes(1);
+    });
+
+    it('writes the reuse row in its own transaction before answering null', async () => {
+      const { service, rows, user, token0 } = await signedIn();
+      advance(60_000);
+      await service.refresh(token0);
+      advance(31_000);
+      jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+      rows.length = 0;
+
+      expect(await service.refresh(token0)).toBeNull();
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.inTransaction).toBe(true);
+      expect(rows[0]?.entry).toMatchObject({
+        userId: user.id,
+        role: user.role,
+        type: 'ingreso',
+        entity: 'sesion',
+      });
+      expect(JSON.stringify(rows)).not.toContain(token0);
     });
 
     it('rejects a token from the future, a forged token and a missing one', async () => {
@@ -436,6 +571,38 @@ describe('AuthService', () => {
       expect(repository.sessions.get(sessionIdOf(other.issued.refreshToken))?.reason).toBe(
         SessionRevocationReason.PasswordChange,
       );
+    });
+
+    it('writes an ingreso row without passwords inside the transaction', async () => {
+      const { service, rows } = setup();
+      const current = await service.signIn(SessionProvider.Password, 'valido', false);
+      const actor = (await service.authenticate(current.issued.accessToken)) as RequestUser;
+      rows.length = 0;
+
+      await service.changePassword(actor, 'actual-secreta', 'nueva-secreta-1');
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.inTransaction).toBe(true);
+      expect(rows[0]?.entry).toMatchObject({
+        userId: actor.id,
+        role: actor.role,
+        type: 'ingreso',
+        action: 'Cambiar la contraseña propia',
+      });
+      expect(JSON.stringify(rows)).not.toMatch(/secreta/);
+    });
+
+    it('does not change the password when the row cannot be written', async () => {
+      const { service, failAudit, repository } = setup();
+      const current = await service.signIn(SessionProvider.Password, 'valido', false);
+      const other = await service.signIn(SessionProvider.Password, 'valido', false);
+      const actor = (await service.authenticate(current.issued.accessToken)) as RequestUser;
+      failAudit.next = true;
+
+      await expect(service.changePassword(actor, 'actual', 'x'.repeat(12))).rejects.toThrow(
+        'bitácora caída',
+      );
+      expect(repository.sessions.get(sessionIdOf(other.issued.refreshToken))?.revokedAt).toBeNull();
     });
   });
 });

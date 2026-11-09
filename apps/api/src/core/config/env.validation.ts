@@ -12,6 +12,9 @@ const corsOrigins = z
 
 const MIN_SECRET_LENGTH = 32;
 
+// Versión vigente del aviso de datos: cabe en `consentimiento_datos.version_politica` (20).
+const POLICY_VERSION_PATTERN = /^[A-Za-z0-9._-]{1,20}$/;
+
 const secret = z.string().min(MIN_SECRET_LENGTH);
 
 // Solo `true` o `false`: `z.coerce.boolean` convertiría "false" en true.
@@ -35,6 +38,8 @@ export const envSchema = z
     AUTH_COOKIE_SECURE: booleanText.default(true),
     LOGIN_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(100).default(5),
     LOGIN_WINDOW_SECONDS: z.coerce.number().int().min(1).max(3600).default(300),
+    // Sin valor por defecto: es un dato legal y uno implícito registraría aceptaciones de una versión no publicada.
+    DATA_POLICY_VERSION: z.string().regex(POLICY_VERSION_PATTERN),
   })
   .superRefine((env, ctx) => {
     if (env.JWT_ACCESS_SECRET === env.REFRESH_TOKEN_SECRET) {
@@ -79,6 +84,8 @@ const INVALID_VALUE_REASONS: Record<EnvKey, string> = {
   AUTH_COOKIE_SECURE: 'debe ser true o false (y true en producción)',
   LOGIN_MAX_ATTEMPTS: 'debe ser un entero entre 1 y 100',
   LOGIN_WINDOW_SECONDS: 'debe ser un entero entre 1 y 3600',
+  DATA_POLICY_VERSION:
+    'debe tener de 1 a 20 caracteres: letras, números, punto, guion o guion bajo',
 };
 
 const MISSING_REASON = 'falta la variable';

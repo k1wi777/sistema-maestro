@@ -65,6 +65,7 @@ export default async function globalSetup(): Promise<void> {
   process.env.JWT_ACCESS_SECRET ??= randomBytes(32).toString('hex');
   process.env.REFRESH_TOKEN_SECRET ??= randomBytes(32).toString('hex');
   process.env.AUTH_COOKIE_SECURE ??= 'false';
+  process.env.DATA_POLICY_VERSION ??= 'prueba-1';
   // Alto para que los ingresos de las pruebas no choquen con el límite; la prueba del 429 lo baja.
   process.env.LOGIN_MAX_ATTEMPTS ??= '100';
 }

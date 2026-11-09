@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { AuditLogType } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../src/core/audit/audited.decorator';
+import { Public } from '../../../src/modules/identidad/auth/access.decorators';
 import { FaqExampleAuditSnapshot } from './faq-example.audit-snapshot';
 import {
   CreateFaqExampleDto,
@@ -13,6 +14,8 @@ import {
 } from './faq-example.dto';
 import { FaqExampleService } from './faq-example.service';
 
+// Solo pruebas: público a propósito, ejercita la capa HTTP sin sesión.
+@Public()
 @Controller('faq-example')
 export class FaqExampleController {
   constructor(private readonly service: FaqExampleService) {}
