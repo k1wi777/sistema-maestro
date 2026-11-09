@@ -1,4 +1,4 @@
-// Modelo de datos de la Plataforma GNS: 27 tablas en 7 módulos.
+// Modelo de datos de la Plataforma GNS: 29 tablas en 7 módulos.
 // Modelos y campos en inglés, mapeados a tablas y columnas en español (snake_case).
 // Lo que Prisma no expresa (triggers de la bitácora, privilegios y CHECK) vive en
 // las migraciones SQL escritas a mano.
@@ -51,9 +51,47 @@ model User {
   certificates       Certificate[]
   updatedFaqEntries  FaqEntry[]
   auditLogs          AuditLog[]
+  passwordCredential PasswordCredential?
+  sessions           Session[]
 
   @@index([createdById])
   @@map("usuario")
+}
+
+// Contraseña de un usuario como hash argon2id (formato PHC). Va en una tabla aparte para
+// que el hash nunca viaje en las lecturas de `usuario`. La migración añade el CHECK
+// `hash LIKE '$argon2id$%'`.
+model PasswordCredential {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @unique @map("usuario_id") @db.Uuid
+  hash      String   @map("hash") @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("credencial_contrasena")
+}
+
+// Sesión de un dispositivo. `generation` es la generación vigente del token de renovación;
+// `expiresAt` es el máximo absoluto de «mantener la sesión iniciada» (nulo si no se marcó).
+model Session {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String    @map("usuario_id") @db.Uuid
+  provider         String    @map("proveedor") @db.VarChar(20)
+  generation       Int       @default(0) @map("generacion")
+  rotatedAt        DateTime? @map("rotada_en") @db.Timestamptz(6)
+  renewedAt        DateTime  @map("renovada_en") @db.Timestamptz(6)
+  expiresAt        DateTime? @map("expira_en") @db.Timestamptz(6)
+  revokedAt        DateTime? @map("revocada_en") @db.Timestamptz(6)
+  revocationReason String?   @map("motivo_revocacion") @db.VarChar(20)
+  createdAt        DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId])
+  @@map("sesion")
 }
 
 model DataConsent {

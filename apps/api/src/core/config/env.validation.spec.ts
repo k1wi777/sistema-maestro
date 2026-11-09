@@ -2,7 +2,18 @@ import { validateEnv } from './env.validation';
 
 const DATABASE_URL = 'postgresql://gns:gns@localhost:5432/gns';
 const CORS_ORIGINS = 'http://localhost:3001';
-const BASE = { NODE_ENV: 'test', PORT: '3000', DATABASE_URL, CORS_ORIGINS };
+// Secretos de prueba sin valor real: solo cumplen la longitud mínima.
+const ACCESS_SECRET = 'prueba-acceso-'.padEnd(40, 'a');
+const REFRESH_SECRET = 'prueba-renovacion-'.padEnd(40, 'r');
+const BASE = {
+  NODE_ENV: 'test',
+  PORT: '3000',
+  DATABASE_URL,
+  CORS_ORIGINS,
+  JWT_ACCESS_SECRET: ACCESS_SECRET,
+  REFRESH_TOKEN_SECRET: REFRESH_SECRET,
+  DATA_POLICY_VERSION: '2026-1',
+};
 const DATABASE_URL_REASON =
   '- DATABASE_URL: debe ser una URL de PostgreSQL (postgresql://usuario:clave@host:puerto/base)';
 
@@ -25,6 +36,16 @@ describe('validateEnv', () => {
       RATE_LIMIT_WINDOW_SECONDS: 60,
       RATE_LIMIT_MAX_REQUESTS: 100,
       LOG_LEVEL: 'info',
+      JWT_ACCESS_SECRET: ACCESS_SECRET,
+      ACCESS_TOKEN_TTL_MINUTES: 15,
+      REFRESH_TOKEN_SECRET: REFRESH_SECRET,
+      REFRESH_ROTATION_GRACE_SECONDS: 30,
+      SESSION_IDLE_TIMEOUT_HOURS: 24,
+      SESSION_REMEMBER_MAX_DAYS: 7,
+      AUTH_COOKIE_SECURE: true,
+      LOGIN_MAX_ATTEMPTS: 5,
+      LOGIN_WINDOW_SECONDS: 300,
+      DATA_POLICY_VERSION: '2026-1',
     });
   });
 
@@ -56,6 +77,8 @@ describe('validateEnv', () => {
     expect(message).toContain('- PORT: falta la variable');
     expect(message).toContain('- DATABASE_URL: falta la variable');
     expect(message).toContain('- CORS_ORIGINS: falta la variable');
+    expect(message).toContain('- JWT_ACCESS_SECRET: falta la variable');
+    expect(message).toContain('- REFRESH_TOKEN_SECRET: falta la variable');
   });
 
   it('accepts the postgres:// protocol in DATABASE_URL', () => {
@@ -116,6 +139,99 @@ describe('validateEnv', () => {
       RATE_LIMIT_WINDOW_SECONDS: 60,
       RATE_LIMIT_MAX_REQUESTS: 100,
       LOG_LEVEL: 'info',
+    });
+  });
+
+  describe('authentication settings', () => {
+    it('applies the session defaults', () => {
+      expect(validateEnv({ ...BASE, AUTH_COOKIE_SECURE: undefined })).toMatchObject({
+        ACCESS_TOKEN_TTL_MINUTES: 15,
+        REFRESH_ROTATION_GRACE_SECONDS: 30,
+        SESSION_IDLE_TIMEOUT_HOURS: 24,
+        SESSION_REMEMBER_MAX_DAYS: 7,
+        AUTH_COOKIE_SECURE: true,
+        LOGIN_MAX_ATTEMPTS: 5,
+        LOGIN_WINDOW_SECONDS: 300,
+      });
+    });
+
+    it.each(['JWT_ACCESS_SECRET', 'REFRESH_TOKEN_SECRET'])('requires %s', (key) => {
+      expect(errorMessageOf({ ...BASE, [key]: undefined })).toContain(
+        `- ${key}: falta la variable`,
+      );
+    });
+
+    it('rejects a secret shorter than 32 characters', () => {
+      expect(errorMessageOf({ ...BASE, JWT_ACCESS_SECRET: 'corto' })).toContain(
+        '- JWT_ACCESS_SECRET: debe tener al menos 32 caracteres',
+      );
+    });
+
+    it('rejects equal secrets', () => {
+      expect(errorMessageOf({ ...BASE, REFRESH_TOKEN_SECRET: ACCESS_SECRET })).toContain(
+        '- REFRESH_TOKEN_SECRET:',
+      );
+    });
+
+    it.each([
+      ['ACCESS_TOKEN_TTL_MINUTES', '0'],
+      ['ACCESS_TOKEN_TTL_MINUTES', '61'],
+      ['REFRESH_ROTATION_GRACE_SECONDS', '-1'],
+      ['REFRESH_ROTATION_GRACE_SECONDS', '301'],
+      ['SESSION_IDLE_TIMEOUT_HOURS', '0'],
+      ['SESSION_IDLE_TIMEOUT_HOURS', '721'],
+      ['SESSION_REMEMBER_MAX_DAYS', '0'],
+      ['SESSION_REMEMBER_MAX_DAYS', '91'],
+      ['AUTH_COOKIE_SECURE', 'si'],
+      ['LOGIN_MAX_ATTEMPTS', '0'],
+      ['LOGIN_WINDOW_SECONDS', '3601'],
+    ])('rejects %s=%s', (key, value) => {
+      expect(errorMessageOf({ ...BASE, [key]: value })).toContain(`- ${key}:`);
+    });
+
+    it('rejects a remember-me maximum that does not exceed the inactivity timeout', () => {
+      expect(
+        errorMessageOf({
+          ...BASE,
+          SESSION_IDLE_TIMEOUT_HOURS: '72',
+          SESSION_REMEMBER_MAX_DAYS: '3',
+        }),
+      ).toContain('- SESSION_REMEMBER_MAX_DAYS:');
+    });
+
+    it('requires Secure cookies in production but not elsewhere', () => {
+      expect(
+        errorMessageOf({ ...BASE, NODE_ENV: 'production', AUTH_COOKIE_SECURE: 'false' }),
+      ).toContain('- AUTH_COOKIE_SECURE:');
+      expect(validateEnv({ ...BASE, NODE_ENV: 'production' }).AUTH_COOKIE_SECURE).toBe(true);
+      expect(validateEnv({ ...BASE, AUTH_COOKIE_SECURE: 'false' }).AUTH_COOKIE_SECURE).toBe(false);
+    });
+
+    it('never prints the secrets it received', () => {
+      const message = errorMessageOf({
+        ...BASE,
+        JWT_ACCESS_SECRET: 's3cr3t',
+        REFRESH_TOKEN_SECRET: 's3cr3t',
+      });
+      expect(message).not.toContain('s3cr3t');
+    });
+  });
+
+  describe('DATA_POLICY_VERSION', () => {
+    it('is required', () => {
+      expect(errorMessageOf({ ...BASE, DATA_POLICY_VERSION: undefined })).toContain(
+        '- DATA_POLICY_VERSION: falta la variable',
+      );
+    });
+
+    it.each(['', 'con espacio', 'a'.repeat(21), 'v/1'])('rejects %j', (value) => {
+      expect(errorMessageOf({ ...BASE, DATA_POLICY_VERSION: value })).toContain(
+        '- DATA_POLICY_VERSION:',
+      );
+    });
+
+    it.each(['2026-1', 'v1.2_b', 'a'.repeat(20)])('accepts %j', (value) => {
+      expect(validateEnv({ ...BASE, DATA_POLICY_VERSION: value }).DATA_POLICY_VERSION).toBe(value);
     });
   });
 });

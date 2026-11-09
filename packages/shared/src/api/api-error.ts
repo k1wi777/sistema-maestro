@@ -5,6 +5,7 @@ export const ApiErrorCode = {
   Validation: 'validacion',
   Unauthenticated: 'no_autenticado',
   Forbidden: 'sin_permiso',
+  ConsentRequired: 'consentimiento_requerido',
   NotFound: 'no_encontrado',
   Conflict: 'conflicto',
   TooManyRequests: 'demasiadas_peticiones',

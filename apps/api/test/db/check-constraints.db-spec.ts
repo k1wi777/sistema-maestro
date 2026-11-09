@@ -26,7 +26,9 @@ import {
   insertFieldJournalEntry,
   insertLessonPlan,
   insertObserverNote,
+  insertPasswordCredential,
   insertReview,
+  insertSession,
   insertTrainingActivity,
   insertTrainingModule,
   insertUser,
@@ -195,6 +197,12 @@ describe('check constraints', () => {
       [
         ...CASES.map(({ table, column }) => `${table}_${column}_check`),
         'actividad_modulo_configuracion_check',
+        'credencial_contrasena_hash_check',
+        'sesion_expira_en_check',
+        'sesion_generacion_check',
+        'sesion_motivo_revocacion_check',
+        'sesion_proveedor_check',
+        'sesion_revocacion_check',
         'modulo_formacion_segundos_por_pregunta_check',
         'modulo_formacion_umbral_aprobacion_check',
         'periodo_academico_numero_check',
@@ -313,5 +321,116 @@ describe('check constraints', () => {
         [number],
       );
     });
+  });
+
+  describe('credencial_contrasena.hash', () => {
+    it('accepts an argon2id hash', async () => {
+      const credential = await insertPasswordCredential(db.client);
+
+      expect(String(credential.hash).startsWith('$argon2id$')).toBe(true);
+    });
+
+    it.each(['una-contraseña-en-claro', '$argon2i$v=19$m=1,t=1,p=1$c2FsdA$aGFzaA', '$2b$10$abc'])(
+      'rejects a value that is not an argon2id hash',
+      async (hash) => {
+        await expectSqlError(
+          db.client,
+          CHECK_VIOLATION,
+          'INSERT INTO credencial_contrasena (usuario_id, hash) VALUES ($1, $2)',
+          [(await insertUser(db.client)).id, hash],
+        );
+      },
+    );
+
+    it('allows only one credential per user', async () => {
+      const credential = await insertPasswordCredential(db.client);
+
+      await expectSqlError(
+        db.client,
+        '23505',
+        'INSERT INTO credencial_contrasena (usuario_id, hash) VALUES ($1, $2)',
+        [credential.usuario_id, credential.hash],
+      );
+    });
+  });
+
+  describe('sesion', () => {
+    it('stores a session with its defaults', async () => {
+      const session = await insertSession(db.client);
+
+      expect(session).toMatchObject({
+        proveedor: 'contrasena',
+        generacion: 0,
+        rotada_en: null,
+        expira_en: null,
+        revocada_en: null,
+        motivo_revocacion: null,
+      });
+    });
+
+    it('rejects an unknown provider', async () => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        'INSERT INTO sesion (usuario_id, proveedor, renovada_en) VALUES ($1, $2, now())',
+        [(await insertUser(db.client)).id, 'google'],
+      );
+    });
+
+    it('rejects a negative generation', async () => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        'UPDATE sesion SET generacion = -1 WHERE id = $1',
+        [(await insertSession(db.client)).id],
+      );
+    });
+
+    it('accepts an absolute expiry after creation and rejects one that is not', async () => {
+      const session = await insertSession(db.client, {
+        expira_en: new Date(Date.now() + 7 * 24 * 3600 * 1000),
+      });
+      expect(session.expira_en).not.toBeNull();
+
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        "UPDATE sesion SET expira_en = creado_en - interval '1 second' WHERE id = $1",
+        [session.id],
+      );
+    });
+
+    it.each(['cierre', 'desactivacion', 'contrasena', 'reutilizacion'])(
+      'accepts the revocation reason %s together with revocada_en',
+      async (reason) => {
+        const session = await insertSession(db.client, {
+          revocada_en: new Date(),
+          motivo_revocacion: reason,
+        });
+
+        expect(session.motivo_revocacion).toBe(reason);
+      },
+    );
+
+    it('rejects an unknown revocation reason', async () => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        'UPDATE sesion SET revocada_en = now(), motivo_revocacion = $2 WHERE id = $1',
+        [(await insertSession(db.client)).id, 'otro'],
+      );
+    });
+
+    it.each([['revocada_en = now()'], ["motivo_revocacion = 'cierre'"]])(
+      'rejects revocation and reason out of sync (%s)',
+      async (assignment) => {
+        await expectSqlError(
+          db.client,
+          CHECK_VIOLATION,
+          `UPDATE sesion SET ${assignment} WHERE id = $1`,
+          [(await insertSession(db.client)).id],
+        );
+      },
+    );
   });
 });

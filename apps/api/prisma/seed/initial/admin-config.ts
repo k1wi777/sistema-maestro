@@ -14,6 +14,8 @@ const adminConfigSchema = z.object({
   SEED_ADMIN_EMAIL: z
     .string({ error: 'falta o no es texto' })
     .trim()
+    // Minúsculas: el `@unique` de `usuario.correo_institucional` basta para evitar duplicados.
+    .toLowerCase()
     .max(160, 'no puede superar 160 caracteres')
     .pipe(z.email('no es un correo válido')),
 });
