@@ -45,6 +45,14 @@ export abstract class PrismaReadRepository<
   protected abstract toWhere(filters: TFilters): TWhere;
   protected abstract toEntity(row: TRow): TEntity;
 
+  /**
+   * Criterios de orden que siguen al elegido. Por defecto `id`; una subclase puede
+   * anteponer uno de dominio (p. ej. el número de periodo) y debe terminar en `id`.
+   */
+  protected tieBreakers(field: TSortField): Record<string, 'asc' | 'desc'>[] {
+    return field === 'id' ? [] : [{ id: 'asc' }];
+  }
+
   async findById(id: string): Promise<TEntity | null> {
     const row = await this.delegate.findUnique({ where: { id } });
     return row ? this.toEntity(row) : null;
@@ -53,12 +61,12 @@ export abstract class PrismaReadRepository<
   async findPage(query: ListQuery<TFilters, TSortField>): Promise<Page<TEntity>> {
     const where = this.toWhere(query.filters);
     const { skip, take } = toPageWindow(query.page, query.pageSize);
-    // `id` como desempate da un orden total: sin él, valores repetidos en el
+    // Los desempates dan un orden total: sin ellos, valores repetidos en el
     // campo de orden repetirían u omitirían filas entre páginas.
-    const orderBy: Record<string, 'asc' | 'desc'>[] = [{ [query.sort.field]: query.sort.order }];
-    if (query.sort.field !== 'id') {
-      orderBy.push({ id: 'asc' });
-    }
+    const orderBy: Record<string, 'asc' | 'desc'>[] = [
+      { [query.sort.field]: query.sort.order },
+      ...this.tieBreakers(query.sort.field),
+    ];
 
     const [totalItems, rows] = await this.countAndFind(where, orderBy, skip, take);
 
