@@ -12,6 +12,7 @@ import {
 
 export * from './common';
 export * from './match';
+export * from './module-settings';
 export * from './simulator';
 export * from './simulator-evaluator';
 export * from './true-or-myth';

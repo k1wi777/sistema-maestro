@@ -9,6 +9,7 @@ export interface ActivitySeed {
   type: TrainingActivityType;
   title: string;
   isRequired: boolean;
+  instructions?: string;
   config: Record<string, unknown>;
 }
 
@@ -20,6 +21,8 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     type: TrainingActivityType.WheelPassport,
     title: 'Ruleta de beneficios',
     isRequired: false,
+    instructions:
+      'Cada giro te muestra un beneficio. Responde su pregunta para ganar el sello. Completa los 14 sellos y obtén la insignia de Experto en Beneficios GNS.',
     config: {
       insignia: 'Experto en Beneficios GNS',
       tarjetas: [
@@ -248,6 +251,10 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
           emoji: '📣',
           titulo_corto: 'Referidos',
           titulo: 'Referidos GNS',
+          enlace: {
+            texto: 'Formulario de referidos',
+            url: 'https://docs.google.com/forms/d/e/1FAIpQLSdpaAxS2DDn7yLDQ_BgLP4qyQQ2A49wkl8ikU_mR_jd_tPdzQ/viewform',
+          },
           dato: '20% del SMMLV por cada referido contratado',
           hechos: [
             'Si refieres a un profesional y es contratado, recibes el 20% del SMMLV.',
@@ -267,6 +274,7 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     type: TrainingActivityType.Match,
     title: 'Conecta',
     isRequired: true,
+    instructions: 'Une cada beneficio con su dato clave antes de que se acabe el tiempo.',
     config: {
       pares: [
         {
@@ -350,6 +358,7 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     type: TrainingActivityType.TrueOrMyth,
     title: '¿Verdad o mito?',
     isRequired: true,
+    instructions: '10 afirmaciones rápidas. Tienes 3 vidas ❤️❤️❤️',
     config: {
       afirmaciones: [
         {
@@ -424,7 +433,11 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     type: TrainingActivityType.Simulator,
     title: 'Simulador de ahorro mutuo',
     isRequired: false,
+    instructions:
+      'Calcula cuánto pueden representar para ti. Tu salario no se guarda ni se envía: solo se usa en esta pantalla.',
     config: {
+      icono: '🐷',
+      destacado: { clave: 'total', subtitulo: 'ahorro estimado' },
       entradas: [
         {
           clave: 'salario',
@@ -446,6 +459,7 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
         {
           clave: 'anios',
           etiqueta: 'Años de ahorro',
+          unidad: 'años',
           tipo: 'numero',
           min: 1,
           max: 10,
@@ -569,7 +583,11 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     type: TrainingActivityType.Simulator,
     title: 'Simulador de bono de desempeño',
     isRequired: false,
+    instructions:
+      'Calcula cuánto pueden representar para ti. Tu salario no se guarda ni se envía: solo se usa en esta pantalla.',
     config: {
+      icono: '🏅',
+      destacado: { clave: 'bono', subtitulo: 'bono estimado' },
       entradas: [
         {
           clave: 'salario',
@@ -757,10 +775,13 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     title: 'Simulador de bono de antigüedad',
     isRequired: false,
     config: {
+      icono: '📈',
+      destacado: { clave: 'acumulado', subtitulo: 'bono de antigüedad acumulado' },
       entradas: [
         {
           clave: 'anios',
           etiqueta: 'Años de servicio',
+          unidad: 'años',
           tipo: 'numero',
           min: 0,
           max: 24,
@@ -961,6 +982,11 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     title: 'Simulador de cabaña en Coveñas',
     isRequired: false,
     config: {
+      icono: '🏖️',
+      destacado: {
+        clave: 'costo',
+        subtitulo: 'más el consumo eléctrico (promedio $110.000 por fin de semana)',
+      },
       entradas: [
         {
           clave: 'antiguedad',
@@ -1205,6 +1231,8 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
     title: 'Simulador de bilingüismo',
     isRequired: false,
     config: {
+      icono: '🗣️',
+      destacado: { clave: 'valor', subtitulo: 'reconocimiento mensual estimado' },
       entradas: [
         {
           clave: 'nivel',

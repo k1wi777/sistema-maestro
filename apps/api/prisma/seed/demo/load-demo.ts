@@ -98,7 +98,7 @@ async function loadReferences(client: Client) {
     `SELECT m.id, m.numero, m.video_url, m.presentacion_url,
             (SELECT count(*) FROM diapositiva d WHERE d.modulo_id = m.id) AS slides,
             (SELECT count(*) FROM pregunta_desafio q WHERE q.modulo_id = m.id) AS questions
-     FROM modulo_formacion m WHERE m.plan_id = $1`,
+     FROM modulo_formacion m WHERE m.plan_id = $1 AND m.estado <> 'borrador'`,
     [planId],
   );
   const moduleFacts = new Map<string, ModuleFacts>(
@@ -124,7 +124,7 @@ async function loadReferences(client: Client) {
   }>(
     `SELECT a.id, a.tipo, a.titulo, a.obligatoria, m.numero, a.configuracion
      FROM actividad_modulo a JOIN modulo_formacion m ON m.id = a.modulo_id
-     WHERE m.plan_id = $1 AND a.estado = 'activo'`,
+     WHERE m.plan_id = $1 AND m.estado <> 'borrador' AND a.estado = 'activo'`,
     [planId],
   );
   const activityFacts = new Map<string, ActivityFacts>(

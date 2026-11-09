@@ -7,6 +7,9 @@ import {
   RecordStatus,
   ReviewAction,
   ReviewRecordType,
+  CHALLENGE_DEFAULT_APPROVAL_THRESHOLD,
+  CHALLENGE_SECONDS_PER_QUESTION_LIMITS,
+  TrainingActivityStatus,
   TrainingActivityType,
   TrainingModuleStatus,
   UserRole,
@@ -146,8 +149,9 @@ const CASES: CheckCase[] = [
   {
     table: 'actividad_modulo',
     column: 'estado',
-    allowed: Object.values(TrainingModuleStatus),
-    rejected: ['inactivo'],
+    // Una actividad no admite `borrador`.
+    allowed: Object.values(TrainingActivityStatus),
+    rejected: ['inactivo', 'borrador'],
     insert: insertTrainingActivity,
     updatable: true,
   },
@@ -191,6 +195,8 @@ describe('check constraints', () => {
       [
         ...CASES.map(({ table, column }) => `${table}_${column}_check`),
         'actividad_modulo_configuracion_check',
+        'modulo_formacion_segundos_por_pregunta_check',
+        'modulo_formacion_umbral_aprobacion_check',
         'periodo_academico_numero_check',
         'progreso_actividad_intentos_check',
         'progreso_actividad_mejor_puntaje_check',
@@ -234,6 +240,63 @@ describe('check constraints', () => {
       }
     },
   );
+
+  describe('modulo_formacion.estado borrador', () => {
+    it('accepts a draft module while activities keep their two statuses', async () => {
+      const draft = await insertTrainingModule(db.client, { estado: TrainingModuleStatus.Draft });
+
+      expect(draft.estado).toBe('borrador');
+      expect(Object.values(TrainingActivityStatus)).not.toContain('borrador');
+    });
+  });
+
+  describe('modulo_formacion.umbral_aprobacion', () => {
+    it.each([0, 80, 100])('accepts %i', async (value) => {
+      const module = await insertTrainingModule(db.client, { umbral_aprobacion: value });
+
+      expect(module.umbral_aprobacion).toBe(value);
+    });
+
+    it.each([-1, 101])('rejects %i', async (value) => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE modulo_formacion SET umbral_aprobacion = $1 WHERE id = $2`,
+        [value, (await insertTrainingModule(db.client)).id],
+      );
+    });
+
+    it('defaults to the shared default', async () => {
+      const module = await insertTrainingModule(db.client);
+
+      expect(module.umbral_aprobacion).toBe(CHALLENGE_DEFAULT_APPROVAL_THRESHOLD);
+    });
+  });
+
+  describe('modulo_formacion.segundos_por_pregunta', () => {
+    const { min, max } = CHALLENGE_SECONDS_PER_QUESTION_LIMITS;
+
+    it.each([min, 20, max])('accepts %i', async (value) => {
+      const module = await insertTrainingModule(db.client, { segundos_por_pregunta: value });
+
+      expect(module.segundos_por_pregunta).toBe(value);
+    });
+
+    it('is null by default', async () => {
+      const module = await insertTrainingModule(db.client);
+
+      expect(module.segundos_por_pregunta).toBeNull();
+    });
+
+    it.each([0, min - 1, max + 1])('rejects %i', async (value) => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE modulo_formacion SET segundos_por_pregunta = $1 WHERE id = $2`,
+        [value, (await insertTrainingModule(db.client)).id],
+      );
+    });
+  });
 
   describe('periodo_academico.numero', () => {
     it.each([1, 2, 3])('accepts %i', async (number) => {

@@ -348,19 +348,25 @@ model TrainingPlan {
   @@map("plan_formacion")
 }
 
+// `status` admite `borrador` (módulo aún no publicado, sin progreso) además de
+// `activo` y `fuera_del_plan`; el CHECK vive en la migración.
 model TrainingModule {
-  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  planId          String   @map("plan_id") @db.Uuid
-  part            String?  @map("parte") @db.VarChar(60)
-  number          String?  @map("numero") @db.VarChar(4)
-  sortOrder       Int      @map("orden") @db.SmallInt
-  title           String   @map("titulo") @db.VarChar(160)
-  summary         String?  @map("resumen") @db.Text
-  videoUrl        String?  @map("video_url") @db.Text
-  presentationUrl String?  @map("presentacion_url") @db.Text
-  status          String   @map("estado") @db.VarChar(14)
-  createdAt       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
-  updatedAt       DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId             String   @map("plan_id") @db.Uuid
+  part               String?  @map("parte") @db.VarChar(60)
+  number             String?  @map("numero") @db.VarChar(4)
+  sortOrder          Int      @map("orden") @db.SmallInt
+  title              String   @map("titulo") @db.VarChar(160)
+  summary            String?  @map("resumen") @db.Text
+  videoUrl           String?  @map("video_url") @db.Text
+  videoTitle         String?  @map("video_titulo") @db.VarChar(160)
+  presentationUrl    String?  @map("presentacion_url") @db.Text
+  status             String   @map("estado") @db.VarChar(14)
+  // Desafío GNS: porcentaje para aprobar y tiempo fijo por pregunta (nulo = tiempo vigente por tipo).
+  approvalThreshold  Int      @default(80) @map("umbral_aprobacion") @db.SmallInt
+  secondsPerQuestion Int?     @map("segundos_por_pregunta") @db.SmallInt
+  createdAt          DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   plan         TrainingPlan        @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   slides       Slide[]
@@ -480,16 +486,17 @@ model Certificate {
 // esquemas Zod de @gns/shared según `tipo`; la base solo exige un objeto.
 // Un módulo termina cuando se completan todas las actividades obligatorias activas.
 model TrainingActivity {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  moduleId   String   @map("modulo_id") @db.Uuid
-  type       String   @map("tipo") @db.VarChar(16)
-  sortOrder  Int      @map("orden") @db.SmallInt
-  title      String   @map("titulo") @db.VarChar(160)
-  isRequired Boolean  @map("obligatoria")
-  status     String   @map("estado") @db.VarChar(14)
-  config     Json     @map("configuracion") @db.JsonB
-  createdAt  DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
-  updatedAt  DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId     String   @map("modulo_id") @db.Uuid
+  type         String   @map("tipo") @db.VarChar(16)
+  sortOrder    Int      @map("orden") @db.SmallInt
+  title        String   @map("titulo") @db.VarChar(160)
+  isRequired   Boolean  @map("obligatoria")
+  instructions String?  @map("instrucciones") @db.VarChar(500)
+  status       String   @map("estado") @db.VarChar(14)
+  config       Json     @map("configuracion") @db.JsonB
+  createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   module   TrainingModule     @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   progress ActivityProgress[]

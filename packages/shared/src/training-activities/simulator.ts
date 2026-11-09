@@ -100,7 +100,21 @@ const expressionSchema: z.ZodType<SimulatorExpression> = z.lazy(() => {
         hasta: z
           .array(z.strictObject({ hasta: literal, valor: expressionSchema }))
           .min(1)
-          .max(10),
+          .max(10)
+          .superRefine((steps, context) => {
+            // El evaluador toma el primer tramo con valor <= hasta: un límite
+            // repetido o menor sería inalcanzable.
+            steps.forEach((current, index) => {
+              const previous = steps[index - 1];
+              if (previous !== undefined && current.hasta <= previous.hasta) {
+                context.addIssue({
+                  code: 'custom',
+                  path: [index, 'hasta'],
+                  message: 'Los límites de los tramos deben ir en orden ascendente.',
+                });
+              }
+            });
+          }),
         resto: expressionSchema,
       }),
     }),
@@ -217,6 +231,7 @@ const inputSchema = z.discriminatedUnion('tipo', [
     .strictObject({
       ...inputBase,
       tipo: z.literal('moneda'),
+      unidad: shortText(16).optional(),
       min: literal,
       max: literal.optional(),
       paso: step,
@@ -227,6 +242,7 @@ const inputSchema = z.discriminatedUnion('tipo', [
     .strictObject({
       ...inputBase,
       tipo: z.enum(['numero', 'porcentaje']),
+      unidad: shortText(16).optional(),
       min: literal,
       max: literal,
       paso: step,
@@ -273,6 +289,8 @@ export const simulatorConfigSchema = z
     notas: z
       .array(z.strictObject({ texto: shortText(300), cuando: activityKey.optional() }))
       .max(10),
+    icono: shortText(8).optional(),
+    destacado: z.strictObject({ clave: activityKey, subtitulo: shortText(120) }).optional(),
   })
   .superRefine((config, context) => {
     const declared = new Set<string>();
@@ -314,6 +332,16 @@ export const simulatorConfigSchema = z
         });
       }
     });
+    if (
+      config.destacado !== undefined &&
+      !config.resultados.some((result) => result.clave === config.destacado?.clave)
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['destacado', 'clave'],
+        message: 'El resultado destacado debe ser uno de los resultados.',
+      });
+    }
     config.notas.forEach((note, index) => {
       if (note.cuando !== undefined && !calculationKeys.has(note.cuando)) {
         context.addIssue({

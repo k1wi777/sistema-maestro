@@ -1,8 +1,14 @@
 import {
+  activityInstructionsSchema,
+  CHALLENGE_DEFAULT_APPROVAL_THRESHOLD,
+  CHALLENGE_DEFAULT_SECONDS_PER_QUESTION,
+  CHALLENGE_SECONDS_PER_QUESTION_LIMITS,
+  ChallengeQuestionType,
   evaluateSimulator,
   parseActivityConfig,
   parseActivityProgressDetail,
   TrainingActivityType,
+  trainingModuleSettingsSchema,
   type SimulatorConfig,
 } from '@gns/shared';
 import { BENEFITS_ACTIVITIES, type ActivitySeed } from '../../prisma/seed/initial/benefits.data.ts';
@@ -51,6 +57,7 @@ function simulatorWith(calculos: unknown[]): Loose {
   config.calculos = calculos;
   config.resultados = [{ clave: 'x', etiqueta: 'Resultado', formato: 'numero' }];
   config.notas = [];
+  delete (config as { destacado?: unknown }).destacado;
   return config;
 }
 
@@ -112,6 +119,35 @@ describe('activity configuration schemas', () => {
     config.entradas[0]!.inicial = 123;
 
     expect(parseSimulator(config)).toBe(false);
+  });
+
+  describe('wheel card link', () => {
+    const withLink = (link: unknown): Loose => {
+      const config = cloneConfig('Ruleta de beneficios') as unknown as {
+        tarjetas: Record<string, unknown>[];
+      };
+      config.tarjetas[0]!.enlace = link;
+      return config as unknown as Loose;
+    };
+    const parseWheel = (config: unknown) =>
+      parseActivityConfig(TrainingActivityType.WheelPassport, config).success;
+
+    it('accepts an https link with a visible text', () => {
+      expect(parseWheel(withLink({ texto: 'Formulario', url: 'https://gns.test/ruta' }))).toBe(
+        true,
+      );
+    });
+
+    it.each([
+      ['http', { texto: 'Formulario', url: 'http://gns.test' }],
+      ['javascript', { texto: 'Formulario', url: 'javascript:alert(1)' }],
+      ['relative', { texto: 'Formulario', url: '/formulario' }],
+      ['no text', { texto: ' ', url: 'https://gns.test' }],
+      ['no url', { texto: 'Formulario' }],
+      ['extra field', { texto: 'Formulario', url: 'https://gns.test', rel: 'x' }],
+    ])('rejects a link with %s', (_name, link) => {
+      expect(parseWheel(withLink(link))).toBe(false);
+    });
   });
 
   describe('progress detail', () => {
@@ -200,6 +236,162 @@ describe('simulator schema limits', () => {
     config.constantes = [{ clave: 'anios', valor: 1 }];
 
     expect(parseSimulator(config)).toBe(false);
+  });
+});
+
+describe('simulator presentation data', () => {
+  const savings = (): Record<string, unknown> & { entradas: Record<string, unknown>[] } =>
+    structuredClone(activityByTitle('Simulador de ahorro mutuo').config) as never;
+
+  it('accepts a unit on numeric inputs and an icon', () => {
+    const config = savings();
+    config.entradas.forEach((input) => {
+      if (input.tipo !== 'opcion') {
+        input.unidad = 'años';
+      }
+    });
+    config.icono = '🐷';
+
+    expect(parseSimulator(config)).toBe(true);
+  });
+
+  it('rejects a unit on an option input', () => {
+    const config = structuredClone(activityByTitle('Simulador de bilingüismo').config) as never as {
+      entradas: Record<string, unknown>[];
+    };
+    config.entradas[0]!.unidad = 'años';
+
+    expect(config.entradas[0]!.tipo).toBe('opcion');
+    expect(parseSimulator(config)).toBe(false);
+  });
+
+  it.each(['', 'x'.repeat(17)])('rejects the unit "%s"', (unit) => {
+    const config = savings();
+    config.entradas[1]!.unidad = unit;
+
+    expect(parseSimulator(config)).toBe(false);
+  });
+
+  it('rejects an empty or long icon', () => {
+    expect(parseSimulator({ ...savings(), icono: '' })).toBe(false);
+    expect(parseSimulator({ ...savings(), icono: 'x'.repeat(9) })).toBe(false);
+  });
+
+  it('accepts a highlighted result with subtitle', () => {
+    expect(
+      parseSimulator({ ...savings(), destacado: { clave: 'total', subtitulo: 'ahorro estimado' } }),
+    ).toBe(true);
+  });
+
+  it.each([
+    ['an unknown result', { clave: 'inexistente', subtitulo: 'texto' }],
+    ['a calculation that is not a result', { clave: 'pct', subtitulo: 'texto' }],
+    ['no subtitle', { clave: 'total' }],
+    ['an empty subtitle', { clave: 'total', subtitulo: '' }],
+  ])('rejects a highlighted result with %s', (_name, highlighted) => {
+    expect(parseSimulator({ ...savings(), destacado: highlighted })).toBe(false);
+  });
+
+  it('points to the highlighted key when it is not a result', () => {
+    const parsed = parseActivityConfig(TrainingActivityType.Simulator, {
+      ...savings(),
+      destacado: { clave: 'inexistente', subtitulo: 'texto' },
+    });
+
+    expect(parsed.error?.issues[0]?.path).toEqual(['destacado', 'clave']);
+  });
+
+  describe('tramos order', () => {
+    const steps = (limits: number[]): Loose =>
+      simulatorWith([
+        {
+          clave: 'x',
+          expresion: {
+            tramos: {
+              clave: 'anios',
+              hasta: limits.map((hasta) => ({ hasta, valor: 1 })),
+              resto: 0,
+            },
+          },
+        },
+      ]);
+
+    it('accepts strictly ascending limits', () => {
+      expect(parseSimulator(steps([0, 4, 9, 14]))).toBe(true);
+    });
+
+    it.each([
+      ['unordered', [4, 2, 9]],
+      ['repeated', [2, 2, 9]],
+    ])('rejects %s limits and points to the offending step', (_name, limits) => {
+      const parsed = parseActivityConfig(TrainingActivityType.Simulator, steps(limits));
+
+      expect(parsed.success).toBe(false);
+      const path = parsed.error?.issues[0]?.path ?? [];
+      expect(path.slice(-3)).toEqual(['hasta', 1, 'hasta']);
+    });
+  });
+});
+
+describe('training module settings schemas', () => {
+  const valid = { video_titulo: 'Video 1', umbral_aprobacion: 80, segundos_por_pregunta: null };
+
+  it('exposes the current defaults', () => {
+    expect(CHALLENGE_DEFAULT_APPROVAL_THRESHOLD).toBe(80);
+    expect(CHALLENGE_DEFAULT_SECONDS_PER_QUESTION).toEqual({
+      [ChallengeQuestionType.MultipleChoice]: 20,
+      [ChallengeQuestionType.TrueFalse]: 15,
+      [ChallengeQuestionType.Ordering]: 35,
+    });
+    expect(CHALLENGE_SECONDS_PER_QUESTION_LIMITS).toEqual({ min: 5, max: 120 });
+  });
+
+  it.each([
+    valid,
+    { ...valid, video_titulo: null },
+    { ...valid, video_titulo: 'x'.repeat(160) },
+    { ...valid, umbral_aprobacion: 0 },
+    { ...valid, umbral_aprobacion: 100 },
+    { ...valid, segundos_por_pregunta: 5 },
+    { ...valid, segundos_por_pregunta: 120 },
+  ])('accepts %j', (settings) => {
+    expect(trainingModuleSettingsSchema.safeParse(settings).success).toBe(true);
+  });
+
+  it.each([
+    { ...valid, video_titulo: '' },
+    { ...valid, video_titulo: 'x'.repeat(161) },
+    { ...valid, umbral_aprobacion: -1 },
+    { ...valid, umbral_aprobacion: 101 },
+    { ...valid, umbral_aprobacion: 80.5 },
+    { ...valid, segundos_por_pregunta: 4 },
+    { ...valid, segundos_por_pregunta: 121 },
+    { ...valid, segundos_por_pregunta: 20.5 },
+  ])('rejects %j', (settings) => {
+    expect(trainingModuleSettingsSchema.safeParse(settings).success).toBe(false);
+  });
+
+  it('accepts instructions up to 500 characters and rejects the rest', () => {
+    expect(activityInstructionsSchema.safeParse('x'.repeat(500)).success).toBe(true);
+    expect(activityInstructionsSchema.safeParse(null).success).toBe(true);
+    expect(activityInstructionsSchema.safeParse('x'.repeat(501)).success).toBe(false);
+    expect(activityInstructionsSchema.safeParse('').success).toBe(false);
+  });
+});
+
+describe('configurations valid before the presentation fields', () => {
+  it('stay valid without link, unit, icon or highlighted result', () => {
+    const wheel = cloneConfig('Ruleta de beneficios') as unknown as {
+      tarjetas: Record<string, unknown>[];
+    };
+    wheel.tarjetas.forEach((card) => delete card.enlace);
+    const simulator = structuredClone(activityByTitle('Simulador de ahorro mutuo').config);
+    delete simulator.icono;
+    delete simulator.destacado;
+    (simulator.entradas as Record<string, unknown>[]).forEach((input) => delete input.unidad);
+
+    expect(parseActivityConfig(TrainingActivityType.WheelPassport, wheel).success).toBe(true);
+    expect(parseSimulator(simulator)).toBe(true);
   });
 });
 
