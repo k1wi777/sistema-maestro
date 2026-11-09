@@ -10,10 +10,12 @@
     "dev": "turbo run dev",
     "test": "turbo run test",
     "test:db": "pnpm --filter @gns/api test:db",
-    "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "test:affected": "node scripts/test-affected.mjs",
+    "lint": "eslint . --max-warnings 0 --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ && prettier --check . --cache --cache-strategy content --cache-location node_modules/.cache/prettier/.prettier-cache",
+    "lint:cold": "eslint . --max-warnings 0 && prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky",
-    "postinstall": "turbo run build --filter=@gns/shared"
+    "postinstall": "turbo run build --filter=@gns/shared && pnpm --filter @gns/api db:generate"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

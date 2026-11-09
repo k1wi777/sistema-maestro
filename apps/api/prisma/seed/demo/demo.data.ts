@@ -1,4 +1,5 @@
 import {
+  AUDIT_UNKNOWN_ROLE,
   AuditLogType,
   JournalEventType,
   ObserverNoteType,
@@ -934,7 +935,7 @@ export const DEMO_AUDIT: readonly DemoAuditEntry[] = [
   {
     at: '2026-10-21T07:30:00-05:00',
     user: null,
-    role: 'desconocido',
+    role: AUDIT_UNKNOWN_ROLE,
     type: AuditLogType.Login,
     action: 'Intento de ingreso fallido',
     detail: 'Credenciales no válidas',

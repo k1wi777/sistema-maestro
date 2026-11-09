@@ -14,11 +14,47 @@ permissions:
   contents: read
 
 jobs:
+  # Decides how much to test. Fail-safe: only an explicit `affected` or `none`
+  # narrows the tests; an empty or missing output (failed job) runs everything.
+  changes:
+    name: Select tests
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      db: ${{ steps.plan.outputs.db }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      # Pull requests to an epic branch get the selection; PRs to main and pushes run everything.
+      - id: plan
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = "pull_request" ] && [[ "$BASE_REF" == epic/* ]]; then
+            node scripts/test-affected.mjs --plan --base "origin/$BASE_REF"
+          else
+            echo "mode=all" >> "$GITHUB_OUTPUT"
+            echo "db=true" >> "$GITHUB_OUTPUT"
+            echo "### Test selection: mode all (PR to main or push)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
   ci:
     name: Lint, test and build
+    needs: changes
+    # Keeps running if `changes` fails: a skipped job would count as passing.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       # Reads the pnpm version from packageManager in package.json.
       - uses: pnpm/action-setup@v6
@@ -32,11 +68,21 @@ jobs:
       - run: pnpm lint
       # Typechecks the seed scripts (Node runs them with type stripping, without tsc).
       - run: pnpm --filter @gns/api typecheck:seed
-      - run: pnpm test
+      - name: Tests (selected)
+        if: ${{ needs.changes.outputs.mode == 'affected' }}
+        run: pnpm test:affected --base "origin/${{ github.base_ref }}"
+      - name: Tests (none affected)
+        if: ${{ needs.changes.outputs.mode == 'none' }}
+        run: echo "No changed file affects tests; skipped (lint, typecheck:seed and build still run)."
+      - name: Tests (all)
+        if: ${{ needs.changes.outputs.mode != 'affected' && needs.changes.outputs.mode != 'none' }}
+        run: pnpm test
       - run: pnpm build
 
   database:
     name: Database migrations and tests
+    needs: changes
+    if: ${{ !cancelled() && ((needs.changes.outputs.mode != 'affected' && needs.changes.outputs.mode != 'none') || needs.changes.outputs.db == 'true') }}
     runs-on: ubuntu-latest
     # Same PostgreSQL as docker-compose.yml, without MinIO.
     services:

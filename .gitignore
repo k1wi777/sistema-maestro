@@ -18,3 +18,6 @@ coverage/
 .env.*
 !.env.example
 .next/
+
+# Cliente de Prisma generado (pnpm db:generate)
+apps/api/src/generated/

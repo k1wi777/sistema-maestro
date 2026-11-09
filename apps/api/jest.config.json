@@ -1,9 +1,27 @@
 {
-  "testEnvironment": "node",
-  "rootDir": "src",
-  "testMatch": ["**/*.spec.ts"],
-  "moduleFileExtensions": ["js", "json", "ts"],
-  "transform": {
-    "^.+\\.ts$": ["ts-jest", { "tsconfig": "<rootDir>/../tsconfig.json" }]
-  }
+  "projects": [
+    {
+      "displayName": "unit",
+      "testEnvironment": "node",
+      "rootDir": "src",
+      "testMatch": ["**/*.spec.ts"],
+      "moduleFileExtensions": ["js", "json", "ts"],
+      "transform": {
+        "^.+\\.ts$": ["ts-jest", { "tsconfig": "<rootDir>/../tsconfig.json" }]
+      }
+    },
+    {
+      "displayName": "integration",
+      "testEnvironment": "node",
+      "rootDir": "test/integration",
+      "testMatch": ["**/*.int-spec.ts"],
+      "moduleFileExtensions": ["js", "json", "ts"],
+      "globalSetup": "<rootDir>/support/global-setup.ts",
+      "globalTeardown": "<rootDir>/support/global-teardown.ts",
+      "transform": {
+        "^.+\\.ts$": ["ts-jest", { "tsconfig": "<rootDir>/../tsconfig.json" }]
+      }
+    }
+  ],
+  "testTimeout": 30000
 }

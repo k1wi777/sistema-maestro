@@ -11,3 +11,13 @@ allowBuilds:
   '@parcel/watcher': false
   '@prisma/engines': false
   prisma: false
+  # Dependencias transitivas de Testcontainers (docker-modem -> ssh2):
+  # ssh2 y cpu-features compilan módulos nativos opcionales; ssh2 tiene alternativa en
+  # JS puro y Testcontainers no usa SSH contra Docker local ni en la CI.
+  # protobufjs (postinstall) solo ajusta el esquema de versiones del paquete.
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
+  # Dependencia transitiva de swagger-ui-dist (@nestjs/swagger): su postinstall solo
+  # envía telemetría de uso; Swagger UI funciona igual sin ejecutarlo.
+  '@scarf/scarf': false
