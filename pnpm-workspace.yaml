@@ -18,3 +18,6 @@ allowBuilds:
   cpu-features: false
   protobufjs: false
   ssh2: false
+  # Dependencia transitiva de swagger-ui-dist (@nestjs/swagger): su postinstall solo
+  # envía telemetría de uso; Swagger UI funciona igual sin ejecutarlo.
+  '@scarf/scarf': false

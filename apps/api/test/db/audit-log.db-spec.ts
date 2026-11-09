@@ -50,6 +50,14 @@ describe('immutable audit log', () => {
       }
     });
 
+    it('has USAGE on the public schema so it can reach the tables', async () => {
+      const result = await db.client.query<{ allowed: boolean }>(
+        `SELECT has_schema_privilege($1, 'public', 'USAGE') AS allowed`,
+        [APP_ROLE],
+      );
+      expect(result.rows[0]?.allowed).toBe(true);
+    });
+
     it('can read and write the other 26 tables', async () => {
       const result = await db.client.query<{ table_name: string }>(
         `SELECT table_name FROM information_schema.tables

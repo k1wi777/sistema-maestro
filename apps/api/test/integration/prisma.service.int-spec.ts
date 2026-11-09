@@ -12,7 +12,7 @@ describe('PrismaService', () => {
 
     const rows = await prisma.$queryRaw<{ db: string }[]>`SELECT current_database() AS db`;
     expect(rows[0]?.db).toBe('test');
-    expect(process.env.DATABASE_URL).not.toContain('/gns');
+    expect(new URL(process.env.DATABASE_URL ?? '').pathname).not.toBe('/gns');
 
     const disconnect = jest.spyOn(prisma, '$disconnect');
     await app.close();
