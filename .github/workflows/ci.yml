@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, 'epic/**']
   push:
-    branches: [main]
+    branches: [main, 'epic/**']
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -30,5 +30,57 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Typechecks the seed scripts (Node runs them with type stripping, without tsc).
+      - run: pnpm --filter @gns/api typecheck:seed
       - run: pnpm test
       - run: pnpm build
+
+  database:
+    name: Database migrations and tests
+    runs-on: ubuntu-latest
+    # Same PostgreSQL as docker-compose.yml, without MinIO.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: gns
+          POSTGRES_PASSWORD: gns
+          POSTGRES_DB: gns
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U gns -d gns"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://gns:gns@localhost:5432/gns
+      # The demo commands only run with NODE_ENV development or test, on a local database.
+      NODE_ENV: test
+      SEED_ADMIN_NAME: Administrador GNS
+      SEED_ADMIN_EMAIL: administrador@gns.test
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      # Applies every migration, checks that schema.prisma matches the migrated
+      # database and runs the database tests (triggers, privileges, CHECK, activities
+      # and seeds).
+      - run: pnpm --filter @gns/api db:deploy
+      - run: pnpm --filter @gns/api db:check
+      # The initial data load must be idempotent: running it twice changes nothing.
+      - run: pnpm --filter @gns/api db:seed
+      - run: pnpm --filter @gns/api db:seed
+      - run: pnpm test:db
+      # Demo data: load, test with it present, then reset the local database
+      # (prisma migrate reset, which a CI job may run) and check only the initial data remains.
+      - run: pnpm --filter @gns/api db:demo:load
+      - run: pnpm test:db
+      - run: pnpm --filter @gns/api db:demo:clear

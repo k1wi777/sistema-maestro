@@ -1,0 +1,574 @@
+// Modelo de datos de la Plataforma GNS: 27 tablas en 7 módulos.
+// Modelos y campos en inglés, mapeados a tablas y columnas en español (snake_case).
+// Lo que Prisma no expresa (triggers de la bitácora, privilegios y CHECK) vive en
+// las migraciones SQL escritas a mano.
+//
+// Convenciones del mapeo:
+// - Los UUID los genera la base (gen_random_uuid()), no el cliente, para que los
+//   seeds y el SQL directo también reciban id.
+// - Las relaciones usan NoAction, como el modelo validado: borrar un padre
+//   referenciado falla en lugar de propagar el borrado.
+// - Los estados y tipos son varchar + CHECK (no enums) y sus valores viven en
+//   @gns/shared.
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Identidad y acceso ----------
+
+model User {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName           String   @map("nombre_completo") @db.VarChar(120)
+  institutionalEmail String   @unique @map("correo_institucional") @db.VarChar(160)
+  role               String   @map("rol") @db.VarChar(20)
+  status             String   @map("estado") @db.VarChar(10)
+  createdById        String?  @map("creado_por") @db.Uuid
+  createdAt          DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  createdBy          User?               @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdUsers       User[]              @relation("UserCreatedBy")
+  dataConsents       DataConsent[]
+  teacherAssignments TeacherAssignment[]
+  lessonPlans        LessonPlan[]
+  reviews            Review[]
+  sharedActivities   SharedActivity[]
+  favoriteActivities FavoriteActivity[]
+  fieldJournals      FieldJournal[]
+  observerNotes      ObserverNote[]
+  moduleProgress     ModuleProgress[]
+  activityProgress   ActivityProgress[]
+  certificates       Certificate[]
+  updatedFaqEntries  FaqEntry[]
+  auditLogs          AuditLog[]
+
+  @@index([createdById])
+  @@map("usuario")
+}
+
+model DataConsent {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("usuario_id") @db.Uuid
+  policyVersion String   @map("version_politica") @db.VarChar(20)
+  acceptedAt    DateTime @map("aceptado_en") @db.Timestamptz(6)
+  checkedItems  String[] @map("casillas")
+  createdAt     DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Una aceptación por usuario y versión del aviso.
+  @@unique([userId, policyVersion])
+  @@index([userId])
+  @@map("consentimiento_datos")
+}
+
+// ---------- Estructura académica ----------
+
+model EducationLevel {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique @map("nombre") @db.VarChar(60)
+  sortOrder Int      @map("orden") @db.SmallInt
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  grades           Grade[]
+  sharedActivities SharedActivity[]
+
+  @@map("nivel")
+}
+
+model Grade {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  levelId   String   @map("nivel_id") @db.Uuid
+  name      String   @unique @map("nombre") @db.VarChar(40)
+  sortOrder Int      @map("orden") @db.SmallInt
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  level              EducationLevel      @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teacherAssignments TeacherAssignment[]
+  lessonPlans        LessonPlan[]
+  fieldJournals      FieldJournal[]
+  observerNotes      ObserverNote[]
+
+  @@index([levelId])
+  @@map("grado")
+}
+
+model Area {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @unique @map("nombre") @db.VarChar(80)
+  type      String   @map("tipo") @db.VarChar(12)
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacherAssignments TeacherAssignment[]
+  lessonPlans        LessonPlan[]
+  sharedActivities   SharedActivity[]
+  trainingPlans      TrainingPlan[]
+
+  @@map("area")
+}
+
+model AcademicPeriod {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  schoolYear String    @map("anio_lectivo") @db.VarChar(9)
+  number     Int       @map("numero") @db.SmallInt
+  startDate  DateTime? @map("fecha_inicio") @db.Date
+  endDate    DateTime? @map("fecha_fin") @db.Date
+  createdAt  DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  lessonPlans   LessonPlan[]
+  fieldJournals FieldJournal[]
+
+  @@unique([schoolYear, number])
+  @@map("periodo_academico")
+}
+
+model TeacherAssignment {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId         String   @map("docente_id") @db.Uuid
+  gradeId           String   @map("grado_id") @db.Uuid
+  areaId            String   @map("area_id") @db.Uuid
+  schoolYear        String   @map("anio_lectivo") @db.VarChar(9)
+  isHomeroomTeacher Boolean  @default(false) @map("es_director_grupo")
+  createdAt         DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher User  @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade   Grade @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  area    Area  @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([teacherId, gradeId, areaId, schoolYear])
+  @@index([teacherId])
+  @@index([gradeId])
+  @@index([areaId])
+  @@map("asignacion_docente")
+}
+
+// ---------- Planeación ----------
+
+model LessonPlan {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId             String    @map("docente_id") @db.Uuid
+  gradeId               String    @map("grado_id") @db.Uuid
+  areaId                String    @map("area_id") @db.Uuid
+  periodId              String    @map("periodo_id") @db.Uuid
+  dateFrom              DateTime? @map("fecha_desde") @db.Date
+  dateTo                DateTime? @map("fecha_hasta") @db.Date
+  topic                 String?   @map("tema") @db.VarChar(160)
+  crossCuttingProject   String?   @map("proyecto_transversal") @db.VarChar(60)
+  expectedPerformance   String?   @map("desempeno_esperado") @db.Text
+  learningCorner        String?   @map("rincon") @db.VarChar(60)
+  curiocityStage        String?   @map("etapa_curiocity") @db.VarChar(20)
+  explorationMoment     String?   @map("momento_exploracion") @db.Text
+  developmentMoment     String?   @map("momento_desarrollo") @db.Text
+  socializationMoment   String?   @map("momento_socializacion") @db.Text
+  closingMoment         String?   @map("momento_cierre") @db.Text
+  resources             String?   @map("recursos") @db.Text
+  reasonableAdjustments String?   @map("ajustes_razonables") @db.Text
+  status                String    @map("estado") @db.VarChar(14)
+  submittedAt           DateTime? @map("enviada_en") @db.Timestamptz(6)
+  createdAt             DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt             DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher         User                 @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade           Grade                @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  area            Area                 @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  period          AcademicPeriod       @relation(fields: [periodId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  linkedResources LessonPlanResource[]
+
+  @@index([teacherId])
+  @@index([gradeId])
+  @@index([areaId])
+  @@index([periodId])
+  @@map("planeacion")
+}
+
+model LessonPlanResource {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lessonPlanId String   @map("planeacion_id") @db.Uuid
+  tool         String   @map("herramienta") @db.VarChar(20)
+  name         String?  @map("nombre") @db.VarChar(120)
+  url          String   @db.Text
+  moment       Int?     @map("momento") @db.SmallInt
+  createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  lessonPlan LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([lessonPlanId])
+  @@map("recurso_planeacion")
+}
+
+// Registro polimórfico: registro_id apunta a una planeación, un diario o una
+// anotación según tipo_registro, por eso no tiene llave foránea.
+model Review {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recordType     String   @map("tipo_registro") @db.VarChar(12)
+  recordId       String   @map("registro_id") @db.Uuid
+  reviewerId     String   @map("revisor_id") @db.Uuid
+  action         String   @map("accion") @db.VarChar(14)
+  comment        String?  @map("comentario") @db.Text
+  adjustedFields String[] @map("campos_ajustados")
+  date           DateTime @map("fecha") @db.Timestamptz(6)
+  createdAt      DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  reviewer User @relation(fields: [reviewerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([reviewerId])
+  @@index([recordType, recordId])
+  @@map("revision")
+}
+
+model SharedActivity {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId        String   @map("autor_id") @db.Uuid
+  levelId         String?  @map("nivel_id") @db.Uuid
+  areaId          String?  @map("area_id") @db.Uuid
+  title           String   @map("titulo") @db.VarChar(160)
+  objective       String?  @map("objetivo") @db.Text
+  durationMinutes Int?     @map("duracion_min") @db.SmallInt
+  materials       String?  @map("materiales") @db.Text
+  steps           String   @map("pasos") @db.Text
+  link            String?  @map("enlace") @db.Text
+  createdAt       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  author    User               @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  level     EducationLevel?    @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  area      Area?              @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  favorites FavoriteActivity[]
+
+  @@index([authorId])
+  @@index([levelId])
+  @@index([areaId])
+  @@map("actividad_repositorio")
+}
+
+model FavoriteActivity {
+  userId     String @map("usuario_id") @db.Uuid
+  activityId String @map("actividad_id") @db.Uuid
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  activity SharedActivity @relation(fields: [activityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([userId, activityId])
+  @@map("favorito_actividad")
+}
+
+// ---------- Formatos ----------
+
+model FieldJournal {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String    @map("docente_id") @db.Uuid
+  gradeId     String    @map("grado_id") @db.Uuid
+  periodId    String    @map("periodo_id") @db.Uuid
+  status      String    @map("estado") @db.VarChar(14)
+  submittedAt DateTime? @map("enviada_en") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher User                @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade   Grade               @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  period  AcademicPeriod      @relation(fields: [periodId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  entries FieldJournalEntry[]
+
+  @@unique([teacherId, gradeId, periodId])
+  @@index([teacherId])
+  @@index([gradeId])
+  @@index([periodId])
+  @@map("diario_campo")
+}
+
+model FieldJournalEntry {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journalId    String   @map("diario_id") @db.Uuid
+  date         DateTime @map("fecha") @db.Date
+  lesson       String?  @map("clase") @db.VarChar(80)
+  eventType    String   @map("tipo_evento") @db.VarChar(10)
+  // Privacidad: solo nombres de pila, sin otros datos de los estudiantes.
+  studentNames String?  @map("estudiantes") @db.VarChar(160)
+  description  String   @map("descripcion") @db.Text
+  actions      String?  @map("acciones") @db.Text
+  reflection   String?  @map("reflexion") @db.Text
+  createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  journal FieldJournal @relation(fields: [journalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([journalId])
+  @@map("diario_entrada")
+}
+
+model ObserverNote {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId        String   @map("docente_id") @db.Uuid
+  gradeId          String   @map("grado_id") @db.Uuid
+  // Privacidad: solo el nombre de pila del estudiante, sin datos sensibles.
+  studentFirstName String   @map("estudiante_nombre") @db.VarChar(40)
+  date             DateTime @map("fecha") @db.Date
+  type             String   @map("tipo") @db.VarChar(12)
+  description      String   @map("descripcion") @db.Text
+  studentVersion   String?  @map("version_estudiante") @db.Text
+  actions          String?  @map("acciones") @db.Text
+  familyInformed   Boolean  @default(false) @map("familia_informada")
+  followUp         String?  @map("seguimiento") @db.Text
+  status           String   @map("estado") @db.VarChar(14)
+  createdAt        DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt        DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher User  @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade   Grade @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([teacherId])
+  @@index([gradeId])
+  @@map("observador_anotacion")
+}
+
+// ---------- Plan de formación ----------
+
+model TrainingPlan {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // Vacío = plan General para todos los docentes.
+  areaId     String?  @map("area_id") @db.Uuid
+  name       String   @map("nombre") @db.VarChar(120)
+  schoolYear String?  @map("anio_lectivo") @db.VarChar(9)
+  createdAt  DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  area    Area?            @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  modules TrainingModule[]
+
+  @@index([areaId])
+  @@map("plan_formacion")
+}
+
+// `status` admite `borrador` (módulo aún no publicado, sin progreso) además de
+// `activo` y `fuera_del_plan`; el CHECK vive en la migración.
+model TrainingModule {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId             String   @map("plan_id") @db.Uuid
+  part               String?  @map("parte") @db.VarChar(60)
+  number             String?  @map("numero") @db.VarChar(4)
+  sortOrder          Int      @map("orden") @db.SmallInt
+  title              String   @map("titulo") @db.VarChar(160)
+  summary            String?  @map("resumen") @db.Text
+  videoUrl           String?  @map("video_url") @db.Text
+  videoTitle         String?  @map("video_titulo") @db.VarChar(160)
+  presentationUrl    String?  @map("presentacion_url") @db.Text
+  status             String   @map("estado") @db.VarChar(14)
+  // Desafío GNS: porcentaje para aprobar y tiempo fijo por pregunta (nulo = tiempo vigente por tipo).
+  approvalThreshold  Int      @default(80) @map("umbral_aprobacion") @db.SmallInt
+  secondsPerQuestion Int?     @map("segundos_por_pregunta") @db.SmallInt
+  createdAt          DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt          DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  plan         TrainingPlan        @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  slides       Slide[]
+  questions    ChallengeQuestion[]
+  progress     ModuleProgress[]
+  certificates Certificate[]
+  activities   TrainingActivity[]
+
+  @@index([planId])
+  @@map("modulo_formacion")
+}
+
+model Slide {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId  String   @map("modulo_id") @db.Uuid
+  sortOrder Int      @map("orden") @db.SmallInt
+  title     String?  @map("titulo") @db.VarChar(160)
+  keyIdeas  String?  @map("ideas_clave") @db.Text
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  module TrainingModule @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([moduleId])
+  @@map("diapositiva")
+}
+
+model ChallengeQuestion {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId        String   @map("modulo_id") @db.Uuid
+  sortOrder       Int      @map("orden") @db.SmallInt
+  type            String   @map("tipo") @db.VarChar(8)
+  prompt          String   @map("enunciado") @db.Text
+  feedback        String?  @map("retroalimentacion") @db.Text
+  trueFalseAnswer Boolean? @map("respuesta_vf")
+  createdAt       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  module  TrainingModule   @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  options QuestionOption[]
+
+  @@index([moduleId])
+  @@map("pregunta_desafio")
+}
+
+model QuestionOption {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  questionId      String   @map("pregunta_id") @db.Uuid
+  text            String   @map("texto") @db.VarChar(200)
+  isCorrect       Boolean? @map("es_correcta")
+  correctPosition Int?     @map("orden_correcto") @db.SmallInt
+  createdAt       DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  question ChallengeQuestion @relation(fields: [questionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([questionId])
+  @@map("opcion_pregunta")
+}
+
+model ModuleProgress {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId            String    @map("docente_id") @db.Uuid
+  moduleId             String    @map("modulo_id") @db.Uuid
+  videoViewedAt        DateTime? @map("video_visto_en") @db.Timestamptz(6)
+  presentationViewedAt DateTime? @map("presentacion_vista_en") @db.Timestamptz(6)
+  bestScore            Int?      @map("mejor_puntaje") @db.SmallInt
+  passedAt             DateTime? @map("aprobado_en") @db.Timestamptz(6)
+  completedAt          DateTime? @map("terminado_en") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt            DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher  User               @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  module   TrainingModule     @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  attempts ChallengeAttempt[]
+
+  @@unique([teacherId, moduleId])
+  @@index([teacherId])
+  @@index([moduleId])
+  @@map("progreso_modulo")
+}
+
+model ChallengeAttempt {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  progressId String   @map("progreso_id") @db.Uuid
+  score      Int      @map("puntaje") @db.SmallInt
+  points     Int      @map("puntos")
+  date       DateTime @map("fecha") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  progress ModuleProgress @relation(fields: [progressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([progressId])
+  @@map("intento_desafio")
+}
+
+model Certificate {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId String   @map("docente_id") @db.Uuid
+  // Vacío = certificado de la ruta completa.
+  moduleId  String?  @map("modulo_id") @db.Uuid
+  code      String   @unique @map("codigo") @db.VarChar(20)
+  issuedAt  DateTime @map("emitido_en") @db.Timestamptz(6)
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher User            @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  module  TrainingModule? @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([teacherId])
+  @@index([moduleId])
+  @@map("certificado")
+}
+
+// Actividad configurable de un módulo. `configuracion` es JSON validado con los
+// esquemas Zod de @gns/shared según `tipo`; la base solo exige un objeto.
+// Un módulo termina cuando se completan todas las actividades obligatorias activas.
+model TrainingActivity {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId     String   @map("modulo_id") @db.Uuid
+  type         String   @map("tipo") @db.VarChar(16)
+  sortOrder    Int      @map("orden") @db.SmallInt
+  title        String   @map("titulo") @db.VarChar(160)
+  isRequired   Boolean  @map("obligatoria")
+  instructions String?  @map("instrucciones") @db.VarChar(500)
+  status       String   @map("estado") @db.VarChar(14)
+  config       Json     @map("configuracion") @db.JsonB
+  createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  module   TrainingModule     @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  progress ActivityProgress[]
+
+  @@index([moduleId])
+  @@map("actividad_modulo")
+}
+
+// Progreso de un docente en una actividad. `completedAt` no nulo = completada.
+model ActivityProgress {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String    @map("docente_id") @db.Uuid
+  activityId  String    @map("actividad_id") @db.Uuid
+  completedAt DateTime? @map("completada_en") @db.Timestamptz(6)
+  bestScore   Int?      @map("mejor_puntaje") @db.SmallInt
+  bestPoints  Int?      @map("mejores_puntos")
+  attempts    Int       @default(0) @map("intentos") @db.SmallInt
+  detail      Json?     @map("detalle") @db.JsonB
+  createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher  User             @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  activity TrainingActivity @relation(fields: [activityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([teacherId, activityId])
+  @@index([teacherId])
+  @@index([activityId])
+  @@map("progreso_actividad")
+}
+
+// ---------- Asistente ----------
+
+model FaqEntry {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category    String   @map("categoria") @db.VarChar(40)
+  question    String   @map("pregunta") @db.VarChar(200)
+  answer      String   @map("respuesta") @db.Text
+  keywords    String?  @map("palabras_clave") @db.Text
+  source      String?  @map("fuente") @db.VarChar(120)
+  isActive    Boolean  @default(false) @map("activa")
+  updatedById String?  @map("actualizado_por") @db.Uuid
+  createdAt   DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([updatedById])
+  @@map("pregunta_frecuente")
+}
+
+// ---------- Auditoría ----------
+
+// Solo inserción: los triggers de la migración immutable_audit_log rechazan
+// UPDATE, DELETE y TRUNCATE. El id es GENERATED ALWAYS AS IDENTITY en la
+// migración init_schema (Prisma solo expresa autoincrement()).
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  occurredAt DateTime @default(now()) @map("fecha_hora") @db.Timestamptz(6)
+  // Opcional: ingresos fallidos y acciones del sistema no tienen usuario.
+  userId     String?  @map("usuario_id") @db.Uuid
+  role       String   @map("rol") @db.VarChar(20)
+  type       String   @map("tipo") @db.VarChar(20)
+  action     String   @map("accion") @db.VarChar(160)
+  entity     String?  @map("entidad") @db.VarChar(40)
+  entityId   String?  @map("entidad_id") @db.Uuid
+  detail     String?  @map("detalle") @db.Text
+  dataBefore Json?    @map("datos_antes") @db.JsonB
+  dataAfter  Json?    @map("datos_despues") @db.JsonB
+
+  user User? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId])
+  @@index([occurredAt(sort: Desc)])
+  @@map("bitacora")
+}
