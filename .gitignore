@@ -1,0 +1,9 @@
+# Harness REI y configuración local de agentes (no se versionan)
+.rei/
+.claude/
+
+# Documentos de contexto del proyecto (no se versionan)
+CONTEXTO_Plataforma_GNS.md
+Backlog_de_desarrollo_Plataforma_GNS.md
+Diagrama_base_de_datos_Plataforma_GNS.html
+Modelo_de_datos_y_procesos_Plataforma_GNS.pdf
