@@ -30,6 +30,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
+      # Typechecks the seed scripts (Node runs them with type stripping, without tsc).
+      - run: pnpm --filter @gns/api typecheck:seed
       - run: pnpm test
       - run: pnpm build
 
@@ -53,6 +55,10 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://gns:gns@localhost:5432/gns
+      # The demo commands only run with NODE_ENV development or test, on a local database.
+      NODE_ENV: test
+      SEED_ADMIN_NAME: Administrador GNS
+      SEED_ADMIN_EMAIL: administrador@gns.test
     steps:
       - uses: actions/checkout@v7
 
@@ -65,7 +71,16 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       # Applies every migration, checks that schema.prisma matches the migrated
-      # database and runs the database tests (triggers, privileges and CHECK).
+      # database and runs the database tests (triggers, privileges, CHECK, activities
+      # and seeds).
       - run: pnpm --filter @gns/api db:deploy
       - run: pnpm --filter @gns/api db:check
+      # The initial data load must be idempotent: running it twice changes nothing.
+      - run: pnpm --filter @gns/api db:seed
+      - run: pnpm --filter @gns/api db:seed
       - run: pnpm test:db
+      # Demo data: load, test with it present, then reset the local database
+      # (prisma migrate reset, which a CI job may run) and check only the initial data remains.
+      - run: pnpm --filter @gns/api db:demo:load
+      - run: pnpm test:db
+      - run: pnpm --filter @gns/api db:demo:clear

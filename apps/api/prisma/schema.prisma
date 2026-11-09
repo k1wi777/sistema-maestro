@@ -1,4 +1,4 @@
-// Modelo de datos de la Plataforma GNS: 25 tablas en 7 módulos.
+// Modelo de datos de la Plataforma GNS: 27 tablas en 7 módulos.
 // Modelos y campos en inglés, mapeados a tablas y columnas en español (snake_case).
 // Lo que Prisma no expresa (triggers de la bitácora, privilegios y CHECK) vive en
 // las migraciones SQL escritas a mano.
@@ -38,6 +38,7 @@ model User {
   fieldJournals      FieldJournal[]
   observerNotes      ObserverNote[]
   moduleProgress     ModuleProgress[]
+  activityProgress   ActivityProgress[]
   certificates       Certificate[]
   updatedFaqEntries  FaqEntry[]
   auditLogs          AuditLog[]
@@ -366,6 +367,7 @@ model TrainingModule {
   questions    ChallengeQuestion[]
   progress     ModuleProgress[]
   certificates Certificate[]
+  activities   TrainingActivity[]
 
   @@index([planId])
   @@map("modulo_formacion")
@@ -472,6 +474,50 @@ model Certificate {
   @@index([teacherId])
   @@index([moduleId])
   @@map("certificado")
+}
+
+// Actividad configurable de un módulo. `configuracion` es JSON validado con los
+// esquemas Zod de @gns/shared según `tipo`; la base solo exige un objeto.
+// Un módulo termina cuando se completan todas las actividades obligatorias activas.
+model TrainingActivity {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  moduleId   String   @map("modulo_id") @db.Uuid
+  type       String   @map("tipo") @db.VarChar(16)
+  sortOrder  Int      @map("orden") @db.SmallInt
+  title      String   @map("titulo") @db.VarChar(160)
+  isRequired Boolean  @map("obligatoria")
+  status     String   @map("estado") @db.VarChar(14)
+  config     Json     @map("configuracion") @db.JsonB
+  createdAt  DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt  DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  module   TrainingModule     @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  progress ActivityProgress[]
+
+  @@index([moduleId])
+  @@map("actividad_modulo")
+}
+
+// Progreso de un docente en una actividad. `completedAt` no nulo = completada.
+model ActivityProgress {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String    @map("docente_id") @db.Uuid
+  activityId  String    @map("actividad_id") @db.Uuid
+  completedAt DateTime? @map("completada_en") @db.Timestamptz(6)
+  bestScore   Int?      @map("mejor_puntaje") @db.SmallInt
+  bestPoints  Int?      @map("mejores_puntos")
+  attempts    Int       @default(0) @map("intentos") @db.SmallInt
+  detail      Json?     @map("detalle") @db.JsonB
+  createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  teacher  User             @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  activity TrainingActivity @relation(fields: [activityId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([teacherId, activityId])
+  @@index([teacherId])
+  @@index([activityId])
+  @@map("progreso_actividad")
 }
 
 // ---------- Asistente ----------

@@ -10,10 +10,15 @@ if (existsSync(envFile)) {
   process.loadEnvFile(envFile);
 }
 
+const runInitial =
+  'node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env prisma/seed/run-initial.ts';
+
 export default defineConfig({
   schema: join('prisma', 'schema.prisma'),
   migrations: {
     path: join('prisma', 'migrations'),
+    // Datos iniciales idempotentes; los datos demo nunca se cargan por aquí.
+    seed: runInitial,
   },
   datasource: {
     url: env('DATABASE_URL'),

@@ -7,6 +7,7 @@ import {
   RecordStatus,
   ReviewAction,
   ReviewRecordType,
+  TrainingActivityType,
   TrainingModuleStatus,
   UserRole,
   UserStatus,
@@ -23,6 +24,7 @@ import {
   insertLessonPlan,
   insertObserverNote,
   insertReview,
+  insertTrainingActivity,
   insertTrainingModule,
   insertUser,
   type Row,
@@ -134,6 +136,22 @@ const CASES: CheckCase[] = [
     updatable: true,
   },
   {
+    table: 'actividad_modulo',
+    column: 'tipo',
+    allowed: Object.values(TrainingActivityType),
+    rejected: ['quiz'],
+    insert: insertTrainingActivity,
+    updatable: true,
+  },
+  {
+    table: 'actividad_modulo',
+    column: 'estado',
+    allowed: Object.values(TrainingModuleStatus),
+    rejected: ['inactivo'],
+    insert: insertTrainingActivity,
+    updatable: true,
+  },
+  {
     table: 'pregunta_desafio',
     column: 'tipo',
     allowed: Object.values(ChallengeQuestionType),
@@ -163,7 +181,7 @@ async function checkConstraintValues(table: string, column: string): Promise<str
 }
 
 describe('check constraints', () => {
-  it('declares one named CHECK per constrained column and for the period number', async () => {
+  it('declares one named CHECK per constrained column and for the numeric and JSON rules', async () => {
     const result = await db.client.query<{ conname: string }>(
       `SELECT conname FROM pg_constraint
        WHERE contype = 'c' AND connamespace = 'public'::regnamespace ORDER BY conname`,
@@ -172,7 +190,10 @@ describe('check constraints', () => {
     expect(result.rows.map((row) => row.conname)).toEqual(
       [
         ...CASES.map(({ table, column }) => `${table}_${column}_check`),
+        'actividad_modulo_configuracion_check',
         'periodo_academico_numero_check',
+        'progreso_actividad_intentos_check',
+        'progreso_actividad_mejor_puntaje_check',
       ].sort(),
     );
   });
