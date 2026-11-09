@@ -2,6 +2,7 @@ import { expectSqlError, useTestDatabase } from './support/database';
 import {
   insertAuditLog,
   insertObserverNote,
+  insertReview,
   insertRow,
   insertTeacherAssignment,
   insertUser,
@@ -173,6 +174,17 @@ describe('migrated schema', () => {
       const entry = await insertAuditLog(db.client, { usuario_id: null });
 
       expect(entry.usuario_id).toBeNull();
+    });
+
+    it('stores the adjusted values of a review as nullable jsonb (revision.cambios)', async () => {
+      const column = await db.client.query<ColumnInfo>(
+        `SELECT data_type, is_nullable FROM information_schema.columns
+         WHERE table_name = 'revision' AND column_name = 'cambios'`,
+      );
+      const review = await insertReview(db.client);
+
+      expect(column.rows[0]).toMatchObject({ data_type: 'jsonb', is_nullable: 'YES' });
+      expect(review.cambios).toBeNull();
     });
   });
 });

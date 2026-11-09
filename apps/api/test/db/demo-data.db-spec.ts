@@ -1,16 +1,20 @@
 import {
   AuditLogType,
+  crossCuttingProjectFor,
+  levelAllowsCuriocity,
   JournalEventType,
   ObserverNoteType,
   RecordStatus,
+  REVIEW_DECISION_RESULT_STATUS,
   ReviewAction,
+  ReviewDecision,
   ReviewRecordType,
   TrainingActivityType,
   UserRole,
   UserStatus,
 } from '@gns/shared';
 import type { Client } from 'pg';
-import { DEMO_EMAIL_DOMAIN, REVIEW_RESULT_STATUS } from '../../prisma/seed/demo/demo.data.ts';
+import { DEMO_EMAIL_DOMAIN } from '../../prisma/seed/demo/demo.data.ts';
 import { isDemoLoaded, loadDemoData } from '../../prisma/seed/demo/load-demo.ts';
 import { useTestDatabase } from './support/database';
 
@@ -116,6 +120,29 @@ describe('demo records (R19)', () => {
     }
   });
 
+  it('gives every lesson plan the cross-cutting project of its level and period, and CurioCity only in secondary', async () => {
+    const plans = await rows(
+      `SELECT p.proyecto_transversal, p.etapa_curiocity, n.nombre AS nivel, pa.numero
+       FROM planeacion p JOIN grado g ON g.id = p.grado_id JOIN nivel n ON n.id = g.nivel_id
+       JOIN periodo_academico pa ON pa.id = p.periodo_id
+       WHERE p.docente_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE],
+    );
+
+    expect(plans.length).toBeGreaterThan(0);
+    for (const plan of plans) {
+      const level = String(plan.nivel);
+      expect([level, plan.numero, plan.proyecto_transversal]).toEqual([
+        level,
+        plan.numero,
+        crossCuttingProjectFor(level, Number(plan.numero)),
+      ]);
+      if (plan.etapa_curiocity !== null) {
+        expect(levelAllowsCuriocity(level)).toBe(true);
+      }
+    }
+  });
+
   it('uses learning corners in preschool, the CurioCity stage in secondary and a linked resource', async () => {
     const preschool = await count(
       `SELECT count(*) FROM planeacion p JOIN grado g ON g.id = p.grado_id JOIN nivel n ON n.id = g.nivel_id
@@ -207,7 +234,26 @@ describe('demo reviews (R20)', () => {
         await rows(`SELECT estado FROM ${table} WHERE id = $1`, [review.registro_id])
       )[0];
 
-      expect(record?.estado).toBe(REVIEW_RESULT_STATUS[review.accion as ReviewAction]);
+      // `ajuste` nunca es la última fila: no determina estado y siempre lo sigue una decisión.
+      expect(review.accion).not.toBe(ReviewAction.Adjustment);
+      expect(record?.estado).toBe(REVIEW_DECISION_RESULT_STATUS[review.accion as ReviewDecision]);
+    }
+  });
+
+  it('follows every adjustment with a decision on the same record', async () => {
+    const reviews = await demoReviews();
+    const adjustments = reviews.filter((row) => row.accion === ReviewAction.Adjustment);
+
+    expect(adjustments.length).toBeGreaterThan(0);
+    for (const adjustment of adjustments) {
+      const decided = reviews.some(
+        (row) =>
+          row.registro_id === adjustment.registro_id &&
+          row.accion !== ReviewAction.Adjustment &&
+          new Date(row.fecha as Date) > new Date(adjustment.fecha as Date),
+      );
+
+      expect(decided).toBe(true);
     }
   });
 

@@ -3,6 +3,7 @@ import type { INestApplication } from '@nestjs/common';
 import { apiErrorBodySchema, UserRole, UserStatus } from '@gns/shared';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
+import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
 import { asUser, createTestUser, signIn, type Cookies, type TestUser } from './support/session';
 
 interface YearBody {
@@ -44,8 +45,11 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
   let coordinator: Cookies;
   let teacherUser: TestUser;
   let teacher: Cookies;
+  let releaseSchoolYear: () => Promise<void>;
 
   beforeAll(async () => {
+    // Exclusivo: las pruebas de planeación necesitan un año vigente estable y no corren a la vez.
+    releaseSchoolYear = await holdSchoolYearLock('exclusive');
     app = await createTestApp({ withFailures: false });
     prisma = app.get(PrismaService);
     await prisma.schoolYear.updateMany({ data: { isCurrent: null } });
@@ -55,10 +59,11 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
     coordinator = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
     teacherUser = await createTestUser(app);
     teacher = await signIn(app, teacherUser);
-  });
+  }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
     await app.close();
+    await releaseSchoolYear();
   });
 
   type Method = 'get' | 'post' | 'put' | 'patch';

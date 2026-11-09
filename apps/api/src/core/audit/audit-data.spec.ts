@@ -4,6 +4,7 @@ import {
   diffFirstLevel,
   normalizeAuditData,
   prepareAuditData,
+  resolveAuditDetail,
 } from './audit-data';
 
 describe('normalizeAuditData', () => {
@@ -71,5 +72,24 @@ describe('diffFirstLevel', () => {
       before: { n: 1 },
       after: { n: 2 },
     });
+  });
+});
+
+describe('resolveAuditDetail', () => {
+  it('uses the trimmed text of the body key, which prevails over the fixed detail', () => {
+    expect(
+      resolveAuditDetail({ detail: 'fijo', detailFromBody: 'reason' }, { reason: '  Duplicada  ' }),
+    ).toBe('Duplicada');
+  });
+
+  it.each([{}, { reason: '   ' }, { reason: 5 }, null, undefined])(
+    'falls back to the fixed detail when the body has no text (%j)',
+    (body) => {
+      expect(resolveAuditDetail({ detail: 'fijo', detailFromBody: 'reason' }, body)).toBe('fijo');
+    },
+  );
+
+  it('is null without a fixed detail or a body key', () => {
+    expect(resolveAuditDetail({}, { reason: 'x' })).toBeNull();
   });
 });

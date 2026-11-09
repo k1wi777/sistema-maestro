@@ -27,6 +27,7 @@ import {
   insertFieldJournalEntry,
   insertGrade,
   insertLessonPlan,
+  insertLessonPlanResource,
   insertObserverNote,
   insertPasswordCredential,
   insertReview,
@@ -222,6 +223,8 @@ describe('check constraints', () => {
         'modulo_formacion_segundos_por_pregunta_check',
         'modulo_formacion_umbral_aprobacion_check',
         'periodo_academico_numero_check',
+        'recurso_planeacion_momento_check',
+        'revision_cambios_check',
         'progreso_actividad_intentos_check',
         'progreso_actividad_mejor_puntaje_check',
       ].sort(),
@@ -318,6 +321,42 @@ describe('check constraints', () => {
         CHECK_VIOLATION,
         `UPDATE modulo_formacion SET segundos_por_pregunta = $1 WHERE id = $2`,
         [value, (await insertTrainingModule(db.client)).id],
+      );
+    });
+  });
+
+  describe('recurso_planeacion.momento', () => {
+    it.each([null, 1, 4])('accepts %s', async (value) => {
+      const resource = await insertLessonPlanResource(db.client, { momento: value });
+
+      expect(resource.momento).toBe(value);
+    });
+
+    it.each([0, 5, -1])('rejects %i', async (value) => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE recurso_planeacion SET momento = $1 WHERE id = $2`,
+        [value, (await insertLessonPlanResource(db.client)).id],
+      );
+    });
+  });
+
+  describe('revision.cambios', () => {
+    const stored = JSON.stringify({ tema: { antes: 'A', despues: 'B' } });
+
+    it.each([null, stored, '{}'])('accepts %s', async (value) => {
+      const review = await insertReview(db.client, { cambios: value });
+
+      expect(review.cambios).toEqual(value === null ? null : JSON.parse(value));
+    });
+
+    it.each(['[]', '"texto"', '1'])('rejects the non-object %s', async (value) => {
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE revision SET cambios = $1::jsonb WHERE id = $2`,
+        [value, (await insertReview(db.client)).id],
       );
     });
   });

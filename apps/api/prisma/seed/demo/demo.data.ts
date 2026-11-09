@@ -171,7 +171,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     status: RecordStatus.Reviewed,
     submittedAt: '2026-09-18T09:00:00-05:00',
     topic: 'Fracciones en la tienda escolar',
-    crossCuttingProject: 'STEAM+H',
+    crossCuttingProject: 'Ciudad+',
     learningCorner: 'Zona de pensamiento lógico-matemático',
     linkedResources: [
       {
@@ -218,7 +218,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     status: RecordStatus.Submitted,
     submittedAt: '2026-10-20T16:45:00-05:00',
     topic: 'El mito de la caverna',
-    crossCuttingProject: 'Ciudad+',
+    crossCuttingProject: 'STEAM+H',
     curiocityStage: 'Investigo',
     reasonableAdjustments: 'Lectura guiada en parejas y tiempo adicional para la socialización.',
   }),
@@ -241,7 +241,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     status: RecordStatus.Reviewed,
     submittedAt: '2026-10-09T08:15:00-05:00',
     topic: 'Germinación de frijoles',
-    crossCuttingProject: 'STEAM+H',
+    crossCuttingProject: 'Ciudad+',
     learningCorner: 'Estación sensorial',
   }),
 ];
@@ -599,7 +599,7 @@ export const DEMO_REVIEWS: readonly DemoReview[] = [
     COORDINATOR_1,
     ReviewAction.Approved,
     '2026-09-19T10:00:00-05:00',
-    'Planeación clara y coherente con el proyecto STEAM+H.',
+    'Planeación clara y coherente con el proyecto Ciudad+.',
   ),
   review(
     'r3',
@@ -610,6 +610,16 @@ export const DEMO_REVIEWS: readonly DemoReview[] = [
     '2026-09-23T11:30:00-05:00',
     'Se ajustaron los recursos y el cierre para alinearlos con la etapa Interactúo.',
     ['recursos', 'momento_cierre'],
+  ),
+  // Todo ajuste va seguido de la decisión que fija el estado del registro (como hace la API).
+  review(
+    'r11',
+    ReviewRecordType.LessonPlan,
+    'pl6',
+    COORDINATOR_2,
+    ReviewAction.Approved,
+    '2026-09-23T11:31:00-05:00',
+    'Planeación aprobada con los ajustes aplicados.',
   ),
   review(
     'r4',
@@ -675,14 +685,16 @@ export const DEMO_REVIEWS: readonly DemoReview[] = [
     'Se redactó la descripción en términos objetivos.',
     ['descripcion'],
   ),
+  review(
+    'r12',
+    ReviewRecordType.ObserverNote,
+    'n7',
+    COORDINATOR_2,
+    ReviewAction.Approved,
+    '2026-10-22T13:01:00-05:00',
+    'Anotación aprobada con la redacción ajustada.',
+  ),
 ];
-
-/** Estado en que debe quedar un registro según su última revisión. */
-export const REVIEW_RESULT_STATUS: Record<ReviewAction, RecordStatus> = {
-  [ReviewAction.Approved]: RecordStatus.Reviewed,
-  [ReviewAction.Adjustment]: RecordStatus.Reviewed,
-  [ReviewAction.ChangesRequested]: RecordStatus.ChangesRequested,
-};
 
 // ---------- Formación ----------
 
