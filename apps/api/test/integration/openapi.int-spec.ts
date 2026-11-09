@@ -51,7 +51,11 @@ function registeredRoutes(app: INestApplication): RegisteredRoute[] {
 const ERROR_REF = '#/components/schemas/ApiErrorBody';
 
 // Endpoints que no reciben cuerpo: la sesión viaja en cookies.
-const BODYLESS = new Set(['post /auth/logout', 'post /auth/refresh']);
+const BODYLESS = new Set([
+  'post /auth/logout',
+  'post /auth/refresh',
+  'put /school-years/{id}/current',
+]);
 
 describe('documentación OpenAPI', () => {
   let app: INestApplication;
@@ -125,6 +129,9 @@ describe('documentación OpenAPI', () => {
       ['/auth/me', 'get'],
       ['/consent', 'get'],
       ['/consent', 'post'],
+      ['/teacher-assignments', 'get'],
+      ['/school-years/{id}/current', 'put'],
+      ['/me/assignments', 'get'],
     ] as const) {
       const operation = operations[path]?.[method];
       expect(operation?.security).toEqual([{ cookie: [] }]);

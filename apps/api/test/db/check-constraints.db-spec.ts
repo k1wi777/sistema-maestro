@@ -9,6 +9,7 @@ import {
   ReviewRecordType,
   CHALLENGE_DEFAULT_APPROVAL_THRESHOLD,
   CHALLENGE_SECONDS_PER_QUESTION_LIMITS,
+  TeacherAssignmentStatus,
   TrainingActivityStatus,
   TrainingActivityType,
   TrainingModuleStatus,
@@ -24,11 +25,14 @@ import {
   insertChallengeQuestion,
   insertFieldJournal,
   insertFieldJournalEntry,
+  insertGrade,
   insertLessonPlan,
   insertObserverNote,
   insertPasswordCredential,
   insertReview,
+  insertSchoolYear,
   insertSession,
+  insertTeacherAssignment,
   insertTrainingActivity,
   insertTrainingModule,
   insertUser,
@@ -38,6 +42,8 @@ import {
 const db = useTestDatabase();
 
 const CHECK_VIOLATION = '23514';
+const UNIQUE_VIOLATION = '23505';
+const FOREIGN_KEY_VIOLATION = '23503';
 
 interface CheckCase {
   table: string;
@@ -166,6 +172,14 @@ const CASES: CheckCase[] = [
     updatable: true,
   },
   {
+    table: 'asignacion_docente',
+    column: 'estado',
+    allowed: Object.values(TeacherAssignmentStatus),
+    rejected: ['inactiva', 'Activa'],
+    insert: insertTeacherAssignment,
+    updatable: true,
+  },
+  {
     table: 'bitacora',
     column: 'tipo',
     allowed: Object.values(AuditLogType),
@@ -197,6 +211,8 @@ describe('check constraints', () => {
       [
         ...CASES.map(({ table, column }) => `${table}_${column}_check`),
         'actividad_modulo_configuracion_check',
+        'anio_lectivo_codigo_check',
+        'anio_lectivo_vigente_check',
         'credencial_contrasena_hash_check',
         'sesion_expira_en_check',
         'sesion_generacion_check',
@@ -319,6 +335,72 @@ describe('check constraints', () => {
         CHECK_VIOLATION,
         `INSERT INTO periodo_academico (anio_lectivo, numero) VALUES ('2026-2027', $1)`,
         [number],
+      );
+    });
+  });
+
+  describe('anio_lectivo.codigo', () => {
+    it('accepts consecutive years', async () => {
+      const year = await insertSchoolYear(db.client, { codigo: '2031-2032' });
+
+      expect(year.codigo).toBe('2031-2032');
+    });
+
+    it.each(['2031', '2031-2033', '2032-2031', '31-32', '2031/2032', 'abcd-efgh'])(
+      'rejects %s',
+      async (code) => {
+        await expectSqlError(
+          db.client,
+          CHECK_VIOLATION,
+          `INSERT INTO anio_lectivo (codigo) VALUES ($1)`,
+          [code],
+        );
+      },
+    );
+  });
+
+  describe('anio_lectivo.vigente', () => {
+    it('is NULL by default and rejects false', async () => {
+      expect((await insertSchoolYear(db.client)).vigente).toBeNull();
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `INSERT INTO anio_lectivo (codigo, vigente) VALUES ('3031-3032', false)`,
+      );
+    });
+
+    it('allows many non-current years but at most one current', async () => {
+      // La base de pruebas puede tener un vigente (seed); el ROLLBACK de la prueba lo restaura.
+      await db.client.query('UPDATE anio_lectivo SET vigente = NULL');
+      await insertSchoolYear(db.client);
+      await insertSchoolYear(db.client);
+      await insertSchoolYear(db.client, { codigo: '3041-3042', vigente: true });
+
+      await expectSqlError(
+        db.client,
+        UNIQUE_VIOLATION,
+        `INSERT INTO anio_lectivo (codigo, vigente) VALUES ('3043-3044', true)`,
+      );
+    });
+  });
+
+  describe('año lectivo referenciado por periodos y asignaciones', () => {
+    it('rejects a period or an assignment of an unregistered year', async () => {
+      await expectSqlError(
+        db.client,
+        FOREIGN_KEY_VIOLATION,
+        `INSERT INTO periodo_academico (anio_lectivo, numero) VALUES ('1999-2000', 1)`,
+      );
+      await expectSqlError(
+        db.client,
+        FOREIGN_KEY_VIOLATION,
+        `INSERT INTO asignacion_docente (docente_id, grado_id, area_id, anio_lectivo)
+         VALUES ($1, $2, $3, '1999-2000')`,
+        [
+          (await insertUser(db.client)).id,
+          (await insertGrade(db.client)).id,
+          (await insertArea(db.client)).id,
+        ],
       );
     });
   });

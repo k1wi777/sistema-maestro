@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CoreModule } from './core/core.module';
 import { validateEnv } from './core/config/env.validation';
+import { StructureModule } from './modules/estructura/structure.module';
 import { IdentityModule } from './modules/identidad/identity.module';
 import { DatabaseModule } from './shared/database/database.module';
 
@@ -16,6 +17,7 @@ import { DatabaseModule } from './shared/database/database.module';
     DatabaseModule,
     CoreModule,
     IdentityModule,
+    StructureModule,
   ],
 })
 export class AppModule {}
