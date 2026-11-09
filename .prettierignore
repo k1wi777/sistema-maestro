@@ -1,3 +1,5 @@
 # Documentos del harness con formato propio y lockfile generado.
 *.md
 pnpm-lock.yaml
+# Cliente de Prisma generado.
+apps/api/src/generated/

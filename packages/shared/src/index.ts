@@ -8,4 +8,5 @@ export * from './constants/record-status';
 export * from './constants/review';
 export * from './constants/training';
 export * from './constants/user';
+export * from './list-query';
 export * from './training-activities';

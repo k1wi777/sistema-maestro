@@ -11,6 +11,15 @@
 // - Los estados y tipos son varchar + CHECK (no enums) y sus valores viven en
 //   @gns/shared.
 
+// El cliente se genera dentro de src/ porque el generador emite TypeScript que
+// se compila con la API. Es un artefacto (no se versiona): `pnpm db:generate`,
+// que el postinstall del monorepo ejecuta y que no necesita base de datos.
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
 datasource db {
   provider = "postgresql"
 }
