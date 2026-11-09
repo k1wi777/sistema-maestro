@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { activityKey, shortText } from './common';
 
+const httpsUrl = z.url({ protocol: /^https$/, error: 'La URL debe usar https.' }).max(500);
+
 const cardSchema = z.strictObject({
   clave: activityKey,
   emoji: shortText(8),
@@ -8,6 +10,7 @@ const cardSchema = z.strictObject({
   titulo: shortText(80),
   dato: shortText(200),
   hechos: z.array(shortText(300)).min(1).max(6),
+  enlace: z.strictObject({ texto: shortText(60), url: httpsUrl }).optional(),
   pregunta: z
     .strictObject({
       enunciado: shortText(200),

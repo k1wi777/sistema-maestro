@@ -30,6 +30,7 @@ export interface TrainingModuleSeed {
   title: string;
   summary: string;
   videoUrl: string | null;
+  videoTitle: string;
   slides: readonly SlideSeed[];
   questions: readonly ChallengeQuestionSeed[];
 }
@@ -45,6 +46,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     summary:
       'Misión, visión, propósito, principios, jornada laboral, beneficios, evaluación de desempeño y políticas institucionales.',
     videoUrl: null,
+    videoTitle: 'Video de bienvenida',
     slides: [],
     questions: [
       {
@@ -150,6 +152,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     title: 'Antecedente histórico GNS · Marco epistemológico y científico',
     summary: 'Orígenes del colegio y bases científicas de nuestro modelo.',
     videoUrl: 'https://youtu.be/LAj4tbIR0J4',
+    videoTitle: 'Video 1 · Antecedente histórico GNS',
     slides: [
       {
         title: "De Pimpones a George's Noble School",
@@ -298,6 +301,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     title: 'Objetivo del modelo GNS',
     summary: 'Qué buscamos lograr con nuestra metodología.',
     videoUrl: 'https://youtu.be/secrhIHAJUE',
+    videoTitle: 'Video 2 · Objetivo del modelo GNS',
     slides: [
       {
         title: '¿Qué busca el modelo GNSM?',
@@ -437,6 +441,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     summary:
       'Estructura de nuestra enseñanza: Journey Learning, CurioCity, proyectos transversales y CLIL.',
     videoUrl: 'https://youtu.be/0aLrOdXbtzw',
+    videoTitle: 'Video 3 · Propuesta pedagógica',
     slides: [
       {
         title: 'Journey Learning: estrategias macro',
@@ -599,6 +604,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     title: 'Claves y diferenciadores',
     summary: 'Lo que nos hace únicos en el entorno educativo.',
     videoUrl: 'https://youtu.be/0q_7N2KdPyk',
+    videoTitle: 'Video 4 · Claves y diferenciadores',
     slides: [
       {
         title: 'Colegio bilingüe, calendario B',
@@ -721,6 +727,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     title: 'Recomendaciones para Preescolar Bajo',
     summary: 'Red, Blue, Purple, Green y Garden: niños y niñas de 2 a 4 años.',
     videoUrl: 'https://youtu.be/fbFqeVVZT48',
+    videoTitle: 'Video 5 · Recomendaciones Preescolar Bajo',
     slides: [
       {
         title: 'El ciclo de Preescolar Bajo',
@@ -866,6 +873,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     title: 'Recomendaciones para Preescolar Alto (KTF)',
     summary: 'Kinder, Transition y First Grade: niños y niñas de 4 a 7 años.',
     videoUrl: 'https://youtu.be/zfzinmmUsJU',
+    videoTitle: 'Video 6 · Recomendaciones Preescolar Alto',
     slides: [
       {
         title: 'El ciclo KTF',
@@ -1005,6 +1013,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     summary:
       'Propósito, principios y competencias institucionales, estructura de liderazgo, y cómo funcionan tu contrato y tu nómina.',
     videoUrl: null,
+    videoTitle: 'Video · Nuestro talento humano',
     slides: [],
     questions: [
       {
@@ -1152,6 +1161,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
     summary:
       'Ahorro mutuo, bono de desempeño, bilingüismo, quinquenios, posgrados, cabaña en Coveñas y mucho más. ¡Descúbrelos jugando!',
     videoUrl: null,
+    videoTitle: 'Video · Plan de beneficios',
     slides: [],
     questions: [],
   },

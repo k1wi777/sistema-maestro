@@ -1,9 +1,18 @@
 /** Estado de un módulo dentro de su plan (`modulo_formacion.estado`). */
 export const TrainingModuleStatus = {
+  Draft: 'borrador',
   Active: 'activo',
   OutOfPlan: 'fuera_del_plan',
 } as const;
 export type TrainingModuleStatus = (typeof TrainingModuleStatus)[keyof typeof TrainingModuleStatus];
+
+/** Estado de una actividad del módulo (`actividad_modulo.estado`); no admite borrador. */
+export const TrainingActivityStatus = {
+  Active: 'activo',
+  OutOfPlan: 'fuera_del_plan',
+} as const;
+export type TrainingActivityStatus =
+  (typeof TrainingActivityStatus)[keyof typeof TrainingActivityStatus];
 
 /** Tipo de pregunta del Desafío GNS (`pregunta_desafio.tipo`). */
 export const ChallengeQuestionType = {

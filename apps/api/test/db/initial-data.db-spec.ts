@@ -1,4 +1,12 @@
-import { AreaType, TrainingModuleStatus, UserRole, UserStatus } from '@gns/shared';
+import {
+  AreaType,
+  parseActivityConfig,
+  TrainingActivityStatus,
+  TrainingActivityType,
+  TrainingModuleStatus,
+  UserRole,
+  UserStatus,
+} from '@gns/shared';
 import type { Client } from 'pg';
 import { parseAdminConfig } from '../../prisma/seed/initial/admin-config.ts';
 import { BENEFITS_ACTIVITIES } from '../../prisma/seed/initial/benefits.data.ts';
@@ -126,7 +134,7 @@ describe('initial data content', () => {
     expect(plans[0]?.nombre).toBe(GENERAL_PLAN_NAME);
 
     const modules = await rows(
-      `SELECT numero, parte, orden, titulo, resumen, video_url, presentacion_url, estado
+      `SELECT numero, parte, orden, titulo, resumen, video_url, video_titulo, presentacion_url, estado
        FROM modulo_formacion WHERE plan_id = $1 ORDER BY orden`,
       [plans[0]?.id],
     );
@@ -139,6 +147,7 @@ describe('initial data content', () => {
         titulo: module.title,
         resumen: module.summary,
         video_url: module.videoUrl,
+        video_titulo: module.videoTitle,
         presentacion_url: null,
         estado: TrainingModuleStatus.Active,
       })),
@@ -246,13 +255,107 @@ describe('initial data content', () => {
         orden: index + 1,
         titulo: activity.title,
         obligatoria: activity.isRequired,
-        estado: TrainingModuleStatus.Active,
+        estado: TrainingActivityStatus.Active,
       })),
     );
     expect(activities.filter((activity) => activity.obligatoria).map((a) => a.titulo)).toEqual([
       'Conecta',
       '¿Verdad o mito?',
     ]);
+  });
+
+  it('has the prototype video titles, also on modules without a link', async () => {
+    const modules = await rows(
+      `SELECT m.numero, m.video_titulo, m.video_url FROM modulo_formacion m
+       JOIN plan_formacion p ON p.id = m.plan_id WHERE p.area_id IS NULL ORDER BY m.orden`,
+    );
+
+    expect(modules.map((module) => module.video_titulo)).toEqual([
+      'Video de bienvenida',
+      'Video 1 · Antecedente histórico GNS',
+      'Video 2 · Objetivo del modelo GNS',
+      'Video 3 · Propuesta pedagógica',
+      'Video 4 · Claves y diferenciadores',
+      'Video 5 · Recomendaciones Preescolar Bajo',
+      'Video 6 · Recomendaciones Preescolar Alto',
+      'Video · Nuestro talento humano',
+      'Video · Plan de beneficios',
+    ]);
+    expect(modules.filter((module) => module.video_url === null).map((m) => m.numero)).toEqual([
+      '0',
+      '7',
+      '8',
+    ]);
+  });
+
+  it('has the activity instructions and the default Challenge settings on the modules', async () => {
+    const activities = await rows(
+      `SELECT titulo, instrucciones FROM actividad_modulo ORDER BY orden`,
+    );
+    const modules = await rows(
+      `SELECT DISTINCT umbral_aprobacion, segundos_por_pregunta FROM modulo_formacion`,
+    );
+
+    expect(activities).toEqual(
+      BENEFITS_ACTIVITIES.map((activity) => ({
+        titulo: activity.title,
+        instrucciones: activity.instructions ?? null,
+      })),
+    );
+    expect(activities.map((activity) => activity.instrucciones !== null)).toEqual([
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+    ]);
+    expect(modules).toEqual([{ umbral_aprobacion: 80, segundos_por_pregunta: null }]);
+  });
+
+  it('has the referral link and the simulator presentation data from the prototype', async () => {
+    const stored = await rows(
+      `SELECT tipo, titulo, configuracion FROM actividad_modulo ORDER BY orden`,
+    );
+    const config = (title: string): Row =>
+      stored.find((activity) => activity.titulo === title)?.configuracion as Row;
+    const wheel = config('Ruleta de beneficios') as { tarjetas: Row[] };
+    const referrals = wheel.tarjetas.find((card) => card.clave === 'referidos');
+    const simulators = stored.filter(
+      (activity) => activity.tipo === TrainingActivityType.Simulator,
+    );
+
+    expect(referrals?.enlace).toMatchObject({ texto: 'Formulario de referidos' });
+    expect(String((referrals?.enlace as Row).url)).toMatch(/^https:\/\//);
+    expect(
+      Object.fromEntries(
+        simulators.map((activity) => [activity.titulo, (activity.configuracion as Row).icono]),
+      ),
+    ).toEqual({
+      'Simulador de ahorro mutuo': '🐷',
+      'Simulador de bono de desempeño': '🏅',
+      'Simulador de bono de antigüedad': '📈',
+      'Simulador de cabaña en Coveñas': '🏖️',
+      'Simulador de bilingüismo': '🗣️',
+    });
+    for (const activity of simulators) {
+      const simulator = activity.configuracion as {
+        destacado: { clave: string; subtitulo: string };
+        resultados: { clave: string }[];
+      };
+      expect(simulator.resultados.map((result) => result.clave)).toContain(
+        simulator.destacado.clave,
+      );
+      expect(
+        parseActivityConfig(TrainingActivityType.Simulator, activity.configuracion).success,
+      ).toBe(true);
+    }
+    for (const title of ['Simulador de ahorro mutuo', 'Simulador de bono de antigüedad']) {
+      const inputs = (config(title) as { entradas: Row[] }).entradas;
+      expect(inputs.find((input) => input.clave === 'anios')?.unidad).toBe('años');
+    }
   });
 
   it('keeps the salary of the simulators out of persistence', async () => {

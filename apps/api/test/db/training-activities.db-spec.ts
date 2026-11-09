@@ -3,6 +3,7 @@ import {
   insertActivityProgress,
   insertRow,
   insertTrainingActivity,
+  insertTrainingModule,
   insertUser,
 } from './support/fixtures';
 
@@ -11,7 +12,54 @@ const db = useTestDatabase();
 const CHECK_VIOLATION = '23514';
 const UNIQUE_VIOLATION = '23505';
 
+describe('modulo_formacion training settings', () => {
+  it('leaves a module inserted without the new columns with the defaults', async () => {
+    const module = await insertTrainingModule(db.client);
+
+    expect(module).toMatchObject({
+      estado: 'activo',
+      video_titulo: null,
+      umbral_aprobacion: 80,
+      segundos_por_pregunta: null,
+    });
+  });
+
+  it('stores a video title independently of the video link', async () => {
+    const module = await insertTrainingModule(db.client, { video_titulo: 'Video de bienvenida' });
+
+    expect(module).toMatchObject({ video_titulo: 'Video de bienvenida', video_url: null });
+  });
+
+  it('rejects a video title longer than 160 characters', async () => {
+    await expectSqlError(
+      db.client,
+      '22001',
+      `INSERT INTO modulo_formacion (plan_id, orden, titulo, estado, video_titulo)
+       VALUES ($1, 1, 'Módulo', 'activo', $2)`,
+      [(await insertTrainingModule(db.client)).plan_id, 'x'.repeat(161)],
+    );
+  });
+});
+
 describe('actividad_modulo', () => {
+  it('stores optional instructions up to 500 characters', async () => {
+    const without = await insertTrainingActivity(db.client);
+    const withText = await insertTrainingActivity(db.client, { instrucciones: 'x'.repeat(500) });
+
+    expect(without.instrucciones).toBeNull();
+    expect(String(withText.instrucciones)).toHaveLength(500);
+  });
+
+  it('rejects instructions longer than 500 characters', async () => {
+    await expectSqlError(
+      db.client,
+      '22001',
+      `INSERT INTO actividad_modulo (modulo_id, tipo, orden, titulo, obligatoria, estado, configuracion, instrucciones)
+       VALUES ($1, 'conecta', 1, 'Actividad', false, 'activo', '{}', $2)`,
+      [(await insertTrainingActivity(db.client)).modulo_id, 'x'.repeat(501)],
+    );
+  });
+
   it('accepts a JSON object as configuration', async () => {
     const activity = await insertTrainingActivity(db.client, { configuracion: { pares: [] } });
 

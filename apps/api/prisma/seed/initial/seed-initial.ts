@@ -1,4 +1,10 @@
-import { TrainingModuleStatus, UserRole, UserStatus, parseActivityConfig } from '@gns/shared';
+import {
+  TrainingActivityStatus,
+  TrainingModuleStatus,
+  UserRole,
+  UserStatus,
+  parseActivityConfig,
+} from '@gns/shared';
 import type { Client } from 'pg';
 import { insertForId, insertRow } from '../sql.ts';
 import type { AdminConfig } from './admin-config.ts';
@@ -143,6 +149,7 @@ async function seedGeneralPlan(
       titulo: module.title,
       resumen: module.summary,
       video_url: module.videoUrl,
+      video_titulo: module.videoTitle,
       estado: TrainingModuleStatus.Active,
     });
     counter.record('modulo_formacion', true);
@@ -192,7 +199,8 @@ async function seedGeneralPlan(
       orden: index + 1,
       titulo: activity.title,
       obligatoria: activity.isRequired,
-      estado: TrainingModuleStatus.Active,
+      instrucciones: activity.instructions ?? null,
+      estado: TrainingActivityStatus.Active,
       configuracion: activity.config,
     });
     counter.record('actividad_modulo', true);
