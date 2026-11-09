@@ -1257,8 +1257,9 @@ export const DEMO_AUDIT: readonly DemoAuditEntry[] = [
     'Ajustó una anotación del observador',
     { kind: 'review', key: 'r10' },
     {
-      before: { descripcion: 'Es muy líder y a veces mandón.' },
-      after: { descripcion: 'Lidera con respeto el trabajo en equipo y apoya a sus compañeros.' },
+      // La bitácora no conserva el texto de las anotaciones: se ve que cambió, no su contenido.
+      before: { descripcion: '[oculto]' },
+      after: { descripcion: '[oculto]' },
     },
   ),
 ];

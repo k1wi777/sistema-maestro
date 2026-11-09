@@ -3,6 +3,8 @@ import { isoDateTimeSchema } from '../api/iso-date-time';
 import { ReviewAction } from '../constants/review';
 
 export const REVIEW_COMMENT_MAX_LENGTH = 2000;
+export const VOID_REASON_MIN_LENGTH = 3;
+export const VOID_REASON_MAX_LENGTH = 300;
 
 /** Cambio de un campo ajustado por coordinación; `field` es la columna de la base. */
 export const reviewFieldChangeSchema = z.object({
@@ -102,3 +104,15 @@ export function fromStoredChanges(stored: unknown): ReviewFieldChange[] {
     after: value.despues ?? null,
   }));
 }
+
+/** Cuerpo de anular un registro pedagógico: el motivo queda en la bitácora. */
+export const voidRecordSchema = z
+  .object({
+    reason: z
+      .string({ error: 'debe ser texto' })
+      .trim()
+      .min(VOID_REASON_MIN_LENGTH, `debe tener al menos ${VOID_REASON_MIN_LENGTH} caracteres`)
+      .max(VOID_REASON_MAX_LENGTH, `debe tener como máximo ${VOID_REASON_MAX_LENGTH} caracteres`),
+  })
+  .strict();
+export type VoidRecordInput = z.output<typeof voidRecordSchema>;

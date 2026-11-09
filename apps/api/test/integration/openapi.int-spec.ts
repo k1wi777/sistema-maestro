@@ -56,6 +56,8 @@ const BODYLESS = new Set([
   'post /auth/refresh',
   'put /school-years/{id}/current',
   'post /lesson-plans/{id}/submit',
+  'post /field-journals/{id}/submit',
+  'post /observer-notes/{id}/submit',
   'put /shared-activities/{id}/favorite',
 ]);
 

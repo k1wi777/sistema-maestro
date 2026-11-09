@@ -1,6 +1,7 @@
 import {
   AuditLogType,
   crossCuttingProjectFor,
+  isStudentFirstName,
   levelAllowsCuriocity,
   JournalEventType,
   ObserverNoteType,
@@ -9,6 +10,7 @@ import {
   ReviewAction,
   ReviewDecision,
   ReviewRecordType,
+  splitStudents,
   TrainingActivityType,
   UserRole,
   UserStatus,
@@ -470,7 +472,7 @@ describe('demo privacy (R23)', () => {
     }
   });
 
-  it('stores only one-word first names for students', async () => {
+  it('stores only first names for students, with the shared rule', async () => {
     const notes = await rows(
       `SELECT estudiante_nombre FROM observador_anotacion WHERE docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
@@ -480,19 +482,51 @@ describe('demo privacy (R23)', () => {
        WHERE d.docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
     );
-    const oneWord = /^[\p{L}]+$/u;
 
     expect(notes.length).toBeGreaterThan(0);
     for (const note of notes) {
-      expect(String(note.estudiante_nombre)).toMatch(oneWord);
+      expect(isStudentFirstName(String(note.estudiante_nombre))).toBe(true);
     }
     for (const entry of journalEntries) {
-      const names = String(entry.estudiantes)
-        .split(',')
-        .map((name) => name.trim());
+      const names = splitStudents(typeof entry.estudiantes === 'string' ? entry.estudiantes : null);
       for (const name of names) {
-        expect(name).toMatch(oneWord);
+        expect(isStudentFirstName(name)).toBe(true);
       }
+    }
+  });
+
+  it('keeps student names and free texts out of the demo audit log of journals and observer notes', async () => {
+    const hidden = new Set([
+      'descripcion',
+      'acciones',
+      'reflexion',
+      'estudiantes',
+      'estudiante_nombre',
+      'version_estudiante',
+      'seguimiento',
+    ]);
+    const entries = await rows(
+      `SELECT accion, datos_antes, datos_despues FROM bitacora
+       WHERE usuario_id IN (SELECT id FROM usuario WHERE correo_institucional LIKE $1)
+         AND (tipo IN ('diario', 'observador') OR accion ILIKE '%observador%' OR accion ILIKE '%diario%')`,
+      [DEMO_LIKE],
+    );
+    const exposed = (value: unknown): string[] => {
+      if (Array.isArray(value)) {
+        return value.flatMap(exposed);
+      }
+      if (value !== null && typeof value === 'object') {
+        return Object.entries(value).flatMap(([key, inner]) =>
+          hidden.has(key) && inner !== '[oculto]' ? [key] : exposed(inner),
+        );
+      }
+      return [];
+    };
+
+    expect(entries.length).toBeGreaterThan(0);
+    for (const entry of entries) {
+      expect(exposed(entry.datos_antes)).toEqual([]);
+      expect(exposed(entry.datos_despues)).toEqual([]);
     }
   });
 });

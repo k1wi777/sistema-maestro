@@ -19,6 +19,12 @@ export interface AuditedOptions {
    * una anulación). Prevalece sobre `detail`; si el cuerpo no la trae como texto, se usa `detail`.
    */
   detailFromBody?: string;
+  /**
+   * Claves (en cualquier nivel) cuyo valor se guarda como `[oculto]` en `datos_antes/despues`:
+   * la bitácora es inmutable y no debe retener textos libres ni nombres de estudiantes. La
+   * comparación antes/después usa los valores reales, así que se ve qué campo cambió.
+   */
+  redact?: readonly string[];
 }
 
 /**
