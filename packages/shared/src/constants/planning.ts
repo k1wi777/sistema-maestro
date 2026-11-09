@@ -18,6 +18,20 @@ export const DigitalTool = {
 } as const;
 export type DigitalTool = (typeof DigitalTool)[keyof typeof DigitalTool];
 
+/**
+ * Estados de una planeación que cuentan como entregada en el cumplimiento: la envió el docente
+ * y que coordinación la devolviera o revisara no la convierte en no entregada. `borrador` y
+ * `anulado` no cuentan. Los comparte la API y la interfaz de seguimiento.
+ */
+export const LESSON_PLAN_DELIVERED_STATUSES = ['enviada', 'observaciones', 'revisada'] as const;
+
+/** Resultado de una celda (docente, grado, área, periodo) del cumplimiento de entregas. */
+export const ComplianceStatus = {
+  Delivered: 'entregado',
+  Pending: 'pendiente',
+} as const;
+export type ComplianceStatus = (typeof ComplianceStatus)[keyof typeof ComplianceStatus];
+
 /** Tope de enlaces digitales de una planeación. */
 export const LESSON_PLAN_MAX_RESOURCES = 30;
 

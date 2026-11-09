@@ -72,6 +72,7 @@ function setup(options: Options = {}) {
     findHomeroomOfAnotherTeacher: jest.fn(() => Promise.resolve(options.homeroomOfAnother ?? null)),
     lockGrade: jest.fn(() => Promise.resolve()),
     findActiveByTeacher: jest.fn(() => Promise.resolve(options.mine ?? [])),
+    findActiveByYear: jest.fn(() => Promise.resolve(options.mine ?? [])),
     create: jest.fn(() => Promise.resolve(assignment())),
     update: jest.fn((_id: string, changes: object) =>
       Promise.resolve({ ...(options.stored ?? assignment()), ...changes }),
@@ -338,5 +339,15 @@ describe('mis asignaciones', () => {
     const { service } = setup({ currentYear: null });
 
     await expect(service.listMine('teacher-1')).rejects.toBeInstanceOf(ConflictException);
+  });
+});
+
+describe('TeacherAssignmentsService.listActive', () => {
+  it('delega en el repository con el año recibido, sin paginar', async () => {
+    const mine = [assignment()];
+    const { service, repository } = setup({ mine });
+
+    await expect(service.listActive('2027-2028')).resolves.toEqual(mine);
+    expect(repository.findActiveByYear).toHaveBeenCalledWith('2027-2028');
   });
 });

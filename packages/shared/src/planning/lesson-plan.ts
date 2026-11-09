@@ -119,16 +119,24 @@ export const voidLessonPlanSchema = z
   .strict();
 export type VoidLessonPlanInput = z.output<typeof voidLessonPlanSchema>;
 
-export const LESSON_PLAN_SORT_FIELDS = ['updatedAt', 'createdAt'] as const;
+export const LESSON_PLAN_SORT_FIELDS = ['updatedAt', 'createdAt', 'submittedAt'] as const;
 export type LessonPlanSortField = (typeof LESSON_PLAN_SORT_FIELDS)[number];
 export const lessonPlanListQuerySchema = createListQuerySchema({
   sortFields: LESSON_PLAN_SORT_FIELDS,
   defaultSort: { field: 'updatedAt', order: 'desc' },
-  filters: { status: statusSchema.optional(), periodId: uuid.optional() },
+  filters: {
+    status: statusSchema.optional(),
+    periodId: uuid.optional(),
+    gradeId: uuid.optional(),
+    areaId: uuid.optional(),
+    teacherId: uuid.optional(),
+  },
 });
 export interface LessonPlanFilters {
   status?: RecordStatus;
   periodId?: string;
-  /** Lo fija el servicio con el docente de la sesión; no viene de la query. */
+  gradeId?: string;
+  areaId?: string;
+  /** Coordinación filtra por docente; a un docente el servicio lo fuerza a su propio id. */
   teacherId?: string;
 }

@@ -12,8 +12,11 @@ import { PrismaService } from '../../../shared/database/prisma.service';
 import {
   PrismaReadRepository,
   type ModelDelegate,
+  type OrderByClause,
 } from '../../../shared/repository/prisma-read.repository';
 import type {
+  DeliveredCount,
+  DeliveredFilters,
   LessonPlanChanges,
   LessonPlanContent,
   LessonPlanRecord,
@@ -132,6 +135,26 @@ export class PrismaLessonPlanRepository
     await this.prisma.db.$queryRaw`SELECT id FROM planeacion WHERE id = ${id}::uuid FOR UPDATE`;
   }
 
+  async countDelivered(filters: DeliveredFilters): Promise<DeliveredCount[]> {
+    const groups = await this.prisma.db.lessonPlan.groupBy({
+      by: ['teacherId', 'gradeId', 'areaId', 'periodId'],
+      where: {
+        status: { in: [...filters.statuses] },
+        period: { schoolYear: filters.schoolYear },
+        teacherId: filters.teacherId,
+        periodId: filters.periodId,
+      },
+      _count: { _all: true },
+    });
+    return groups.map((group) => ({
+      teacherId: group.teacherId,
+      gradeId: group.gradeId,
+      areaId: group.areaId,
+      periodId: group.periodId,
+      count: group._count._all,
+    }));
+  }
+
   // `ModelDelegate` no admite `include`: se envuelve el delegado para fijarlo en las lecturas.
   protected get delegate(): ModelDelegate<LessonPlanRow, Prisma.LessonPlanWhereInput> {
     const model = this.prisma.db.lessonPlan;
@@ -147,7 +170,17 @@ export class PrismaLessonPlanRepository
       teacherId: filters.teacherId,
       status: filters.status,
       periodId: filters.periodId,
+      gradeId: filters.gradeId,
+      areaId: filters.areaId,
     };
+  }
+
+  // PostgreSQL pone los NULL primero en DESC: sin esto los borradores (nunca enviados)
+  // encabezarían la bandeja al ordenar por fecha de envío.
+  protected override orderBy(field: LessonPlanSortField, order: 'asc' | 'desc'): OrderByClause {
+    return field === 'submittedAt'
+      ? { submittedAt: { sort: order, nulls: 'last' } }
+      : super.orderBy(field, order);
   }
 
   protected toEntity(row: LessonPlanRow): LessonPlan {

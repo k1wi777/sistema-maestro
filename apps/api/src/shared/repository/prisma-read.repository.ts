@@ -3,6 +3,12 @@ import type { PrismaPromise } from '../../generated/prisma/internal/prismaNamesp
 import type { PrismaService } from '../database/prisma.service';
 import type { ReadRepository } from './repository';
 
+/** Criterio de orden de Prisma: dirección simple o con posición de los nulos. */
+export type OrderByClause = Record<
+  string,
+  'asc' | 'desc' | { sort: 'asc' | 'desc'; nulls: 'first' | 'last' }
+>;
+
 export interface PageWindow {
   skip: number;
   take: number;
@@ -20,7 +26,7 @@ export function countPages(totalItems: number, pageSize: number): number {
 export interface ModelDelegate<TRow, TWhere> {
   findMany(args: {
     where?: TWhere;
-    orderBy: Record<string, 'asc' | 'desc'>[];
+    orderBy: OrderByClause[];
     skip: number;
     take: number;
   }): PrismaPromise<TRow[]>;
@@ -53,6 +59,11 @@ export abstract class PrismaReadRepository<
     return field === 'id' ? [] : [{ id: 'asc' }];
   }
 
+  /** Criterio del campo elegido; una subclase lo sobrescribe p. ej. para ordenar los nulos al final. */
+  protected orderBy(field: TSortField, order: 'asc' | 'desc'): OrderByClause {
+    return { [field]: order };
+  }
+
   async findById(id: string): Promise<TEntity | null> {
     const row = await this.delegate.findUnique({ where: { id } });
     return row ? this.toEntity(row) : null;
@@ -63,8 +74,8 @@ export abstract class PrismaReadRepository<
     const { skip, take } = toPageWindow(query.page, query.pageSize);
     // Los desempates dan un orden total: sin ellos, valores repetidos en el
     // campo de orden repetirían u omitirían filas entre páginas.
-    const orderBy: Record<string, 'asc' | 'desc'>[] = [
-      { [query.sort.field]: query.sort.order },
+    const orderBy: OrderByClause[] = [
+      this.orderBy(query.sort.field, query.sort.order),
       ...this.tieBreakers(query.sort.field),
     ];
 
@@ -81,7 +92,7 @@ export abstract class PrismaReadRepository<
 
   private async countAndFind(
     where: TWhere,
-    orderBy: Record<string, 'asc' | 'desc'>[],
+    orderBy: OrderByClause[],
     skip: number,
     take: number,
   ): Promise<[number, TRow[]]> {

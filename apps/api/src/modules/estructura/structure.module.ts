@@ -68,7 +68,13 @@ import { SchoolYearsService } from './school-years/school-years.service';
     TeacherAssignmentAuditSnapshot,
     { provide: TEACHER_ASSIGNMENT_REPOSITORY, useClass: PrismaTeacherAssignmentRepository },
   ],
-  // BE-5 a BE-7 consultan el año vigente, las asignaciones y los periodos por sus servicios.
-  exports: [SchoolYearsService, TeacherAssignmentsService, AcademicPeriodsService],
+  // BE-5 a BE-7 consultan el año vigente, las asignaciones, los periodos y los catálogos por sus servicios.
+  exports: [
+    SchoolYearsService,
+    TeacherAssignmentsService,
+    AcademicPeriodsService,
+    LevelsService,
+    AreasService,
+  ],
 })
 export class StructureModule {}

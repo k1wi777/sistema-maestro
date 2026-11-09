@@ -39,6 +39,23 @@ export type LessonPlanRecord = Record<LessonPlanAdjustableField, string | null> 
   updatedAt: Date;
 };
 
+export interface DeliveredFilters {
+  schoolYear: string;
+  /** Estados que cuentan como entregada. */
+  statuses: readonly RecordStatus[];
+  teacherId?: string;
+  periodId?: string;
+}
+
+/** Planeaciones entregadas de un docente en un grado, área y periodo. */
+export interface DeliveredCount {
+  teacherId: string;
+  gradeId: string;
+  areaId: string;
+  periodId: string;
+  count: number;
+}
+
 export interface LessonPlanRepository extends ReadRepository<
   LessonPlan,
   LessonPlanFilters,
@@ -57,6 +74,8 @@ export interface LessonPlanRepository extends ReadRepository<
   ): Promise<boolean>;
   /** Bloquea la fila hasta el fin de la transacción para serializar decisiones y altas de enlaces. */
   lock(id: string): Promise<void>;
+  /** Una sola consulta agrupada por docente, grado, área y periodo del año (cumplimiento). */
+  countDelivered(filters: DeliveredFilters): Promise<DeliveredCount[]>;
 }
 
 export const LESSON_PLAN_REPOSITORY = Symbol('LESSON_PLAN_REPOSITORY');
