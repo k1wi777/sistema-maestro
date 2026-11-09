@@ -72,6 +72,26 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'post', path: '/lesson-plans/:id/return', access: COORD },
   { method: 'get', path: '/lesson-plans/:id/reviews', access: TEACHER },
   { method: 'get', path: '/lesson-plan-compliance', access: COORD },
+  { method: 'get', path: '/field-journals', access: TEACHER },
+  { method: 'get', path: '/field-journals/:id', access: TEACHER },
+  { method: 'post', path: '/field-journals', access: TEACHER },
+  { method: 'post', path: '/field-journals/:id/entries', access: TEACHER },
+  { method: 'patch', path: '/field-journals/:id/entries/:entryId', access: TEACHER },
+  { method: 'delete', path: '/field-journals/:id/entries/:entryId', access: TEACHER },
+  { method: 'post', path: '/field-journals/:id/submit', access: TEACHER },
+  { method: 'post', path: '/field-journals/:id/void', access: TEACHER },
+  { method: 'post', path: '/field-journals/:id/approve', access: COORD },
+  { method: 'post', path: '/field-journals/:id/return', access: COORD },
+  { method: 'get', path: '/field-journals/:id/reviews', access: TEACHER },
+  { method: 'get', path: '/observer-notes', access: TEACHER },
+  { method: 'get', path: '/observer-notes/:id', access: TEACHER },
+  { method: 'post', path: '/observer-notes', access: TEACHER },
+  { method: 'patch', path: '/observer-notes/:id', access: TEACHER },
+  { method: 'post', path: '/observer-notes/:id/submit', access: TEACHER },
+  { method: 'post', path: '/observer-notes/:id/void', access: TEACHER },
+  { method: 'post', path: '/observer-notes/:id/approve', access: COORD },
+  { method: 'post', path: '/observer-notes/:id/return', access: COORD },
+  { method: 'get', path: '/observer-notes/:id/reviews', access: TEACHER },
   { method: 'get', path: '/shared-activities', access: TEACHER },
   { method: 'get', path: '/shared-activities/:id', access: TEACHER },
   { method: 'post', path: '/shared-activities', access: TEACHER },
@@ -127,7 +147,10 @@ describe('control de acceso por rol', () => {
   describe.each(EXPECTED_ROUTES.filter((route) => route.access !== PUBLIC))(
     '$method $path (rol mínimo $access)',
     (route) => {
-      const path = route.path.replace(':id', randomUUID()).replace(':resourceId', randomUUID());
+      const path = route.path
+        .replace(':id', randomUUID())
+        .replace(':resourceId', randomUUID())
+        .replace(':entryId', randomUUID());
       const call = (cookies?: Cookies) =>
         cookies
           ? asUser(app, route.method, path, cookies, 'access').send({})

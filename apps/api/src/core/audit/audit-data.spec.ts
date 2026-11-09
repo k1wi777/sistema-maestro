@@ -4,6 +4,7 @@ import {
   diffFirstLevel,
   normalizeAuditData,
   prepareAuditData,
+  redactAuditKeys,
   resolveAuditDetail,
 } from './audit-data';
 
@@ -91,5 +92,26 @@ describe('resolveAuditDetail', () => {
 
   it('is null without a fixed detail or a body key', () => {
     expect(resolveAuditDetail({}, { reason: 'x' })).toBeNull();
+  });
+});
+
+describe('redactAuditKeys', () => {
+  it('hides the named keys at any level, in arrays too, and keeps the rest', () => {
+    const data = normalizeAuditData({
+      description: 'texto',
+      status: 'borrador',
+      entries: [{ studentNames: 'Ana', lesson: 'Arte', actions: null }],
+    });
+    expect(redactAuditKeys(data, ['description', 'studentNames', 'actions'])).toEqual({
+      description: REDACTED,
+      status: 'borrador',
+      entries: [{ studentNames: REDACTED, lesson: 'Arte', actions: REDACTED }],
+    });
+  });
+
+  it('compares names without case or separators', () => {
+    expect(redactAuditKeys({ student_first_name: 'Ana' }, ['studentFirstName'])).toEqual({
+      student_first_name: REDACTED,
+    });
   });
 });
