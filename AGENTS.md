@@ -27,10 +27,6 @@ No continúes hasta completar estos pasos.
 
 # 2. Propósito del proyecto
 
-> **Personaliza esta sección** al adaptar REI Harness a tu repositorio. Describe el producto concreto, no el arnés.
-
-*Resume aquí el objetivo del proyecto. Esta información guía las decisiones del agente y evita cambios que contradigan la visión del producto.*
-
 ## Qué construimos
 
 La **Plataforma GNS**: la plataforma web institucional de George Noble School
@@ -63,8 +59,6 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 
 ## Qué NO es
 
-*Acota explícitamente el alcance del proyecto para evitar feature creep.*
-
 - No incluye en esta fase: despliegue (pruebas y producción), dominio, PIAR, control de notas, reporte a coordinación ni IA.
 - No es un sistema de gestión de estudiantes: no guarda datos personales de menores más allá del nombre de pila.
 - No permite autorregistro: los usuarios los crea el administrador.
@@ -73,10 +67,6 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 ---
 
 # 3. Stack técnico
-
-> **Personaliza esta sección** con el stack y los comandos reales de tu proyecto.
-
-*Documenta únicamente la información técnica esencial para comprender el proyecto.*
 
 ## Tecnologías principales
 
@@ -91,18 +81,15 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 
 ## Comandos principales
 
-*Comandos que cualquier agente utilizará con frecuencia.*
+Todos se ejecutan desde la raíz del repositorio.
 
-> **Estado:** todavía no existe código. Estos son los comandos **previstos**; se
-> habilitan con las tareas BE-01 a BE-05 del backlog (monorepo, lint, Docker
-> Compose, API y CI). Hasta entonces, no los ejecutes como verificación.
-
-- `pnpm install` — Instalar dependencias desde la raíz (BE-01).
-- `docker compose up -d` — Levantar PostgreSQL 16 y MinIO en local (BE-03).
-- `pnpm test` — Tests; levanta una base PostgreSQL temporal con Testcontainers (BE-27).
-- `pnpm lint` — Linter (ESLint + Prettier, BE-02).
-- `pnpm build` — Build de todo el monorepo con Turborepo (BE-01).
-- Comando de desarrollo (arrancar API y web en modo watch) — por definir en BE-01/BE-04.
+- `pnpm install` — Instalar dependencias; al terminar compila `@gns/shared` (necesario para el lint con tipos).
+- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`).
+- `pnpm build` — Build de todo el monorepo con Turborepo.
+- `pnpm lint` — ESLint + Prettier (solo comprobación); también corre en el hook de pre-commit sobre los archivos en stage.
+- `pnpm format` — Aplica el formato de Prettier.
+- `pnpm test` — Tests; hoy ejecuta las pruebas unitarias (Jest). La integración con PostgreSQL real (Testcontainers) llega en BE-27.
+- `docker compose up -d` — Levantar PostgreSQL 16 y MinIO en local.
 
 ---
 
@@ -112,8 +99,12 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 
 | Ruta | Propósito |
 |------|-----------|
-| `src/` | Código fuente del proyecto. |
-| `tests/` | Suite de pruebas. |
+| `apps/api/` | API NestJS (`@gns/api`); pruebas `*.spec.ts` junto al código. |
+| `apps/api/src/core/` | Núcleo transversal de la API; hoy, la configuración (variables de entorno validadas con Zod). |
+| `apps/web/` | Frontend (`@gns/web`); esqueleto TypeScript hasta FE-01 (Next.js). |
+| `packages/shared/` | Tipos, esquemas Zod y constantes compartidos (`@gns/shared`). |
+| `docker-compose.yml` | Entorno local: PostgreSQL 16 y MinIO. |
+| `.github/workflows/` | CI con GitHub Actions: lint, pruebas y build en cada pull request. |
 | `.rei/specs/` | Work Items y planificación del REI Harness. |
 | `.rei/progress/` | Estado actual (`current.md`), historial general (`history.md`) y detalle de Work Items. |
 | `.rei/progress/work-items/` | Registros detallados de cada Work Item, organizados cronológicamente. |
@@ -121,8 +112,11 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 | `.rei/docs/project/` | Documentación específica del proyecto. |
 | `.rei/agents/` | Roles y comportamiento de los subagentes (frontmatter + `## Contrato` + `## Referencia`). |
 | `.rei/adapters/` | Adaptadores de runtime (plantilla + mapa de herramientas); p. ej. `opencode/`. |
-| `cmd/`, `internal/` | Código del CLI `rei` (Go). |
 | `.rei/templates/` | Plantillas canónicas (`current.md`, `history.md`, `meta.json`). Fuente única de verdad. |
+
+- **Patrón repository en el backend:** controlador (recibe y valida) → servicio (reglas del negocio) → repository (único que toca la base de datos).
+- **Dependencias:** un módulo del backend usa a otro solo por su servicio exportado; una feature del frontend no importa otra feature; lo común va a `shared` (`apps/web/src/shared` o `packages/shared`).
+- Detalle de la arquitectura y la estructura prevista: `.rei/docs/project/architecture.md`.
 
 ---
 
