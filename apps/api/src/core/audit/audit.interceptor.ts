@@ -15,12 +15,13 @@ import {
 } from '../../shared/database/transaction-runner';
 import { AUDITED_KEY, type AuditedOptions } from './audited.decorator';
 import { AuditWriteError } from './audit-write.error';
-import { diffFirstLevel } from './audit-data';
+import { diffFirstLevel, resolveAuditDetail } from './audit-data';
 import type { AuditSnapshotSource } from './audit-snapshot';
 import type { RequestUser } from './request-user';
 
 interface AuditedRequest {
   params?: Record<string, unknown>;
+  body?: unknown;
   user?: RequestUser;
 }
 
@@ -85,7 +86,7 @@ export class AuditInterceptor implements NestInterceptor {
         action: options.action,
         entity: options.entity,
         entityId: entityId ?? null,
-        detail: options.detail ?? null,
+        detail: resolveAuditDetail(options, request.body),
         dataBefore: changes.before,
         dataAfter: changes.after,
       });

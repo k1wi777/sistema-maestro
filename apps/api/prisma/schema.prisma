@@ -281,6 +281,8 @@ model Review {
   action         String   @map("accion") @db.VarChar(14)
   comment        String?  @map("comentario") @db.Text
   adjustedFields String[] @map("campos_ajustados")
+  // Valores anterior y nuevo de los campos ajustados: { columna: { antes, despues } }.
+  changes        Json?    @map("cambios") @db.JsonB
   date           DateTime @map("fecha") @db.Timestamptz(6)
   createdAt      DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt      DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)

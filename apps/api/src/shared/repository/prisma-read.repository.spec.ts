@@ -81,4 +81,12 @@ describe('PrismaReadRepository.findPage', () => {
     expect(delegate.findMany).toHaveBeenCalledTimes(1);
     expect(page.totalItems).toBe(2);
   });
+
+  it('orders by the chosen field then id by default', async () => {
+    const { repository, delegate } = setup(true);
+    await repository.findPage({ ...query, sort: { field: 'id', order: 'desc' } });
+    expect(delegate.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: [{ id: 'desc' }] }),
+    );
+  });
 });

@@ -39,6 +39,8 @@ export interface TeacherAssignmentRepository extends ReadRepository<
   /** Bloquea la fila del grado hasta el fin de la transacción para serializar altas de director. */
   lockGrade(gradeId: string): Promise<void>;
   findActiveByTeacher(teacherId: string, schoolYear: string): Promise<TeacherAssignment[]>;
+  /** Asignaciones activas de todos los docentes en el año, sin paginar. */
+  findActiveByYear(schoolYear: string): Promise<TeacherAssignment[]>;
   create(input: NewTeacherAssignment): Promise<TeacherAssignment>;
   update(id: string, changes: TeacherAssignmentChanges): Promise<TeacherAssignment>;
 }

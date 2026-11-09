@@ -9,7 +9,7 @@ import { AccessDeclarationVerifier } from '../../src/modules/identidad/auth/acce
 import { createTestApp } from './support/create-test-app';
 import { asUser, createTestUser, serverOf, signIn, type Cookies } from './support/session';
 
-type Method = 'get' | 'post' | 'put' | 'patch';
+type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 interface ExpectedRoute {
   method: Method;
@@ -60,6 +60,25 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'get', path: '/school-years/current', access: TEACHER },
   { method: 'post', path: '/school-years', access: ADMIN },
   { method: 'put', path: '/school-years/:id/current', access: ADMIN },
+  { method: 'get', path: '/lesson-plans', access: TEACHER },
+  { method: 'get', path: '/lesson-plans/:id', access: TEACHER },
+  { method: 'post', path: '/lesson-plans', access: TEACHER },
+  { method: 'patch', path: '/lesson-plans/:id', access: TEACHER },
+  { method: 'post', path: '/lesson-plans/:id/submit', access: TEACHER },
+  { method: 'post', path: '/lesson-plans/:id/void', access: TEACHER },
+  { method: 'post', path: '/lesson-plans/:id/resources', access: TEACHER },
+  { method: 'delete', path: '/lesson-plans/:id/resources/:resourceId', access: TEACHER },
+  { method: 'post', path: '/lesson-plans/:id/approve', access: COORD },
+  { method: 'post', path: '/lesson-plans/:id/return', access: COORD },
+  { method: 'get', path: '/lesson-plans/:id/reviews', access: TEACHER },
+  { method: 'get', path: '/lesson-plan-compliance', access: COORD },
+  { method: 'get', path: '/shared-activities', access: TEACHER },
+  { method: 'get', path: '/shared-activities/:id', access: TEACHER },
+  { method: 'post', path: '/shared-activities', access: TEACHER },
+  { method: 'patch', path: '/shared-activities/:id', access: TEACHER },
+  { method: 'delete', path: '/shared-activities/:id', access: TEACHER },
+  { method: 'put', path: '/shared-activities/:id/favorite', access: TEACHER },
+  { method: 'delete', path: '/shared-activities/:id/favorite', access: TEACHER },
   // Solo pruebas: públicos a propósito.
   { method: 'get', path: '/faq-example', access: PUBLIC },
   { method: 'get', path: '/faq-example/:id', access: PUBLIC },
@@ -108,7 +127,7 @@ describe('control de acceso por rol', () => {
   describe.each(EXPECTED_ROUTES.filter((route) => route.access !== PUBLIC))(
     '$method $path (rol mínimo $access)',
     (route) => {
-      const path = route.path.replace(':id', randomUUID());
+      const path = route.path.replace(':id', randomUUID()).replace(':resourceId', randomUUID());
       const call = (cookies?: Cookies) =>
         cookies
           ? asUser(app, route.method, path, cookies, 'access').send({})

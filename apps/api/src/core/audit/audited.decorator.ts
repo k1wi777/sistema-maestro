@@ -14,6 +14,11 @@ export interface AuditedOptions {
   /** Fuente que lee la entidad antes y después de la acción. */
   snapshot: Type<AuditSnapshotSource>;
   detail?: string;
+  /**
+   * Clave del cuerpo de la petición cuyo texto se guarda como `detalle` (p. ej. el motivo de
+   * una anulación). Prevalece sobre `detail`; si el cuerpo no la trae como texto, se usa `detail`.
+   */
+  detailFromBody?: string;
 }
 
 /**

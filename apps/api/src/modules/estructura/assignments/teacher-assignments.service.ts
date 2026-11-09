@@ -133,6 +133,11 @@ export class TeacherAssignmentsService {
     return groupAssignmentsByGrade(current.code, assignments);
   }
 
+  /** Asignaciones activas de todos los docentes del año, sin paginar (informes de coordinación). */
+  listActive(schoolYear: string): Promise<TeacherAssignment[]> {
+    return this.repository.findActiveByYear(schoolYear);
+  }
+
   private async get(id: string): Promise<TeacherAssignment> {
     const assignment = await this.find(id);
     if (!assignment) {

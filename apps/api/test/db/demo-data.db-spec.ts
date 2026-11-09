@@ -1,16 +1,20 @@
 import {
   AuditLogType,
+  crossCuttingProjectFor,
+  levelAllowsCuriocity,
   JournalEventType,
   ObserverNoteType,
   RecordStatus,
+  REVIEW_DECISION_RESULT_STATUS,
   ReviewAction,
+  ReviewDecision,
   ReviewRecordType,
   TrainingActivityType,
   UserRole,
   UserStatus,
 } from '@gns/shared';
 import type { Client } from 'pg';
-import { DEMO_EMAIL_DOMAIN, REVIEW_RESULT_STATUS } from '../../prisma/seed/demo/demo.data.ts';
+import { DEMO_EMAIL_DOMAIN } from '../../prisma/seed/demo/demo.data.ts';
 import { isDemoLoaded, loadDemoData } from '../../prisma/seed/demo/load-demo.ts';
 import { useTestDatabase } from './support/database';
 
@@ -35,6 +39,8 @@ async function demoTableCounts(): Promise<Record<string, number>> {
     'diario_campo',
     'revision',
     'progreso_modulo',
+    'actividad_repositorio',
+    'favorito_actividad',
     'bitacora',
   ];
   const counts: Record<string, number> = {};
@@ -113,6 +119,29 @@ describe('demo records (R19)', () => {
         [DEMO_LIKE],
       );
       expect([table, inconsistent]).toEqual([table, 0]);
+    }
+  });
+
+  it('gives every lesson plan the cross-cutting project of its level and period, and CurioCity only in secondary', async () => {
+    const plans = await rows(
+      `SELECT p.proyecto_transversal, p.etapa_curiocity, n.nombre AS nivel, pa.numero
+       FROM planeacion p JOIN grado g ON g.id = p.grado_id JOIN nivel n ON n.id = g.nivel_id
+       JOIN periodo_academico pa ON pa.id = p.periodo_id
+       WHERE p.docente_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE],
+    );
+
+    expect(plans.length).toBeGreaterThan(0);
+    for (const plan of plans) {
+      const level = String(plan.nivel);
+      expect([level, plan.numero, plan.proyecto_transversal]).toEqual([
+        level,
+        plan.numero,
+        crossCuttingProjectFor(level, Number(plan.numero)),
+      ]);
+      if (plan.etapa_curiocity !== null) {
+        expect(levelAllowsCuriocity(level)).toBe(true);
+      }
     }
   });
 
@@ -207,7 +236,26 @@ describe('demo reviews (R20)', () => {
         await rows(`SELECT estado FROM ${table} WHERE id = $1`, [review.registro_id])
       )[0];
 
-      expect(record?.estado).toBe(REVIEW_RESULT_STATUS[review.accion as ReviewAction]);
+      // `ajuste` nunca es la última fila: no determina estado y siempre lo sigue una decisión.
+      expect(review.accion).not.toBe(ReviewAction.Adjustment);
+      expect(record?.estado).toBe(REVIEW_DECISION_RESULT_STATUS[review.accion as ReviewDecision]);
+    }
+  });
+
+  it('follows every adjustment with a decision on the same record', async () => {
+    const reviews = await demoReviews();
+    const adjustments = reviews.filter((row) => row.accion === ReviewAction.Adjustment);
+
+    expect(adjustments.length).toBeGreaterThan(0);
+    for (const adjustment of adjustments) {
+      const decided = reviews.some(
+        (row) =>
+          row.registro_id === adjustment.registro_id &&
+          row.accion !== ReviewAction.Adjustment &&
+          new Date(row.fecha as Date) > new Date(adjustment.fecha as Date),
+      );
+
+      expect(decided).toBe(true);
     }
   });
 
@@ -342,6 +390,70 @@ describe('demo training progress (R21 and R22)', () => {
       expect(types.has(type)).toBe(true);
     }
     expect(entries.some((row) => row.usuario_id === null)).toBe(true);
+  });
+});
+
+describe('demo shared activities and favorites (BE-5)', () => {
+  const DEMO_ACTIVITIES = `(SELECT id FROM actividad_repositorio WHERE autor_id IN ${DEMO_TEACHERS})`;
+
+  it('has a few activities by several demo teachers, levels and areas', async () => {
+    const activities = await rows(
+      `SELECT autor_id, nivel_id, area_id, titulo, pasos, duracion_min FROM actividad_repositorio
+       WHERE autor_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE],
+    );
+
+    expect(activities.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(activities.map((row) => row.autor_id)).size).toBeGreaterThanOrEqual(3);
+    expect(new Set(activities.map((row) => row.nivel_id)).size).toBeGreaterThanOrEqual(3);
+    expect(new Set(activities.map((row) => row.area_id)).size).toBeGreaterThanOrEqual(3);
+    for (const row of activities) {
+      expect(String(row.titulo).length).toBeGreaterThan(0);
+      expect(String(row.pasos).length).toBeGreaterThan(0);
+      expect(Number(row.duracion_min)).toBeGreaterThan(0);
+    }
+  });
+
+  it('only links to http or https pages and carries no student data', async () => {
+    const links = await rows(
+      `SELECT enlace FROM actividad_repositorio WHERE autor_id IN ${DEMO_TEACHERS} AND enlace IS NOT NULL`,
+      [DEMO_LIKE],
+    );
+
+    expect(links.length).toBeGreaterThan(0);
+    for (const row of links) {
+      expect(String(row.enlace)).toMatch(/^https?:\/\//);
+    }
+    // El repositorio no tiene columnas de estudiantes: solo texto de la actividad.
+    const columns = await rows(
+      `SELECT column_name FROM information_schema.columns WHERE table_name = 'actividad_repositorio'`,
+    );
+    expect(columns.map((row) => row.column_name).join(' ')).not.toMatch(/estudiante/);
+  });
+
+  it('has favorites among demo teachers and never on their own activities', async () => {
+    const favorites = await rows(
+      `SELECT f.usuario_id, a.autor_id FROM favorito_actividad f
+       JOIN actividad_repositorio a ON a.id = f.actividad_id
+       WHERE f.usuario_id IN ${DEMO_TEACHERS} AND f.actividad_id IN ${DEMO_ACTIVITIES}`,
+      [DEMO_LIKE],
+    );
+
+    expect(favorites.length).toBeGreaterThanOrEqual(3);
+    expect(new Set(favorites.map((row) => row.usuario_id)).size).toBeGreaterThanOrEqual(2);
+    for (const row of favorites) {
+      expect(row.usuario_id).not.toBe(row.autor_id);
+    }
+  });
+
+  it('is found by the accent-insensitive search used by the API', async () => {
+    const found = await rows(
+      `SELECT titulo FROM actividad_repositorio
+       WHERE translate(titulo, 'áéíóúÁÉÍÓÚñÑ', 'aeiouAEIOUnN') ILIKE $2 AND autor_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE, '%cuento viajero%'],
+    );
+
+    expect(found).toHaveLength(1);
   });
 });
 

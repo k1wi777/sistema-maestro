@@ -86,6 +86,14 @@ export class PrismaTeacherAssignmentRepository
     return rows.map((row) => this.toEntity(row));
   }
 
+  async findActiveByYear(schoolYear: string): Promise<TeacherAssignment[]> {
+    const rows = await this.prisma.db.teacherAssignment.findMany({
+      where: { schoolYear, status: TeacherAssignmentStatus.Active },
+      include: INCLUDE,
+    });
+    return rows.map((row) => this.toEntity(row));
+  }
+
   async create(input: NewTeacherAssignment): Promise<TeacherAssignment> {
     const row = await this.prisma.db.teacherAssignment.create({ data: input, include: INCLUDE });
     return this.toEntity(row);
