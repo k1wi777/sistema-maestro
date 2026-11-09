@@ -4,6 +4,7 @@ import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from '@nestjs/swagger';
 import { PRODUCT_NAME, apiErrorBodySchema } from '@gns/shared';
 import { cleanupOpenApiDoc } from 'nestjs-zod';
+import { ACCESS_COOKIE } from '../../modules/identidad/auth/session-cookies';
 import { z } from 'zod';
 
 const API_ERROR_SCHEMA = 'ApiErrorBody';
@@ -62,7 +63,12 @@ function addCommonErrors(document: OpenAPIObject): void {
 
 /** Documento OpenAPI derivado de los esquemas Zod de las peticiones y respuestas. */
 export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
-  const options = new DocumentBuilder().setTitle(PRODUCT_NAME).setVersion(apiVersion()).build();
+  const options = new DocumentBuilder()
+    .setTitle(PRODUCT_NAME)
+    .setVersion(apiVersion())
+    // Sesión por cookie httpOnly: los endpoints con `@RequireRole` la exigen.
+    .addCookieAuth(ACCESS_COOKIE)
+    .build();
   const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, options));
   addCommonErrors(document);
   return document;

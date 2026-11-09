@@ -179,3 +179,24 @@ export function insertAuditLog(client: Client, values: Values = {}): Promise<Row
     ...values,
   });
 }
+
+/** Hash de prueba con formato argon2id (no corresponde a ninguna contraseña real). */
+export const FAKE_ARGON2ID_HASH =
+  '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0$ZmFrZWhhc2hmYWtlaGFzaGZha2VoYXNo';
+
+export async function insertPasswordCredential(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'credencial_contrasena', {
+    usuario_id: await idOf(insertUser(client)),
+    hash: FAKE_ARGON2ID_HASH,
+    ...values,
+  });
+}
+
+export async function insertSession(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'sesion', {
+    usuario_id: await idOf(insertUser(client)),
+    proveedor: 'contrasena',
+    renovada_en: new Date(),
+    ...values,
+  });
+}

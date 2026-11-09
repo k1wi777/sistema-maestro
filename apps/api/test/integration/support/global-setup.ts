@@ -61,4 +61,10 @@ export default async function globalSetup(): Promise<void> {
   process.env.CORS_ORIGINS ??= 'http://localhost:3001';
   process.env.LOG_LEVEL = 'silent';
   process.env.RATE_LIMIT_MAX_REQUESTS ??= '1000';
+  // Secretos de prueba efímeros, distintos en cada ejecución; solo valen para esta suite.
+  process.env.JWT_ACCESS_SECRET ??= randomBytes(32).toString('hex');
+  process.env.REFRESH_TOKEN_SECRET ??= randomBytes(32).toString('hex');
+  process.env.AUTH_COOKIE_SECURE ??= 'false';
+  // Alto para que los ingresos de las pruebas no choquen con el límite; la prueba del 429 lo baja.
+  process.env.LOGIN_MAX_ATTEMPTS ??= '100';
 }

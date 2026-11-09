@@ -44,15 +44,15 @@ async function columnsNamed(columnName: string): Promise<ColumnInfo[]> {
 }
 
 describe('migrated schema', () => {
-  it('has the 27 domain tables plus the Prisma migrations table', async () => {
+  it('has the 29 domain tables plus the Prisma migrations table', async () => {
     const result = await db.client.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`,
     );
     const tables = result.rows.map((row) => row.table_name);
 
-    expect(tables).toHaveLength(28);
+    expect(tables).toHaveLength(30);
     expect(tables).toContain('_prisma_migrations');
-    expect(await domainTables()).toHaveLength(27);
+    expect(await domainTables()).toHaveLength(29);
     // Decisiones del modelo: un solo rol por usuario y sin tabla de estudiantes.
     expect(tables).not.toEqual(
       expect.arrayContaining([
@@ -66,7 +66,7 @@ describe('migrated schema', () => {
       const ids = await columnsNamed('id');
       const uuidIds = ids.filter((column) => column.data_type === 'uuid');
 
-      expect(uuidIds).toHaveLength(25);
+      expect(uuidIds).toHaveLength(27);
       for (const column of uuidIds) {
         expect(column.column_default).toBe('gen_random_uuid()');
       }
