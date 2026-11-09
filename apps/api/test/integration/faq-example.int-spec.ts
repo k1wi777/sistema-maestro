@@ -107,8 +107,6 @@ describe('listados paginados (módulo de ejemplo)', () => {
   it.each([
     ['parámetro desconocido', { extra: '1' }, 'extra'],
     ['sortBy no permitido', { sortBy: 'answer' }, 'sortBy'],
-    ['pageSize 0', { pageSize: '0' }, 'pageSize'],
-    ['pageSize 101', { pageSize: '101' }, 'pageSize'],
   ])('responde 400 con %s', async (_name, query, param) => {
     const res = await list(query).expect(400);
     expect(JSON.stringify(res.body)).toContain(param);

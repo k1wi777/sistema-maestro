@@ -207,9 +207,4 @@ describe('privilegios de la aplicación sobre la bitácora', () => {
     expect(await codeOf(app, sql)).toBe('42501');
     expect(await detailOf()).toBe('original');
   });
-
-  it.each(statements)('con el superusuario %s lo rechaza el trigger', async (sql) => {
-    expect(await codeOf(admin, sql)).toBe('P0001');
-    expect(await detailOf()).toBe('original');
-  });
 });

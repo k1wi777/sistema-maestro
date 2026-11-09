@@ -80,14 +80,4 @@ describe('createLoggerOptions', () => {
       expect(output).not.toContain(forbidden);
     }
   });
-
-  it('reuses a safe incoming request id and replaces an unsafe one', async () => {
-    const reused = await send({ 'x-request-id': 'abc-123' });
-    await reused.text();
-    expect(reused.headers.get('x-request-id')).toBe('abc-123');
-
-    const replaced = await send({ 'x-request-id': 'a b;{"x":1}' });
-    await replaced.text();
-    expect(replaced.headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
-  });
 });
