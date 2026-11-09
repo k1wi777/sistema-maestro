@@ -8,6 +8,7 @@
     "start": "node dist/main",
     "test": "jest",
     "test:unit": "jest --selectProjects unit",
+    "test:integration": "jest --selectProjects integration",
     "test:db": "jest -c jest.db.config.json --runInBand",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

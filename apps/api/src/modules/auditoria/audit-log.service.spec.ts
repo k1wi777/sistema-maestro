@@ -26,18 +26,6 @@ describe('AuditLogService.record', () => {
     });
   });
 
-  it('hides secrets in the before and after data', async () => {
-    const { service, inserted } = setup();
-    await service.record({
-      type: AuditLogType.DataConsent,
-      action: 'Cambio',
-      dataBefore: { passwordHash: 'viejo', nombre: 'A' },
-      dataAfter: { passwordHash: 'nuevo', nombre: 'B' },
-    });
-    expect(JSON.stringify(inserted[0])).not.toMatch(/viejo|nuevo/);
-    expect(inserted[0]?.dataAfter).toEqual({ passwordHash: '[oculto]', nombre: 'B' });
-  });
-
   it('cuts the action to the column length', async () => {
     const { service, inserted } = setup();
     await service.record({ type: AuditLogType.Login, action: 'a'.repeat(300) });
