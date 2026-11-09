@@ -15,11 +15,11 @@ import { SessionProvider, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import type { RequestUser } from '../../../core/audit/request-user';
 import type { Env } from '../../../core/config/env.validation';
+import { AllowWithoutConsent, Public, RequireRole } from './access.decorators';
 import { AuthService, type SessionResult } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
 import { ChangePasswordDto, CurrentUserDto, LoginDto } from './dto/auth.dto';
 import { LoginThrottled } from './login-throttle';
-import { RequireRole } from './require-role.decorator';
 import {
   clearSessionCookies,
   readCookie,
@@ -46,6 +46,7 @@ export class AuthController {
 
   /** Público. Las cookies llevan los tokens; el cuerpo, solo el usuario actual. */
   @Post('login')
+  @Public()
   @LoginThrottled()
   @HttpCode(200)
   @ZodResponse({ status: 200, type: CurrentUserDto })
@@ -56,6 +57,7 @@ export class AuthController {
 
   /** Renueva con la cookie de renovación (solo llega a `/auth`); no exige el token de acceso. */
   @Post('refresh')
+  @Public()
   @HttpCode(200)
   @ZodResponse({ status: 200, type: CurrentUserDto })
   async refresh(
@@ -72,6 +74,7 @@ export class AuthController {
 
   /** Revoca la sesión actual y borra las cookies, también si la sesión ya no era válida. */
   @Post('logout')
+  @Public()
   @HttpCode(204)
   @ApiNoContentResponse({ description: 'Sesión cerrada' })
   async logout(
@@ -84,6 +87,7 @@ export class AuthController {
 
   @Get('me')
   @RequireRole(UserRole.Teacher)
+  @AllowWithoutConsent()
   @ZodResponse({ status: 200, type: CurrentUserDto })
   me(@CurrentUser() user: RequestUser) {
     return this.auth.profile(user.id);

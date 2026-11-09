@@ -1,0 +1,169 @@
+import { randomUUID } from 'node:crypto';
+import { Controller, Get, type INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { apiErrorBodySchema, ApiErrorCode, roleSatisfies, UserRole } from '@gns/shared';
+import request from 'supertest';
+import { AppModule } from '../../src/app.module';
+import { configureApp } from '../../src/core/bootstrap/configure-app';
+import { AccessDeclarationVerifier } from '../../src/modules/identidad/auth/access-declaration.verifier';
+import { createTestApp } from './support/create-test-app';
+import { asUser, createTestUser, serverOf, signIn, type Cookies } from './support/session';
+
+type Method = 'get' | 'post' | 'put' | 'patch';
+
+interface ExpectedRoute {
+  method: Method;
+  path: string;
+  /** `public` o el rol mínimo. */
+  access: 'public' | UserRole;
+}
+
+const PUBLIC = 'public' as const;
+const TEACHER = UserRole.Teacher;
+const ADMIN = UserRole.Administrator;
+
+// Matriz esperada de TODAS las rutas (incluidas las de prueba). Una ruta nueva, o una cuyo
+// acceso cambia, hace fallar la prueba de inventario hasta que se actualice aquí (R6).
+const EXPECTED_ROUTES: ExpectedRoute[] = [
+  { method: 'post', path: '/auth/login', access: PUBLIC },
+  { method: 'post', path: '/auth/refresh', access: PUBLIC },
+  { method: 'post', path: '/auth/logout', access: PUBLIC },
+  { method: 'get', path: '/auth/me', access: TEACHER },
+  { method: 'put', path: '/auth/password', access: TEACHER },
+  { method: 'get', path: '/consent', access: TEACHER },
+  { method: 'post', path: '/consent', access: TEACHER },
+  { method: 'get', path: '/users', access: ADMIN },
+  { method: 'get', path: '/users/:id', access: ADMIN },
+  { method: 'post', path: '/users', access: ADMIN },
+  { method: 'patch', path: '/users/:id', access: ADMIN },
+  { method: 'patch', path: '/users/:id/status', access: ADMIN },
+  { method: 'put', path: '/users/:id/password', access: ADMIN },
+  // Solo pruebas: públicos a propósito.
+  { method: 'get', path: '/faq-example', access: PUBLIC },
+  { method: 'get', path: '/faq-example/:id', access: PUBLIC },
+  { method: 'post', path: '/faq-example', access: PUBLIC },
+  { method: 'patch', path: '/faq-example/:id', access: PUBLIC },
+  { method: 'get', path: '/failures/boom', access: PUBLIC },
+  { method: 'get', path: '/failures/unique', access: PUBLIC },
+  { method: 'get', path: '/failures/foreign-key', access: PUBLIC },
+  { method: 'get', path: '/failures/check', access: PUBLIC },
+  { method: 'get', path: '/failures/undeclared', access: PUBLIC },
+  { method: 'post', path: '/failures/failing-audited', access: PUBLIC },
+  { method: 'post', path: '/failures/bad-audit', access: PUBLIC },
+  { method: 'post', path: '/failures/audited-secret', access: PUBLIC },
+  { method: 'post', path: '/failures/audited-big', access: PUBLIC },
+];
+
+const label = ({ method, path }: { method: string; path: string }) =>
+  `${method.toUpperCase()} ${path}`;
+
+describe('control de acceso por rol', () => {
+  let app: INestApplication;
+  const sessions = new Map<UserRole, Cookies>();
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    for (const role of Object.values(UserRole)) {
+      sessions.set(role, await signIn(app, await createTestUser(app, { role })));
+    }
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('declara exactamente el acceso de la matriz esperada en todas las rutas (R1, R5, R6)', () => {
+    const actual = app
+      .get(AccessDeclarationVerifier)
+      .listRoutes()
+      .map(({ method, path, access }) => `${label({ method, path })} -> ${access}`)
+      .sort();
+    const expected = EXPECTED_ROUTES.map((route) => `${label(route)} -> ${route.access}`).sort();
+
+    expect(actual).toEqual(expected);
+  });
+
+  describe.each(EXPECTED_ROUTES.filter((route) => route.access !== PUBLIC))(
+    '$method $path (rol mínimo $access)',
+    (route) => {
+      const path = route.path.replace(':id', randomUUID());
+      const call = (cookies?: Cookies) =>
+        cookies
+          ? asUser(app, route.method, path, cookies, 'access').send({})
+          : request(serverOf(app))[route.method](path).send({});
+
+      it('responde 401 no_autenticado sin sesión (R3)', async () => {
+        const res = await call().expect(401);
+
+        expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Unauthenticated);
+      });
+
+      it.each(Object.values(UserRole))('con el rol %s', async (role) => {
+        const res = await call(sessions.get(role));
+
+        if (roleSatisfies(role, route.access as UserRole)) {
+          // Pasa el guard: lo que responda el endpoint (400 por el cuerpo vacío, 404...) no es 401 ni 403.
+          expect([401, 403]).not.toContain(res.status);
+        } else {
+          expect(res.status).toBe(403);
+          expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Forbidden);
+        }
+      });
+    },
+  );
+
+  it('deja pasar los endpoints públicos sin sesión', async () => {
+    await request(serverOf(app)).post('/auth/logout').expect(204);
+    await request(serverOf(app)).post('/auth/refresh').expect(401);
+    await request(serverOf(app)).get('/faq-example').expect(200);
+  });
+});
+
+describe('orden de los guards (R13)', () => {
+  let app: INestApplication;
+
+  beforeAll(async () => {
+    app = await createTestApp({
+      withFailures: false,
+      config: { RATE_LIMIT_MAX_REQUESTS: 2, RATE_LIMIT_WINDOW_SECONDS: 60 },
+    });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('responde 429 antes que 401 en un endpoint con rol', async () => {
+    await request(serverOf(app)).get('/users').expect(401);
+    await request(serverOf(app)).get('/users').expect(401);
+
+    const res = await request(serverOf(app)).get('/users').expect(429);
+
+    expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.TooManyRequests);
+  });
+});
+
+describe('verificación de declaración al arrancar (R2)', () => {
+  @Controller('sin-declaracion')
+  class UndeclaredController {
+    @Get()
+    list(): string {
+      return 'no debe ejecutarse';
+    }
+  }
+
+  it('impide arrancar la API y nombra el controlador y el método', async () => {
+    const testing = await Test.createTestingModule({
+      imports: [AppModule],
+      controllers: [UndeclaredController],
+    }).compile();
+    const undeclared = testing.createNestApplication();
+    configureApp(undeclared);
+
+    try {
+      await expect(undeclared.init()).rejects.toThrow('UndeclaredController.list');
+    } finally {
+      await undeclared.close();
+    }
+  });
+});

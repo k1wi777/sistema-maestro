@@ -9,6 +9,7 @@ import {
 import { ThrottlerException } from '@nestjs/throttler';
 import { ApiErrorCode, type ApiErrorBody } from '@gns/shared';
 import { describeDatabaseError, mapPrismaError } from '../../shared/database/prisma-error.mapper';
+import { ApiCodedException } from './api-coded.exception';
 import { RequestValidationException } from './request-validation.exception';
 
 interface HttpRequestLike {
@@ -140,6 +141,15 @@ export class ApiExceptionFilter implements ExceptionFilter {
         statusCode: 429,
         code: ApiErrorCode.TooManyRequests,
         message: messageForStatus(429),
+        requestId,
+      };
+    }
+
+    if (exception instanceof ApiCodedException) {
+      return {
+        statusCode: exception.getStatus(),
+        code: exception.code,
+        message: exception.message,
         requestId,
       };
     }

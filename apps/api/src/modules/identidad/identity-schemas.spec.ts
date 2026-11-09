@@ -1,4 +1,5 @@
 import {
+  acceptConsentSchema,
   changePasswordSchema,
   createUserSchema,
   loginSchema,
@@ -83,5 +84,39 @@ describe('changePasswordSchema', () => {
     expect(
       changePasswordSchema.safeParse({ currentPassword: 'vieja', newPassword: 'corta' }).success,
     ).toBe(false);
+  });
+});
+
+describe('acceptConsentSchema', () => {
+  const valid = {
+    policyVersion: '2026-1',
+    items: { policy: true, authorization: true, minors: true, security: true },
+  };
+
+  it('accepts the four boxes checked', () => {
+    expect(acceptConsentSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it.each(['policy', 'authorization', 'minors', 'security'])(
+    'rejects %s missing or unchecked, naming the field',
+    (key) => {
+      const missing = { ...valid.items } as Record<string, unknown>;
+      delete missing[key];
+      const unchecked = { ...valid.items, [key]: false };
+
+      for (const items of [missing, unchecked]) {
+        const result = acceptConsentSchema.safeParse({ ...valid, items });
+        expect(result.success).toBe(false);
+        expect(result.error?.issues[0]?.path).toEqual(['items', key]);
+      }
+    },
+  );
+
+  it('rejects unknown fields and an empty or oversized version', () => {
+    expect(acceptConsentSchema.safeParse({ ...valid, extra: 1 }).success).toBe(false);
+    expect(acceptConsentSchema.safeParse({ ...valid, policyVersion: '' }).success).toBe(false);
+    expect(acceptConsentSchema.safeParse({ ...valid, policyVersion: 'v'.repeat(21) }).success).toBe(
+      false,
+    );
   });
 });

@@ -123,6 +123,8 @@ describe('documentación OpenAPI', () => {
       ['/users', 'get'],
       ['/users/{id}/password', 'put'],
       ['/auth/me', 'get'],
+      ['/consent', 'get'],
+      ['/consent', 'post'],
     ] as const) {
       const operation = operations[path]?.[method];
       expect(operation?.security).toEqual([{ cookie: [] }]);

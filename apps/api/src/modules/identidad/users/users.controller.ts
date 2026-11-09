@@ -5,8 +5,8 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
+import { RequireRole } from '../auth/access.decorators';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { RequireRole } from '../auth/require-role.decorator';
 import {
   CreateUserDto,
   ResetPasswordDto,

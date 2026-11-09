@@ -12,6 +12,7 @@ const BASE = {
   CORS_ORIGINS,
   JWT_ACCESS_SECRET: ACCESS_SECRET,
   REFRESH_TOKEN_SECRET: REFRESH_SECRET,
+  DATA_POLICY_VERSION: '2026-1',
 };
 const DATABASE_URL_REASON =
   '- DATABASE_URL: debe ser una URL de PostgreSQL (postgresql://usuario:clave@host:puerto/base)';
@@ -44,6 +45,7 @@ describe('validateEnv', () => {
       AUTH_COOKIE_SECURE: true,
       LOGIN_MAX_ATTEMPTS: 5,
       LOGIN_WINDOW_SECONDS: 300,
+      DATA_POLICY_VERSION: '2026-1',
     });
   });
 
@@ -212,6 +214,24 @@ describe('validateEnv', () => {
         REFRESH_TOKEN_SECRET: 's3cr3t',
       });
       expect(message).not.toContain('s3cr3t');
+    });
+  });
+
+  describe('DATA_POLICY_VERSION', () => {
+    it('is required', () => {
+      expect(errorMessageOf({ ...BASE, DATA_POLICY_VERSION: undefined })).toContain(
+        '- DATA_POLICY_VERSION: falta la variable',
+      );
+    });
+
+    it.each(['', 'con espacio', 'a'.repeat(21), 'v/1'])('rejects %j', (value) => {
+      expect(errorMessageOf({ ...BASE, DATA_POLICY_VERSION: value })).toContain(
+        '- DATA_POLICY_VERSION:',
+      );
+    });
+
+    it.each(['2026-1', 'v1.2_b', 'a'.repeat(20)])('accepts %j', (value) => {
+      expect(validateEnv({ ...BASE, DATA_POLICY_VERSION: value }).DATA_POLICY_VERSION).toBe(value);
     });
   });
 });
