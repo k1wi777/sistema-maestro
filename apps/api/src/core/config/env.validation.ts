@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']),
   PORT: z.coerce.number().int().min(1).max(65535),
+  DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -12,6 +13,7 @@ type EnvKey = keyof Env;
 const INVALID_VALUE_REASONS: Record<EnvKey, string> = {
   NODE_ENV: 'debe ser development, test o production',
   PORT: 'debe ser un entero entre 1 y 65535',
+  DATABASE_URL: 'debe ser una URL de PostgreSQL (postgresql://usuario:clave@host:puerto/base)',
 };
 
 const MISSING_REASON = 'falta la variable';

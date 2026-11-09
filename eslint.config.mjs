@@ -26,9 +26,9 @@ export default defineConfig(
       },
     },
   },
-  // Los archivos de configuración JS no pertenecen a ningún tsconfig.
+  // Los archivos de configuración (JS y prisma.config.ts) no pertenecen a ningún tsconfig.
   {
-    files: ['**/*.{js,mjs,cjs}'],
+    files: ['**/*.{js,mjs,cjs}', '**/prisma.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
   },
   prettier,

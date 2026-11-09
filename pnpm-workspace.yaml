@@ -4,5 +4,10 @@ packages:
 
 # Dependencias con scripts de instalación. Ninguna es necesaria hoy:
 # @parcel/watcher (modo watch de Jest) trae binarios precompilados por plataforma.
+# prisma (preinstall) solo comprueba la versión de Node, que ya fija .nvmrc.
+# @prisma/engines (postinstall) descarga el schema engine, pero la CLI de Prisma
+# lo descarga igualmente en su primer uso si falta.
 allowBuilds:
   '@parcel/watcher': false
+  '@prisma/engines': false
+  prisma: false
