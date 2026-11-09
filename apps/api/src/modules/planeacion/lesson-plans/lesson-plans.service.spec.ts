@@ -75,6 +75,7 @@ function setup(options: Options = {}) {
     create: jest.fn(() => Promise.resolve(plan())),
     updateIfStatus: jest.fn(() => Promise.resolve(true)),
     lock: jest.fn(() => Promise.resolve()),
+    countDelivered: jest.fn(() => Promise.resolve([])),
   } satisfies LessonPlanRepository;
   const reviewRepository = {
     insert: jest.fn((review: NewReview) => {
@@ -236,6 +237,28 @@ describe('LessonPlansService: visibilidad y dueño (404 → 403 → 409 → 400)
     expect(repository.findPage).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({ filters: {} }),
+    );
+  });
+
+  it('un docente con teacherId ajeno en el filtro solo ve lo suyo; coordinación respeta el filtro', async () => {
+    const { service, repository } = setup();
+    const query = {
+      page: 1,
+      pageSize: 20,
+      sort: { field: 'submittedAt' as const, order: 'desc' as const },
+      filters: { teacherId: 'stranger', gradeId: 'g-1' },
+    };
+
+    await service.list(owner, query);
+    await service.list(coordinator, query);
+
+    expect(repository.findPage).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ filters: { teacherId: 'owner', gradeId: 'g-1' } }),
+    );
+    expect(repository.findPage).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ filters: { teacherId: 'stranger', gradeId: 'g-1' } }),
     );
   });
 });

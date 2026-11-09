@@ -895,6 +895,115 @@ export const DEMO_TRAINING: readonly DemoTeacherTraining[] = [
   },
 ];
 
+// ---------- Repositorio de actividades ----------
+
+export interface DemoSharedActivity {
+  key: string;
+  author: string;
+  /** Nombre del nivel del catálogo inicial. */
+  level: string;
+  /** Nombre del área del catálogo inicial; nulo si la actividad no es de un área. */
+  area: string | null;
+  title: string;
+  objective: string;
+  durationMinutes: number;
+  materials: string;
+  steps: string;
+  link: string | null;
+  createdAt: string;
+}
+
+// Actividades ficticias inspiradas en el repositorio del prototipo: de distintos autores,
+// niveles y áreas. Sin datos de estudiantes y con enlaces solo a sitios de herramientas conocidas.
+export const DEMO_SHARED_ACTIVITIES: readonly DemoSharedActivity[] = [
+  {
+    key: 'cuento',
+    author: VALERIA,
+    level: 'Preescolar bajo',
+    area: 'Dimensión comunicativa',
+    title: 'El cuento viajero',
+    objective: 'Contar una historia corta con apoyo de imágenes y respetar los turnos para hablar.',
+    durationMinutes: 30,
+    materials: 'Cinco láminas ilustradas, un morral de tela y una campana pequeña.',
+    steps:
+      '1. Sentar al grupo en círculo y mostrar el morral cerrado.\n2. Sacar una lámina y pedir que cada niño diga una frase sobre ella.\n3. Enlazar las frases hasta formar el cuento.\n4. Cerrar tocando la campana y guardar las láminas en el morral.',
+    link: null,
+    createdAt: '2026-09-08T10:15:00-05:00',
+  },
+  {
+    key: 'flotar',
+    author: JULIAN,
+    level: 'Preescolar alto (KTF)',
+    area: 'Pre-ciencias',
+    title: 'Mini laboratorio de flotar y hundir',
+    objective: 'Predecir y comprobar qué objetos cotidianos flotan o se hunden en el agua.',
+    durationMinutes: 40,
+    materials: 'Tres recipientes con agua, tapas, corchos, piedras, monedas y esponjas.',
+    steps:
+      '1. Mostrar los objetos y pedir una predicción con la mano arriba (flota) o abajo (se hunde).\n2. Probar cada objeto y anotar el resultado en un cartel.\n3. Comparar las predicciones con lo observado.\n4. Conversar sobre qué tienen en común los que flotan.',
+    link: null,
+    createdAt: '2026-09-15T14:00:00-05:00',
+  },
+  {
+    key: 'tienda',
+    author: SOFIA,
+    level: 'Primaria',
+    area: 'Matemáticas',
+    title: 'La tienda del salón: sumas con monedas de cartón',
+    objective: 'Resolver sumas y restas con valores de dinero en situaciones de compra y venta.',
+    durationMinutes: 50,
+    materials: 'Monedas y billetes de cartón, etiquetas de precio y objetos del salón.',
+    steps:
+      '1. Armar la tienda con objetos del salón y etiquetas de precio.\n2. Por parejas, un vendedor y un comprador resuelven tres compras.\n3. Registrar cada operación en el cuaderno.\n4. Intercambiar los roles y revisar en el tablero una compra de cada pareja.',
+    link: 'https://www.canva.com/',
+    createdAt: '2026-09-22T09:30:00-05:00',
+  },
+  {
+    key: 'rampas',
+    author: ANDRES,
+    level: 'Bachillerato',
+    area: 'Física',
+    title: 'Rampas y fuerzas: ¿qué tan rápido baja?',
+    objective: 'Relacionar la inclinación de una rampa con el tiempo de descenso de un carrito.',
+    durationMinutes: 60,
+    materials: 'Tablas, libros para variar la altura, un carrito, cinta métrica y cronómetro.',
+    steps:
+      '1. Armar la rampa con tres alturas distintas.\n2. Medir el tiempo de descenso tres veces por altura.\n3. Calcular el promedio y organizarlo en una tabla.\n4. Graficar altura contra tiempo y escribir una conclusión de dos líneas.',
+    link: null,
+    createdAt: '2026-10-06T08:20:00-05:00',
+  },
+  {
+    key: 'feria',
+    author: DANIELA,
+    level: 'Bachillerato',
+    area: null,
+    title: 'Feria de ideas en tres minutos',
+    objective: 'Presentar una idea de emprendimiento de forma clara y breve ante el grupo.',
+    durationMinutes: 90,
+    materials: 'Cronómetro, tarjetas para anotar preguntas y una rúbrica de una página.',
+    steps:
+      '1. Cada equipo prepara una presentación de tres minutos: problema, idea y a quién ayuda.\n2. Presentar con cronómetro y recibir dos preguntas del grupo.\n3. Votar con tarjetas la idea más clara.\n4. Cerrar con una reflexión sobre lo que se mejoraría.',
+    link: 'https://kahoot.com/',
+    createdAt: '2026-10-13T11:00:00-05:00',
+  },
+];
+
+export interface DemoFavorite {
+  teacher: string;
+  activity: string;
+}
+
+/** Algunos favoritos entre docentes demo (ninguno marca una actividad propia). */
+export const DEMO_FAVORITES: readonly DemoFavorite[] = [
+  { teacher: SOFIA, activity: 'cuento' },
+  { teacher: SOFIA, activity: 'flotar' },
+  { teacher: SOFIA, activity: 'rampas' },
+  { teacher: JULIAN, activity: 'cuento' },
+  { teacher: ANDRES, activity: 'tienda' },
+  { teacher: VALERIA, activity: 'tienda' },
+  { teacher: VALERIA, activity: 'feria' },
+];
+
 // ---------- Bitácora ----------
 
 export type DemoEntityRef =

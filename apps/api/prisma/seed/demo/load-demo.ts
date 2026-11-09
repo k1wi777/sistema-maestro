@@ -6,16 +6,18 @@ import {
 } from '@gns/shared';
 import type { Client } from 'pg';
 import { SCHOOL_YEAR } from '../initial/catalogs.data.ts';
-import { insertForId, type Row } from '../sql.ts';
+import { insertForId, insertRow, type Row } from '../sql.ts';
 import {
   DEMO_ASSIGNMENTS,
   DEMO_AUDIT,
   DEMO_EMAIL_DOMAIN,
+  DEMO_FAVORITES,
   DEMO_JOURNALS,
   DEMO_LESSON_PLANS,
   DEMO_OBSERVER_NOTES,
   DEMO_REVIEWS,
   DEMO_SCHOOL_YEAR,
+  DEMO_SHARED_ACTIVITIES,
   DEMO_TRAINING,
   DEMO_USERS,
   planMoments,
@@ -142,6 +144,7 @@ async function loadReferences(client: Client) {
   );
 
   return {
+    levels: await byName('nivel'),
     grades: await byName('grado'),
     areas: await byName('area'),
     periods: new Map(periods.rows.map((row) => [String(row.numero), row.id])),
@@ -309,6 +312,33 @@ export async function loadDemoData(client: Client): Promise<DemoSummary> {
   }
 
   await loadTraining(references, ids, insert);
+
+  for (const item of DEMO_SHARED_ACTIVITIES) {
+    ids.set(
+      `activity:${item.key}`,
+      await insert('actividad_repositorio', {
+        autor_id: idOf(item.author),
+        nivel_id: required(references.levels, item.level, 'el nivel'),
+        area_id: item.area === null ? null : required(references.areas, item.area, 'el área'),
+        titulo: item.title,
+        objetivo: item.objective,
+        duracion_min: item.durationMinutes,
+        materiales: item.materials,
+        pasos: item.steps,
+        enlace: item.link,
+        creado_en: item.createdAt,
+        actualizado_en: item.createdAt,
+      }),
+    );
+  }
+  for (const item of DEMO_FAVORITES) {
+    // La tabla no tiene id propio (clave compuesta): se cuenta como las demás.
+    summary.favorito_actividad = (summary.favorito_actividad ?? 0) + 1;
+    await insertRow(client, 'favorito_actividad', {
+      usuario_id: idOf(item.teacher),
+      actividad_id: idOf(`activity:${item.activity}`),
+    });
+  }
 
   for (const item of DEMO_AUDIT) {
     const entity = item.entity;

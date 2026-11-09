@@ -56,6 +56,7 @@ const BODYLESS = new Set([
   'post /auth/refresh',
   'put /school-years/{id}/current',
   'post /lesson-plans/{id}/submit',
+  'put /shared-activities/{id}/favorite',
 ]);
 
 describe('documentación OpenAPI', () => {

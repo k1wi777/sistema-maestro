@@ -76,7 +76,10 @@ export class LessonPlansService {
 
   // ---------- Lectura ----------
 
-  /** Un docente ve solo las suyas; coordinación, todas. */
+  /**
+   * Un docente ve solo las suyas; coordinación, todas y con el filtro de docente que pida.
+   * El `teacherId` de la query de un docente se ignora: se sobrescribe con el de la sesión.
+   */
   list(
     user: RequestUser,
     query: ListQuery<LessonPlanFilters, LessonPlanSortField>,
