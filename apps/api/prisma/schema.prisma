@@ -1,4 +1,4 @@
-// Modelo de datos de la Plataforma GNS: 29 tablas en 7 módulos.
+// Modelo de datos de la Plataforma GNS: 30 tablas en 7 módulos.
 // Modelos y campos en inglés, mapeados a tablas y columnas en español (snake_case).
 // Lo que Prisma no expresa (triggers de la bitácora, privilegios y CHECK) vive en
 // las migraciones SQL escritas a mano.
@@ -159,6 +159,23 @@ model Area {
   @@map("area")
 }
 
+// Año lectivo registrado por administración. isCurrent es true en el año vigente y NULL
+// en los demás: el UNIQUE admite muchos NULL y un solo true, así que hay a lo sumo un vigente.
+// Periodos y asignaciones lo referencian por code (FK sobre el texto AAAA-AAAA). La
+// migración añade los CHECK del formato del código y de vigente.
+model SchoolYear {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String   @unique @map("codigo") @db.VarChar(9)
+  isCurrent Boolean? @unique @map("vigente")
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  academicPeriods    AcademicPeriod[]
+  teacherAssignments TeacherAssignment[]
+
+  @@map("anio_lectivo")
+}
+
 model AcademicPeriod {
   id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   schoolYear String    @map("anio_lectivo") @db.VarChar(9)
@@ -168,6 +185,7 @@ model AcademicPeriod {
   createdAt  DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt  DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
+  schoolYearRef SchoolYear     @relation(fields: [schoolYear], references: [code], onDelete: NoAction, onUpdate: NoAction)
   lessonPlans   LessonPlan[]
   fieldJournals FieldJournal[]
 
@@ -182,12 +200,14 @@ model TeacherAssignment {
   areaId            String   @map("area_id") @db.Uuid
   schoolYear        String   @map("anio_lectivo") @db.VarChar(9)
   isHomeroomTeacher Boolean  @default(false) @map("es_director_grupo")
+  status            String   @default("activa") @map("estado") @db.VarChar(10)
   createdAt         DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt         DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  teacher User  @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  grade   Grade @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  area    Area  @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schoolYearRef SchoolYear @relation(fields: [schoolYear], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  teacher       User       @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade         Grade      @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  area          Area       @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([teacherId, gradeId, areaId, schoolYear])
   @@index([teacherId])

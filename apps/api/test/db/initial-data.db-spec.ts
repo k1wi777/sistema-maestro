@@ -27,6 +27,7 @@ const db = useTestDatabase();
 const ADMIN = { name: 'Administrador de Prueba', email: 'seed-admin-prueba@gns.test' };
 
 const SEEDED_TABLES = [
+  'anio_lectivo',
   'nivel',
   'grado',
   'area',
@@ -397,6 +398,49 @@ describe('initial data content', () => {
 
     expect(admin).toEqual([
       { nombre_completo: ADMIN.name, rol: UserRole.Administrator, estado: UserStatus.Active },
+    ]);
+  });
+});
+
+describe('año lectivo vigente', () => {
+  it('registers 2026-2027 with its three periods', async () => {
+    const years = await rows(`SELECT codigo FROM anio_lectivo WHERE codigo = $1`, [SCHOOL_YEAR]);
+    const periods = await rows(`SELECT numero FROM periodo_academico WHERE anio_lectivo = $1`, [
+      SCHOOL_YEAR,
+    ]);
+
+    expect(years).toEqual([{ codigo: '2026-2027' }]);
+    expect(periods).toHaveLength(ACADEMIC_PERIOD_NUMBERS.length);
+  });
+
+  it('leaves exactly one current year and keeps it after a second load', async () => {
+    const current = async () => rows(`SELECT codigo FROM anio_lectivo WHERE vigente`);
+
+    expect((await current()).length).toBe(1);
+    const before = await current();
+    await seedInitialData(db.client, ADMIN);
+
+    expect(await current()).toEqual(before);
+  });
+
+  it('marks 2026-2027 current when no year is', async () => {
+    await db.client.query(`UPDATE anio_lectivo SET vigente = NULL`);
+
+    await seedInitialData(db.client, ADMIN);
+
+    expect(await rows(`SELECT codigo FROM anio_lectivo WHERE vigente`)).toEqual([
+      { codigo: SCHOOL_YEAR },
+    ]);
+  });
+
+  it('does not change a current year that administration marked', async () => {
+    await db.client.query(`UPDATE anio_lectivo SET vigente = NULL`);
+    await db.client.query(`INSERT INTO anio_lectivo (codigo, vigente) VALUES ('2027-2028', true)`);
+
+    await seedInitialData(db.client, ADMIN);
+
+    expect(await rows(`SELECT codigo FROM anio_lectivo WHERE vigente`)).toEqual([
+      { codigo: '2027-2028' },
     ]);
   });
 });

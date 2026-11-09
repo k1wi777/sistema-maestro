@@ -57,6 +57,9 @@ async function idByName(client: Client, table: string, name: string): Promise<st
 }
 
 async function seedCatalogs(client: Client, counter: SeedCounter): Promise<void> {
+  // Antes de los periodos: su llave foránea exige el año registrado.
+  const schoolYear = await insertRow(client, 'anio_lectivo', { codigo: SCHOOL_YEAR }, '(codigo)');
+  counter.record('anio_lectivo', schoolYear !== null);
   for (const level of LEVELS) {
     const row = await insertRow(
       client,
@@ -92,6 +95,19 @@ async function seedCatalogs(client: Client, counter: SeedCounter): Promise<void>
     );
     counter.record('periodo_academico', row !== null);
   }
+  await markCurrentSchoolYearIfNone(client);
+}
+
+/**
+ * Marca 2026-2027 como vigente solo si ningún año lo está: una nueva carga no debe deshacer
+ * el año que administración marcó después. El UNIQUE de `vigente` cubre la carrera.
+ */
+async function markCurrentSchoolYearIfNone(client: Client): Promise<void> {
+  await client.query(
+    `UPDATE anio_lectivo SET vigente = true, actualizado_en = now()
+     WHERE codigo = $1 AND NOT EXISTS (SELECT 1 FROM anio_lectivo WHERE vigente)`,
+    [SCHOOL_YEAR],
+  );
 }
 
 async function countExistingPlanRows(

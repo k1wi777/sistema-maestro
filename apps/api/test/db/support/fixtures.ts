@@ -62,12 +62,41 @@ export function insertArea(client: Client, values: Values = {}): Promise<Row> {
   });
 }
 
+/** Año lectivo `AAAA-AAAA` único por llamada (el CHECK exige años consecutivos). */
+function uniqueSchoolYear(): string {
+  const start = 3000 + Math.floor(Math.random() * 6000);
+  return `${start}-${start + 1}`;
+}
+
+/** Registra el año lectivo si no existe (periodos y asignaciones lo referencian por código). */
+export async function ensureSchoolYear(client: Client, code: string): Promise<void> {
+  await client.query(
+    'INSERT INTO anio_lectivo (codigo) VALUES ($1) ON CONFLICT (codigo) DO NOTHING',
+    [code],
+  );
+}
+
+export function insertSchoolYear(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'anio_lectivo', { codigo: uniqueSchoolYear(), ...values });
+}
+
 /** Cada llamada usa un año lectivo propio para no chocar con el único (año, número). */
-export function insertAcademicPeriod(client: Client, values: Values = {}): Promise<Row> {
-  return insertRow(client, 'periodo_academico', {
-    anio_lectivo: uniqueSuffix(),
-    numero: 1,
+export async function insertAcademicPeriod(client: Client, values: Values = {}): Promise<Row> {
+  const schoolYear =
+    typeof values.anio_lectivo === 'string' ? values.anio_lectivo : uniqueSchoolYear();
+  await ensureSchoolYear(client, schoolYear);
+  return insertRow(client, 'periodo_academico', { numero: 1, ...values, anio_lectivo: schoolYear });
+}
+
+export async function insertTeacherAssignment(client: Client, values: Values = {}): Promise<Row> {
+  const schoolYear = typeof values.anio_lectivo === 'string' ? values.anio_lectivo : '2026-2027';
+  await ensureSchoolYear(client, schoolYear);
+  return insertRow(client, 'asignacion_docente', {
+    docente_id: await idOf(insertUser(client)),
+    grado_id: await idOf(insertGrade(client)),
+    area_id: await idOf(insertArea(client)),
     ...values,
+    anio_lectivo: schoolYear,
   });
 }
 

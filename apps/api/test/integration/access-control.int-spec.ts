@@ -20,6 +20,7 @@ interface ExpectedRoute {
 
 const PUBLIC = 'public' as const;
 const TEACHER = UserRole.Teacher;
+const COORD = UserRole.Coordinator;
 const ADMIN = UserRole.Administrator;
 
 // Matriz esperada de TODAS las rutas (incluidas las de prueba). Una ruta nueva, o una cuyo
@@ -38,6 +39,27 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'patch', path: '/users/:id', access: ADMIN },
   { method: 'patch', path: '/users/:id/status', access: ADMIN },
   { method: 'put', path: '/users/:id/password', access: ADMIN },
+  { method: 'get', path: '/levels', access: TEACHER },
+  { method: 'post', path: '/levels', access: ADMIN },
+  { method: 'patch', path: '/levels/:id', access: ADMIN },
+  { method: 'get', path: '/grades', access: TEACHER },
+  { method: 'post', path: '/grades', access: ADMIN },
+  { method: 'patch', path: '/grades/:id', access: ADMIN },
+  { method: 'get', path: '/areas', access: TEACHER },
+  { method: 'post', path: '/areas', access: ADMIN },
+  { method: 'patch', path: '/areas/:id', access: ADMIN },
+  { method: 'get', path: '/academic-periods', access: TEACHER },
+  { method: 'post', path: '/academic-periods', access: ADMIN },
+  { method: 'patch', path: '/academic-periods/:id', access: ADMIN },
+  { method: 'get', path: '/teacher-assignments', access: COORD },
+  { method: 'post', path: '/teacher-assignments', access: COORD },
+  { method: 'patch', path: '/teacher-assignments/:id', access: COORD },
+  { method: 'patch', path: '/teacher-assignments/:id/status', access: COORD },
+  { method: 'get', path: '/me/assignments', access: TEACHER },
+  { method: 'get', path: '/school-years', access: TEACHER },
+  { method: 'get', path: '/school-years/current', access: TEACHER },
+  { method: 'post', path: '/school-years', access: ADMIN },
+  { method: 'put', path: '/school-years/:id/current', access: ADMIN },
   // Solo pruebas: públicos a propósito.
   { method: 'get', path: '/faq-example', access: PUBLIC },
   { method: 'get', path: '/faq-example/:id', access: PUBLIC },
