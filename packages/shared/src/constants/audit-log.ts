@@ -11,3 +11,6 @@ export const AuditLogType = {
   Coordination: 'coordinacion',
 } as const;
 export type AuditLogType = (typeof AuditLogType)[keyof typeof AuditLogType];
+
+/** Rol que se registra en la bitácora cuando la acción no tiene sesión (`bitacora.rol`). */
+export const AUDIT_UNKNOWN_ROLE = 'desconocido';

@@ -22,6 +22,17 @@ export interface Page<T> {
   totalPages: number;
 }
 
+/** Esquema de `Page<T>` para documentar y serializar las respuestas de los listados. */
+export function createPageSchema<TItem extends z.ZodType>(itemSchema: TItem) {
+  return z.object({
+    items: z.array(itemSchema),
+    page: z.number().int(),
+    pageSize: z.number().int(),
+    totalItems: z.number().int(),
+    totalPages: z.number().int(),
+  });
+}
+
 /**
  * Booleano de query string. `z.coerce.boolean` convertiría "false" en true,
  * por eso solo se aceptan los textos "true" y "false".

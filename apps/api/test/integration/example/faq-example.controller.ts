@@ -1,31 +1,55 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
-import { createListQuerySchema, queryBoolean, type ListQuery, type Page } from '@gns/shared';
-import { z } from 'zod';
-import { ListQueryPipe } from '../../../src/shared/pagination/list-query.pipe';
-import { FAQ_EXAMPLE_SORT_FIELDS, type FaqExample } from './faq-example.repository';
-import type { FaqExampleFilters, FaqExampleSortField } from './faq-example.repository';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { AuditLogType } from '@gns/shared';
+import { ZodResponse } from 'nestjs-zod';
+import { Audited } from '../../../src/core/audit/audited.decorator';
+import { FaqExampleAuditSnapshot } from './faq-example.audit-snapshot';
+import {
+  CreateFaqExampleDto,
+  FaqExampleDto,
+  FaqExampleListQueryDto,
+  FaqExamplePageDto,
+  IdParamDto,
+  UpdateFaqExampleDto,
+} from './faq-example.dto';
 import { FaqExampleService } from './faq-example.service';
-
-const faqExampleListQuery = createListQuerySchema({
-  sortFields: FAQ_EXAMPLE_SORT_FIELDS,
-  defaultSort: { field: 'createdAt', order: 'desc' },
-  filters: { category: z.string().min(1).optional(), isActive: queryBoolean.optional() },
-});
 
 @Controller('faq-example')
 export class FaqExampleController {
   constructor(private readonly service: FaqExampleService) {}
 
   @Get()
-  list(
-    @Query(new ListQueryPipe(faqExampleListQuery))
-    query: ListQuery<FaqExampleFilters, FaqExampleSortField>,
-  ): Promise<Page<FaqExample>> {
+  @ZodResponse({ status: 200, type: FaqExamplePageDto })
+  list(@Query() query: FaqExampleListQueryDto) {
     return this.service.list(query);
   }
 
   @Get(':id')
-  get(@Param('id', new ParseUUIDPipe()) id: string): Promise<FaqExample> {
+  @ZodResponse({ status: 200, type: FaqExampleDto })
+  get(@Param() { id }: IdParamDto) {
     return this.service.get(id);
+  }
+
+  @Post()
+  @Audited({
+    type: AuditLogType.Assistant,
+    action: 'Crear pregunta frecuente',
+    entity: 'pregunta_frecuente',
+    snapshot: FaqExampleAuditSnapshot,
+  })
+  @ZodResponse({ status: 201, type: FaqExampleDto })
+  create(@Body() body: CreateFaqExampleDto) {
+    return this.service.create(body);
+  }
+
+  @Patch(':id')
+  @Audited({
+    type: AuditLogType.Assistant,
+    action: 'Editar pregunta frecuente',
+    entity: 'pregunta_frecuente',
+    snapshot: FaqExampleAuditSnapshot,
+  })
+  @ZodResponse({ status: 200, type: FaqExampleDto })
+  update(@Param() { id }: IdParamDto, @Body() body: UpdateFaqExampleDto) {
+    return this.service.update(id, body);
   }
 }

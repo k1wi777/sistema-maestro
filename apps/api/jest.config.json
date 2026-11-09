@@ -18,10 +18,10 @@
       "moduleFileExtensions": ["js", "json", "ts"],
       "globalSetup": "<rootDir>/support/global-setup.ts",
       "globalTeardown": "<rootDir>/support/global-teardown.ts",
-      "testTimeout": 30000,
       "transform": {
         "^.+\\.ts$": ["ts-jest", { "tsconfig": "<rootDir>/../tsconfig.json" }]
       }
     }
-  ]
+  ],
+  "testTimeout": 30000
 }

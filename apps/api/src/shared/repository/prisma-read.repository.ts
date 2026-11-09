@@ -60,10 +60,7 @@ export abstract class PrismaReadRepository<
       orderBy.push({ id: 'asc' });
     }
 
-    const [totalItems, rows] = await this.prisma.$transaction([
-      this.delegate.count({ where }),
-      this.delegate.findMany({ where, orderBy, skip, take }),
-    ]);
+    const [totalItems, rows] = await this.countAndFind(where, orderBy, skip, take);
 
     return {
       items: rows.map((row) => this.toEntity(row)),
@@ -72,5 +69,24 @@ export abstract class PrismaReadRepository<
       totalItems: totalItems,
       totalPages: countPages(totalItems, query.pageSize),
     };
+  }
+
+  private async countAndFind(
+    where: TWhere,
+    orderBy: Record<string, 'asc' | 'desc'>[],
+    skip: number,
+    take: number,
+  ): Promise<[number, TRow[]]> {
+    // El cliente de una transacción no tiene `$transaction`: dentro de una, las dos
+    // consultas ya comparten la misma transacción.
+    if (this.prisma.inTransaction) {
+      const totalItems = await this.delegate.count({ where });
+      const rows = await this.delegate.findMany({ where, orderBy, skip, take });
+      return [totalItems, rows];
+    }
+    return this.prisma.$transaction([
+      this.delegate.count({ where }),
+      this.delegate.findMany({ where, orderBy, skip, take }),
+    ]);
   }
 }
