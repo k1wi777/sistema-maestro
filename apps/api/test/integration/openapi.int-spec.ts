@@ -12,6 +12,7 @@ interface RegisteredRoute {
 }
 
 interface Operation {
+  security?: Record<string, unknown>[];
   parameters?: { name: string; in: string }[];
   responses: Record<string, { content?: Record<string, { schema?: unknown }> }>;
   requestBody?: { content: Record<string, { schema?: unknown }> };
@@ -49,6 +50,9 @@ function registeredRoutes(app: INestApplication): RegisteredRoute[] {
 
 const ERROR_REF = '#/components/schemas/ApiErrorBody';
 
+// Endpoints que no reciben cuerpo: la sesión viaja en cookies.
+const BODYLESS = new Set(['post /auth/logout', 'post /auth/refresh']);
+
 describe('documentación OpenAPI', () => {
   let app: INestApplication;
   let operations: Record<string, Record<string, Operation> | undefined>;
@@ -82,11 +86,14 @@ describe('documentación OpenAPI', () => {
         expect([label, status, schema]).toEqual([label, status, { $ref: ERROR_REF }]);
       }
       const success = Object.entries(operation.responses).find(([status]) => /^2/.test(status));
-      expect([label, success?.[1].content?.['application/json']?.schema !== undefined]).toEqual([
-        label,
-        true,
-      ]);
-      if (['post', 'put', 'patch'].includes(method)) {
+      // Un 204 no tiene cuerpo que describir.
+      if (success?.[0] !== '204') {
+        expect([label, success?.[1].content?.['application/json']?.schema !== undefined]).toEqual([
+          label,
+          true,
+        ]);
+      }
+      if (['post', 'put', 'patch'].includes(method) && !BODYLESS.has(`${method} ${openApiPath}`)) {
         const schema = operation.requestBody?.content['application/json']?.schema;
         expect([label, schema !== undefined]).toEqual([label, true]);
       }
@@ -105,6 +112,28 @@ describe('documentación OpenAPI', () => {
       in: 'path',
     });
     expect(operations['/faq-example']?.post?.responses['201']).toBeDefined();
+  });
+
+  it('documenta la cookie de sesión y las respuestas 401 y 403 solo en los endpoints con rol', () => {
+    const security = (document.components as { securitySchemes?: Record<string, unknown> })
+      .securitySchemes;
+    expect(security?.cookie).toMatchObject({ type: 'apiKey', in: 'cookie', name: 'gns_access' });
+
+    for (const [path, method] of [
+      ['/users', 'get'],
+      ['/users/{id}/password', 'put'],
+      ['/auth/me', 'get'],
+    ] as const) {
+      const operation = operations[path]?.[method];
+      expect(operation?.security).toEqual([{ cookie: [] }]);
+      for (const status of ['401', '403']) {
+        expect(operation?.responses[status]?.content?.['application/json']?.schema).toEqual({
+          $ref: ERROR_REF,
+        });
+      }
+    }
+    const publicLogin = operations['/auth/login']?.post as { security?: unknown } | undefined;
+    expect(publicLogin?.security).toBeUndefined();
   });
 
   it('registra el esquema ApiErrorBody con sus campos', () => {
