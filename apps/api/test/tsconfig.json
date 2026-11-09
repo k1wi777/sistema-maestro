@@ -3,7 +3,8 @@
   "compilerOptions": {
     "rootDir": "..",
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "types": ["node", "jest"]
   },
-  "include": ["."]
+  "include": [".", "../prisma/seed"]
 }

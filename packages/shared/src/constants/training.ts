@@ -13,3 +13,12 @@ export const ChallengeQuestionType = {
 } as const;
 export type ChallengeQuestionType =
   (typeof ChallengeQuestionType)[keyof typeof ChallengeQuestionType];
+
+/** Tipo de actividad configurable de un módulo (`actividad_modulo.tipo`). */
+export const TrainingActivityType = {
+  WheelPassport: 'ruleta_pasaporte',
+  Match: 'conecta',
+  TrueOrMyth: 'verdad_o_mito',
+  Simulator: 'simulador',
+} as const;
+export type TrainingActivityType = (typeof TrainingActivityType)[keyof typeof TrainingActivityType];

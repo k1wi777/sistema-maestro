@@ -150,6 +150,27 @@ export async function insertChallengeQuestion(client: Client, values: Values = {
   });
 }
 
+export async function insertTrainingActivity(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'actividad_modulo', {
+    modulo_id: await idOf(insertTrainingModule(client)),
+    tipo: 'conecta',
+    orden: 1,
+    titulo: 'Actividad de prueba',
+    obligatoria: false,
+    estado: 'activo',
+    configuracion: {},
+    ...values,
+  });
+}
+
+export async function insertActivityProgress(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'progreso_actividad', {
+    docente_id: await idOf(insertUser(client)),
+    actividad_id: await idOf(insertTrainingActivity(client)),
+    ...values,
+  });
+}
+
 export function insertAuditLog(client: Client, values: Values = {}): Promise<Row> {
   return insertRow(client, 'bitacora', {
     rol: 'docente',
