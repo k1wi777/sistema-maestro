@@ -7,3 +7,14 @@ CONTEXTO_Plataforma_GNS.md
 Backlog_de_desarrollo_Plataforma_GNS.md
 Diagrama_base_de_datos_Plataforma_GNS.html
 Modelo_de_datos_y_procesos_Plataforma_GNS.pdf
+
+# Monorepo: dependencias, compilados, caché y entornos locales
+node_modules/
+dist/
+.turbo/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.next/

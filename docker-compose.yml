@@ -1,0 +1,43 @@
+# Local development environment: PostgreSQL 16 + MinIO (local stand-in for Cloudflare R2).
+# Defaults are for local use only; override them with a root .env (see .env.example).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gns}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gns}
+      POSTGRES_DB: ${POSTGRES_DB:-gns}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    # MinIO RELEASE.2026-10-23T20-06-51Z (AGPLv3, local use only); minio/minio is no longer pullable.
+    # To update: docker pull cgr.dev/chainguard/minio:latest and copy the digest from
+    # docker image inspect --format "{{index .RepoDigests 0}}" cgr.dev/chainguard/minio:latest
+    image: cgr.dev/chainguard/minio@sha256:a1ac4589a5f8136b616e667b48a0bea9719bb10bd45799ea946f24bbedfafde4
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-gns-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-gns-minio-secret}
+    ports:
+      - '${MINIO_API_PORT:-9000}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      # Required: without a named volume MinIO fails renaming files on overlayfs.
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
+  minio-data:

@@ -1,0 +1,8 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Dependencias con scripts de instalación. Ninguna es necesaria hoy:
+# @parcel/watcher (modo watch de Jest) trae binarios precompilados por plataforma.
+allowBuilds:
+  '@parcel/watcher': false
