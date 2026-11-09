@@ -13,7 +13,7 @@
     "lint": "eslint . --max-warnings 0 && prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky",
-    "postinstall": "turbo run build --filter=@gns/shared"
+    "postinstall": "turbo run build --filter=@gns/shared && pnpm --filter @gns/api db:generate"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

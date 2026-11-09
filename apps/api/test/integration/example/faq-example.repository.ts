@@ -1,0 +1,26 @@
+import type { ReadRepository } from '../../../src/shared/repository/repository';
+
+export interface FaqExample {
+  id: string;
+  category: string;
+  question: string;
+  answer: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export interface FaqExampleFilters {
+  category?: string;
+  isActive?: boolean;
+}
+
+export const FAQ_EXAMPLE_SORT_FIELDS = ['question', 'createdAt'] as const;
+export type FaqExampleSortField = (typeof FAQ_EXAMPLE_SORT_FIELDS)[number];
+
+export type FaqExampleRepository = ReadRepository<
+  FaqExample,
+  FaqExampleFilters,
+  FaqExampleSortField
+>;
+
+export const FAQ_EXAMPLE_REPOSITORY = Symbol('FAQ_EXAMPLE_REPOSITORY');
