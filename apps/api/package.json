@@ -6,7 +6,11 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main",
-    "test": "jest"
+    "test": "jest",
+    "test:db": "jest -c jest.db.config.json --runInBand",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:check": "prisma validate && prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code"
   },
   "dependencies": {
     "@gns/shared": "workspace:*",
@@ -22,7 +26,10 @@
     "@nestjs/cli": "11.0.24",
     "@types/jest": "30.0.0",
     "@types/node": "26.6.6",
+    "@types/pg": "8.23.1",
     "jest": "30.5.2",
+    "pg": "8.23.1",
+    "prisma": "7.10.1",
     "ts-jest": "29.4.15",
     "typescript": "5.9.3"
   }
