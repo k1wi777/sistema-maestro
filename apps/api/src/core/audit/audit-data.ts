@@ -94,3 +94,21 @@ export function diffFirstLevel(
 function bigintToText(_key: string, inner: unknown): unknown {
   return typeof inner === 'bigint' ? inner.toString() : inner;
 }
+
+/**
+ * Detalle de la fila de bitácora: el texto de `detailFromBody` en el cuerpo (recortado) si
+ * lo hay; si no, `detail`. El cuerpo ya lo validó el esquema del endpoint cuando la acción
+ * terminó con éxito.
+ */
+export function resolveAuditDetail(
+  options: { detail?: string; detailFromBody?: string },
+  body: unknown,
+): string | null {
+  if (options.detailFromBody && typeof body === 'object' && body !== null) {
+    const value = (body as Record<string, unknown>)[options.detailFromBody];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+  return options.detail ?? null;
+}

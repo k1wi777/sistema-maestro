@@ -111,6 +111,15 @@ export async function insertLessonPlan(client: Client, values: Values = {}): Pro
   });
 }
 
+export async function insertLessonPlanResource(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'recurso_planeacion', {
+    planeacion_id: await idOf(insertLessonPlan(client)),
+    herramienta: 'Canva',
+    url: 'https://recursos.ejemplo.test/uno',
+    ...values,
+  });
+}
+
 export async function insertReview(client: Client, values: Values = {}): Promise<Row> {
   return insertRow(client, 'revision', {
     tipo_registro: 'planeacion',
