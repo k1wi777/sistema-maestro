@@ -28,6 +28,10 @@ import {
   insertGrade,
   insertLessonPlan,
   insertLessonPlanResource,
+  insertActivityProgress,
+  insertModuleProgress,
+  insertTrainingPlan,
+  insertTrainingSection,
   insertObserverNote,
   insertPasswordCredential,
   insertReview,
@@ -227,6 +231,8 @@ describe('check constraints', () => {
         'revision_cambios_check',
         'progreso_actividad_intentos_check',
         'progreso_actividad_mejor_puntaje_check',
+        'progreso_actividad_partida_check',
+        'progreso_modulo_partida_desafio_check',
       ].sort(),
     );
   });
@@ -322,6 +328,67 @@ describe('check constraints', () => {
         `UPDATE modulo_formacion SET segundos_por_pregunta = $1 WHERE id = $2`,
         [value, (await insertTrainingModule(db.client)).id],
       );
+    });
+  });
+
+  describe('en-curso game state columns', () => {
+    it('accepts a JSON object or NULL as the Challenge game', async () => {
+      const progress = await insertModuleProgress(db.client, { partida_desafio: { v: 1 } });
+
+      expect(progress.partida_desafio).toEqual({ v: 1 });
+      expect((await insertModuleProgress(db.client)).partida_desafio).toBeNull();
+    });
+
+    it.each([[[1, 2]], ['texto'], [7]])('rejects %j as the Challenge game', async (value) => {
+      const progress = await insertModuleProgress(db.client);
+
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE progreso_modulo SET partida_desafio = $1::jsonb WHERE id = $2`,
+        [JSON.stringify(value), progress.id],
+      );
+    });
+
+    it.each([[[1, 2]], ['texto'], [7]])('rejects %j as the activity game', async (value) => {
+      const progress = await insertActivityProgress(db.client);
+
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE progreso_actividad SET partida = $1::jsonb WHERE id = $2`,
+        [JSON.stringify(value), progress.id],
+      );
+    });
+
+    it('accepts a JSON object as the activity game', async () => {
+      const progress = await insertActivityProgress(db.client, { partida: { v: 1 } });
+
+      expect(progress.partida).toEqual({ v: 1 });
+    });
+  });
+
+  describe('modulo_formacion.seccion_id', () => {
+    it('rejects a section that belongs to another plan', async () => {
+      const otherPlan = await insertTrainingPlan(db.client);
+      const foreignSection = await insertTrainingSection(db.client, { plan_id: otherPlan.id });
+      const module = await insertTrainingModule(db.client);
+
+      await expectSqlError(
+        db.client,
+        FOREIGN_KEY_VIOLATION,
+        `UPDATE modulo_formacion SET seccion_id = $1 WHERE id = $2`,
+        [foreignSection.id, module.id],
+      );
+    });
+
+    it('no longer has the part column', async () => {
+      const result = await db.client.query(
+        `SELECT 1 FROM information_schema.columns
+         WHERE table_name = 'modulo_formacion' AND column_name = 'parte'`,
+      );
+
+      expect(result.rowCount).toBe(0);
     });
   });
 

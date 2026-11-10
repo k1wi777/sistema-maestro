@@ -59,6 +59,17 @@ const BODYLESS = new Set([
   'post /field-journals/{id}/submit',
   'post /observer-notes/{id}/submit',
   'put /shared-activities/{id}/favorite',
+  'post /training-modules/{id}/publish',
+  'post /training-modules/{id}/withdraw',
+  'post /training-modules/{id}/restore',
+  'post /training-modules/{id}/activities/{activityId}/withdraw',
+  'post /training-modules/{id}/activities/{activityId}/restore',
+  'post /me/training/modules/{moduleId}/video-viewed',
+  'post /me/training/modules/{moduleId}/presentation-viewed',
+  'post /me/training/modules/{moduleId}/challenge',
+  'post /me/training/modules/{moduleId}/challenge/next',
+  'post /me/training/activities/{activityId}/game',
+  'post /me/training/activities/{activityId}/game/next',
 ]);
 
 describe('documentación OpenAPI', () => {

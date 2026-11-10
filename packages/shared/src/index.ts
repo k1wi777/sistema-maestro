@@ -19,4 +19,5 @@ export * from './list-query';
 export * from './planning';
 export * from './review';
 export * from './structure';
+export * from './training';
 export * from './training-activities';

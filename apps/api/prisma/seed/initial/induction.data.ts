@@ -23,9 +23,40 @@ export interface SlideSeed {
   keyIdeas: readonly string[];
 }
 
+export const TRAINING_SECTIONS = [
+  {
+    key: 'welcome',
+    title: 'Bienvenida',
+    subtitle: 'Inducción institucional 2026–2027',
+  },
+  {
+    key: 'part_1',
+    title: 'Parte I · Fundamentos y filosofía',
+    subtitle: 'Orígenes y bases científicas del modelo, y qué buscamos lograr',
+  },
+  {
+    key: 'part_2',
+    title: 'Parte II · La práctica pedagógica',
+    subtitle: 'Estructura de nuestra enseñanza y lo que nos hace únicos',
+  },
+  {
+    key: 'part_3',
+    title: 'Parte III · Recomendaciones específicas',
+    subtitle: 'Orientaciones para preescolar bajo y preescolar alto',
+  },
+  {
+    key: 'part_4',
+    title: 'Parte IV · Nuestro talento humano',
+    subtitle: 'Propósito, principios, competencias, estructura y condiciones laborales',
+  },
+] as const;
+export type TrainingSectionKey = (typeof TRAINING_SECTIONS)[number]['key'];
+
 export interface TrainingModuleSeed {
   number: string;
-  part: string;
+  /** Clave de su sección en `TRAINING_SECTIONS`. */
+  section: TrainingSectionKey;
+  /** Posición dentro de su sección (1..n). */
   sortOrder: number;
   title: string;
   summary: string;
@@ -40,8 +71,8 @@ export const GENERAL_PLAN_NAME = 'Inducción institucional';
 export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   {
     number: '0',
-    part: 'Bienvenida',
-    sortOrder: 0,
+    section: 'welcome',
+    sortOrder: 1,
     title: 'Bienvenida institucional GNS',
     summary:
       'Misión, visión, propósito, principios, jornada laboral, beneficios, evaluación de desempeño y políticas institucionales.',
@@ -147,7 +178,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '1',
-    part: 'Parte I · Fundamentos y filosofía',
+    section: 'part_1',
     sortOrder: 1,
     title: 'Antecedente histórico GNS · Marco epistemológico y científico',
     summary: 'Orígenes del colegio y bases científicas de nuestro modelo.',
@@ -296,7 +327,7 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '2',
-    part: 'Parte I · Fundamentos y filosofía',
+    section: 'part_1',
     sortOrder: 2,
     title: 'Objetivo del modelo GNS',
     summary: 'Qué buscamos lograr con nuestra metodología.',
@@ -435,8 +466,8 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '3',
-    part: 'Parte II · La práctica pedagógica',
-    sortOrder: 3,
+    section: 'part_2',
+    sortOrder: 1,
     title: 'Propuesta pedagógica',
     summary:
       'Estructura de nuestra enseñanza: Journey Learning, CurioCity, proyectos transversales y CLIL.',
@@ -599,8 +630,8 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '4',
-    part: 'Parte II · La práctica pedagógica',
-    sortOrder: 4,
+    section: 'part_2',
+    sortOrder: 2,
     title: 'Claves y diferenciadores',
     summary: 'Lo que nos hace únicos en el entorno educativo.',
     videoUrl: 'https://youtu.be/0q_7N2KdPyk',
@@ -722,8 +753,8 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '5',
-    part: 'Parte III · Recomendaciones específicas',
-    sortOrder: 5,
+    section: 'part_3',
+    sortOrder: 1,
     title: 'Recomendaciones para Preescolar Bajo',
     summary: 'Red, Blue, Purple, Green y Garden: niños y niñas de 2 a 4 años.',
     videoUrl: 'https://youtu.be/fbFqeVVZT48',
@@ -868,8 +899,8 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '6',
-    part: 'Parte III · Recomendaciones específicas',
-    sortOrder: 6,
+    section: 'part_3',
+    sortOrder: 2,
     title: 'Recomendaciones para Preescolar Alto (KTF)',
     summary: 'Kinder, Transition y First Grade: niños y niñas de 4 a 7 años.',
     videoUrl: 'https://youtu.be/zfzinmmUsJU',
@@ -1007,8 +1038,8 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '7',
-    part: 'Parte IV · Nuestro talento humano',
-    sortOrder: 7,
+    section: 'part_4',
+    sortOrder: 1,
     title: 'Nuestro talento humano',
     summary:
       'Propósito, principios y competencias institucionales, estructura de liderazgo, y cómo funcionan tu contrato y tu nómina.',
@@ -1155,8 +1186,8 @@ export const INDUCTION_MODULES: readonly TrainingModuleSeed[] = [
   },
   {
     number: '8',
-    part: 'Parte IV · Nuestro talento humano',
-    sortOrder: 8,
+    section: 'part_4',
+    sortOrder: 2,
     title: 'Plan de beneficios GNS 2026–2027',
     summary:
       'Ahorro mutuo, bono de desempeño, bilingüismo, quinquenios, posgrados, cabaña en Coveñas y mucho más. ¡Descúbrelos jugando!',

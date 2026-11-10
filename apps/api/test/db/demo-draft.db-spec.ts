@@ -12,8 +12,8 @@ describe('demo data and draft modules (R16)', () => {
       return;
     }
     await db.client.query(
-      `INSERT INTO modulo_formacion (plan_id, numero, orden, titulo, estado, video_url)
-       SELECT plan_id, '9', 9, 'Módulo en borrador', $1, 'https://youtu.be/borrador'
+      `INSERT INTO modulo_formacion (plan_id, seccion_id, numero, orden, titulo, estado, video_url)
+       SELECT plan_id, seccion_id, '9', 9, 'Módulo en borrador', $1, 'https://youtu.be/borrador'
        FROM modulo_formacion WHERE numero = '0' LIMIT 1`,
       [TrainingModuleStatus.Draft],
     );

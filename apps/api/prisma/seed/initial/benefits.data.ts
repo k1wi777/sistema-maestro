@@ -719,6 +719,19 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
           },
         },
         {
+          // Misma cuenta que `mitad`: dos resultados no pueden compartir clave.
+          clave: 'mitad_siguiente',
+          expresion: {
+            op: 'divide',
+            args: [
+              {
+                ref: 'bono',
+              },
+              2,
+            ],
+          },
+        },
+        {
           clave: 'sin_bono',
           expresion: {
             op: 'compara',
@@ -754,7 +767,7 @@ export const BENEFITS_ACTIVITIES: readonly ActivitySeed[] = [
           formato: 'moneda',
         },
         {
-          clave: 'mitad',
+          clave: 'mitad_siguiente',
           etiqueta: 'Si continúas el siguiente año (50%)',
           formato: 'moneda',
         },

@@ -31,12 +31,13 @@ describe('modulo_formacion training settings', () => {
   });
 
   it('rejects a video title longer than 160 characters', async () => {
+    const module = await insertTrainingModule(db.client);
     await expectSqlError(
       db.client,
       '22001',
-      `INSERT INTO modulo_formacion (plan_id, orden, titulo, estado, video_titulo)
-       VALUES ($1, 1, 'Módulo', 'activo', $2)`,
-      [(await insertTrainingModule(db.client)).plan_id, 'x'.repeat(161)],
+      `INSERT INTO modulo_formacion (plan_id, seccion_id, orden, titulo, estado, video_titulo)
+       VALUES ($1, $2, 1, 'Módulo', 'activo', $3)`,
+      [module.plan_id, module.seccion_id, 'x'.repeat(161)],
     );
   });
 });
