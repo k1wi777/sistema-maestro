@@ -18,7 +18,11 @@ import {
   SCHOOL_YEAR,
 } from '../../prisma/seed/initial/catalogs.data.ts';
 import { FAQ_ENTRIES } from '../../prisma/seed/initial/faq.data.ts';
-import { GENERAL_PLAN_NAME, INDUCTION_MODULES } from '../../prisma/seed/initial/induction.data.ts';
+import {
+  GENERAL_PLAN_NAME,
+  INDUCTION_MODULES,
+  TRAINING_SECTIONS,
+} from '../../prisma/seed/initial/induction.data.ts';
 import { seedInitialData } from '../../prisma/seed/initial/seed-initial.ts';
 import { useTestDatabase } from './support/database';
 
@@ -33,6 +37,7 @@ const SEEDED_TABLES = [
   'area',
   'periodo_academico',
   'plan_formacion',
+  'seccion_plan',
   'modulo_formacion',
   'diapositiva',
   'pregunta_desafio',
@@ -135,15 +140,17 @@ describe('initial data content', () => {
     expect(plans[0]?.nombre).toBe(GENERAL_PLAN_NAME);
 
     const modules = await rows(
-      `SELECT numero, parte, orden, titulo, resumen, video_url, video_titulo, presentacion_url, estado
-       FROM modulo_formacion WHERE plan_id = $1 ORDER BY orden`,
+      `SELECT m.numero, s.titulo AS seccion, m.orden, m.titulo, m.resumen, m.video_url, m.video_titulo,
+              m.presentacion_url, m.estado
+       FROM modulo_formacion m JOIN seccion_plan s ON s.id = m.seccion_id
+       WHERE m.plan_id = $1 ORDER BY s.orden, m.orden`,
       [plans[0]?.id],
     );
 
     expect(modules).toEqual(
       INDUCTION_MODULES.map((module) => ({
         numero: module.number,
-        parte: module.part,
+        seccion: TRAINING_SECTIONS.find((section) => section.key === module.section)?.title,
         orden: module.sortOrder,
         titulo: module.title,
         resumen: module.summary,
@@ -166,12 +173,55 @@ describe('initial data content', () => {
     ]);
   });
 
+  it('has the General plan sections in order, with their modules numbered within each one', async () => {
+    const sections = await rows(
+      `SELECT s.titulo, s.subtitulo, s.orden,
+              coalesce(array_agg(m.numero ORDER BY m.orden) FILTER (WHERE m.id IS NOT NULL), '{}') AS modulos,
+              coalesce(array_agg(m.orden ORDER BY m.orden) FILTER (WHERE m.id IS NOT NULL), '{}') AS ordenes
+       FROM seccion_plan s
+       JOIN plan_formacion p ON p.id = s.plan_id AND p.area_id IS NULL AND p.anio_lectivo = $1
+       LEFT JOIN modulo_formacion m ON m.seccion_id = s.id
+       GROUP BY s.id ORDER BY s.orden`,
+      [SCHOOL_YEAR],
+    );
+
+    // Igual en una base migrada desde `parte` que en una sembrada después de la migración.
+    expect(sections).toEqual(
+      TRAINING_SECTIONS.map((section, index) => {
+        const modules = INDUCTION_MODULES.filter((module) => module.section === section.key);
+        return {
+          titulo: section.title,
+          subtitulo: section.subtitle,
+          orden: index + 1,
+          modulos: modules.map((module) => module.number),
+          ordenes: modules.map((module) => module.sortOrder),
+        };
+      }),
+    );
+    expect(sections.map((section) => section.ordenes)).toEqual([
+      [1],
+      [1, 2],
+      [1, 2],
+      [1, 2],
+      [1, 2],
+    ]);
+  });
+
+  it('keeps every module in a section of its own plan', async () => {
+    const mismatched = await rows(
+      `SELECT m.id FROM modulo_formacion m JOIN seccion_plan s ON s.id = m.seccion_id
+       WHERE s.plan_id <> m.plan_id`,
+    );
+
+    expect(mismatched).toEqual([]);
+  });
+
   it('has the text slides of modules 1 to 6 and none for modules 0, 7 and 8', async () => {
     const result = await rows(
       `SELECT m.numero, d.orden, d.titulo, d.ideas_clave
        FROM diapositiva d JOIN modulo_formacion m ON m.id = d.modulo_id
        JOIN plan_formacion p ON p.id = m.plan_id
-       WHERE p.area_id IS NULL AND p.anio_lectivo = $1 ORDER BY m.orden, d.orden`,
+       WHERE p.area_id IS NULL AND p.anio_lectivo = $1 ORDER BY m.numero::int, d.orden`,
       [SCHOOL_YEAR],
     );
 
@@ -199,7 +249,7 @@ describe('initial data content', () => {
        JOIN plan_formacion p ON p.id = m.plan_id
        LEFT JOIN opcion_pregunta o ON o.pregunta_id = q.id
        WHERE p.area_id IS NULL AND p.anio_lectivo = $1
-       GROUP BY m.numero, m.orden, q.id ORDER BY m.orden, q.orden`,
+       GROUP BY m.numero, m.orden, q.id ORDER BY m.numero::int, q.orden`,
       [SCHOOL_YEAR],
     );
 
@@ -268,7 +318,8 @@ describe('initial data content', () => {
   it('has the prototype video titles, also on modules without a link', async () => {
     const modules = await rows(
       `SELECT m.numero, m.video_titulo, m.video_url FROM modulo_formacion m
-       JOIN plan_formacion p ON p.id = m.plan_id WHERE p.area_id IS NULL ORDER BY m.orden`,
+       JOIN plan_formacion p ON p.id = m.plan_id JOIN seccion_plan s ON s.id = m.seccion_id
+       WHERE p.area_id IS NULL ORDER BY s.orden, m.orden`,
     );
 
     expect(modules.map((module) => module.video_titulo)).toEqual([
@@ -357,6 +408,20 @@ describe('initial data content', () => {
       const inputs = (config(title) as { entradas: Row[] }).entradas;
       expect(inputs.find((input) => input.clave === 'anios')?.unidad).toBe('años');
     }
+  });
+
+  it('stores the performance bonus simulator with the corrected `mitad_siguiente` key', async () => {
+    const [stored] = await rows(
+      `SELECT configuracion FROM actividad_modulo WHERE titulo = 'Simulador de bono de desempeño'`,
+    );
+    const seeded = BENEFITS_ACTIVITIES.find(
+      (activity) => activity.title === 'Simulador de bono de desempeño',
+    );
+
+    // Una base sembrada antes de BE-7 la recibe por la migración; una nueva, por el seed.
+    expect(stored?.configuracion).toEqual(
+      parseActivityConfig(TrainingActivityType.Simulator, seeded?.config).data,
+    );
   });
 
   it('keeps the salary of the simulators out of persistence', async () => {

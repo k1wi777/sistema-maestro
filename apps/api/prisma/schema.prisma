@@ -1,4 +1,4 @@
-// Modelo de datos de la Plataforma GNS: 30 tablas en 7 módulos.
+// Modelo de datos de la Plataforma GNS: 31 tablas en 7 módulos.
 // Modelos y campos en inglés, mapeados a tablas y columnas en español (snake_case).
 // Lo que Prisma no expresa (triggers de la bitácora, privilegios y CHECK) vive en
 // las migraciones SQL escritas a mano.
@@ -411,10 +411,31 @@ model TrainingPlan {
   updatedAt  DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   area    Area?            @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  modules TrainingModule[]
+  modules  TrainingModule[]
+  sections TrainingSection[]
 
   @@index([areaId])
   @@map("plan_formacion")
+}
+
+// Sección de un plan (p. ej. «Parte I»): agrupa módulos y se ordena dentro del plan.
+// Sin estado: una sección sin módulos activos no aparece en la ruta del docente.
+model TrainingSection {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId    String   @map("plan_id") @db.Uuid
+  title     String   @map("titulo") @db.VarChar(120)
+  subtitle  String?  @map("subtitulo") @db.VarChar(200)
+  sortOrder Int      @map("orden") @db.SmallInt
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  plan    TrainingPlan     @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  modules TrainingModule[]
+
+  // Respalda la llave foránea compuesta de `modulo_formacion` (la sección es del mismo plan).
+  @@unique([id, planId])
+  @@index([planId])
+  @@map("seccion_plan")
 }
 
 // `status` admite `borrador` (módulo aún no publicado, sin progreso) además de
@@ -422,7 +443,7 @@ model TrainingPlan {
 model TrainingModule {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   planId             String   @map("plan_id") @db.Uuid
-  part               String?  @map("parte") @db.VarChar(60)
+  sectionId          String   @map("seccion_id") @db.Uuid
   number             String?  @map("numero") @db.VarChar(4)
   sortOrder          Int      @map("orden") @db.SmallInt
   title              String   @map("titulo") @db.VarChar(160)
@@ -438,6 +459,7 @@ model TrainingModule {
   updatedAt          DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   plan         TrainingPlan        @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  section      TrainingSection     @relation(fields: [sectionId, planId], references: [id, planId], onDelete: NoAction, onUpdate: NoAction)
   slides       Slide[]
   questions    ChallengeQuestion[]
   progress     ModuleProgress[]
@@ -445,6 +467,7 @@ model TrainingModule {
   activities   TrainingActivity[]
 
   @@index([planId])
+  @@index([sectionId])
   @@map("modulo_formacion")
 }
 
@@ -505,6 +528,8 @@ model ModuleProgress {
   bestScore            Int?      @map("mejor_puntaje") @db.SmallInt
   passedAt             DateTime? @map("aprobado_en") @db.Timestamptz(6)
   completedAt          DateTime? @map("terminado_en") @db.Timestamptz(6)
+  // Partida del Desafío en curso (estado del servidor, nunca sale de la API); NULL si no hay.
+  challengeGame        Json?     @map("partida_desafio") @db.JsonB
   createdAt            DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt            DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
@@ -584,6 +609,8 @@ model ActivityProgress {
   bestPoints  Int?      @map("mejores_puntos")
   attempts    Int       @default(0) @map("intentos") @db.SmallInt
   detail      Json?     @map("detalle") @db.JsonB
+  // Partida de conecta o verdad o mito en curso (estado del servidor); NULL si no hay.
+  game        Json?     @map("partida") @db.JsonB
   createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 

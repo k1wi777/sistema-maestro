@@ -31,3 +31,11 @@ export const TrainingActivityType = {
   Simulator: 'simulador',
 } as const;
 export type TrainingActivityType = (typeof TrainingActivityType)[keyof typeof TrainingActivityType];
+
+/** Estado de un módulo para un docente en su ruta (calculado, no se guarda). */
+export const TeacherModuleState = {
+  Pending: 'pendiente',
+  InProgress: 'en_curso',
+  Done: 'terminado',
+} as const;
+export type TeacherModuleState = (typeof TeacherModuleState)[keyof typeof TeacherModuleState];

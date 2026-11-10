@@ -185,6 +185,24 @@ describe('activity configuration schemas', () => {
   });
 });
 
+describe('simulator result keys', () => {
+  it('rejects two results that share a key', () => {
+    const config = cloneConfig('Simulador de ahorro mutuo');
+    const first = config.resultados[0] as { clave: string; etiqueta: string; formato: string };
+    config.resultados = [first, { ...first, etiqueta: 'Otra etiqueta' }];
+
+    expect(parseSimulator(config)).toBe(false);
+  });
+
+  it('keeps the performance bonus result keys unique, with the next-year half apart', () => {
+    const config = simulatorConfig('Simulador de bono de desempeño');
+    const keys = config.resultados.map((result) => result.clave);
+
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys).toEqual(expect.arrayContaining(['mitad', 'mitad_siguiente']));
+  });
+});
+
 describe('simulator schema limits', () => {
   const only = (expresion: unknown) => [{ clave: 'x', expresion }];
 

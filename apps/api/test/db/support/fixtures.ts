@@ -168,9 +168,16 @@ export function insertTrainingPlan(client: Client, values: Values = {}): Promise
   return insertRow(client, 'plan_formacion', { nombre: 'Plan de prueba', ...values });
 }
 
+export function insertTrainingSection(client: Client, values: Values): Promise<Row> {
+  return insertRow(client, 'seccion_plan', { titulo: 'Sección de prueba', orden: 1, ...values });
+}
+
+/** Módulo con su plan y su sección; si se da `plan_id`, la sección se crea en ese plan. */
 export async function insertTrainingModule(client: Client, values: Values = {}): Promise<Row> {
+  const planId = values.plan_id ?? (await idOf(insertTrainingPlan(client)));
   return insertRow(client, 'modulo_formacion', {
-    plan_id: await idOf(insertTrainingPlan(client)),
+    plan_id: planId,
+    seccion_id: await idOf(insertTrainingSection(client, { plan_id: planId })),
     orden: 1,
     titulo: 'Módulo de prueba',
     estado: 'activo',
@@ -197,6 +204,14 @@ export async function insertTrainingActivity(client: Client, values: Values = {}
     obligatoria: false,
     estado: 'activo',
     configuracion: {},
+    ...values,
+  });
+}
+
+export async function insertModuleProgress(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'progreso_modulo', {
+    docente_id: await idOf(insertUser(client)),
+    modulo_id: await idOf(insertTrainingModule(client)),
     ...values,
   });
 }
