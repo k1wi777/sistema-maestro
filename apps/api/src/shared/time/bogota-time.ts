@@ -1,4 +1,5 @@
-const TIME_ZONE = 'America/Bogota';
+/** Zona horaria del colegio: única fuente para todo formateo de fechas de la API. */
+export const BOGOTA_TIME_ZONE = 'America/Bogota';
 
 // Colombia no tiene horario de verano: el desfase es fijo y el filtro por día no depende de la
 // base de datos de zonas horarias.
@@ -7,7 +8,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 function parts(date: Date): Record<string, string> {
   const formatted = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
+    timeZone: BOGOTA_TIME_ZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -23,6 +24,12 @@ function parts(date: Date): Record<string, string> {
 export function formatBogotaDateOnly(date: Date): string {
   const p = parts(date);
   return `${p.year}-${p.month}-${p.day}`;
+}
+
+/** `aaaa-mm-dd HH:mm` en la hora de Colombia. */
+export function formatBogotaDateTime(date: Date): string {
+  const p = parts(date);
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
 }
 
 /** `aaaa-mm-dd hh:mm:ss` en la hora de Colombia. */

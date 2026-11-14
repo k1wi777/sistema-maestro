@@ -1,8 +1,9 @@
 import type { Server } from 'node:http';
 import type { INestApplication } from '@nestjs/common';
-import { apiErrorBodySchema } from '@gns/shared';
+import { apiErrorBodySchema, UserRole } from '@gns/shared';
 import request from 'supertest';
 import { createTestApp } from './support/create-test-app';
+import { asUser, createTestUser, signIn } from './support/session';
 
 const ALLOWED_ORIGIN = process.env.CORS_ORIGINS?.split(',')[0] ?? '';
 
@@ -27,6 +28,26 @@ describe('seguridad base', () => {
     expect(res.headers['x-content-type-options']).toBe('nosniff');
     expect(res.headers['strict-transport-security']).toBeDefined();
     expect(res.headers['x-powered-by']).toBeUndefined();
+  });
+
+  it.each([
+    ['una respuesta exitosa', '/faq-example', 200],
+    ['una ruta inexistente', '/no-existe', 404],
+    ['un error de validación', '/faq-example?pageSize=0', 400],
+    ['una petición sin sesión', '/users', 401],
+  ])('no permite guardar en caché %s', async (_name, path, status) => {
+    const res = await request(server()).get(path).expect(status);
+    expect(res.headers['cache-control']).toBe('no-store');
+  });
+
+  it('no permite guardar en caché una exportación CSV', async () => {
+    const coordinator = await createTestUser(app, { role: UserRole.Coordinator });
+    const cookies = await signIn(app, coordinator);
+
+    const res = await asUser(app, 'get', '/audit-log/export', cookies, 'access').expect(200);
+
+    expect(res.headers['content-type']).toMatch(/^text\/csv/);
+    expect(res.headers['cache-control']).toBe('no-store');
   });
 
   it('permite un origen listado con credenciales y expone el id de petición', async () => {
@@ -82,5 +103,6 @@ describe('límite de peticiones', () => {
     expect(body).toMatchObject({ statusCode: 429, code: 'demasiadas_peticiones' });
     expect(body.requestId).toBe(res.headers['x-request-id']);
     expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['cache-control']).toBe('no-store');
   });
 });

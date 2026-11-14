@@ -4,7 +4,7 @@
 // Usage: node scripts/test-affected.mjs [--base <ref>] [--plan]
 //   --base <ref>  base to compare against (default: TEST_BASE or origin/main)
 //   --plan        print the decision as JSON and do not run anything
-// With GITHUB_OUTPUT defined, writes `mode` and `db` for the CI.
+// With GITHUB_OUTPUT defined, writes `mode`, `db` and `e2e` for the CI.
 // Fail-safe: any doubt or error resolves to mode "all", never to "none".
 import console from 'node:console';
 import process from 'node:process';
@@ -51,6 +51,8 @@ const rules = [
       f.startsWith('.github/') ||
       f.startsWith('scripts/'),
   ],
+  // The end-to-end tests are classified before `related`: `--findRelatedTests` must not run on them.
+  ['e2e', (f) => f.startsWith('apps/api/test/e2e/')],
   ['db', (f) => f.startsWith('apps/api/prisma/seed/') || f.startsWith('apps/api/test/db/')],
   [
     'related',
@@ -90,6 +92,7 @@ function decide() {
     return {
       mode: 'all',
       db: true,
+      e2e: true,
       base,
       files: [],
       reason: `git failed or base not found (${base}): ${String(e.message).split('\n')[0]}`,
@@ -99,6 +102,7 @@ function decide() {
     return {
       mode: 'all',
       db: true,
+      e2e: true,
       base,
       files: changed,
       reason: `more than ${MAX_FILES} changed files`,
@@ -106,12 +110,30 @@ function decide() {
   }
   const related = [];
   let db = false;
+  // End-to-end tests run (in an epic PR) only when they or the seed data change.
+  let e2e = false;
   for (const f of changed) {
+    if (f.startsWith('apps/api/test/e2e/') || f.startsWith('apps/api/prisma/seed/')) e2e = true;
     const hit = rules.find(([, test]) => test(f));
-    if (!hit) return { mode: 'all', db: true, base, files: changed, reason: `unknown file: ${f}` };
+    if (!hit)
+      return {
+        mode: 'all',
+        db: true,
+        e2e: true,
+        base,
+        files: changed,
+        reason: `unknown file: ${f}`,
+      };
     const [cat] = hit;
     if (cat === 'all')
-      return { mode: 'all', db: true, base, files: changed, reason: `core file changed: ${f}` };
+      return {
+        mode: 'all',
+        db: true,
+        e2e: true,
+        base,
+        files: changed,
+        reason: `core file changed: ${f}`,
+      };
     if (cat === 'db') db = true;
     if (cat === 'related' || cat === 'db') {
       if (deleted.has(f)) {
@@ -127,10 +149,11 @@ function decide() {
       } else if (cat === 'related') related.push(f);
     }
   }
-  if (related.length === 0 && !db) {
+  if (related.length === 0 && !db && !e2e) {
     return {
       mode: 'none',
       db: false,
+      e2e: false,
       base,
       files: changed,
       reason: 'no changed file affects tests',
@@ -139,10 +162,15 @@ function decide() {
   return {
     mode: 'affected',
     db,
+    e2e,
     base,
     files: changed,
     related,
-    reason: db ? 'related tests + database tests (V8)' : 'related tests only',
+    reason: [
+      'related tests',
+      ...(db ? ['database tests (V8)'] : []),
+      ...(e2e ? ['end-to-end tests (V5)'] : []),
+    ].join(' + '),
   };
 }
 
@@ -150,16 +178,23 @@ let plan;
 try {
   plan = decide();
 } catch (e) {
-  plan = { mode: 'all', db: true, base, files: [], reason: `unexpected error: ${e.message}` };
+  plan = {
+    mode: 'all',
+    db: true,
+    e2e: true,
+    base,
+    files: [],
+    reason: `unexpected error: ${e.message}`,
+  };
 }
 
 if (process.env.GITHUB_OUTPUT) {
-  appendFileSync(process.env.GITHUB_OUTPUT, `mode=${plan.mode}\ndb=${plan.db}\n`);
+  appendFileSync(process.env.GITHUB_OUTPUT, `mode=${plan.mode}\ndb=${plan.db}\ne2e=${plan.e2e}\n`);
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(
     process.env.GITHUB_STEP_SUMMARY,
-    `### Test selection\n\n- mode: \`${plan.mode}\`\n- database tests: \`${plan.db}\`\n- base: \`${plan.base}\`\n- reason: ${plan.reason}\n- changed files: ${plan.files.length}\n`,
+    `### Test selection\n\n- mode: \`${plan.mode}\`\n- database tests: \`${plan.db}\`\n- end-to-end tests: \`${plan.e2e}\`\n- base: \`${plan.base}\`\n- reason: ${plan.reason}\n- changed files: ${plan.files.length}\n`,
   );
 }
 
@@ -174,6 +209,11 @@ console.error(
 if (plan.db) {
   console.error(
     '[test-affected] V8 (pnpm test:db) is required and is not run by this script: run it against the migrated local database.',
+  );
+}
+if (plan.e2e) {
+  console.error(
+    '[test-affected] V5 (pnpm test:e2e) is required and is not run by this script: it starts its own containers.',
   );
 }
 
@@ -206,7 +246,7 @@ if (plan.mode === 'all') {
 // affected
 if (plan.related.length === 0) {
   console.error(
-    '[test-affected] no related unit/integration tests; only database tests (V8) apply.',
+    '[test-affected] no related unit/integration tests; only database (V8) or end-to-end (V5) tests apply.',
   );
   process.exit(0);
 }

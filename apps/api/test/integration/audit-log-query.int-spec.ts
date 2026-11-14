@@ -2,19 +2,11 @@ import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { apiErrorBodySchema, ApiErrorCode, UserRole, UserStatus } from '@gns/shared';
-import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/core/bootstrap/configure-app';
 import { AUDIT_LOG_EXPORT_LIMIT } from '../../src/modules/auditoria/audit-log-query.service';
 import { PrismaService } from '../../src/shared/database/prisma.service';
-import {
-  asUser,
-  createTestUser,
-  serverOf,
-  signIn,
-  type Cookies,
-  type TestUser,
-} from './support/session';
+import { asUser, createTestUser, signIn, type Cookies, type TestUser } from './support/session';
 import { createTestApp } from './support/create-test-app';
 
 interface EntryBody {
@@ -146,12 +138,6 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
 
   describe('acceso (R1, R2)', () => {
     const paths = ['/audit-log', '/audit-log/export', '/audit-log/1'];
-
-    it.each(paths)('GET %s responde 401 sin sesión', async (path) => {
-      const res = await request(serverOf(app)).get(path).expect(401);
-
-      expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Unauthenticated);
-    });
 
     it.each(paths)('GET %s responde 403 al docente sin filas ni registro', async (path) => {
       const before = await ownRows(teacherUser.id);

@@ -15,7 +15,6 @@ import {
   createSection,
   publish,
   trainingAudit,
-  unique,
 } from './support/training';
 
 describe('planes, secciones y módulos de formación (BE-7)', () => {
@@ -24,8 +23,6 @@ describe('planes, secciones y módulos de formación (BE-7)', () => {
   let planning: Planning;
   let release: () => Promise<void>;
   let coord: Cookies;
-  let admin: Cookies;
-  let teacher: Cookies;
 
   const newArea = async () => (await planning.gradeAndArea('Primaria')).areaId;
   const tree = async (planId: string) =>
@@ -45,8 +42,6 @@ describe('planes, secciones y módulos de formación (BE-7)', () => {
     prisma = app.get(PrismaService);
     planning = await setupPlanning(app);
     coord = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
-    admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
-    teacher = await signIn(app, await createTestUser(app));
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -339,34 +334,6 @@ describe('planes, secciones y módulos de formación (BE-7)', () => {
   });
 
   describe('roles y bitácora (R29, R30)', () => {
-    it('responde 403 a un docente en las rutas de coordinación y 2xx a coordinación y administración', async () => {
-      const plan = await createAreaPlan(app, coord, planning, await newArea());
-      const section = await createSection(app, coord, plan.id);
-      const module = await createModule(app, coord, section.id);
-
-      for (const [method, path] of [
-        ['get', '/training-plans'],
-        ['post', '/training-plans'],
-        ['get', `/training-plans/${plan.id}/sections`],
-        ['post', `/training-plans/${plan.id}/sections`],
-        ['patch', `/training-sections/${section.id}`],
-        ['post', `/training-sections/${section.id}/modules`],
-        ['get', `/training-modules/${module.id}`],
-        ['post', `/training-modules/${module.id}/publish`],
-        ['put', `/training-modules/${module.id}/slide-order`],
-      ] as const) {
-        expect([method, path, (await call(app, teacher, method, path).send({})).status]).toEqual([
-          method,
-          path,
-          403,
-        ]);
-      }
-      await call(app, admin, 'get', '/training-plans').expect(200);
-      await call(app, admin, 'post', `/training-plans/${plan.id}/sections`)
-        .send({ title: `Admin ${unique()}` })
-        .expect(201);
-    });
-
     it('registra cada escritura de coordinación con tipo formacion y los datos antes y después', async () => {
       const plan = await createAreaPlan(app, coord, planning, await newArea());
       const section = await createSection(app, coord, plan.id, 'Auditada');

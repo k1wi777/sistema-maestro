@@ -1,10 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { apiErrorBodySchema, AreaType, UserRole } from '@gns/shared';
-import request from 'supertest';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
-import { asUser, createTestUser, serverOf, signIn, type Cookies } from './support/session';
+import { asUser, createTestUser, signIn, type Cookies } from './support/session';
 
 interface Item {
   id: string;
@@ -146,29 +145,6 @@ describe('catálogos académicos', () => {
   });
 
   describe('escritura solo para administración (R2, R3, R6)', () => {
-    it('un docente y un coordinador reciben 403 sin_permiso y no se modifica nada', async () => {
-      const level = await createLevel();
-      const name = `Intento ${unique()}`;
-
-      for (const cookies of [teacher, coordinator]) {
-        const responses = await Promise.all([
-          as(cookies, 'post', '/levels').send({ name, sortOrder: 1 }),
-          as(cookies, 'patch', `/levels/${level.id}`).send({ name }),
-          as(cookies, 'post', '/grades').send({ name, levelId: level.id, sortOrder: 1 }),
-          as(cookies, 'post', '/areas').send({ name, type: 'asignatura' }),
-          as(cookies, 'post', '/academic-periods').send({ schoolYear: '2026-2027', number: 1 }),
-          as(cookies, 'post', '/school-years').send({ code: randomSchoolYear() }),
-        ]);
-        for (const res of responses) {
-          expect(res.status).toBe(403);
-          expect(apiErrorBodySchema.parse(res.body).code).toBe('sin_permiso');
-        }
-      }
-      expect(await prisma.educationLevel.count({ where: { name } })).toBe(0);
-      expect(await prisma.grade.count({ where: { name } })).toBe(0);
-      expect(await prisma.area.count({ where: { name } })).toBe(0);
-    });
-
     it('el administrador crea y edita niveles, grados y áreas', async () => {
       const level = await createLevel(3);
       expect(level).toMatchObject({ sortOrder: 3 });
@@ -379,19 +355,6 @@ describe('catálogos académicos', () => {
           where: { entity: 'anio_lectivo', action: 'Registrar año lectivo' },
         }),
       ).toBeGreaterThan(0);
-    });
-  });
-
-  describe('acceso (R17)', () => {
-    it('sin sesión responde 401 y sin aviso de datos aceptado 403 consentimiento_requerido', async () => {
-      await request(serverOf(app)).get('/levels').expect(401);
-      const noConsent = await createTestUser(app, { consent: false });
-      const cookies = await signIn(app, noConsent);
-
-      for (const path of ['/levels', '/grades', '/areas', '/academic-periods']) {
-        const res = await as(cookies, 'get', path).expect(403);
-        expect(apiErrorBodySchema.parse(res.body).code).toBe('consentimiento_requerido');
-      }
     });
   });
 });

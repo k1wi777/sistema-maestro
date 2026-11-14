@@ -180,6 +180,14 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'post', path: '/failures/audited-big', access: PUBLIC },
 ];
 
+// De menor a mayor jerarquía.
+const ROLE_ORDER = [TEACHER, COORD, ADMIN];
+
+function boundaryRoles(minimum: UserRole): UserRole[] {
+  const index = ROLE_ORDER.indexOf(minimum);
+  return index > 0 ? [ROLE_ORDER[index - 1] as UserRole, minimum] : [minimum];
+}
+
 const label = ({ method, path }: { method: string; path: string }) =>
   `${method.toUpperCase()} ${path}`;
 
@@ -227,7 +235,9 @@ describe('control de acceso por rol', () => {
         expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Unauthenticated);
       });
 
-      it.each(Object.values(UserRole))('con el rol %s', async (role) => {
+      // Solo la frontera: el rol mínimo pasa y el inmediatamente inferior (si existe) recibe 403.
+      // Los roles por encima del mínimo heredan por jerarquía, que prueba `access.guard.spec.ts`.
+      it.each(boundaryRoles(route.access as UserRole))('con el rol %s', async (role) => {
         const res = await call(sessions.get(role));
 
         if (roleSatisfies(role, route.access as UserRole)) {

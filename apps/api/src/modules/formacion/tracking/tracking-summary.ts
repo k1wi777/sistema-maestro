@@ -1,4 +1,5 @@
 import type { CsvValue } from '../../../shared/csv/csv';
+import { formatBogotaDateOnly, formatBogotaDateTime } from '../../../shared/time/bogota-time';
 import {
   TrackingModuleState,
   type PlanTracking,
@@ -107,33 +108,6 @@ const STATE_LABELS: Record<TrackingModuleState, string> = {
   [TrackingModuleState.Done]: 'Terminado',
 };
 
-const TIME_ZONE = 'America/Bogota';
-
-function bogotaParts(date: Date): Record<string, string> {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(date);
-  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
-}
-
-/** `aaaa-mm-dd HH:mm` en la zona horaria del colegio. */
-export function formatBogotaDateTime(date: Date): string {
-  const p = bogotaParts(date);
-  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
-}
-
-/** `aaaa-mm-dd` en la zona horaria del colegio (nombre del archivo). */
-export function formatBogotaDate(date: Date): string {
-  const p = bogotaParts(date);
-  return `${p.year}-${p.month}-${p.day}`;
-}
-
 /**
  * Una fila por docente y módulo. Solo datos de docentes: sin correos, códigos de certificado,
  * URL ni claves de objeto (R25); la columna Certificado dice solo `sí` o `no`.
@@ -169,5 +143,5 @@ export function exportFileName(planName: string, date: Date): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
-  return `seguimiento-${slug || 'plan'}-${formatBogotaDate(date)}.csv`;
+  return `seguimiento-${slug || 'plan'}-${formatBogotaDateOnly(date)}.csv`;
 }
