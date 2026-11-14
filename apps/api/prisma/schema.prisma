@@ -733,7 +733,7 @@ model AuditLog {
   user User? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([userId])
-  @@index([occurredAt(sort: Desc)])
+  @@index([occurredAt(sort: Desc), id(sort: Desc)])
   @@map("bitacora")
 }
 
