@@ -395,6 +395,58 @@ describe('demo training progress (R21 and R22)', () => {
   });
 });
 
+describe('demo certificates (BE-7)', () => {
+  it('has one certificate for every finished module and none for the others', async () => {
+    const missing = await count(
+      `SELECT count(*) FROM progreso_modulo p
+       WHERE p.terminado_en IS NOT NULL AND p.docente_id IN ${DEMO_TEACHERS}
+         AND NOT EXISTS (SELECT 1 FROM certificado c
+                         WHERE c.docente_id = p.docente_id AND c.modulo_id = p.modulo_id
+                           AND c.emitido_en = p.terminado_en)`,
+      [DEMO_LIKE],
+    );
+    const unfinished = await count(
+      `SELECT count(*) FROM certificado c
+       WHERE c.modulo_id IS NOT NULL AND c.docente_id IN ${DEMO_TEACHERS}
+         AND NOT EXISTS (SELECT 1 FROM progreso_modulo p
+                         WHERE p.docente_id = c.docente_id AND p.modulo_id = c.modulo_id
+                           AND p.terminado_en IS NOT NULL)`,
+      [DEMO_LIKE],
+    );
+
+    expect(missing).toBe(0);
+    expect(unfinished).toBe(0);
+  });
+
+  it('has the route certificate only for the teacher who finished every module', async () => {
+    const route = await rows(
+      `SELECT u.nombre_completo, c.titulo FROM certificado c JOIN usuario u ON u.id = c.docente_id
+       WHERE c.modulo_id IS NULL AND u.correo_institucional LIKE $1`,
+      [DEMO_LIKE],
+    );
+
+    expect(route).toEqual([
+      { nombre_completo: 'Sofía Marquesina', titulo: 'Ruta de formación GNS' },
+    ]);
+  });
+
+  it('has unique well-formed codes and no PDF yet (generated on first download)', async () => {
+    const certificates = await rows(
+      `SELECT c.codigo, c.archivo_id, c.nombre_docente, c.titulo FROM certificado c
+       WHERE c.docente_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE],
+    );
+
+    expect(certificates.length).toBeGreaterThan(0);
+    expect(new Set(certificates.map((row) => row.codigo)).size).toBe(certificates.length);
+    for (const row of certificates) {
+      expect(row.codigo).toMatch(/^[0-9A-HJKMNP-TV-Z]{4}(-[0-9A-HJKMNP-TV-Z]{4}){3}$/);
+      expect(row.archivo_id).toBeNull();
+      expect(String(row.nombre_docente).length).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('demo shared activities and favorites (BE-5)', () => {
   const DEMO_ACTIVITIES = `(SELECT id FROM actividad_repositorio WHERE autor_id IN ${DEMO_TEACHERS})`;
 

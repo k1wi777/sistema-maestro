@@ -162,7 +162,9 @@ export class PrismaTrainingProgressRepository implements TrainingProgressReposit
     return {
       moduleCompletedAt: progress?.completedAt ?? null,
       videoUrl: module.videoUrl,
+      videoFileId: module.videoFileId,
       presentationUrl: module.presentationUrl,
+      presentationFileId: module.presentationFileId,
       slideCount: module._count.slides,
       questionCount: module._count.questions,
       videoViewedAt: progress?.videoViewedAt ?? null,

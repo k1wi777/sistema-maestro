@@ -15,6 +15,9 @@ const MIN_SECRET_LENGTH = 32;
 // Versión vigente del aviso de datos: cabe en `consentimiento_datos.version_politica` (20).
 const POLICY_VERSION_PATTERN = /^[A-Za-z0-9._-]{1,20}$/;
 
+// Nombre de bucket S3: 3 a 63 caracteres, minúsculas, dígitos y guion, sin guion en los extremos.
+const BUCKET_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
+
 const secret = z.string().min(MIN_SECRET_LENGTH);
 
 // Solo `true` o `false`: `z.coerce.boolean` convertiría "false" en true.
@@ -40,6 +43,18 @@ export const envSchema = z
     LOGIN_WINDOW_SECONDS: z.coerce.number().int().min(1).max(3600).default(300),
     // Sin valor por defecto: es un dato legal y uno implícito registraría aceptaciones de una versión no publicada.
     DATA_POLICY_VERSION: z.string().regex(POLICY_VERSION_PATTERN),
+    // Almacenamiento S3 (MinIO en local, Cloudflare R2 en producción). Sin valores por defecto
+    // para el endpoint, el bucket ni las credenciales.
+    STORAGE_ENDPOINT: z.url({ protocol: /^https?$/ }),
+    STORAGE_REGION: z.string().min(1).max(40).default('auto'),
+    STORAGE_BUCKET: z.string().regex(BUCKET_PATTERN),
+    STORAGE_ACCESS_KEY_ID: z.string().min(1),
+    STORAGE_SECRET_ACCESS_KEY: z.string().min(1),
+    STORAGE_FORCE_PATH_STYLE: booleanText.default(true),
+    // Subidas (PUT) y descargas (GET `attachment`: PPTX y certificados).
+    STORAGE_SIGNED_URL_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(300),
+    // Visualización (GET `inline`): el reproductor pide rangos contra la misma URL mientras reproduce.
+    STORAGE_VIEW_URL_TTL_SECONDS: z.coerce.number().int().min(600).max(21600).default(7200),
   })
   .superRefine((env, ctx) => {
     if (env.JWT_ACCESS_SECRET === env.REFRESH_TOKEN_SECRET) {
@@ -57,6 +72,20 @@ export const envSchema = z
         code: 'custom',
         path: ['AUTH_COOKIE_SECURE'],
         message: 'debe ser true en producción',
+      });
+    }
+    if (env.STORAGE_VIEW_URL_TTL_SECONDS < env.STORAGE_SIGNED_URL_TTL_SECONDS) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['STORAGE_VIEW_URL_TTL_SECONDS'],
+        message: 'menor que la de descargas',
+      });
+    }
+    if (env.NODE_ENV === 'production' && !env.STORAGE_ENDPOINT.startsWith('https://')) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['STORAGE_ENDPOINT'],
+        message: 'debe ser https en producción',
       });
     }
   });
@@ -86,6 +115,16 @@ const INVALID_VALUE_REASONS: Record<EnvKey, string> = {
   LOGIN_WINDOW_SECONDS: 'debe ser un entero entre 1 y 3600',
   DATA_POLICY_VERSION:
     'debe tener de 1 a 20 caracteres: letras, números, punto, guion o guion bajo',
+  STORAGE_ENDPOINT: 'debe ser una URL http(s) del servicio S3 (https en producción)',
+  STORAGE_REGION: 'debe tener de 1 a 40 caracteres',
+  STORAGE_BUCKET:
+    'debe ser un nombre de bucket válido: de 3 a 63 caracteres, minúsculas, números y guion',
+  STORAGE_ACCESS_KEY_ID: 'no puede estar vacía',
+  STORAGE_SECRET_ACCESS_KEY: 'no puede estar vacía',
+  STORAGE_FORCE_PATH_STYLE: 'debe ser true o false',
+  STORAGE_SIGNED_URL_TTL_SECONDS: 'debe ser un entero entre 60 y 3600',
+  STORAGE_VIEW_URL_TTL_SECONDS:
+    'debe ser un entero entre 600 y 21600 y no menor que STORAGE_SIGNED_URL_TTL_SECONDS',
 };
 
 const MISSING_REASON = 'falta la variable';

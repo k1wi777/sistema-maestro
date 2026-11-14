@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { isoDateTimeSchema } from '../api/iso-date-time';
 import { TeacherModuleState, TrainingActivityType } from '../constants/training';
+import { moduleFileSummarySchema } from './files';
+import { VideoSource } from './youtube';
 
 /**
  * Lo que ve el docente. Todos los objetos son estrictos y se construyen por lista blanca
@@ -13,6 +15,8 @@ const moduleStates = Object.values(TeacherModuleState) as [
 ];
 
 const nullableDate = isoDateTimeSchema.nullable();
+
+const videoSources = Object.values(VideoSource) as [VideoSource, ...VideoSource[]];
 
 // ---------- Ruta ----------
 
@@ -34,6 +38,8 @@ export const teacherModuleSummarySchema = z.strictObject({
   number: z.string().nullable(),
   title: z.string(),
   summary: z.string().nullable(),
+  videoSource: z.enum(videoSources).nullable(),
+  videoEmbedUrl: z.string().nullable(),
   state: z.enum(moduleStates),
   steps: z.strictObject({
     video: z.boolean(),
@@ -143,8 +149,12 @@ export const teacherModuleSchema = z.strictObject({
   title: z.string(),
   summary: z.string().nullable(),
   videoUrl: z.string().nullable(),
+  videoSource: z.enum(videoSources).nullable(),
+  videoEmbedUrl: z.string().nullable(),
+  videoFile: moduleFileSummarySchema.nullable(),
   videoTitle: z.string().nullable(),
   presentationUrl: z.string().nullable(),
+  presentationFile: moduleFileSummarySchema.nullable(),
   slides: z.array(
     z.strictObject({ id: z.uuid(), title: z.string().nullable(), keyIdeas: z.string().nullable() }),
   ),

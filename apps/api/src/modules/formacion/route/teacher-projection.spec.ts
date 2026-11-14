@@ -99,8 +99,10 @@ const moduleRow: TeacherModuleRow = {
   title: 'Módulo',
   summary: 'Resumen',
   sortOrder: 1,
-  videoUrl: 'https://youtu.be/x',
+  videoUrl: 'https://youtu.be/dQw4w9WgXcQ',
   presentationUrl: null,
+  videoFile: null,
+  presentationFile: null,
   slideCount: 1,
   questionCount: 3,
   activities: [wheel, match, myth, simulator],
@@ -175,6 +177,82 @@ describe('teacher projection', () => {
     const wheelCard = (projected.activities[0] as { config: { tarjetas: { pregunta: object }[] } })
       .config.tarjetas[0];
     expect(wheelCard?.pregunta).toEqual({ enunciado: '¿?', opciones: ['uno', 'dos'] });
+  });
+
+  describe('video and presentation origin (R28)', () => {
+    const FILE = { id: ID(80), name: 'clase.mp4', contentType: 'video/mp4', size: 1234 };
+    const project = (change: Partial<TeacherModuleRow>) =>
+      projectModule({ ...moduleRow, ...change }, undefined, new Map());
+
+    it('gives the no-cookie embed URL of a YouTube link and keeps the start', () => {
+      const projected = project({ videoUrl: 'https://youtu.be/dQw4w9WgXcQ?t=1m30s' });
+
+      expect(projected).toMatchObject({
+        videoSource: 'youtube',
+        videoUrl: 'https://youtu.be/dQw4w9WgXcQ?t=1m30s',
+        videoEmbedUrl: 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?start=90',
+        videoFile: null,
+      });
+    });
+
+    it('reports a file video without an embed URL or any signed URL', () => {
+      const projected = project({ videoUrl: null, videoFile: FILE });
+
+      expect(projected).toMatchObject({
+        videoSource: 'archivo',
+        videoUrl: null,
+        videoEmbedUrl: null,
+        videoFile: FILE,
+      });
+      expect(JSON.stringify(projected)).not.toMatch(
+        /X-Amz|formacion\/modulos|clave_objeto|objectKey/,
+      );
+      expect(teacherModuleSchema.safeEncode(projected).success).toBe(true);
+    });
+
+    it('has no source without video and shows the original of an unreadable stored link', () => {
+      expect(project({ videoUrl: null })).toMatchObject({ videoSource: null, videoEmbedUrl: null });
+      expect(project({ videoUrl: 'https://example.com/no-youtube' })).toMatchObject({
+        videoSource: 'youtube',
+        videoEmbedUrl: null,
+        videoUrl: 'https://example.com/no-youtube',
+      });
+    });
+
+    it('counts a file as a step in the route summary', () => {
+      const plan: RoutePlanRow = {
+        id: ID(1),
+        name: 'Plan',
+        areaId: null,
+        areaName: null,
+        schoolYear: null,
+        sections: [
+          {
+            id: ID(2),
+            title: 'Sección',
+            subtitle: null,
+            sortOrder: 1,
+            modules: [
+              {
+                ...moduleRow,
+                videoUrl: null,
+                videoFile: FILE,
+                slideCount: 0,
+                presentationFile: FILE,
+              },
+            ],
+          },
+        ],
+      };
+
+      const summary = projectRoute('2026-2027', [plan], new Map(), new Map()).plans[0]?.sections[0]
+        ?.modules[0];
+
+      expect(summary).toMatchObject({
+        videoSource: 'archivo',
+        steps: { video: true, presentation: true },
+      });
+    });
   });
 
   it('counts only the stamps that are still cards of the passport', () => {

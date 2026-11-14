@@ -308,7 +308,9 @@ export class TrainingPlansService {
     const counts = await this.repository.countContent(module.id);
     const hasStep =
       module.videoUrl !== null ||
+      module.videoFile !== null ||
       module.presentationUrl !== null ||
+      module.presentationFile !== null ||
       counts.slides > 0 ||
       counts.questions > 0 ||
       counts.activeActivities > 0;

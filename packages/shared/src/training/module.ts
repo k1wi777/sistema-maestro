@@ -4,10 +4,21 @@ import { TrainingModuleStatus } from '../constants/training';
 import { shortText } from '../training-activities/common';
 import { trainingModuleSettingsSchema } from '../training-activities/module-settings';
 import { activitySchema, challengeQuestionSchema, slideSchema } from './content';
+import { moduleFileSummarySchema } from './files';
+import { parseYouTubeUrl, VideoSource } from './youtube';
 
 const httpsUrl = z
   .url({ protocol: /^https$/, error: 'La URL debe usar https.' })
   .max(500)
+  .nullable();
+
+/** El video del módulo es un enlace de YouTube (o un archivo subido, R6). */
+const youtubeUrl = z
+  .string({ error: 'debe ser texto' })
+  .max(500)
+  .refine((value) => parseYouTubeUrl(value) !== null, {
+    error: 'El video debe ser un enlace de YouTube (youtube.com o youtu.be).',
+  })
   .nullable();
 
 const settings = trainingModuleSettingsSchema.shape;
@@ -16,7 +27,7 @@ const moduleFields = {
   number: z.string({ error: 'debe ser texto' }).trim().min(1).max(4).nullable(),
   title: shortText(160),
   summary: z.string({ error: 'debe ser texto' }).trim().max(500).nullable(),
-  videoUrl: httpsUrl,
+  videoUrl: youtubeUrl,
   videoTitle: settings.video_titulo,
   presentationUrl: httpsUrl,
   approvalThreshold: settings.umbral_aprobacion,
@@ -66,6 +77,10 @@ export const trainingModuleSchema = z.object({
   videoUrl: z.string().nullable(),
   videoTitle: z.string().nullable(),
   presentationUrl: z.string().nullable(),
+  videoSource: z.enum(Object.values(VideoSource) as [VideoSource, ...VideoSource[]]).nullable(),
+  videoEmbedUrl: z.string().nullable(),
+  videoFile: moduleFileSummarySchema.nullable(),
+  presentationFile: moduleFileSummarySchema.nullable(),
   status: z.enum(moduleStatuses),
   approvalThreshold: z.number().int(),
   secondsPerQuestion: z.number().int().nullable(),

@@ -48,7 +48,9 @@ export interface ActivityProgressChanges {
 export interface CompletionSnapshot {
   moduleCompletedAt: Date | null;
   videoUrl: string | null;
+  videoFileId: string | null;
   presentationUrl: string | null;
+  presentationFileId: string | null;
   slideCount: number;
   questionCount: number;
   videoViewedAt: Date | null;

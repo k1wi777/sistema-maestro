@@ -1,6 +1,7 @@
 import {
   AreaType,
   parseActivityConfig,
+  parseYouTubeUrl,
   TrainingActivityStatus,
   TrainingActivityType,
   TrainingModuleStatus,
@@ -338,6 +339,17 @@ describe('initial data content', () => {
       '7',
       '8',
     ]);
+  });
+
+  it('has only YouTube links as video, so every seeded module passes the API rule (R27)', async () => {
+    const links = await rows(
+      `SELECT numero, video_url FROM modulo_formacion WHERE video_url IS NOT NULL ORDER BY numero`,
+    );
+
+    expect(links).toHaveLength(6);
+    for (const link of links) {
+      expect(parseYouTubeUrl(String(link.video_url))).not.toBeNull();
+    }
   });
 
   it('has the activity instructions and the default Challenge settings on the modules', async () => {

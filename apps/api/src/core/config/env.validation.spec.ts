@@ -13,6 +13,10 @@ const BASE = {
   JWT_ACCESS_SECRET: ACCESS_SECRET,
   REFRESH_TOKEN_SECRET: REFRESH_SECRET,
   DATA_POLICY_VERSION: '2026-1',
+  STORAGE_ENDPOINT: 'http://localhost:9000',
+  STORAGE_BUCKET: 'gns-files',
+  STORAGE_ACCESS_KEY_ID: 'prueba-clave',
+  STORAGE_SECRET_ACCESS_KEY: 'prueba-secreto-almacenamiento',
 };
 const DATABASE_URL_REASON =
   '- DATABASE_URL: debe ser una URL de PostgreSQL (postgresql://usuario:clave@host:puerto/base)';
@@ -46,6 +50,67 @@ describe('validateEnv', () => {
       LOGIN_MAX_ATTEMPTS: 5,
       LOGIN_WINDOW_SECONDS: 300,
       DATA_POLICY_VERSION: '2026-1',
+      STORAGE_ENDPOINT: 'http://localhost:9000',
+      STORAGE_REGION: 'auto',
+      STORAGE_BUCKET: 'gns-files',
+      STORAGE_ACCESS_KEY_ID: 'prueba-clave',
+      STORAGE_SECRET_ACCESS_KEY: 'prueba-secreto-almacenamiento',
+      STORAGE_FORCE_PATH_STYLE: true,
+      STORAGE_SIGNED_URL_TTL_SECONDS: 300,
+      STORAGE_VIEW_URL_TTL_SECONDS: 7200,
+    });
+  });
+
+  describe('storage', () => {
+    it('lists every missing storage variable without values', () => {
+      const message = errorMessageOf({
+        ...BASE,
+        STORAGE_ENDPOINT: undefined,
+        STORAGE_BUCKET: undefined,
+        STORAGE_ACCESS_KEY_ID: undefined,
+        STORAGE_SECRET_ACCESS_KEY: undefined,
+      });
+      expect(message).toContain('- STORAGE_ENDPOINT: falta la variable');
+      expect(message).toContain('- STORAGE_BUCKET: falta la variable');
+      expect(message).toContain('- STORAGE_ACCESS_KEY_ID: falta la variable');
+      expect(message).toContain('- STORAGE_SECRET_ACCESS_KEY: falta la variable');
+    });
+
+    it('rejects an invalid bucket name without showing its value', () => {
+      const message = errorMessageOf({ ...BASE, STORAGE_BUCKET: 'Mal_Bucket' });
+      expect(message).toContain('- STORAGE_BUCKET: debe ser un nombre de bucket válido');
+      expect(message).not.toContain('Mal_Bucket');
+    });
+
+    it('rejects a view TTL shorter than the download TTL', () => {
+      const message = errorMessageOf({
+        ...BASE,
+        STORAGE_SIGNED_URL_TTL_SECONDS: '3000',
+        STORAGE_VIEW_URL_TTL_SECONDS: '1000',
+      });
+      expect(message).toContain('- STORAGE_VIEW_URL_TTL_SECONDS: debe ser un entero');
+    });
+
+    it('rejects TTLs out of range', () => {
+      expect(errorMessageOf({ ...BASE, STORAGE_SIGNED_URL_TTL_SECONDS: '30' })).toContain(
+        '- STORAGE_SIGNED_URL_TTL_SECONDS',
+      );
+      expect(errorMessageOf({ ...BASE, STORAGE_VIEW_URL_TTL_SECONDS: '30000' })).toContain(
+        '- STORAGE_VIEW_URL_TTL_SECONDS',
+      );
+    });
+
+    it('requires an https endpoint in production', () => {
+      const secure = {
+        ...BASE,
+        NODE_ENV: 'production',
+        AUTH_COOKIE_SECURE: 'true',
+        STORAGE_ENDPOINT: 'https://cuenta.r2.cloudflarestorage.com',
+      };
+      expect(validateEnv(secure).STORAGE_ENDPOINT).toBe('https://cuenta.r2.cloudflarestorage.com');
+      expect(errorMessageOf({ ...secure, STORAGE_ENDPOINT: 'http://localhost:9000' })).toContain(
+        '- STORAGE_ENDPOINT',
+      );
     });
   });
 
@@ -203,7 +268,13 @@ describe('validateEnv', () => {
       expect(
         errorMessageOf({ ...BASE, NODE_ENV: 'production', AUTH_COOKIE_SECURE: 'false' }),
       ).toContain('- AUTH_COOKIE_SECURE:');
-      expect(validateEnv({ ...BASE, NODE_ENV: 'production' }).AUTH_COOKIE_SECURE).toBe(true);
+      expect(
+        validateEnv({
+          ...BASE,
+          NODE_ENV: 'production',
+          STORAGE_ENDPOINT: 'https://cuenta.r2.cloudflarestorage.com',
+        }).AUTH_COOKIE_SECURE,
+      ).toBe(true);
       expect(validateEnv({ ...BASE, AUTH_COOKIE_SECURE: 'false' }).AUTH_COOKIE_SECURE).toBe(false);
     });
 

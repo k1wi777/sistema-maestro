@@ -86,7 +86,7 @@ describe('ruta y módulo del docente (BE-7)', () => {
   > {
     const course = await setupCourse(app, planning, coord);
     const empty = await createSection(app, coord, course.plan.id, 'Sección sin módulos activos');
-    await createModule(app, coord, empty.id, { videoUrl: 'https://youtu.be/borrador' });
+    await createModule(app, coord, empty.id, { videoUrl: 'https://youtu.be/abcdefghijk' });
     const second = await createSection(app, coord, course.plan.id, 'Segunda');
     const a = await buildModule(app, coord, course.section.id, {
       video: true,

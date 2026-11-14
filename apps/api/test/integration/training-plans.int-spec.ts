@@ -277,7 +277,9 @@ describe('planes, secciones y módulos de formación (BE-7)', () => {
     it('aplica solo las transiciones permitidas y responde 409 a las demás', async () => {
       const plan = await createAreaPlan(app, coord, planning, await newArea());
       const section = await createSection(app, coord, plan.id);
-      const module = await createModule(app, coord, section.id, { videoUrl: 'https://youtu.be/x' });
+      const module = await createModule(app, coord, section.id, {
+        videoUrl: 'https://youtu.be/dQw4w9WgXcQ',
+      });
       const state = (action: string) =>
         call(app, coord, 'post', `/training-modules/${module.id}/${action}`);
 
@@ -368,7 +370,9 @@ describe('planes, secciones y módulos de formación (BE-7)', () => {
     it('registra cada escritura de coordinación con tipo formacion y los datos antes y después', async () => {
       const plan = await createAreaPlan(app, coord, planning, await newArea());
       const section = await createSection(app, coord, plan.id, 'Auditada');
-      const module = await createModule(app, coord, section.id, { videoUrl: 'https://youtu.be/x' });
+      const module = await createModule(app, coord, section.id, {
+        videoUrl: 'https://youtu.be/dQw4w9WgXcQ',
+      });
       await call(app, coord, 'patch', `/training-modules/${module.id}`)
         .send({ title: 'Nuevo título' })
         .expect(200);

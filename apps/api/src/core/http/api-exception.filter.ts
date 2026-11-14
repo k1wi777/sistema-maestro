@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
 import { ApiErrorCode, type ApiErrorBody } from '@gns/shared';
+import { StorageUnavailableError } from '../../shared/storage/storage-unavailable.error';
 import { describeDatabaseError, mapPrismaError } from '../../shared/database/prisma-error.mapper';
 import { ApiCodedException } from './api-coded.exception';
 import { RequestValidationException } from './request-validation.exception';
@@ -24,6 +25,8 @@ interface HttpResponseLike {
 }
 
 const INTERNAL_MESSAGE = 'Ocurrió un error inesperado';
+const STORAGE_UNAVAILABLE_MESSAGE =
+  'El almacenamiento de archivos no está disponible: intenta de nuevo en unos instantes';
 
 const CODE_BY_STATUS: Record<number, ApiErrorCode> = {
   400: ApiErrorCode.Validation,
@@ -141,6 +144,16 @@ export class ApiExceptionFilter implements ExceptionFilter {
         statusCode: 429,
         code: ApiErrorCode.TooManyRequests,
         message: messageForStatus(429),
+        requestId,
+      };
+    }
+
+    // Sin detalles del almacenamiento (endpoint, bucket ni claves) en la respuesta.
+    if (exception instanceof StorageUnavailableError) {
+      return {
+        statusCode: 503,
+        code: ApiErrorCode.StorageUnavailable,
+        message: STORAGE_UNAVAILABLE_MESSAGE,
         requestId,
       };
     }

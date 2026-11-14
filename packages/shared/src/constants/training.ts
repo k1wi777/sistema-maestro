@@ -39,3 +39,34 @@ export const TeacherModuleState = {
   Done: 'terminado',
 } as const;
 export type TeacherModuleState = (typeof TeacherModuleState)[keyof typeof TeacherModuleState];
+
+/** Para qué se guarda un objeto del almacenamiento (`archivo.proposito`). */
+export const StoredFilePurpose = {
+  ModuleVideo: 'video_modulo',
+  ModulePresentation: 'presentacion_modulo',
+  Certificate: 'certificado',
+} as const;
+export type StoredFilePurpose = (typeof StoredFilePurpose)[keyof typeof StoredFilePurpose];
+
+/** Estado de un objeto del almacenamiento (`archivo.estado`). */
+export const StoredFileStatus = {
+  Pending: 'pendiente',
+  Available: 'disponible',
+  Rejected: 'rechazado',
+} as const;
+export type StoredFileStatus = (typeof StoredFileStatus)[keyof typeof StoredFileStatus];
+
+/** Tipo de certificado: de un módulo o de la ruta completa (calculado: `modulo_id` nulo = ruta). */
+export const CertificateKind = {
+  Module: 'modulo',
+  Route: 'ruta',
+} as const;
+export type CertificateKind = (typeof CertificateKind)[keyof typeof CertificateKind];
+
+/** Estado de un módulo para un docente en el seguimiento de coordinación (calculado, no se guarda). */
+export const TrackingModuleState = {
+  NotStarted: 'sin_iniciar',
+  InProgress: 'en_curso',
+  Done: 'terminado',
+} as const;
+export type TrackingModuleState = (typeof TrackingModuleState)[keyof typeof TrackingModuleState];

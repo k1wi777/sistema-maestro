@@ -27,6 +27,8 @@ describe('TrainingMilestones', () => {
     await milestones.presentationViewed(user, 'p1', 'm1', DATE);
     await milestones.activityCompleted(user, 'ap1', 'a1', DATE);
     await milestones.moduleCompleted(user, 'p1', 'm1', DATE);
+    await milestones.certificateIssued(user, 'c1', 'modulo', 'm1');
+    await milestones.certificateDownloaded(user, 'c1', 'ruta');
 
     expect(record.mock.calls.map(([entry]) => entry.action)).toEqual([
       'Inició el Desafío GNS',
@@ -37,6 +39,8 @@ describe('TrainingMilestones', () => {
       'Revisó la presentación',
       'Completó una actividad',
       'Terminó un módulo',
+      'Obtuvo un certificado',
+      'Descargó un certificado',
     ]);
     for (const [entry] of record.mock.calls) {
       expect(entry).toMatchObject({
@@ -80,6 +84,8 @@ describe('TrainingMilestones', () => {
         'presentationViewed',
         'activityCompleted',
         'moduleCompleted',
+        'certificateIssued',
+        'certificateDownloaded',
       ].sort(),
     );
   });

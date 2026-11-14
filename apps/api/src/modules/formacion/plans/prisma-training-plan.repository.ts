@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  describeModuleVideo,
   TrainingActivityStatus,
   TrainingModuleStatus,
   type CreateTrainingModuleInput,
@@ -16,7 +17,7 @@ import {
 } from '@gns/shared';
 import type {
   Prisma,
-  TrainingModule as ModuleRow,
+  StoredFile as FileRow,
   TrainingPlan as PlanRow,
   TrainingSection as SectionRow,
 } from '../../../generated/prisma/client';
@@ -49,6 +50,24 @@ const toSection = (row: SectionRow): TrainingSection => ({
   updatedAt: row.updatedAt,
 });
 
+/** El módulo de coordinación trae sus dos archivos (solo metadatos, sin URL). */
+const MODULE_FILES_INCLUDE = {
+  videoFile: true,
+  presentationFile: true,
+} satisfies Prisma.TrainingModuleInclude;
+
+type ModuleRow = Prisma.TrainingModuleGetPayload<{ include: typeof MODULE_FILES_INCLUDE }>;
+
+const toFileSummary = (row: FileRow | null) =>
+  row
+    ? {
+        id: row.id,
+        name: row.originalName,
+        contentType: row.contentType,
+        size: Number(row.sizeBytes),
+      }
+    : null;
+
 const toModule = (row: ModuleRow): TrainingModule => ({
   id: row.id,
   planId: row.planId,
@@ -60,6 +79,9 @@ const toModule = (row: ModuleRow): TrainingModule => ({
   videoUrl: row.videoUrl,
   videoTitle: row.videoTitle,
   presentationUrl: row.presentationUrl,
+  ...describeModuleVideo(row.videoUrl, row.videoFile !== null),
+  videoFile: toFileSummary(row.videoFile),
+  presentationFile: toFileSummary(row.presentationFile),
   status: row.status as TrainingModuleStatus,
   approvalThreshold: row.approvalThreshold,
   secondsPerQuestion: row.secondsPerQuestion,
@@ -109,6 +131,8 @@ const toRouteActivity = (row: ActivityRow): RouteActivityRow => ({
 /** Un módulo de ruta: todos los hijos se traen en la misma consulta del plan, sin N+1. */
 const ROUTE_MODULE_INCLUDE = {
   _count: { select: { slides: true, questions: true } },
+  videoFile: true,
+  presentationFile: true,
   activities: ACTIVE_ACTIVITIES,
 } satisfies Prisma.TrainingModuleInclude;
 
@@ -271,7 +295,10 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
   // ---------- Módulos ----------
 
   async findModule(id: string): Promise<TrainingModule | null> {
-    const row = await this.prisma.db.trainingModule.findUnique({ where: { id } });
+    const row = await this.prisma.db.trainingModule.findUnique({
+      where: { id },
+      include: MODULE_FILES_INCLUDE,
+    });
     return row ? toModule(row) : null;
   }
 
@@ -307,6 +334,7 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
         approvalThreshold: input.approvalThreshold,
         secondsPerQuestion: input.secondsPerQuestion,
       },
+      include: MODULE_FILES_INCLUDE,
     });
     return toModule(row);
   }
@@ -324,9 +352,14 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
         videoUrl: input.videoUrl,
         videoTitle: input.videoTitle,
         presentationUrl: input.presentationUrl,
+        // Enlace y archivo del mismo propósito se excluyen: fijar el enlace quita el archivo (R6).
+        // El archivo queda en el almacenamiento y en `archivo`, solo se desasocia.
+        videoFileId: input.videoUrl ? null : undefined,
+        presentationFileId: input.presentationUrl ? null : undefined,
         approvalThreshold: input.approvalThreshold,
         secondsPerQuestion: input.secondsPerQuestion,
       },
+      include: MODULE_FILES_INCLUDE,
     });
     return toModule(row);
   }
@@ -335,6 +368,7 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
     const row = await this.prisma.db.trainingModule.update({
       where: { id },
       data: { sectionId, sortOrder: await this.nextModuleOrder(sectionId) },
+      include: MODULE_FILES_INCLUDE,
     });
     return toModule(row);
   }
@@ -354,7 +388,11 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
   }
 
   async setModuleStatus(id: string, status: TrainingModuleStatus): Promise<TrainingModule> {
-    const row = await this.prisma.db.trainingModule.update({ where: { id }, data: { status } });
+    const row = await this.prisma.db.trainingModule.update({
+      where: { id },
+      data: { status },
+      include: MODULE_FILES_INCLUDE,
+    });
     return toModule(row);
   }
 
@@ -410,6 +448,8 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
           sortOrder: module.sortOrder,
           videoUrl: module.videoUrl,
           presentationUrl: module.presentationUrl,
+          videoFile: toFileSummary(module.videoFile),
+          presentationFile: toFileSummary(module.presentationFile),
           slideCount: module._count.slides,
           questionCount: module._count.questions,
           activities: module.activities.map(toRouteActivity),
@@ -439,6 +479,8 @@ export class PrismaTrainingPlanRepository implements TrainingPlanRepository {
       sortOrder: row.sortOrder,
       videoUrl: row.videoUrl,
       presentationUrl: row.presentationUrl,
+      videoFile: toFileSummary(row.videoFile),
+      presentationFile: toFileSummary(row.presentationFile),
       slideCount: row._count.slides,
       questionCount: row._count.questions,
       activities: row.activities.map(toRouteActivity),

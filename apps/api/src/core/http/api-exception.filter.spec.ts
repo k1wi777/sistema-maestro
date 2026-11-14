@@ -1,5 +1,6 @@
-import type { ArgumentsHost } from '@nestjs/common';
+import { Logger, type ArgumentsHost } from '@nestjs/common';
 import { ApiErrorCode } from '@gns/shared';
+import { StorageUnavailableError } from '../../shared/storage/storage-unavailable.error';
 import { ApiCodedException } from './api-coded.exception';
 import { ApiExceptionFilter } from './api-exception.filter';
 
@@ -35,5 +36,21 @@ describe('ApiExceptionFilter', () => {
       message: 'Debes aceptar el aviso',
       requestId: 'req-1',
     });
+  });
+
+  it('answers 503 with a stable code and no storage details', () => {
+    jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    const { status, body } = run(
+      new StorageUnavailableError({ cause: new Error('connect ECONNREFUSED http://minio:9000') }),
+    );
+
+    expect(status).toBe(503);
+    expect(body).toEqual({
+      statusCode: 503,
+      code: 'almacenamiento_no_disponible',
+      message: expect.stringContaining('almacenamiento') as string,
+      requestId: 'req-1',
+    });
+    expect(JSON.stringify(body)).not.toContain('minio');
   });
 });
