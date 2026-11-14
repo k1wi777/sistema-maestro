@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuditLogType } from '@gns/shared';
+import { AuditLogType, type CertificateKind } from '@gns/shared';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { AuditLogService } from '../../auditoria/audit-log.service';
 
@@ -105,6 +105,27 @@ export class TrainingMilestones {
       activityId,
       completedAt,
     });
+  }
+
+  /** Nunca se registra el código de verificación. */
+  certificateIssued(
+    user: RequestUser,
+    certificateId: string,
+    kind: CertificateKind,
+    moduleId: string | null,
+  ): Promise<void> {
+    return this.record(user, 'Obtuvo un certificado', 'certificado', certificateId, {
+      kind,
+      moduleId,
+    });
+  }
+
+  certificateDownloaded(
+    user: RequestUser,
+    certificateId: string,
+    kind: CertificateKind,
+  ): Promise<void> {
+    return this.record(user, 'Descargó un certificado', 'certificado', certificateId, { kind });
   }
 
   moduleCompleted(

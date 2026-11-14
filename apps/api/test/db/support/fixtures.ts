@@ -208,6 +208,28 @@ export async function insertTrainingActivity(client: Client, values: Values = {}
   });
 }
 
+export function insertStoredFile(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'archivo', {
+    clave_objeto: `pruebas/${randomUUID()}`,
+    proposito: 'video_modulo',
+    tipo_contenido: 'video/mp4',
+    tamano_bytes: 1000,
+    estado: 'pendiente',
+    ...values,
+  });
+}
+
+export async function insertCertificate(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'certificado', {
+    docente_id: await idOf(insertUser(client)),
+    codigo: uniqueSuffix().toUpperCase(),
+    emitido_en: new Date(),
+    nombre_docente: 'Docente de prueba',
+    titulo: 'Módulo de prueba',
+    ...values,
+  });
+}
+
 export async function insertModuleProgress(client: Client, values: Values = {}): Promise<Row> {
   return insertRow(client, 'progreso_modulo', {
     docente_id: await idOf(insertUser(client)),

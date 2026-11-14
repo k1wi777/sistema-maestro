@@ -1,5 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { RequestUser } from '../../../core/audit/request-user';
+import { CertificatesService } from '../certificates/certificates.service';
 import { isModuleComplete } from './completion';
 import { TrainingMilestones } from './training-milestones';
 import {
@@ -19,6 +20,7 @@ export class ModuleCompletionService {
   constructor(
     @Inject(TRAINING_PROGRESS_REPOSITORY) private readonly repository: TrainingProgressRepository,
     private readonly milestones: TrainingMilestones,
+    private readonly certificates: CertificatesService,
   ) {}
 
   /** Devuelve la fecha de terminación del módulo (la ya fijada o la que se fija ahora). */
@@ -40,6 +42,8 @@ export class ModuleCompletionService {
     const completedAt = new Date();
     await this.repository.updateModuleProgress(progress.id, { completedAt });
     await this.milestones.moduleCompleted(user, progress.id, moduleId, completedAt);
+    // En la misma transacción: no hay módulo terminado sin su certificado (R12, R13).
+    await this.certificates.issueForModule(user, moduleId, completedAt);
     return completedAt;
   }
 }

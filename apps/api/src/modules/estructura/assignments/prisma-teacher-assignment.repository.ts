@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
   TeacherAssignmentStatus,
+  UserRole,
+  UserStatus,
   type AreaType,
   type TeacherAssignment,
   type TeacherAssignmentFilters,
   type TeacherAssignmentSortField,
-  type UserStatus,
 } from '@gns/shared';
 import type { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
@@ -17,6 +18,7 @@ import type {
   NewTeacherAssignment,
   TeacherAssignmentChanges,
   TeacherAssignmentRepository,
+  TeacherInScope,
 } from './teacher-assignment.repository';
 
 // Datos anidados que evitan que el cliente cruce cuatro catálogos; nunca el correo.
@@ -92,6 +94,23 @@ export class PrismaTeacherAssignmentRepository
       include: INCLUDE,
     });
     return rows.map((row) => this.toEntity(row));
+  }
+
+  async findActiveTeachers(areaId: string | null, schoolYear: string): Promise<TeacherInScope[]> {
+    const where: Prisma.UserWhereInput =
+      areaId === null
+        ? { role: UserRole.Teacher, status: UserStatus.Active }
+        : {
+            status: UserStatus.Active,
+            teacherAssignments: {
+              some: { areaId, schoolYear, status: TeacherAssignmentStatus.Active },
+            },
+          };
+    return this.prisma.db.user.findMany({
+      where,
+      select: { id: true, fullName: true },
+      orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
+    });
   }
 
   async create(input: NewTeacherAssignment): Promise<TeacherAssignment> {

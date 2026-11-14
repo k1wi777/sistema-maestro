@@ -5,6 +5,7 @@ import {
   type ActivityConfigByType,
 } from '@gns/shared';
 import type { Client } from 'pg';
+import { generateCertificateCode } from '../../../src/modules/formacion/certificates/certificate-code.ts';
 import { SCHOOL_YEAR } from '../initial/catalogs.data.ts';
 import { insertForId, insertRow, type Row } from '../sql.ts';
 import {
@@ -51,6 +52,7 @@ export async function isDemoLoaded(client: Client): Promise<boolean> {
 interface ModuleFacts {
   id: string;
   number: string;
+  title: string;
   hasVideo: boolean;
   hasPresentation: boolean;
   hasQuestions: boolean;
@@ -76,7 +78,12 @@ async function loadReferences(client: Client) {
     [DEMO_SCHOOL_YEAR],
   );
   const planId = plan.rows[0]?.id;
-  if (!planId || periods.rowCount !== 3) {
+  const planName = (
+    await client.query<{ nombre: string }>(`SELECT nombre FROM plan_formacion WHERE id = $1`, [
+      planId ?? null,
+    ])
+  ).rows[0]?.nombre;
+  if (!planId || !planName || periods.rowCount !== 3) {
     throw new Error(
       'Faltan los datos iniciales (plan General o periodos). Ejecute db:seed antes de cargar los datos demo.',
     );
@@ -92,12 +99,13 @@ async function loadReferences(client: Client) {
   const modules = await client.query<{
     id: string;
     numero: string;
+    titulo: string;
     video_url: string | null;
     presentacion_url: string | null;
     slides: string;
     questions: string;
   }>(
-    `SELECT m.id, m.numero, m.video_url, m.presentacion_url,
+    `SELECT m.id, m.numero, m.titulo, m.video_url, m.presentacion_url,
             (SELECT count(*) FROM diapositiva d WHERE d.modulo_id = m.id) AS slides,
             (SELECT count(*) FROM pregunta_desafio q WHERE q.modulo_id = m.id) AS questions
      FROM modulo_formacion m WHERE m.plan_id = $1 AND m.estado <> 'borrador'`,
@@ -109,6 +117,7 @@ async function loadReferences(client: Client) {
       {
         id: row.id,
         number: row.numero,
+        title: row.titulo,
         hasVideo: row.video_url !== null,
         hasPresentation: Number(row.slides) > 0 || row.presentacion_url !== null,
         hasQuestions: Number(row.questions) > 0,
@@ -150,6 +159,7 @@ async function loadReferences(client: Client) {
     periods: new Map(periods.rows.map((row) => [String(row.numero), row.id])),
     moduleFacts,
     activityFacts,
+    planName,
   };
 }
 
@@ -413,10 +423,85 @@ async function loadTraining(
       completionByTitle.set(script.title, script.completedAt);
     }
 
+    const completions = new Map<string, string>();
     for (const script of training.modules) {
-      await loadModuleProgress(references, script, teacherId, completionByTitle, insert);
+      const completedAt = await loadModuleProgress(
+        references,
+        script,
+        teacherId,
+        completionByTitle,
+        insert,
+      );
+      if (completedAt) {
+        completions.set(script.module, completedAt);
+        await loadCertificate(
+          references,
+          training.teacher,
+          teacherId,
+          script.module,
+          completedAt,
+          insert,
+        );
+      }
     }
+    await loadRouteCertificate(references, training.teacher, teacherId, completions, insert);
   }
+}
+
+const teacherNameOf = (key: string): string => {
+  const found = DEMO_USERS.find((demoUser) => demoUser.key === key);
+  if (!found) {
+    throw new Error(`Los datos demo no definen al usuario «${key}»`);
+  }
+  return found.name;
+};
+
+/**
+ * Certificado del módulo terminado: `emitido_en` = `terminado_en`, con la instantánea del nombre,
+ * el módulo y el plan. Sin `archivo_id`: el PDF se genera en la primera descarga.
+ */
+async function loadCertificate(
+  references: References,
+  teacherKey: string,
+  teacherId: string,
+  moduleNumber: string,
+  completedAt: string,
+  insert: Insert,
+): Promise<void> {
+  const facts = required(references.moduleFacts, moduleNumber, 'el módulo');
+  await insert('certificado', {
+    docente_id: teacherId,
+    modulo_id: facts.id,
+    codigo: generateCertificateCode(),
+    emitido_en: completedAt,
+    nombre_docente: teacherNameOf(teacherKey),
+    titulo: facts.title,
+    plan_nombre: references.planName,
+  });
+}
+
+/** Certificado de la ruta completa: solo para quien terminó todos los módulos del plan General. */
+async function loadRouteCertificate(
+  references: References,
+  teacherKey: string,
+  teacherId: string,
+  completions: Map<string, string>,
+  insert: Insert,
+): Promise<void> {
+  const numbers = [...references.moduleFacts.keys()];
+  if (numbers.length === 0 || !numbers.every((number) => completions.has(number))) {
+    return;
+  }
+  const last = Math.max(...[...completions.values()].map((moment) => Date.parse(moment)));
+  await insert('certificado', {
+    docente_id: teacherId,
+    modulo_id: null,
+    codigo: generateCertificateCode(),
+    emitido_en: new Date(last).toISOString(),
+    nombre_docente: teacherNameOf(teacherKey),
+    titulo: 'Ruta de formación GNS',
+    plan_nombre: null,
+  });
 }
 
 async function loadModuleProgress(
@@ -425,7 +510,7 @@ async function loadModuleProgress(
   teacherId: string,
   completionByTitle: Map<string, string | null>,
   insert: Insert,
-): Promise<void> {
+): Promise<string | null> {
   const facts = required(references.moduleFacts, script.module, 'el módulo');
   if (script.attempts.length > 0 && !facts.hasQuestions) {
     throw new Error(`El módulo ${script.module} no tiene desafío: no admite intentos demo`);
@@ -477,4 +562,5 @@ async function loadModuleProgress(
       fecha: attempt.date,
     });
   }
+  return completedAt;
 }

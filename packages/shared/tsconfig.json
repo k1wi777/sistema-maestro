@@ -1,6 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // DOM solo por `URL`: el código compartido corre en Node y en el navegador.
+    "lib": ["ES2023", "DOM"],
     "rootDir": "src",
     "outDir": "dist",
     "declaration": true

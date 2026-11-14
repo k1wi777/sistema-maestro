@@ -39,6 +39,10 @@ const trainingModule = (change: Partial<TrainingModule> = {}): TrainingModule =>
   videoUrl: null,
   videoTitle: null,
   presentationUrl: null,
+  videoSource: null,
+  videoEmbedUrl: null,
+  videoFile: null,
+  presentationFile: null,
   status: 'borrador',
   approvalThreshold: 80,
   secondsPerQuestion: null,
@@ -217,7 +221,7 @@ describe('TrainingPlansService modules', () => {
   ] as const)('applies %s from %s to %s', async (action, from, to) => {
     const { service, repository } = setup();
     repository.findModule.mockResolvedValue(
-      trainingModule({ status: from, videoUrl: 'https://youtu.be/x' }),
+      trainingModule({ status: from, videoUrl: 'https://youtu.be/dQw4w9WgXcQ' }),
     );
     repository.setModuleStatus.mockResolvedValue(trainingModule({ status: to }));
 
@@ -251,7 +255,7 @@ describe('TrainingPlansService modules', () => {
   it.each([
     [
       'a video',
-      trainingModule({ videoUrl: 'https://youtu.be/x' }),
+      trainingModule({ videoUrl: 'https://youtu.be/dQw4w9WgXcQ' }),
       { slides: 0, questions: 0, activeActivities: 0 },
     ],
     [

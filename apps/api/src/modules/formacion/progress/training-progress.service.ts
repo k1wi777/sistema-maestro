@@ -41,7 +41,7 @@ export class TrainingProgressService {
   /** La fecha de la primera marca se conserva en las repetidas, que responden 200 igual (R19). */
   async markVideo(user: RequestUser, moduleId: string): Promise<ViewMark> {
     const module = await this.route.requireVisibleModule(user, moduleId);
-    if (module.videoUrl === null) {
+    if (module.videoUrl === null && module.videoFile === null) {
       throw new ConflictException('Este módulo no tiene video');
     }
     return this.transactions.run(async () => {
@@ -66,7 +66,11 @@ export class TrainingProgressService {
   /** La presentación la marca el cliente al llegar a la última diapositiva: el servidor no puede comprobar la lectura. */
   async markPresentation(user: RequestUser, moduleId: string): Promise<ViewMark> {
     const module = await this.route.requireVisibleModule(user, moduleId);
-    if (module.slideCount === 0 && module.presentationUrl === null) {
+    if (
+      module.slideCount === 0 &&
+      module.presentationUrl === null &&
+      module.presentationFile === null
+    ) {
       throw new ConflictException('Este módulo no tiene presentación');
     }
     return this.transactions.run(async () => {

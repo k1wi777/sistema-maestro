@@ -6,6 +6,12 @@ import type {
 } from '@gns/shared';
 import type { ReadRepository } from '../../../shared/repository/repository';
 
+/** Docente del alcance de un plan: solo id y nombre (nunca correo ni otros datos). */
+export interface TeacherInScope {
+  id: string;
+  fullName: string;
+}
+
 export interface NewTeacherAssignment {
   teacherId: string;
   gradeId: string;
@@ -41,6 +47,11 @@ export interface TeacherAssignmentRepository extends ReadRepository<
   findActiveByTeacher(teacherId: string, schoolYear: string): Promise<TeacherAssignment[]>;
   /** Asignaciones activas de todos los docentes en el año, sin paginar. */
   findActiveByYear(schoolYear: string): Promise<TeacherAssignment[]>;
+  /**
+   * Docentes activos por nombre: sin área, todos los de rol docente; con área, los usuarios
+   * activos con asignación activa en esa área y año.
+   */
+  findActiveTeachers(areaId: string | null, schoolYear: string): Promise<TeacherInScope[]>;
   create(input: NewTeacherAssignment): Promise<TeacherAssignment>;
   update(id: string, changes: TeacherAssignmentChanges): Promise<TeacherAssignment>;
 }

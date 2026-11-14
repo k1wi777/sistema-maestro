@@ -1,4 +1,5 @@
 import {
+  describeModuleVideo,
   parseActivityConfig,
   TeacherModuleState,
   TrainingActivityType,
@@ -103,13 +104,15 @@ function projectModuleSummary(
     number: row.number,
     title: row.title,
     summary: row.summary,
+    ...describeModuleVideo(row.videoUrl, row.videoFile !== null),
     state: teacherModuleState(
       progress,
       row.activities.map((activity) => activityProgress.get(activity.id)),
     ),
     steps: {
-      video: row.videoUrl !== null,
-      presentation: row.slideCount > 0 || row.presentationUrl !== null,
+      video: row.videoUrl !== null || row.videoFile !== null,
+      presentation:
+        row.slideCount > 0 || row.presentationUrl !== null || row.presentationFile !== null,
       challenge: row.questionCount > 0,
       activities: row.activities.length,
     },
@@ -267,8 +270,11 @@ export function projectModule(
     title: row.title,
     summary: row.summary,
     videoUrl: row.videoUrl,
+    ...describeModuleVideo(row.videoUrl, row.videoFile !== null),
+    videoFile: row.videoFile,
     videoTitle: row.videoTitle,
     presentationUrl: row.presentationUrl,
+    presentationFile: row.presentationFile,
     slides: row.slides.map((slide) => ({
       id: slide.id,
       title: slide.title,

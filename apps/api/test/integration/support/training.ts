@@ -231,7 +231,7 @@ export async function buildModule(
   options: ModuleOptions = {},
 ): Promise<Created> {
   const module = await createModule(app, coord, sectionId, {
-    videoUrl: options.video ? 'https://youtu.be/prueba' : null,
+    videoUrl: options.video ? 'https://youtu.be/dQw4w9WgXcQ' : null,
     approvalThreshold: options.approvalThreshold ?? 80,
   });
   for (let index = 0; index < (options.slides ?? 0); index += 1) {
@@ -258,12 +258,23 @@ export function trainingAudit(app: INestApplication, entityId: string) {
     .auditLog.findMany({ where: { entityId, type: 'formacion' }, orderBy: { id: 'asc' } });
 }
 
-/** Acciones de la bitácora de formación del usuario (el docente de la prueba es solo suyo). */
-export async function milestonesOf(app: INestApplication, userId: string): Promise<string[]> {
+/** Todas las acciones de la bitácora de formación del usuario (el docente de la prueba es solo suyo). */
+export async function allMilestonesOf(app: INestApplication, userId: string): Promise<string[]> {
   const rows = await app
     .get(PrismaService)
     .auditLog.findMany({ where: { userId, type: 'formacion' }, orderBy: { id: 'asc' } });
   return rows.map((row) => row.action);
+}
+
+/**
+ * Hitos del docente sin los de certificados: que la ruta completa quede terminada depende de los
+ * planes General de otros archivos de pruebas, así que su número no es estable fuera de las
+ * suites de certificados (que usan `allMilestonesOf` con un año propio).
+ */
+export async function milestonesOf(app: INestApplication, userId: string): Promise<string[]> {
+  return (await allMilestonesOf(app, userId)).filter(
+    (action) => action !== 'Obtuvo un certificado',
+  );
 }
 
 /** Respuesta correcta de una pregunta, leída de la base (la API no la entrega antes de responder). */

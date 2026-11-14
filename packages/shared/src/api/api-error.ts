@@ -10,6 +10,7 @@ export const ApiErrorCode = {
   NotFound: 'no_encontrado',
   Conflict: 'conflicto',
   TooManyRequests: 'demasiadas_peticiones',
+  StorageUnavailable: 'almacenamiento_no_disponible',
   Internal: 'error_interno',
   Http: 'error_http',
 } as const;

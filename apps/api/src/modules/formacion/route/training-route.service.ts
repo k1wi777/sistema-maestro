@@ -41,8 +41,8 @@ export class TrainingRouteService {
   ) {}
 
   /** Año vigente y áreas con asignación activa del docente; sin año vigente, 409. */
-  private async visibilityOf(user: RequestUser): Promise<Visibility> {
-    const mine: MyAssignments = await this.assignments.listMine(user.id);
+  private async visibilityOf(teacherId: string): Promise<Visibility> {
+    const mine: MyAssignments = await this.assignments.listMine(teacherId);
     return {
       schoolYear: mine.schoolYear,
       areaIds: new Set(mine.grades.flatMap((grade) => grade.areas.map((area) => area.id))),
@@ -59,17 +59,22 @@ export class TrainingRouteService {
     );
   }
 
-  async route(user: RequestUser): Promise<TeacherRoute> {
-    const visibility = await this.visibilityOf(user);
+  route(user: RequestUser): Promise<TeacherRoute> {
+    return this.routeOf(user.id);
+  }
+
+  /** Ruta de cualquier docente: la misma regla para él y para el seguimiento de coordinación. */
+  async routeOf(teacherId: string): Promise<TeacherRoute> {
+    const visibility = await this.visibilityOf(teacherId);
     const plans = await this.plans.findRoutePlans([...visibility.areaIds], visibility.schoolYear);
     const modules = plans.flatMap((plan) => plan.sections.flatMap((section) => section.modules));
     const [moduleProgress, activityProgress] = await Promise.all([
       this.progress.listModuleProgress(
-        user.id,
+        teacherId,
         modules.map((module) => module.id),
       ),
       this.progress.listActivityProgress(
-        user.id,
+        teacherId,
         modules.flatMap((module) => module.activities.map((activity) => activity.id)),
       ),
     ]);
@@ -81,8 +86,17 @@ export class TrainingRouteService {
     );
   }
 
+  /** Ids de los módulos activos de la ruta vigente del docente (para el certificado de ruta). */
+  async routeModuleIds(teacherId: string): Promise<string[]> {
+    const visibility = await this.visibilityOf(teacherId);
+    const plans = await this.plans.findRoutePlans([...visibility.areaIds], visibility.schoolYear);
+    return plans.flatMap((plan) =>
+      plan.sections.flatMap((section) => section.modules.map((module) => module.id)),
+    );
+  }
+
   async requireVisibleModule(user: RequestUser, moduleId: string): Promise<TeacherModuleRow> {
-    const visibility = await this.visibilityOf(user);
+    const visibility = await this.visibilityOf(user.id);
     const row = await this.plans.findTeacherModule(moduleId);
     if (
       !row ||
@@ -96,7 +110,7 @@ export class TrainingRouteService {
 
   /** Actividad activa de un módulo activo de la ruta; otra cosa es 404. */
   async requireVisibleActivity(user: RequestUser, activityId: string): Promise<ActivityScopeRow> {
-    const visibility = await this.visibilityOf(user);
+    const visibility = await this.visibilityOf(user.id);
     const row = await this.plans.findActivityScope(activityId);
     if (
       !row ||

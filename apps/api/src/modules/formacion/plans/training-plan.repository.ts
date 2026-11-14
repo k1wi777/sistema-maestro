@@ -1,4 +1,5 @@
 import type {
+  ModuleFileSummary,
   CreateTrainingModuleInput,
   CreateTrainingPlanInput,
   CreateTrainingSectionInput,
@@ -41,6 +42,9 @@ export interface RouteModuleRow {
   sortOrder: number;
   videoUrl: string | null;
   presentationUrl: string | null;
+  /** Archivos asociados (solo metadatos; la URL se pide aparte porque caduca). */
+  videoFile: ModuleFileSummary | null;
+  presentationFile: ModuleFileSummary | null;
   slideCount: number;
   questionCount: number;
   /** Solo las actividades `activo`, por orden. */

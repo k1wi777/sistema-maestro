@@ -25,6 +25,7 @@ import { groupAssignmentsByGrade } from './my-assignments';
 import {
   TEACHER_ASSIGNMENT_REPOSITORY,
   type TeacherAssignmentRepository,
+  type TeacherInScope,
 } from './teacher-assignment.repository';
 
 const HOMEROOM_TAKEN_MESSAGE =
@@ -136,6 +137,14 @@ export class TeacherAssignmentsService {
   /** Asignaciones activas de todos los docentes del año, sin paginar (informes de coordinación). */
   listActive(schoolYear: string): Promise<TeacherAssignment[]> {
     return this.repository.findActiveByYear(schoolYear);
+  }
+
+  /**
+   * Docentes del alcance de un plan de formación: todos los activos si `areaId` es nulo, o los
+   * que tienen una asignación activa en esa área y año. Solo id y nombre.
+   */
+  teachersInScope(areaId: string | null, schoolYear: string): Promise<TeacherInScope[]> {
+    return this.repository.findActiveTeachers(areaId, schoolYear);
   }
 
   private async get(id: string): Promise<TeacherAssignment> {
