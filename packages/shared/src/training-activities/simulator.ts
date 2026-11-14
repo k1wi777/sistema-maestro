@@ -323,7 +323,16 @@ export const simulatorConfigSchema = z
       declare(['calculos', index, 'clave'], calculation.clave);
     });
 
+    const resultKeys = new Set<string>();
     config.resultados.forEach((result, index) => {
+      if (resultKeys.has(result.clave)) {
+        context.addIssue({
+          code: 'custom',
+          path: ['resultados', index, 'clave'],
+          message: 'La clave del resultado está repetida.',
+        });
+      }
+      resultKeys.add(result.clave);
       if (!calculationKeys.has(result.clave)) {
         context.addIssue({
           code: 'custom',

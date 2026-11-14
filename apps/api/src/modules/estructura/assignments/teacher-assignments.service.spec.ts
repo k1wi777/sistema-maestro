@@ -73,6 +73,7 @@ function setup(options: Options = {}) {
     lockGrade: jest.fn(() => Promise.resolve()),
     findActiveByTeacher: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveByYear: jest.fn(() => Promise.resolve(options.mine ?? [])),
+    findActiveTeachers: jest.fn(() => Promise.resolve([{ id: 'teacher-1', fullName: 'Ana' }])),
     create: jest.fn(() => Promise.resolve(assignment())),
     update: jest.fn((_id: string, changes: object) =>
       Promise.resolve({ ...(options.stored ?? assignment()), ...changes }),
@@ -349,5 +350,18 @@ describe('TeacherAssignmentsService.listActive', () => {
 
     await expect(service.listActive('2027-2028')).resolves.toEqual(mine);
     expect(repository.findActiveByYear).toHaveBeenCalledWith('2027-2028');
+  });
+});
+
+describe('TeacherAssignmentsService.teachersInScope', () => {
+  it('delegates to the repository and only returns id and name', async () => {
+    const { service, repository } = setup();
+
+    await expect(service.teachersInScope('ar-1', YEAR)).resolves.toEqual([
+      { id: 'teacher-1', fullName: 'Ana' },
+    ]);
+    expect(repository.findActiveTeachers).toHaveBeenCalledWith('ar-1', YEAR);
+    await service.teachersInScope(null, YEAR);
+    expect(repository.findActiveTeachers).toHaveBeenLastCalledWith(null, YEAR);
   });
 });

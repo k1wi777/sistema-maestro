@@ -58,11 +58,11 @@ describe('immutable audit log', () => {
       expect(result.rows[0]?.allowed).toBe(true);
     });
 
-    it('can read and write the other 29 tables', async () => {
+    it('can read and write the other 29 tables (archivo and certificado never allow DELETE)', async () => {
       const result = await db.client.query<{ table_name: string }>(
         `SELECT table_name FROM information_schema.tables
          WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
-           AND table_name NOT IN ('bitacora', '_prisma_migrations')`,
+           AND table_name NOT IN ('bitacora', '_prisma_migrations', 'archivo', 'certificado')`,
       );
 
       expect(result.rows).toHaveLength(29);

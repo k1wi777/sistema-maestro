@@ -1,4 +1,4 @@
-// Modelo de datos de la Plataforma GNS: 30 tablas en 7 módulos.
+// Modelo de datos de la Plataforma GNS: 31 tablas en 7 módulos.
 // Modelos y campos en inglés, mapeados a tablas y columnas en español (snake_case).
 // Lo que Prisma no expresa (triggers de la bitácora, privilegios y CHECK) vive en
 // las migraciones SQL escritas a mano.
@@ -49,6 +49,7 @@ model User {
   moduleProgress     ModuleProgress[]
   activityProgress   ActivityProgress[]
   certificates       Certificate[]
+  uploadedFiles      StoredFile[]
   updatedFaqEntries  FaqEntry[]
   auditLogs          AuditLog[]
   passwordCredential PasswordCredential?
@@ -410,11 +411,32 @@ model TrainingPlan {
   createdAt  DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt  DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  area    Area?            @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  modules TrainingModule[]
+  area     Area?             @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  modules  TrainingModule[]
+  sections TrainingSection[]
 
   @@index([areaId])
   @@map("plan_formacion")
+}
+
+// Sección de un plan (p. ej. «Parte I»): agrupa módulos y se ordena dentro del plan.
+// Sin estado: una sección sin módulos activos no aparece en la ruta del docente.
+model TrainingSection {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  planId    String   @map("plan_id") @db.Uuid
+  title     String   @map("titulo") @db.VarChar(120)
+  subtitle  String?  @map("subtitulo") @db.VarChar(200)
+  sortOrder Int      @map("orden") @db.SmallInt
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  plan    TrainingPlan     @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  modules TrainingModule[]
+
+  // Respalda la llave foránea compuesta de `modulo_formacion` (la sección es del mismo plan).
+  @@unique([id, planId])
+  @@index([planId])
+  @@map("seccion_plan")
 }
 
 // `status` admite `borrador` (módulo aún no publicado, sin progreso) además de
@@ -422,7 +444,7 @@ model TrainingPlan {
 model TrainingModule {
   id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   planId             String   @map("plan_id") @db.Uuid
-  part               String?  @map("parte") @db.VarChar(60)
+  sectionId          String   @map("seccion_id") @db.Uuid
   number             String?  @map("numero") @db.VarChar(4)
   sortOrder          Int      @map("orden") @db.SmallInt
   title              String   @map("titulo") @db.VarChar(160)
@@ -430,6 +452,9 @@ model TrainingModule {
   videoUrl           String?  @map("video_url") @db.Text
   videoTitle         String?  @map("video_titulo") @db.VarChar(160)
   presentationUrl    String?  @map("presentacion_url") @db.Text
+  // Video y presentación como archivo subido; excluyen al enlace del mismo propósito (CHECK).
+  videoFileId        String?  @map("video_archivo_id") @db.Uuid
+  presentationFileId String?  @map("presentacion_archivo_id") @db.Uuid
   status             String   @map("estado") @db.VarChar(14)
   // Desafío GNS: porcentaje para aprobar y tiempo fijo por pregunta (nulo = tiempo vigente por tipo).
   approvalThreshold  Int      @default(80) @map("umbral_aprobacion") @db.SmallInt
@@ -437,14 +462,20 @@ model TrainingModule {
   createdAt          DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt          DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  plan         TrainingPlan        @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  slides       Slide[]
-  questions    ChallengeQuestion[]
-  progress     ModuleProgress[]
-  certificates Certificate[]
-  activities   TrainingActivity[]
+  plan             TrainingPlan        @relation(fields: [planId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  section          TrainingSection     @relation(fields: [sectionId, planId], references: [id, planId], onDelete: NoAction, onUpdate: NoAction)
+  videoFile        StoredFile?         @relation("ModuleVideoFile", fields: [videoFileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  presentationFile StoredFile?         @relation("ModulePresentationFile", fields: [presentationFileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  slides           Slide[]
+  questions        ChallengeQuestion[]
+  progress         ModuleProgress[]
+  certificates     Certificate[]
+  activities       TrainingActivity[]
 
   @@index([planId])
+  @@index([sectionId])
+  @@index([videoFileId])
+  @@index([presentationFileId])
   @@map("modulo_formacion")
 }
 
@@ -505,6 +536,8 @@ model ModuleProgress {
   bestScore            Int?      @map("mejor_puntaje") @db.SmallInt
   passedAt             DateTime? @map("aprobado_en") @db.Timestamptz(6)
   completedAt          DateTime? @map("terminado_en") @db.Timestamptz(6)
+  // Partida del Desafío en curso (estado del servidor, nunca sale de la API); NULL si no hay.
+  challengeGame        Json?     @map("partida_desafio") @db.JsonB
   createdAt            DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt            DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
@@ -534,20 +567,30 @@ model ChallengeAttempt {
 }
 
 model Certificate {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teacherId String   @map("docente_id") @db.Uuid
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId   String   @map("docente_id") @db.Uuid
   // Vacío = certificado de la ruta completa.
-  moduleId  String?  @map("modulo_id") @db.Uuid
-  code      String   @unique @map("codigo") @db.VarChar(20)
-  issuedAt  DateTime @map("emitido_en") @db.Timestamptz(6)
-  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  moduleId    String?  @map("modulo_id") @db.Uuid
+  code        String   @unique @map("codigo") @db.VarChar(20)
+  issuedAt    DateTime @map("emitido_en") @db.Timestamptz(6)
+  // PDF guardado en el almacenamiento; nulo hasta la primera descarga.
+  fileId      String?  @map("archivo_id") @db.Uuid
+  // Instantánea de la emisión: no cambia si el docente o el módulo se renombran después.
+  teacherName String   @map("nombre_docente") @db.VarChar(120)
+  title       String   @map("titulo") @db.VarChar(160)
+  planName    String?  @map("plan_nombre") @db.VarChar(120)
+  createdAt   DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   teacher User            @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   module  TrainingModule? @relation(fields: [moduleId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  file    StoredFile?     @relation(fields: [fileId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  // La migración añade dos índices únicos parciales (un certificado por docente y módulo, y uno
+  // de ruta completa por docente) y el rol de la aplicación no tiene DELETE.
   @@index([teacherId])
   @@index([moduleId])
+  @@index([fileId])
   @@map("certificado")
 }
 
@@ -584,6 +627,8 @@ model ActivityProgress {
   bestPoints  Int?      @map("mejores_puntos")
   attempts    Int       @default(0) @map("intentos") @db.SmallInt
   detail      Json?     @map("detalle") @db.JsonB
+  // Partida de conecta o verdad o mito en curso (estado del servidor); NULL si no hay.
+  game        Json?     @map("partida") @db.JsonB
   createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
@@ -640,4 +685,29 @@ model AuditLog {
   @@index([userId])
   @@index([occurredAt(sort: Desc)])
   @@map("bitacora")
+}
+
+// Metadatos y estado de cada objeto del almacenamiento (video y presentación de módulos,
+// PDF de certificados). El rol de la aplicación no tiene DELETE; la migración añade los CHECK
+// de `proposito`, `estado` y `tamano_bytes > 0`.
+model StoredFile {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  objectKey    String    @unique @map("clave_objeto") @db.VarChar(200)
+  purpose      String    @map("proposito") @db.VarChar(20)
+  contentType  String    @map("tipo_contenido") @db.VarChar(100)
+  sizeBytes    BigInt    @map("tamano_bytes")
+  originalName String?   @map("nombre_original") @db.VarChar(160)
+  status       String    @map("estado") @db.VarChar(12)
+  uploadedById String?   @map("subido_por") @db.Uuid
+  confirmedAt  DateTime? @map("confirmado_en") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  uploadedBy            User?            @relation(fields: [uploadedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  videoOfModules        TrainingModule[] @relation("ModuleVideoFile")
+  presentationOfModules TrainingModule[] @relation("ModulePresentationFile")
+  certificates          Certificate[]
+
+  @@index([uploadedById])
+  @@map("archivo")
 }

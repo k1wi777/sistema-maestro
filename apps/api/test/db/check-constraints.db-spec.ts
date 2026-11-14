@@ -7,6 +7,8 @@ import {
   RecordStatus,
   ReviewAction,
   ReviewRecordType,
+  StoredFilePurpose,
+  StoredFileStatus,
   CHALLENGE_DEFAULT_APPROVAL_THRESHOLD,
   CHALLENGE_SECONDS_PER_QUESTION_LIMITS,
   TeacherAssignmentStatus,
@@ -28,11 +30,16 @@ import {
   insertGrade,
   insertLessonPlan,
   insertLessonPlanResource,
+  insertActivityProgress,
+  insertModuleProgress,
+  insertTrainingPlan,
+  insertTrainingSection,
   insertObserverNote,
   insertPasswordCredential,
   insertReview,
   insertSchoolYear,
   insertSession,
+  insertStoredFile,
   insertTeacherAssignment,
   insertTrainingActivity,
   insertTrainingModule,
@@ -140,6 +147,22 @@ const CASES: CheckCase[] = [
     updatable: true,
   },
   {
+    table: 'archivo',
+    column: 'proposito',
+    allowed: Object.values(StoredFilePurpose),
+    rejected: ['otro'],
+    insert: insertStoredFile,
+    updatable: true,
+  },
+  {
+    table: 'archivo',
+    column: 'estado',
+    allowed: Object.values(StoredFileStatus),
+    rejected: ['archivado'],
+    insert: insertStoredFile,
+    updatable: true,
+  },
+  {
     table: 'modulo_formacion',
     column: 'estado',
     allowed: Object.values(TrainingModuleStatus),
@@ -220,6 +243,9 @@ describe('check constraints', () => {
         'sesion_motivo_revocacion_check',
         'sesion_proveedor_check',
         'sesion_revocacion_check',
+        'archivo_tamano_bytes_check',
+        'modulo_formacion_video_exclusivo_check',
+        'modulo_formacion_presentacion_exclusiva_check',
         'modulo_formacion_segundos_por_pregunta_check',
         'modulo_formacion_umbral_aprobacion_check',
         'periodo_academico_numero_check',
@@ -227,6 +253,8 @@ describe('check constraints', () => {
         'revision_cambios_check',
         'progreso_actividad_intentos_check',
         'progreso_actividad_mejor_puntaje_check',
+        'progreso_actividad_partida_check',
+        'progreso_modulo_partida_desafio_check',
       ].sort(),
     );
   });
@@ -322,6 +350,67 @@ describe('check constraints', () => {
         `UPDATE modulo_formacion SET segundos_por_pregunta = $1 WHERE id = $2`,
         [value, (await insertTrainingModule(db.client)).id],
       );
+    });
+  });
+
+  describe('en-curso game state columns', () => {
+    it('accepts a JSON object or NULL as the Challenge game', async () => {
+      const progress = await insertModuleProgress(db.client, { partida_desafio: { v: 1 } });
+
+      expect(progress.partida_desafio).toEqual({ v: 1 });
+      expect((await insertModuleProgress(db.client)).partida_desafio).toBeNull();
+    });
+
+    it.each([[[1, 2]], ['texto'], [7]])('rejects %j as the Challenge game', async (value) => {
+      const progress = await insertModuleProgress(db.client);
+
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE progreso_modulo SET partida_desafio = $1::jsonb WHERE id = $2`,
+        [JSON.stringify(value), progress.id],
+      );
+    });
+
+    it.each([[[1, 2]], ['texto'], [7]])('rejects %j as the activity game', async (value) => {
+      const progress = await insertActivityProgress(db.client);
+
+      await expectSqlError(
+        db.client,
+        CHECK_VIOLATION,
+        `UPDATE progreso_actividad SET partida = $1::jsonb WHERE id = $2`,
+        [JSON.stringify(value), progress.id],
+      );
+    });
+
+    it('accepts a JSON object as the activity game', async () => {
+      const progress = await insertActivityProgress(db.client, { partida: { v: 1 } });
+
+      expect(progress.partida).toEqual({ v: 1 });
+    });
+  });
+
+  describe('modulo_formacion.seccion_id', () => {
+    it('rejects a section that belongs to another plan', async () => {
+      const otherPlan = await insertTrainingPlan(db.client);
+      const foreignSection = await insertTrainingSection(db.client, { plan_id: otherPlan.id });
+      const module = await insertTrainingModule(db.client);
+
+      await expectSqlError(
+        db.client,
+        FOREIGN_KEY_VIOLATION,
+        `UPDATE modulo_formacion SET seccion_id = $1 WHERE id = $2`,
+        [foreignSection.id, module.id],
+      );
+    });
+
+    it('no longer has the part column', async () => {
+      const result = await db.client.query(
+        `SELECT 1 FROM information_schema.columns
+         WHERE table_name = 'modulo_formacion' AND column_name = 'parte'`,
+      );
+
+      expect(result.rowCount).toBe(0);
     });
   });
 

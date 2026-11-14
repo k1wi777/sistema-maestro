@@ -59,7 +59,26 @@ const BODYLESS = new Set([
   'post /field-journals/{id}/submit',
   'post /observer-notes/{id}/submit',
   'put /shared-activities/{id}/favorite',
+  'post /training-modules/{id}/publish',
+  'post /training-modules/{id}/withdraw',
+  'post /training-modules/{id}/restore',
+  'post /training-modules/{id}/activities/{activityId}/withdraw',
+  'post /training-modules/{id}/activities/{activityId}/restore',
+  'post /me/training/modules/{moduleId}/video-viewed',
+  'post /me/training/modules/{moduleId}/presentation-viewed',
+  'post /me/training/modules/{moduleId}/challenge',
+  'post /me/training/modules/{moduleId}/challenge/next',
+  'post /me/training/activities/{activityId}/game',
+  'post /me/training/activities/{activityId}/game/next',
+  'post /training-modules/{id}/files/{fileId}/confirm',
+  'post /training-modules/{id}/files/{purpose}/url',
+  'post /me/training/modules/{moduleId}/files/{purpose}/url',
+  'post /me/training/certificates/{id}/download',
+  'post /training-certificates/{id}/download',
 ]);
+
+// Respuestas que no son JSON: se documentan con su tipo de contenido.
+const NON_JSON_SUCCESS = new Map([['get /training-tracking/plans/{planId}/export', 'text/csv']]);
 
 describe('documentación OpenAPI', () => {
   let app: INestApplication;
@@ -95,8 +114,9 @@ describe('documentación OpenAPI', () => {
       }
       const success = Object.entries(operation.responses).find(([status]) => /^2/.test(status));
       // Un 204 no tiene cuerpo que describir.
+      const mediaType = NON_JSON_SUCCESS.get(`${method} ${openApiPath}`) ?? 'application/json';
       if (success?.[0] !== '204') {
-        expect([label, success?.[1].content?.['application/json']?.schema !== undefined]).toEqual([
+        expect([label, success?.[1].content?.[mediaType]?.schema !== undefined]).toEqual([
           label,
           true,
         ]);

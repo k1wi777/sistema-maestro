@@ -5,6 +5,7 @@ import { validateEnv } from './core/config/env.validation';
 import { StructureModule } from './modules/estructura/structure.module';
 import { IdentityModule } from './modules/identidad/identity.module';
 import { FormatsModule } from './modules/formatos/formats.module';
+import { TrainingModule } from './modules/formacion/training.module';
 import { PlanningModule } from './modules/planeacion/planning.module';
 import { DatabaseModule } from './shared/database/database.module';
 
@@ -22,6 +23,7 @@ import { DatabaseModule } from './shared/database/database.module';
     StructureModule,
     PlanningModule,
     FormatsModule,
+    TrainingModule,
   ],
 })
 export class AppModule {}

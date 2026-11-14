@@ -11,7 +11,7 @@ import type { AdminConfig } from './admin-config.ts';
 import { BENEFITS_ACTIVITIES, BENEFITS_MODULE_NUMBER } from './benefits.data.ts';
 import { ACADEMIC_PERIOD_NUMBERS, AREAS, GRADES, LEVELS, SCHOOL_YEAR } from './catalogs.data.ts';
 import { FAQ_ENTRIES } from './faq.data.ts';
-import { GENERAL_PLAN_NAME, INDUCTION_MODULES } from './induction.data.ts';
+import { GENERAL_PLAN_NAME, INDUCTION_MODULES, TRAINING_SECTIONS } from './induction.data.ts';
 
 export interface TableCount {
   inserted: number;
@@ -116,6 +116,7 @@ async function countExistingPlanRows(
   counter: SeedCounter,
 ): Promise<void> {
   const tables: Record<string, string> = {
+    seccion_plan: `SELECT count(*) FROM seccion_plan WHERE plan_id = $1`,
     modulo_formacion: `SELECT count(*) FROM modulo_formacion WHERE plan_id = $1`,
     diapositiva: `SELECT count(*) FROM diapositiva d JOIN modulo_formacion m ON m.id = d.modulo_id WHERE m.plan_id = $1`,
     pregunta_desafio: `SELECT count(*) FROM pregunta_desafio q JOIN modulo_formacion m ON m.id = q.modulo_id WHERE m.plan_id = $1`,
@@ -155,11 +156,29 @@ async function seedGeneralPlan(
   });
   counter.record('plan_formacion', true);
 
+  const sectionIds = new Map<string, string>();
+  for (const [index, section] of TRAINING_SECTIONS.entries()) {
+    sectionIds.set(
+      section.key,
+      await insertForId(client, 'seccion_plan', {
+        plan_id: planId,
+        titulo: section.title,
+        subtitulo: section.subtitle,
+        orden: index + 1,
+      }),
+    );
+    counter.record('seccion_plan', true);
+  }
+
   const moduleIds = new Map<string, string>();
   for (const module of INDUCTION_MODULES) {
+    const sectionId = sectionIds.get(module.section);
+    if (!sectionId) {
+      throw new Error(`No existe la sección ${module.section} del módulo ${module.number}`);
+    }
     const moduleId = await insertForId(client, 'modulo_formacion', {
       plan_id: planId,
-      parte: module.part,
+      seccion_id: sectionId,
       numero: module.number,
       orden: module.sortOrder,
       titulo: module.title,
