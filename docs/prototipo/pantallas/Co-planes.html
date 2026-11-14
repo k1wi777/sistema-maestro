@@ -1,0 +1,77 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Co-planes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="../assets/gns-premium.css"></head><body>
+
+<div class="app">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"/><circle cx="20" cy="7" r="1.5"/><circle cx="4" cy="19" r="1.5"/></symbol>
+  <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 14l2 2 4-4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></symbol>
+  <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></symbol>
+  <symbol id="i-bitacora" viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-gente" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.8 4 4.5"/></symbol>
+  <symbol id="i-grafica" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-anular" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/></symbol><symbol id="i-puntos" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></symbol></svg>
+  <aside>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
+    <nav class="menu menu-adm" aria-label="Coordinación académica">
+      <div class="menu-titulo">Seguimiento</div>
+      <button type="button"><svg class="i"><use href="#i-plan"></use></svg>Planeaciones</button>
+      <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
+      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
+      <div class="menu-titulo" style="margin-top:12px">Gestión</div>
+      <button type="button"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
+      <button type="button" aria-current="page"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
+      <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
+      <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
+    </nav>
+    <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
+    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <button type="button" class="priv-link">Tratamiento de datos personales</button>
+  </aside>
+  <main>
+    <div class="cont">
+      <section>
+        <div class="encabezado"><div>
+          <div class="eyebrow">Coordinación académica</div>
+          <h1>Planes de formación</h1>
+          <p>Organiza los planes por área en secciones y módulos, y decide qué se publica.</p>
+        </div></div>
+        <div class="bloque">
+          <div class="bloque-h"><h2>Módulos del plan</h2><button type="button" class="btn"><svg class="i"><use href="#i-mas"></use></svg>Nuevo módulo</button></div>
+          <div class="co-filtros"><label>Plan de formación del área<select><option selected>General · Inducción institucional (todos los docentes)</option><option>English (CLIL) (1 módulo)</option><option>Math</option><option>Ciencias Naturales</option></select></label></div>
+          <p class="hint" style="margin:-4px 0 6px">Elige el área y crea o edita sus módulos: los verán los docentes que tengan esa área asignada. El plan General (inducción) lo ven todos. Los cambios se ven de inmediato en la ruta de los docentes. Los módulos quitados se pueden restaurar; el progreso de los docentes no se borra.</p>
+          <div>
+            <div class="co-parte">Bienvenida</div>
+            <div class="co-row"><div class="co-n">0</div><div class="co-info"><b>Bienvenida institucional GNS</b><small>Desafío (6 preguntas)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="67" aria-label="Docentes que terminaron"><span style="width:67%"></span></div>4 terminados · 1 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><button type="button" class="btn lin sm">Quitar del plan</button></div></div>
+            <div class="co-parte">Parte I · Fundamentos y filosofía</div>
+            <div class="co-row"><div class="co-n">1</div><div class="co-info"><b>Antecedente histórico GNS · Marco epistemológico y científico</b><small>Video · Desafío (6 preguntas) · Presentación (5 diapositivas)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-label="Docentes que terminaron"><span style="width:50%"></span></div>3 terminados · 2 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><button type="button" class="btn lin sm">Quitar del plan</button></div></div>
+            <div class="co-row"><div class="co-n">2</div><div class="co-info"><b>Objetivo del modelo GNS</b><small>Video · Desafío (5 preguntas) · Presentación (5 diapositivas)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33" aria-label="Docentes que terminaron"><span style="width:33%"></span></div>2 terminados · 1 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><button type="button" class="btn lin sm">Quitar del plan</button></div></div>
+            <div class="co-parte">Parte II · La práctica pedagógica</div>
+            <div class="co-row"><div class="co-n">3</div><div class="co-info"><b>Propuesta pedagógica</b><small>Video · Desafío (6 preguntas) · Presentación (5 diapositivas)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="17" aria-label="Docentes que terminaron"><span style="width:17%"></span></div>1 terminado · 2 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><button type="button" class="btn lin sm">Quitar del plan</button></div></div>
+            <div class="co-row"><div class="co-n">4</div><div class="co-info"><b>Claves y diferenciadores</b><small>Video · Desafío (5 preguntas) · Presentación (5 diapositivas)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Docentes que terminaron"><span style="width:0%"></span></div>0 terminados · 0 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><button type="button" class="btn lin sm">Quitar del plan</button></div></div>
+            <div class="co-parte">Parte IV · Nuestro talento humano</div>
+            <div class="co-row"><div class="co-n">8</div><div class="co-info"><b>Plan de beneficios GNS 2026–2027</b><small>8 actividades (2 obligatorias)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="17" aria-label="Docentes que terminaron"><span style="width:17%"></span></div>1 terminado · 1 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><button type="button" class="btn lin sm">Quitar del plan</button></div></div>
+            <div class="co-parte">Parte V · Formación continua</div>
+            <div class="co-row extra"><div class="co-n">9</div><div class="co-info"><b>Evaluación formativa en el aula GNS<span class="co-tag rojo">Nuevo</span></b><small>Video · Desafío (5 preguntas) · Presentación (3 diapositivas) · 1 actividad</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Docentes que terminaron"><span style="width:0%"></span></div>0 terminados · 1 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><button type="button" class="btn sec sm">Seguimiento</button><button type="button" class="btn lin sm">Editar</button><details class="mas"><summary class="btn lin sm" aria-label="Más acciones"><svg class="i" aria-hidden="true"><use href="#i-puntos"></use></svg></summary><div class="mas-menu" role="menu"><button type="button" role="menuitem">Quitar del plan</button><button type="button" role="menuitem" class="peligro"><svg class="i" aria-hidden="true"><use href="#i-anular"></use></svg>Anular módulo</button></div></details></div></div>
+            <div class="co-row oculto extra"><div class="co-n">10</div><div class="co-info"><b>Rutinas bilingües en preescolar<span class="co-tag rojo">Nuevo</span><span class="co-tag">Fuera del plan</span></b><small>Desafío (4 preguntas) · Presentación (2 diapositivas)</small><div class="co-mini"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Docentes que terminaron"><span style="width:0%"></span></div>0 terminados · 0 en curso · de 6 docentes</div></div>
+              <div class="co-acc"><span class="co-conf">¿Anular este módulo? Queda constancia en la bitácora. <button type="button" class="btn lin sm">No</button><button type="button" class="btn sm rojo">Sí, anular</button></span></div></div>
+          </div>
+          <p class="hint" style="margin-top:10px">Los módulos 5, 6 y 7 siguen el mismo formato (omitidos aquí).</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</body></html>

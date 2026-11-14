@@ -1,0 +1,259 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Co-editor-modulo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+<link rel="stylesheet" href="../assets/gns-premium.css"></head><body>
+
+<div class="app">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"/><circle cx="20" cy="7" r="1.5"/><circle cx="4" cy="19" r="1.5"/></symbol>
+  <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 14l2 2 4-4"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></symbol>
+  <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></symbol>
+  <symbol id="i-bitacora" viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-gente" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.8 4 4.5"/></symbol>
+  <symbol id="i-grafica" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-volver" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-guardar" viewBox="0 0 24 24"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M7 3v5h8V3M7 21v-7h10v7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-arriba" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
+  <symbol id="i-abajo" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-arrastre" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></symbol>
+  <symbol id="i-subir" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5M5 21h14"/></symbol>
+  <symbol id="i-ojo" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+<symbol id="i-acuerdo" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"/><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"/><path d="m21 3 1 11h-2"/><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"/><path d="M3 4h8"/></symbol><symbol id="i-ahorro" viewBox="0 0 24 24"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/></symbol><symbol id="i-corazon" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol><symbol id="i-pastel" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3M12 8v3M17 8v3"/><path d="M7 4h.01M12 4h.01M17 4h.01"/></symbol><symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol><symbol id="i-siguiente" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol></svg>
+  <aside>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
+    <nav class="menu menu-adm" aria-label="Coordinación académica">
+      <div class="menu-titulo">Seguimiento</div>
+      <button type="button"><svg class="i"><use href="#i-plan"></use></svg>Planeaciones</button>
+      <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
+      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
+      <div class="menu-titulo" style="margin-top:12px">Gestión</div>
+      <button type="button"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
+      <button type="button" aria-current="page"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
+      <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
+      <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
+    </nav><p class="wz-regla">Video, Desafío GNS, presentación y actividades son opcionales: el módulo necesita al menos uno para publicarse. El docente solo ve los que tenga.</p>
+    <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
+    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <button type="button" class="priv-link">Tratamiento de datos personales</button>
+  </aside>
+  <main>
+    <div class="cont">
+      <section>
+      <div class="co-ed">
+
+        <div class="encabezado"><div><button type="button" class="btn lin sm"><svg class="i" aria-hidden="true"><use href="#i-volver"></use></svg>Planes de formación</button><h1 style="margin-top:12px">Editar módulo 8</h1><p>Plan de beneficios GNS 2026–2027 · Parte IV · Nuestro talento humano</p></div><span class="estado e-revisada">Publicado</span></div><nav class="wz" aria-label="Pasos del módulo"><ol class="wz-pasos"><li class="hecho"><button type="button"><span class="wz-n"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><span class="wz-t">Datos del módulo<small>Listo</small></span></button></li><li class="sin"><button type="button"><span class="wz-n">2</span><span class="wz-t">Video<small>Sin video · opcional</small></span></button></li><li class="actual" aria-current="step"><button type="button"><span class="wz-n">3</span><span class="wz-t">Desafío GNS<small>3 preguntas</small></span></button></li><li class=""><button type="button"><span class="wz-n">4</span><span class="wz-t">Presentación<small>1 diapositiva</small></span></button></li><li class=""><button type="button"><span class="wz-n">5</span><span class="wz-t">Actividades<small>8 actividades</small></span></button></li><li class=""><button type="button"><span class="wz-n">6</span><span class="wz-t">Vista previa<small>Así lo verá el docente</small></span></button></li></ol><div class="wz-movil"><span>Paso 3 de 6</span><b>Desafío GNS</b></div><div class="wz-prog" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="3" aria-label="Avance de la edición"><span style="width:40%"></span></div></nav><div class="bloque wz-paso" data-paso="1" hidden><div class="bloque-h"><h2>Datos del módulo</h2></div>
+          <div class="co-g2">
+            <label>Área del plan de formación<select><option selected>General · Inducción institucional</option><option>English (CLIL)</option><option>Math</option></select></label>
+            <label>Parte del plan<select><option>Bienvenida</option><option>Parte I · Fundamentos y filosofía</option><option>Parte II · La práctica pedagógica</option><option>Parte III · Recomendaciones específicas</option><option selected>Parte IV · Nuestro talento humano</option><option>Parte V · Formación continua</option></select></label>
+            <label>Número del módulo<input value="8" maxlength="4"></label>
+            <label style="grid-column:1/-1">Título del módulo<input value="Plan de beneficios GNS 2026–2027" maxlength="160" placeholder="Ej. Evaluación formativa en el aula GNS"></label>
+            <label style="grid-column:1/-1">Descripción corta<textarea rows="2" maxlength="300" placeholder="Qué aprenderá el docente en este módulo">Ahorro mutuo, bono de desempeño, bilingüismo, quinquenios, posgrados, cabaña en Coveñas y mucho más. ¡Descúbrelos jugando!</textarea></label>
+          </div>
+          <p class="hint" style="margin-top:8px">La parte solo aplica al plan General. En un plan de área, los módulos se listan por número.</p>
+        </div>
+
+        <div class="aviso" style="display:flex;flex-direction:column;gap:6px">
+          <b>Cómo se termina este módulo</b>
+          <span>El docente termina el módulo cuando cumple todo lo que el módulo tiene: ver el video (si hay video), aprobar el Desafío GNS con 80 % (si tiene preguntas), revisar la presentación hasta el final (si tiene diapositivas o enlace) y completar todas las actividades marcadas como obligatorias.</span>
+          <span style="display:flex;gap:6px;flex-wrap:wrap"><span class="co-tag" style="margin:0">Video: no se exige (sin video)</span><span class="co-tag" style="margin:0">Desafío GNS · 3 preguntas</span><span class="co-tag" style="margin:0">Presentación · 1 diapositiva</span><span class="co-tag rojo" style="margin:0">Conecta</span><span class="co-tag rojo" style="margin:0">¿Verdad o mito?</span></span>
+        </div>
+
+        <div class="bloque wz-paso" data-paso="2" hidden><div class="bloque-h"><h2>Video</h2><span class="hint">Opcional</span></div>
+          <div class="co-g2">
+            <label>Título del video<input maxlength="100" value="Video · Plan de beneficios" placeholder="Video del módulo"></label>
+            <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:5px"><legend style="font-size:12.5px;font-weight:800;color:var(--muted);padding:0;margin-bottom:5px">Origen del video</legend>
+              <div class="fo-tabs" role="radiogroup" style="margin:0"><button type="button" class="chip" role="radio" aria-checked="true" aria-pressed="true">Enlace</button><button type="button" class="chip" role="radio" aria-checked="false" aria-pressed="false">Archivo subido</button></div></fieldset>
+          </div>
+          <div class="co-g2" style="margin-top:12px">
+            <label>Enlace del video (YouTube, Drive…)<input type="url" placeholder="https://youtu.be/…"><span class="hint">Si lo dejas vacío, el video no se exige para terminar el módulo.</span></label>
+            <div class="vacio" style="padding:16px;display:flex;flex-direction:column;gap:8px;align-items:center"><svg class="i" style="width:24px;height:24px"><use href="#i-subir"></use></svg><span>Con «Archivo subido»: arrastra el video aquí o</span><button type="button" class="btn sec sm">Elegir archivo</button><span class="hint">MP4 · hasta 500 MB. Se reproduce dentro de la plataforma.</span></div>
+          </div>
+        </div>
+
+        <div class="bloque wz-paso" data-paso="3"><div class="bloque-h"><h2>Desafío GNS</h2><span class="hint">Opcional · 3 preguntas</span></div>
+          <p class="hint" style="margin-top:-6px">Se juega como un Kahoot: tiempo por pregunta y puntos por rapidez. Se aprueba con 80% de aciertos. Recomendado: entre 4 y 8 preguntas.</p>
+          <div>
+            <div class="co-item"><div class="co-item-h"><span>Pregunta 1</span><span style="display:flex;gap:4px"><button type="button" class="co-x" aria-label="Subir pregunta" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar pregunta" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar</button></span></div>
+              <div class="co-g2"><label>Tipo<select><option selected>Selección múltiple</option><option>Verdadero o falso</option><option>Ordenar pasos</option></select></label></div>
+              <label>Pregunta<textarea rows="2" maxlength="300">¿Qué porcentaje de la póliza exequial cubre el colegio?</textarea></label>
+              <div class="co-ops"><span class="hint">Marca la opción correcta.</span>
+                <div class="co-op"><input type="radio" name="q1" checked aria-label="Opción 1 es la correcta"><input value="50%" maxlength="200" placeholder="Opción 1"></div>
+                <div class="co-op"><input type="radio" name="q1" aria-label="Opción 2 es la correcta"><input value="100%" maxlength="200" placeholder="Opción 2"></div>
+                <div class="co-op"><input type="radio" name="q1" aria-label="Opción 3 es la correcta"><input value="30%" maxlength="200" placeholder="Opción 3"></div>
+                <div><button type="button" class="co-x">+ Agregar opción</button> <button type="button" class="co-x">− Quitar la última</button></div></div>
+              <label>Retroalimentación (se muestra al responder)<input value="GNS cubre el 50% de la póliza exequial del plan institucional." maxlength="240"></label></div>
+            <div class="co-item"><div class="co-item-h"><span>Pregunta 2</span><span style="display:flex;gap:4px"><button type="button" class="co-x" aria-label="Subir pregunta" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar pregunta" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar</button></span></div>
+              <div class="co-g2"><label>Tipo<select><option>Selección múltiple</option><option selected>Verdadero o falso</option><option>Ordenar pasos</option></select></label></div>
+              <label>Pregunta<textarea rows="2" maxlength="300">El 30% del posgrado se condona con un promedio académico de 3.8 o superior.</textarea></label>
+              <label>Respuesta correcta<select><option selected>Verdadero</option><option>Falso</option></select></label>
+              <label>Retroalimentación (se muestra al responder)<input value="Además del contrato de permanencia." maxlength="240"></label></div>
+            <div class="co-item"><div class="co-item-h"><span>Pregunta 3</span><span style="display:flex;gap:4px"><button type="button" class="co-x" aria-label="Subir pregunta" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar pregunta" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar</button></span></div>
+              <div class="co-g2"><label>Tipo<select><option>Selección múltiple</option><option>Verdadero o falso</option><option selected>Ordenar pasos</option></select></label></div>
+              <label>Pregunta<textarea rows="2" maxlength="300">Ordena los tramos del bono de antigüedad, del menor al mayor porcentaje por año.</textarea></label>
+              <div class="co-ops"><span class="hint">Escribe los pasos en el orden correcto; el juego los mezcla.</span>
+                <div class="co-op"><b>1.</b><input value="Años 1 a 4: 1%" maxlength="200"></div>
+                <div class="co-op"><b>2.</b><input value="Años 5 a 9: 1.5%" maxlength="200"></div>
+                <div class="co-op"><b>3.</b><input value="Años 10 a 14: 2%" maxlength="200"></div>
+                <div class="co-op"><b>4.</b><input value="Años 15 a 19: 2.5%" maxlength="200"></div>
+                <div><button type="button" class="co-x">− Quitar la última</button></div></div>
+              <label>Retroalimentación (se muestra al responder)<input value="1% → 1.5% → 2% → 2.5% → 3% (años 20 a 24)." maxlength="240"></label></div>
+          </div>
+          <button type="button" class="btn lin sm"><svg class="i"><use href="#i-mas"></use></svg>Agregar pregunta</button>
+        </div>
+
+        <div class="bloque wz-paso" data-paso="4" hidden><div class="bloque-h"><h2>Presentación sugerida</h2><span class="hint">Opcional</span></div>
+          <label style="margin-bottom:12px">Enlace a la presentación completa (opcional: Canva, Drive, PDF)<input type="url" placeholder="https://…"></label>
+          <div>
+            <div class="co-item"><div class="co-item-h"><span>Diapositiva 1</span><span style="display:flex;gap:4px"><button type="button" class="co-x" aria-label="Subir diapositiva" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar diapositiva" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar</button></span></div>
+              <label>Título<input value="Plan de beneficios 2026–2027" maxlength="160"></label>
+              <label>Ideas clave (una por línea)<textarea rows="4" style="white-space:pre-line">El colegio aporta el 50% de lo que ahorras.
+Hasta 1 salario completo con evaluación mayor a 3.5.
+80% de descuento en matrícula, pensión y alimentación para tus hijos.</textarea></label></div>
+          </div>
+          <button type="button" class="btn lin sm"><svg class="i"><use href="#i-mas"></use></svg>Agregar diapositiva</button>
+        </div>
+
+        <div class="bloque wz-paso" data-paso="5" hidden><div class="bloque-h"><h2>Actividades</h2><span class="hint">8 actividades · 2 obligatorias</span></div>
+          <p class="hint" style="margin-top:-6px">Agrega juegos y simuladores al módulo. El docente los ve en este orden, después de la presentación. Arrastra para reordenar. Las actividades obligatorias deben completarse para terminar el módulo y descargar el certificado. Quitar una actividad la saca del módulo sin borrar el progreso de los docentes.</p>
+
+          <div class="co-item" style="background:var(--card)">
+            <div class="co-item-h" style="flex-wrap:wrap"><span style="display:flex;gap:8px;align-items:center"><svg class="i" style="color:var(--muted);cursor:grab" aria-hidden="true"><use href="#i-arrastre"></use></svg><span class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">1</span><span class="co-tag" style="margin:0">Ruleta + pasaporte</span></span>
+              <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="check-in" style="font-size:13px"><input type="checkbox" role="switch">Obligatoria para terminar el módulo</label><button type="button" class="co-x" aria-label="Subir actividad" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar actividad" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar del módulo</button></span></div>
+            <div class="co-g2"><label>Título de la actividad<input value="Ruleta de beneficios" maxlength="160"></label><label>Insignia al completar el pasaporte<input value="Experto en Beneficios GNS" maxlength="80"></label></div>
+            <span class="hint" style="font-weight:800">Tarjetas (14 de máximo 20 · mínimo 2). Cada tarjeta es una casilla de la ruleta y un sello del pasaporte.</span>
+            <div class="co-item"><div class="co-item-h"><span>Tarjeta 1 · Ahorro mutuo</span><span style="display:flex;gap:4px"><button type="button" class="co-x" aria-label="Subir tarjeta" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar tarjeta" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar</button></span></div>
+              <div class="co-g2"><label>Ícono<span style="display:flex;gap:8px;align-items:center"><span class="ic-t" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-ahorro"></use></svg></span><select><option value="ahorro" selected>Alcancía</option><option value="medalla">Medalla</option><option value="idiomas">Idiomas</option><option value="acuerdo">Acuerdo</option><option value="pastel">Pastel</option><option value="tendencia">Tendencia</option><option value="birrete">Birrete</option><option value="sol">Sol</option><option value="morral">Morral</option><option value="cubiertos">Cubiertos</option><option value="tiquete">Tiquete</option><option value="bebe">Bebé</option><option value="salvavidas">Salvavidas</option><option value="megafono">Megáfono</option></select></span></label><label>Título corto (ruleta y sello)<input value="Ahorro mutuo" maxlength="24"></label><label>Título<input value="Ahorro mutuo" maxlength="120"></label><label>Dato clave<input value="El colegio aporta el 50% de lo que ahorras" maxlength="160"></label></div>
+              <label>Hechos (uno por línea, de 1 a 6)<textarea rows="4" style="white-space:pre-line">Ahorras entre el 3% y el 10% de tu salario en el plan institucional con Protección AFP.
+GNS aporta el 50% del valor que ahorras.
+Úsalo para vivienda, educación, viajes o crecimiento patrimonial.
+Retiras tus aportes y los del colegio desde el 3.er año; retirar antes implica perder el aporte institucional.</textarea></label>
+              <label>Pregunta para ganar el sello<input value="Si ahorras $100.000 al mes, ¿cuánto aporta el colegio?" maxlength="200"></label>
+              <div class="co-ops"><span class="hint">De 2 a 4 opciones. Marca la correcta.</span>
+                <div class="co-op"><input type="radio" name="t1" checked aria-label="Opción 1 es la correcta"><input value="$50.000"></div>
+                <div class="co-op"><input type="radio" name="t1" aria-label="Opción 2 es la correcta"><input value="$10.000"></div>
+                <div><button type="button" class="co-x">+ Agregar opción</button></div></div>
+            </div>
+            <div class="co-row" style="grid-template-columns:minmax(0,1fr) auto;padding:8px 0"><div class="co-info"><b>Tarjeta 2 · Bono desempeño</b><small>Bono anual de desempeño · Hasta 1 salario completo con evaluación mayor a 3.5</small></div><button type="button" class="btn lin sm">Editar</button></div>
+            <div class="co-row" style="grid-template-columns:minmax(0,1fr) auto;padding:8px 0"><div class="co-info"><b>Tarjeta 3 · Bilingüismo</b><small>Reconocimiento por bilingüismo · $1.000.000 al mes con nivel C1 certificado</small></div><button type="button" class="btn lin sm">Editar</button></div>
+            <p class="hint" style="margin:0">… 11 tarjetas más</p>
+            <div><button type="button" class="btn lin sm"><svg class="i"><use href="#i-mas"></use></svg>Agregar tarjeta</button></div>
+            <p class="hint" style="margin:0">Se completa cuando el docente gana todos los sellos.</p>
+          </div>
+
+          <div class="co-item" style="background:var(--card)">
+            <div class="co-item-h" style="flex-wrap:wrap"><span style="display:flex;gap:8px;align-items:center"><svg class="i" style="color:var(--muted);cursor:grab" aria-hidden="true"><use href="#i-arrastre"></use></svg><span class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">2</span><span class="co-tag" style="margin:0">Conecta</span></span>
+              <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="check-in" style="font-size:13px"><input type="checkbox" role="switch" checked>Obligatoria para terminar el módulo</label><button type="button" class="co-x" aria-label="Subir actividad" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar actividad" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar del módulo</button></span></div>
+            <label>Título de la actividad<input value="Conecta" maxlength="160"></label>
+            <div class="fo-tabla-w"><table style="min-width:560px"><thead><tr><th>Concepto</th><th>Dato que lo acompaña</th><th>Ícono</th><th></th></tr></thead><tbody>
+              <tr><td><input value="Ahorro mutuo"></td><td><input value="El colegio aporta el 50% de lo que ahorras"></td><td style="width:170px"><span style="display:flex;gap:8px;align-items:center"><span class="ic-t" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-ahorro"></use></svg></span><select aria-label="Ícono"><option value="ahorro" selected>Alcancía</option><option value="medalla">Medalla</option><option value="idiomas">Idiomas</option><option value="acuerdo">Acuerdo</option><option value="pastel">Pastel</option><option value="tendencia">Tendencia</option><option value="birrete">Birrete</option><option value="sol">Sol</option><option value="morral">Morral</option><option value="cubiertos">Cubiertos</option><option value="tiquete">Tiquete</option><option value="bebe">Bebé</option><option value="salvavidas">Salvavidas</option><option value="megafono">Megáfono</option></select></span></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+              <tr><td><input value="Póliza exequial"></td><td><input value="El colegio cubre el 50% con Funeraria Los Olivos"></td><td style="width:170px"><span style="display:flex;gap:8px;align-items:center"><span class="ic-t" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-acuerdo"></use></svg></span><select aria-label="Ícono"><option value="ahorro">Alcancía</option><option value="medalla">Medalla</option><option value="idiomas">Idiomas</option><option value="acuerdo" selected>Acuerdo</option><option value="pastel">Pastel</option><option value="tendencia">Tendencia</option><option value="birrete">Birrete</option><option value="sol">Sol</option><option value="morral">Morral</option><option value="cubiertos">Cubiertos</option><option value="tiquete">Tiquete</option><option value="bebe">Bebé</option><option value="salvavidas">Salvavidas</option><option value="megafono">Megáfono</option></select></span></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+              <tr><td><input value="Quinquenios"></td><td><input value="50% del SMMLV por cada 5 años de servicio"></td><td style="width:170px"><span style="display:flex;gap:8px;align-items:center"><span class="ic-t" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-pastel"></use></svg></span><select aria-label="Ícono"><option value="ahorro">Alcancía</option><option value="medalla">Medalla</option><option value="idiomas">Idiomas</option><option value="acuerdo">Acuerdo</option><option value="pastel" selected>Pastel</option><option value="tendencia">Tendencia</option><option value="birrete">Birrete</option><option value="sol">Sol</option><option value="morral">Morral</option><option value="cubiertos">Cubiertos</option><option value="tiquete">Tiquete</option><option value="bebe">Bebé</option><option value="salvavidas">Salvavidas</option><option value="megafono">Megáfono</option></select></span></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+            </tbody></table></div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="button" class="co-x">+ Agregar par</button><span class="hint">14 pares · … 11 más</span></div>
+            <div class="co-g2"><label>Pares por ronda<input type="number" value="5" min="2"></label><label>Rondas<input type="number" value="2" min="1"></label><label>Segundos por ronda<input type="number" value="45" min="10"></label><label>Para aprobar (%)<input type="number" value="80" min="0" max="100"></label></div>
+            <p class="hint" style="margin:0">Necesitas al menos pares por ronda × rondas = 10 pares (tienes 14). Se completa con el primer intento que alcance el porcentaje para aprobar.</p>
+          </div>
+
+          <div class="co-item" style="background:var(--card)">
+            <div class="co-item-h" style="flex-wrap:wrap"><span style="display:flex;gap:8px;align-items:center"><svg class="i" style="color:var(--muted);cursor:grab" aria-hidden="true"><use href="#i-arrastre"></use></svg><span class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">3</span><span class="co-tag" style="margin:0">Verdad o mito</span></span>
+              <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="check-in" style="font-size:13px"><input type="checkbox" role="switch" checked>Obligatoria para terminar el módulo</label><button type="button" class="co-x" aria-label="Subir actividad" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar actividad" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar del módulo</button></span></div>
+            <label>Título de la actividad<input value="¿Verdad o mito?" maxlength="160"></label>
+            <div class="co-item"><div class="co-item-h"><span>Afirmación 1</span><button type="button" class="co-x">Quitar</button></div>
+              <label>Afirmación<input value="El ahorro mutuo permite aportar entre el 3% y el 10% del salario."></label>
+              <div class="co-g2"><label>Respuesta<select><option selected>Verdad</option><option>Mito</option></select></label><label>Explicación<input value="Mínimo 3% y máximo 10%."></label></div></div>
+            <div class="co-item"><div class="co-item-h"><span>Afirmación 2</span><button type="button" class="co-x">Quitar</button></div>
+              <label>Afirmación<input value="Los aportes del ahorro mutuo se pueden retirar desde el primer año."></label>
+              <div class="co-g2"><label>Respuesta<select><option>Verdad</option><option selected>Mito</option></select></label><label>Explicación<input value="Mito: se retiran desde el 3.er año."></label></div></div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button type="button" class="co-x">+ Agregar afirmación</button><span class="hint">12 afirmaciones · … 10 más</span></div>
+            <div class="co-g2"><label>Afirmaciones por partida<input type="number" value="10"></label><label>Vidas<input type="number" value="3"></label><label>Segundos por afirmación<input type="number" value="10"></label><label>Para aprobar (%)<input type="number" value="80"></label></div>
+          </div>
+
+          <div class="co-item" style="background:var(--card)">
+            <div class="co-item-h" style="flex-wrap:wrap"><span style="display:flex;gap:8px;align-items:center"><svg class="i" style="color:var(--muted);cursor:grab" aria-hidden="true"><use href="#i-arrastre"></use></svg><span class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">4</span><span class="co-tag" style="margin:0">Simulador</span></span>
+              <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="check-in" style="font-size:13px"><input type="checkbox" role="switch">Obligatoria para terminar el módulo</label><button type="button" class="co-x" aria-label="Subir actividad" style="color:var(--muted)"><svg class="i"><use href="#i-arriba"></use></svg></button><button type="button" class="co-x" aria-label="Bajar actividad" style="color:var(--muted)"><svg class="i"><use href="#i-abajo"></use></svg></button><button type="button" class="co-x">Quitar del módulo</button></span></div>
+            <label>Título de la actividad<input value="Ahorro mutuo" maxlength="160"></label>
+            <p class="hint" style="margin:0">El simulador se arma con datos, nunca con código: entradas que mueve el docente, constantes y cálculos hechos con las operaciones de la lista.</p>
+
+            <fieldset><legend>Entradas (1 a 10)</legend>
+              <div class="fo-tabla-w"><table style="min-width:820px"><thead><tr><th>Clave</th><th>Etiqueta</th><th>Tipo</th><th>Mín.</th><th>Máx.</th><th>Paso</th><th>Inicial</th><th>Solo en pantalla</th><th></th></tr></thead><tbody>
+                <tr><td><input value="salario"></td><td><input value="Tu salario mensual (opcional)"></td><td><select><option selected>Moneda</option><option>Número</option><option>Porcentaje</option><option>Opción</option></select></td><td><input value="0"></td><td><input placeholder="—"></td><td><input value="1"></td><td><input placeholder="—"></td><td class="c"><input type="checkbox" checked aria-label="Solo en pantalla" style="width:18px;height:18px"></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+                <tr><td><input value="pc"></td><td><input value="Porcentaje que ahorras"></td><td><select><option>Moneda</option><option>Número</option><option selected>Porcentaje</option><option>Opción</option></select></td><td><input value="3"></td><td><input value="10"></td><td><input value="1"></td><td><input value="5"></td><td class="c"><input type="checkbox" aria-label="Solo en pantalla" style="width:18px;height:18px"></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+                <tr><td><input value="an"></td><td><input value="Tiempo ahorrando (años)"></td><td><select><option>Moneda</option><option selected>Número</option><option>Porcentaje</option><option>Opción</option></select></td><td><input value="1"></td><td><input value="10"></td><td><input value="1"></td><td><input value="3"></td><td class="c"><input type="checkbox" aria-label="Solo en pantalla" style="width:18px;height:18px"></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+              </tbody></table></div>
+              <p class="hint">Tipo «Opción»: lista de 2 a 6 opciones con etiqueta y valor numérico; el inicial es uno de esos valores (ej. Bilingüismo: «B1 o inferior» = 0, «B2» = 660.000, «C1» = 1.000.000).</p>
+              <button type="button" class="co-x">+ Agregar entrada</button></fieldset>
+
+            <fieldset><legend>Constantes (0 a 20)</legend>
+              <div class="co-g2"><label>Clave<input value="aporte_colegio"></label><label>Valor<input value="0.5"></label></div>
+              <button type="button" class="co-x">+ Agregar constante</button></fieldset>
+
+            <fieldset><legend>Cálculos (1 a 30) · solo pueden usar entradas, constantes y cálculos anteriores</legend>
+              <div class="co-item"><div class="co-item-h"><span>mensual</span><button type="button" class="co-x">Quitar</button></div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line);border-radius:10px;padding:8px;background:var(--card)">
+                  <b>=</b><span class="co-tag" style="margin:0">Entrada · salario</span><select style="width:auto"><option selected>multiplica</option><option>suma</option><option>resta</option><option>divide</option><option>mínimo</option><option>máximo</option><option>piso</option><option>redondea</option><option>compara</option><option>todos</option><option>alguno</option><option>no</option><option>si … entonces … si no</option><option>tramos</option></select><span class="co-tag" style="margin:0">Entrada · pc</span><select style="width:auto"><option selected>divide</option></select><span class="co-tag rojo" style="margin:0">100</span><button type="button" class="co-x">+ término</button></div></div>
+              <div class="co-item"><div class="co-item-h"><span>colegio</span><button type="button" class="co-x">Quitar</button></div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line);border-radius:10px;padding:8px;background:var(--card)"><b>=</b><span class="co-tag" style="margin:0">Cálculo · mensual</span><select style="width:auto"><option selected>multiplica</option></select><span class="co-tag" style="margin:0">Constante · aporte_colegio</span></div></div>
+              <div class="co-item"><div class="co-item-h"><span>total</span><button type="button" class="co-x">Quitar</button></div>
+                <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;border:1px dashed var(--line);border-radius:10px;padding:8px;background:var(--card)"><b>=</b>
+                  <span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;border:1.5px solid var(--azul);border-radius:10px;padding:6px;background:var(--azul-suave)"><span class="hint" style="font-weight:800">(</span><span class="co-tag" style="margin:0">Cálculo · mensual</span><select style="width:auto"><option selected>suma</option></select><span class="co-tag" style="margin:0">Cálculo · colegio</span><span class="hint" style="font-weight:800">)</span></span>
+                  <select style="width:auto"><option selected>multiplica</option></select><span class="co-tag rojo" style="margin:0">12</span><select style="width:auto"><option selected>multiplica</option></select><span class="co-tag" style="margin:0">Entrada · an</span><button type="button" class="co-x">+ término</button><button type="button" class="co-x">+ grupo ( )</button></div></div>
+              <p class="hint">«Tramos»: valor de una entrada + lista ordenada «hasta X → expresión» y un «resto» (ej. fracción del bono: ≤2 → 0, ≤3 → ⅓, ≤3,5 → ⅔, resto 1). Máximo 8 niveles de grupos.</p>
+              <button type="button" class="co-x">+ Agregar cálculo</button></fieldset>
+
+            <fieldset><legend>Resultados que ve el docente</legend>
+              <div class="fo-tabla-w"><table style="min-width:520px"><thead><tr><th>Cálculo</th><th>Etiqueta</th><th>Formato</th><th></th></tr></thead><tbody>
+                <tr><td><select><option>total</option></select></td><td><input value="Ahorro estimado"></td><td><select><option selected>Moneda</option><option>Porcentaje</option><option>Número</option><option>Sí / No</option></select></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+                <tr><td><select><option>mensual</option></select></td><td><input value="Tú aportas al mes"></td><td><select><option selected>Moneda</option></select></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+                <tr><td><select><option>colegio</option></select></td><td><input value="GNS te aporta al mes (50%)"></td><td><select><option selected>Moneda</option></select></td><td><button type="button" class="co-x">Quitar</button></td></tr>
+              </tbody></table></div>
+              <button type="button" class="co-x">+ Agregar resultado</button></fieldset>
+
+            <fieldset><legend>Notas</legend>
+              <div class="co-g2"><label>Texto<input value="Recuerda: los retiros se habilitan desde el 3.er año."></label><label>Mostrar solo cuando (cálculo sí/no)<select><option>menos_de_3_anios</option><option>Siempre</option></select></label></div>
+              <div class="co-g2" style="margin-top:8px"><label>Texto<input value="Estimado con 12 aportes al año y sin rendimientos del fondo."></label><label>Mostrar solo cuando (cálculo sí/no)<select><option selected>Siempre</option></select></label></div>
+              <button type="button" class="co-x">+ Agregar nota</button></fieldset>
+            <p class="hint" style="margin:0">Se completa la primera vez que el docente lo usa. Las entradas marcadas «solo en pantalla» nunca se guardan ni se envían.</p>
+          </div>
+
+          <div class="co-row" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">5</div><div class="co-info"><b>Bono de desempeño <span class="co-tag">Simulador</span></b><small>Opcional · 3 entradas · 4 cálculos</small></div><button type="button" class="btn lin sm">Editar</button></div>
+          <div class="co-row" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">6</div><div class="co-info"><b>Bono de antigüedad <span class="co-tag">Simulador</span></b><small>Opcional · 1 entrada · 3 cálculos</small></div><button type="button" class="btn lin sm">Editar</button></div>
+          <div class="co-row" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">7</div><div class="co-info"><b>Cabaña en Coveñas <span class="co-tag">Simulador</span></b><small>Opcional · 4 entradas · 5 cálculos</small></div><button type="button" class="btn lin sm">Editar</button></div>
+          <div class="co-row" style="grid-template-columns:auto minmax(0,1fr) auto"><div class="co-n" style="width:30px;height:30px;font-size:13px;border-radius:9px">8</div><div class="co-info"><b>Bilingüismo <span class="co-tag">Simulador</span></b><small>Opcional · 2 entradas · 1 cálculo</small></div><button type="button" class="btn lin sm">Editar</button></div>
+
+          <div style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)">
+            <b style="display:block;margin-bottom:8px">Agregar actividad</b>
+            <div class="co-g2">
+              <button type="button" class="lg-rol" style="padding:12px"><span class="ic" style="width:36px;height:36px"><svg class="i"><use href="#i-mas"></use></svg></span><span><b style="font-size:16px">Ruleta + pasaporte</b><small>Tarjetas con dato y pregunta; un sello por tarjeta.</small></span><span></span></button>
+              <button type="button" class="lg-rol" style="padding:12px"><span class="ic" style="width:36px;height:36px"><svg class="i"><use href="#i-mas"></use></svg></span><span><b style="font-size:16px">Conecta</b><small>Pares concepto–dato contra el reloj.</small></span><span></span></button>
+              <button type="button" class="lg-rol" style="padding:12px"><span class="ic" style="width:36px;height:36px"><svg class="i"><use href="#i-mas"></use></svg></span><span><b style="font-size:16px">Verdad o mito</b><small>Afirmaciones rápidas con vidas.</small></span><span></span></button>
+              <button type="button" class="lg-rol" style="padding:12px"><span class="ic" style="width:36px;height:36px"><svg class="i"><use href="#i-mas"></use></svg></span><span><b style="font-size:16px">Simulador</b><small>Calculadora con entradas y fórmulas del catálogo.</small></span><span></span></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bloque wz-paso" data-paso="6" hidden><div class="bloque-h"><h2><svg class="i"><use href="#i-ojo"></use></svg>Así lo verá el docente</h2><select style="width:auto" aria-label="Actividad a previsualizar"><option>3 · ¿Verdad o mito?</option><option>1 · Ruleta de beneficios</option><option>2 · Conecta</option><option>4 · Ahorro mutuo</option></select></div>
+          <div style="border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--bg);display:flex;flex-direction:column;gap:12px">
+            <div class="encabezado" style="margin:0"><div><div class="eyebrow">Parte IV · Nuestro talento humano · Módulo 8</div><h1 style="font-size:24px">Plan de beneficios GNS 2026–2027</h1></div><span class="estado fo-e-pendiente">Pendiente</span></div>
+            <div class="fo-chips"><span class="fo-chip">Desafío GNS</span><span class="fo-chip">Presentación</span><span class="fo-chip">Conecta</span><span class="fo-chip">¿Verdad o mito?</span></div>
+            <div class="jg bn-mito">
+              <div class="jg-top"><span class="jg-cont">Nivel 2 · 1 / 10</span><span class="bn-vidas" aria-label="3 vidas"><svg class="i vida" aria-hidden="true"><use href="#i-corazon"></use></svg><svg class="i vida" aria-hidden="true"><use href="#i-corazon"></use></svg><svg class="i vida" aria-hidden="true"><use href="#i-corazon"></use></svg></span><span class="jg-pts">0 pts</span></div>
+              <div class="jg-tiempo"><span style="width:100%"></span></div>
+              <div class="bn-carta-m"><span class="jg-tipo">¿Verdad o mito?</span><p>El ahorro mutuo permite aportar entre el 3% y el 10% del salario.</p></div>
+              <div class="bn-vm"><button type="button" class="bn-vm-b mito"><svg class="i" aria-hidden="true"><use href="#i-x"></use></svg>Mito</button><button type="button" class="bn-vm-b verdad"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg>Verdad</button></div>
+            </div>
+            <p class="hint" style="margin:0">Vista previa: lo que juegues aquí no se guarda como progreso.</p>
+          </div>
+        </div>
+
+        <div class="co-barra wz-nav"><button type="button" class="btn lin"><svg class="i" aria-hidden="true"><use href="#i-volver"></use></svg>Anterior</button><span class="wz-nav-esp"></span><button type="button" class="btn lin"><svg class="i" aria-hidden="true"><use href="#i-guardar"></use></svg>Guardar cambios</button><button type="button" class="btn">Siguiente: Presentación<svg class="i" aria-hidden="true"><use href="#i-siguiente"></use></svg></button></div>
+      </div>
+      </section>
+    </div>
+  </main>
+</div>
+</body></html>

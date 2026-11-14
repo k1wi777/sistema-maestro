@@ -32,6 +32,8 @@ const lines = (s) =>
     .filter(Boolean);
 
 // Ordered rules: the first one that matches wins.
+const CONTRACT_DRIFT_TEST = 'apps/api/test/integration/openapi.int-spec.ts';
+
 const rules = [
   [
     'all',
@@ -58,6 +60,8 @@ const rules = [
     'related',
     (f) => (f.startsWith('apps/api/src/') || f.startsWith('apps/api/test/')) && f.endsWith('.ts'),
   ],
+  // The frontend compiles a copy of the API contract: editing it must run the drift test.
+  ['contract', (f) => f === 'apps/web/src/shared/api/openapi.json'],
   [
     'none',
     (f) =>
@@ -148,6 +152,8 @@ function decide() {
         }
       } else if (cat === 'related') related.push(f);
     }
+    // The drift test reads the contract copy with fs (it does not import it), so it is selected by name.
+    if (cat === 'contract') related.push(CONTRACT_DRIFT_TEST);
   }
   if (related.length === 0 && !db && !e2e) {
     return {

@@ -1,0 +1,31 @@
+
+/* ================= Iconos con relleno =================
+   Regla: el trazo fino es la voz por defecto (botones, texto, listas).
+   El relleno se reserva para lo que tiene peso: la sección activa, los iconos
+   dentro de una baldosa (indicadores, roles, beneficios), las observaciones y
+   los estados o premios (racha, vidas, favoritos).
+   Dos intensidades: «tono» (relleno suave del mismo color) y «sólido». */
+
+/* Tono: relleno suave detrás del trazo */
+.menu button[aria-current="page"] svg.i,
+.kpi-ic svg.i,
+.ic-t svg.i,
+.lg-rol .ic svg.i,
+.obs>svg.i,
+.rv-nota>svg.i,
+.cs-falta svg.i,
+.fab-as svg.i,
+.as-av svg.i,
+.mas-menu button svg.i,
+.i-tono{fill:currentColor;fill-opacity:.28}
+.menu button:hover svg.i{fill:currentColor;fill-opacity:.12}
+.menu button[aria-current="page"] svg.i{fill-opacity:.35}
+.co-kpis:not(.neutro) .co-kpi:first-child .kpi-ic svg.i,.lg-rol:hover .ic svg.i,.fab-as svg.i{fill-opacity:.38}
+
+/* Sólido: estados y premios */
+.racha svg.i,.jg-gan svg.i,.vida:not(.off),.rp-star[aria-pressed="true"] svg.i,.i-solido{fill:currentColor;fill-opacity:1}
+.fo-play svg{fill:currentColor}
+
+/* Iconos de trazo abierto: el relleno los deformaría, se quedan solo con el borde */
+svg.i:has(use[href="#i-ruta"],use[href="#i-check"],use[href="#i-flecha"],use[href="#i-siguiente"],use[href="#i-volver"],use[href="#i-tendencia"],use[href="#i-x"],use[href="#i-mas"],use[href="#i-subir"],use[href="#i-salir"],use[href="#i-historial"],use[href="#i-externo"],use[href="#i-arriba"],use[href="#i-abajo"],use[href="#i-arrastre"],use[href="#i-anular"],use[href="#i-idiomas"],use[href="#i-acuerdo"],use[href="#i-grafica"],use[href="#i-enviar"]){fill:none!important}
+.kpi-ic{width:34px;height:34px}.kpi-ic svg.i{width:18px;height:18px}

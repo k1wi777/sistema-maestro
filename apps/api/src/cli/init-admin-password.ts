@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { Readable } from 'node:stream';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -10,6 +9,7 @@ import {
 } from '../modules/identidad/credentials/initial-admin-password.service';
 import { IdentityModule } from '../modules/identidad/identity.module';
 import { DatabaseModule } from '../shared/database/database.module';
+import { adminPasswordInput } from './admin-password-input';
 import { promptHidden } from './hidden-prompt';
 
 /** Módulo mínimo del comando: configuración, base de datos e identidad (sin capa HTTP). */
@@ -22,25 +22,14 @@ import { promptHidden } from './hidden-prompt';
 })
 class InitAdminPasswordModule {}
 
-/** Con terminal se pide dos veces sin eco; sin él (CI, pruebas) se lee la entrada estándar. */
-async function passwordInput(): Promise<Readable> {
-  if (!process.stdin.isTTY) {
-    return process.stdin;
-  }
-  const first = await promptHidden('Contraseña inicial del administrador: ');
-  const second = await promptHidden('Repite la contraseña: ');
-  if (first !== second) {
-    throw new InitialAdminPasswordError('Las contraseñas no coinciden');
-  }
-  return Readable.from([`${first}\n`]);
-}
-
 async function main(): Promise<void> {
   const email = process.env.SEED_ADMIN_EMAIL;
   if (!email) {
     throw new InitialAdminPasswordError('Falta SEED_ADMIN_EMAIL en el entorno');
   }
-  const input = await passwordInput();
+  // R22: se valida el entorno (producción con las contraseñas de desarrollo) antes de leer nada.
+  const env = validateEnv(process.env);
+  const input = await adminPasswordInput(env, process.stdin, promptHidden);
   const app = await NestFactory.createApplicationContext(InitAdminPasswordModule, {
     logger: ['error', 'warn'],
     abortOnError: false,

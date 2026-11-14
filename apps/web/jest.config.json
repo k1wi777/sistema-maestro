@@ -1,0 +1,26 @@
+{
+  "testEnvironment": "node",
+  "rootDir": "src",
+  "testMatch": ["**/*.spec.ts"],
+  "moduleFileExtensions": ["js", "json", "ts", "tsx"],
+  "moduleNameMapper": { "^@/(.*)$": "<rootDir>/$1" },
+  "transform": {
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        "tsconfig": {
+          "module": "commonjs",
+          "moduleResolution": "node",
+          "target": "ES2023",
+          "lib": ["dom", "ES2023"],
+          "jsx": "react-jsx",
+          "strict": true,
+          "noUncheckedIndexedAccess": true,
+          "esModuleInterop": true,
+          "skipLibCheck": true,
+          "resolveJsonModule": true
+        }
+      }
+    ]
+  }
+}

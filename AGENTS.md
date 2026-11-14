@@ -84,10 +84,12 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 Todos se ejecutan desde la raíz del repositorio.
 
 - `pnpm install` — Instalar dependencias; al terminar compila `@gns/shared` (necesario para el lint con tipos).
-- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`).
+- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`) y el frontend Next.js (`apps/web`, puerto 3001; la API usa el 3000 y el frontend la lee de `NEXT_PUBLIC_API_URL`, que se copia de `apps/web/.env.example` a `apps/web/.env.local`). La página de muestra del sistema de diseño está en `/muestra`.
 - `pnpm build` — Build de todo el monorepo con Turborepo.
 - `pnpm lint` — ESLint + Prettier (solo comprobación); también corre en el hook de pre-commit sobre los archivos en stage.
 - `pnpm format` — Aplica el formato de Prettier.
+- `pnpm api:contract` — Tras cambiar la API: la compila, exporta el contrato OpenAPI a `apps/web/src/shared/api/openapi.json` (se versiona) y regenera los tipos del frontend.
+- `ADMIN_INITIAL_PASSWORD` y `DEMO_USERS_PASSWORD` (opcionales, en `apps/api/.env`, solo desarrollo local; la API no arranca con ellas en producción) — `pnpm --filter @gns/api admin:init-password` toma la primera sin preguntarla y `pnpm --filter @gns/api db:demo:load` asigna la segunda a todos los usuarios demo; sin ellas, el comportamiento es el de siempre.
 - `pnpm test` — Tests; hoy ejecuta las pruebas unitarias (Jest). La integración con PostgreSQL real (Testcontainers) llega en BE-27.
 - `docker compose up -d` — Levantar PostgreSQL 16 y MinIO en local.
 
@@ -101,7 +103,8 @@ Todos se ejecutan desde la raíz del repositorio.
 |------|-----------|
 | `apps/api/` | API NestJS (`@gns/api`); pruebas `*.spec.ts` junto al código. |
 | `apps/api/src/core/` | Núcleo transversal de la API; hoy, la configuración (variables de entorno validadas con Zod). |
-| `apps/web/` | Frontend (`@gns/web`); esqueleto TypeScript hasta FE-01 (Next.js). |
+| `apps/web/` | Frontend Next.js App Router (`@gns/web`): `src/app` (rutas), `src/features` (por funcionalidad) y `src/shared/ui` (sistema de diseño GNS). |
+| `docs/prototipo/` | Tablero de diseño v47 (HTML estático y CSS): referencia visual; la app no importa nada de aquí. |
 | `packages/shared/` | Tipos, esquemas Zod y constantes compartidos (`@gns/shared`). |
 | `docker-compose.yml` | Entorno local: PostgreSQL 16 y MinIO. |
 | `.github/workflows/` | CI con GitHub Actions: lint, pruebas y build en cada pull request. |

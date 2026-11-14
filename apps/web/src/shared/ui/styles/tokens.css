@@ -1,0 +1,175 @@
+/*
+ * Tokens de diseño GNS. Valores finales del tablero v47 (docs/prototipo): la capa más
+ * alta gana, así que aquí van los de «Tokens finales» y «Ajustes finales» de
+ * layer-pulido.css sobre layer-premium.css. Modo claro en :root; oscuro con la
+ * preferencia del sistema (sin elección del usuario) o con data-theme="dark".
+ *
+ * Los colores literales viven solo en este archivo; los componentes usan var(--…).
+ * Fijos de marca (no cambian con el tema): --on-solid #FFFFFF (texto sobre fondos
+ * turquí, rojo y azul sólidos); --seal-ring #C8102E (anillo rojo del escudo).
+ */
+:root {
+  color-scheme: light;
+
+  /* Color */
+  --navy: #14254f;
+  --navy-hover: #1b3166;
+  --blue: #1f3d8a;
+  --blue-soft: #eef2fb;
+  --blue-soft-hover: #e2e9f8;
+  --red: #c8102e;
+  --red-soft: #fdeef0;
+  --red-strong: #b30e29;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --fg: #0f172a;
+  --muted: #535d71;
+  --line: #e4e7ec;
+  --line-strong: #d5dae3;
+  --field: #ffffff;
+  --control-border: #858ea1;
+  --placeholder: #6b7488;
+  --ok: #1e7a4c;
+  --ok-soft: #e8f5ee;
+  --warn: #8a5a00;
+  --warn-soft: #fdf4e1;
+  --amber: #d9a441;
+  --tint: #f1f4fa;
+  --nav: #0f1d3f;
+  --on-solid: #ffffff;
+  --seal-ring: #c8102e;
+
+  /* Colores por rol del tema: lo que cambia entre claro y oscuro */
+  --action: var(--navy);
+  --action-hover: var(--navy-hover);
+  --danger: var(--red);
+  --danger-hover: #a90d27;
+  --heading: var(--navy);
+  --focus: var(--blue);
+  --disabled-bg: var(--line);
+  --on-surface-hover: rgba(31, 61, 138, 0.04);
+
+  /* Tipografía */
+  --font-brand-stack: var(--font-brand), 'Trebuchet MS', system-ui, sans-serif;
+  --font-display-stack: var(--font-display), 'Segoe UI', system-ui, sans-serif;
+  --font-body-stack: var(--font-body), 'Segoe UI', system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.1875rem;
+  --text-xl: 1.3125rem;
+  --text-display: clamp(1.75rem, 3.2vw, 2.25rem);
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* Espaciado: ritmo de 4/8 px */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Radios */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-pill: 999px;
+
+  /* Sombras neutras */
+  --shadow-1: 0 1px 2px rgb(16 24 40 / 0.05);
+  --shadow-2: 0 1px 2px rgb(16 24 40 / 0.04), 0 6px 16px -6px rgb(16 24 40 / 0.08);
+  --shadow-3: 0 2px 4px rgb(16 24 40 / 0.04), 0 18px 36px -14px rgb(16 24 40 / 0.2);
+  --shadow-float: 0 4px 10px -2px rgb(16 24 40 / 0.08), 0 24px 48px -16px rgb(16 24 40 / 0.28);
+
+  /* Foco: contorno, sin halos */
+  --focus-width: 2px;
+  --focus-offset: 2px;
+
+  /* Medidas */
+  --control-height: 2.5rem;
+  --control-height-sm: 2.25rem;
+  --content-width: 61.25rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --navy: #0b1530;
+    --navy-hover: #1b3166;
+    --blue: #9db4f2;
+    --blue-soft: #18223d;
+    --blue-soft-hover: #1f2c4e;
+    --red: #f2707f;
+    --red-soft: #33171d;
+    --bg: #0b1020;
+    --surface: #121a2c;
+    --fg: #e8ecf4;
+    --muted: #a9b2c6;
+    --line: #222c44;
+    --line-strong: #2c3754;
+    --field: #0f1626;
+    --control-border: #6f7a94;
+    --placeholder: #8e98ae;
+    --ok: #5fc08e;
+    --ok-soft: #13291f;
+    --warn: #e7b44a;
+    --warn-soft: #2e2511;
+    --tint: #141e35;
+    --nav: #08101f;
+    --action: #2a4386;
+    --action-hover: #3550a0;
+    --danger: #b3132d;
+    --danger-hover: #9e0f27;
+    --heading: var(--fg);
+    --disabled-bg: var(--line-strong);
+    --on-surface-hover: rgba(157, 180, 242, 0.06);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px -4px rgb(0 0 0 / 0.35);
+    --shadow-3: 0 16px 36px -12px rgb(0 0 0 / 0.6);
+    --shadow-float: 0 4px 10px -2px rgb(0 0 0 / 0.4), 0 24px 48px -16px rgb(0 0 0 / 0.7);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --navy: #0b1530;
+  --navy-hover: #1b3166;
+  --blue: #9db4f2;
+  --blue-soft: #18223d;
+  --blue-soft-hover: #1f2c4e;
+  --red: #f2707f;
+  --red-soft: #33171d;
+  --bg: #0b1020;
+  --surface: #121a2c;
+  --fg: #e8ecf4;
+  --muted: #a9b2c6;
+  --line: #222c44;
+  --line-strong: #2c3754;
+  --field: #0f1626;
+  --control-border: #6f7a94;
+  --placeholder: #8e98ae;
+  --ok: #5fc08e;
+  --ok-soft: #13291f;
+  --warn: #e7b44a;
+  --warn-soft: #2e2511;
+  --tint: #141e35;
+  --nav: #08101f;
+  --action: #2a4386;
+  --action-hover: #3550a0;
+  --danger: #b3132d;
+  --danger-hover: #9e0f27;
+  --heading: var(--fg);
+  --disabled-bg: var(--line-strong);
+  --on-surface-hover: rgba(157, 180, 242, 0.06);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px -4px rgb(0 0 0 / 0.35);
+  --shadow-3: 0 16px 36px -12px rgb(0 0 0 / 0.6);
+  --shadow-float: 0 4px 10px -2px rgb(0 0 0 / 0.4), 0 24px 48px -16px rgb(0 0 0 / 0.7);
+}

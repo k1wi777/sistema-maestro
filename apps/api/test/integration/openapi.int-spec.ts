@@ -1,9 +1,15 @@
+import { readFileSync } from 'node:fs';
 import type { Server } from 'node:http';
+import { join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { RequestMethod, type INestApplication } from '@nestjs/common';
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
 import { DiscoveryService, ModulesContainer } from '@nestjs/core';
 import type { OpenAPIObject } from '@nestjs/swagger';
+import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { AppModule } from '../../src/app.module';
+import { buildOpenApiDocument } from '../../src/core/openapi/openapi';
 import { createTestApp } from './support/create-test-app';
 
 interface RegisteredRoute {
@@ -100,6 +106,29 @@ describe('documentación OpenAPI', () => {
 
   afterAll(async () => {
     await app.close();
+  });
+
+  it('coincide con la copia del contrato con la que compila el frontend', async () => {
+    const copy = JSON.parse(
+      readFileSync(join(__dirname, '../../../web/src/shared/api/openapi.json'), 'utf8'),
+    ) as unknown;
+    // La app de pruebas añade endpoints de ejemplo y de fallos que no son la API: se compara
+    // con la API real (solo AppModule), igual que `openapi:export`, sin iniciarla.
+    const testing = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const real = testing.createNestApplication();
+    let current: unknown;
+    try {
+      current = JSON.parse(JSON.stringify(buildOpenApiDocument(real)));
+    } finally {
+      await real.close();
+    }
+    // Se lanza un error propio: la diferencia de un documento de cientos de KB no orienta.
+    if (!isDeepStrictEqual(copy, current)) {
+      throw new Error(
+        'El contrato OpenAPI de la API difiere de apps/web/src/shared/api/openapi.json. ' +
+          'Ejecuta `pnpm api:contract` y confirma el archivo actualizado.',
+      );
+    }
   });
 
   it('incluye todos los endpoints registrados con esquema de éxito, cuerpo y errores comunes', () => {

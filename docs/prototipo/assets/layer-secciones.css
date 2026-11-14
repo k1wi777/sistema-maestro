@@ -1,0 +1,136 @@
+
+/* ================= Personalidad por tipo de sección =================
+   Paleta institucional GNS únicamente: azul turquí, rojo y blanco, con neutros.
+   Todas las pestañas comparten el mismo encabezado; lo que cambia es cómo se ve
+   cada TIPO de sección dentro de la pantalla (indicadores, filtros, pasos de un
+   formulario, listas por categoría, secuencias, recorridos, conversación…).
+   El rojo aparece como acento fino: rótulos, numerales, hitos, progreso e
+   indicadores que piden atención. */
+
+/* Encabezado de página: limpio, con el rótulo rojo precedido de un trazo */
+.encabezado .eyebrow{display:inline-flex;align-items:center;gap:10px}
+.encabezado .eyebrow::before{content:"";width:18px;height:2px;border-radius:2px;background:var(--rojo)}
+.encabezado h1{color:var(--turqui)}
+:root[data-theme="dark"] .encabezado h1{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .encabezado h1{color:var(--fg)}}
+
+/* 1 · Indicadores: una franja de métricas unida, con la primera como foco */
+.co-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-2);overflow:hidden;margin-bottom:20px}
+.co-kpis .co-kpi{border:0;border-radius:0;box-shadow:none;background:transparent;padding:18px 20px;border-left:1px solid var(--line);text-align:left}
+.co-kpis .co-kpi:first-child{border-left:0}
+.co-kpis .co-kpi b{font-size:30px;line-height:1.1;color:var(--turqui);font-variant-numeric:tabular-nums}
+.co-kpis .co-kpi:first-child{background:linear-gradient(180deg,var(--rojo-suave),transparent 70%)}
+.co-kpis .co-kpi:first-child b{color:var(--rojo)}
+.co-kpis .co-kpi:first-child .kpi-ic{background:var(--rojo);color:#fff}
+.kpi-ic{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--azul-suave);color:var(--turqui);margin-bottom:10px}
+.kpi-ic svg.i{width:16px;height:16px}
+button.co-kpi{cursor:pointer;transition:background .15s}
+button.co-kpi:hover{background:var(--bg)}
+.co-kpis .co-kpi[style*="border-color"]{box-shadow:inset 0 -3px 0 var(--rojo)!important;border-color:var(--line)!important}
+:root[data-theme="dark"] .co-kpis .co-kpi b{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .co-kpis .co-kpi b{color:var(--fg)}
+  :root:not([data-theme="light"]) .co-kpis .co-kpi:first-child b{color:var(--rojo)}
+  :root:not([data-theme="light"]) .kpi-ic{color:var(--azul)}}
+@media (max-width:640px){.co-kpis .co-kpi{border-left:0;border-top:1px solid var(--line)}.co-kpis .co-kpi:first-child{border-top:0}}
+
+/* 2 · Filtros: una barra de herramientas gris, distinta del contenido */
+.co-filtros{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px;gap:12px;margin-bottom:16px}
+.co-filtros label{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.co-filtros input,.co-filtros select{min-height:36px;font-size:13.5px;text-transform:none;letter-spacing:0;color:var(--fg)}
+.filtros{padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:99px;width:max-content;max-width:100%;gap:2px;overflow-x:auto}
+.filtros .chip{border:0;background:transparent;padding:6px 14px}
+.filtros .chip[aria-pressed="true"]{background:var(--card);color:var(--turqui);box-shadow:var(--sh-1);font-weight:600}
+:root[data-theme="dark"] .filtros .chip[aria-pressed="true"]{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .filtros .chip[aria-pressed="true"]{color:var(--fg)}}
+
+/* 3 · Pestañas internas: subrayado rojo fino */
+.pl-tabs{border-bottom:1px solid var(--line);gap:8px;margin-bottom:20px}
+.pl-tab{font-weight:500;font-size:14.5px;padding:10px 4px;margin-right:12px;border-bottom-width:2px;margin-bottom:-1px}
+.pl-tab[aria-pressed="true"]{color:var(--turqui);font-weight:600;border-bottom-color:var(--rojo)}
+:root[data-theme="dark"] .pl-tab[aria-pressed="true"]{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pl-tab[aria-pressed="true"]{color:var(--fg)}}
+.fo-tabs{padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:99px;width:max-content;max-width:100%;gap:2px}
+.fo-tabs .chip{border:0;background:transparent}
+.fo-tabs .chip[aria-pressed="true"]{background:var(--turqui);color:#fff}
+
+/* 4 · Pasos de un formulario: numeral en anillo rojo y encabezado con filete */
+.bloque:has(.paso) > .bloque-h{padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.bloque-h .paso{background:var(--card);color:var(--rojo);box-shadow:inset 0 0 0 1.5px var(--rojo);font-weight:700;width:28px;height:28px}
+.bloque-h h2{color:var(--turqui)}
+:root[data-theme="dark"] .bloque-h h2{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .bloque-h h2{color:var(--fg)}}
+
+/* 5 · Listas por categoría: rótulo rojo con filete que se extiende */
+.co-parte{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:.14em;margin:22px 0 4px;color:var(--rojo)}
+.co-parte::after{content:"";flex:1;height:1px;background:var(--line)}
+.co-parte:first-of-type{margin-top:6px}
+.co-row{padding:14px 10px;margin:0 -10px;border-radius:var(--r-md);border-bottom:1px solid var(--line)}
+.co-row:hover{background:var(--bg)}
+.co-info b{color:var(--fg);font-size:14.5px}
+.co-info small{color:var(--muted);display:block;margin-top:2px;line-height:1.5}
+
+/* 6 · Secuencias (momentos de la clase): pasos encadenados */
+.momentos{counter-reset:mom;gap:14px}
+.momento{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 16px 14px;box-shadow:var(--sh-1)}
+.momento::before{counter-increment:mom;content:counter(mom);position:absolute;top:-10px;left:14px;width:22px;height:22px;border-radius:50%;background:var(--turqui);color:#fff;font:600 11.5px/22px var(--body);text-align:center;box-shadow:0 0 0 3px var(--card)}
+.momento .ord{color:var(--rojo);font-weight:600;letter-spacing:.1em;padding-left:24px}
+.momento textarea{background:var(--bg)}
+
+/* 7 · Recorrido de formación: hitos con nodo rojo sobre una línea */
+.fo-resumen{background:var(--card);border:1px solid var(--line);box-shadow:var(--sh-2);border-radius:var(--r-lg);padding:20px 24px;gap:20px}
+.fo-num b{color:var(--rojo);font-size:40px;letter-spacing:-.03em;font-family:var(--display)}
+.fo-barra{height:8px;background:var(--azul-suave)}
+.fo-barra span{background:var(--rojo)}
+.fo-parte{position:relative;padding-left:44px;margin-bottom:28px}
+.fo-parte::before{content:"";position:absolute;left:13px;top:30px;bottom:-30px;width:2px;background:repeating-linear-gradient(to bottom,var(--line-2) 0 6px,transparent 6px 11px)}
+.fo-parte:last-of-type::before{display:none}
+.fo-parte-h{position:relative}
+.fo-parte-h::before{content:"";position:absolute;left:-44px;top:1px;width:28px;height:28px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 2px var(--rojo),0 0 0 5px var(--bg)}
+.fo-parte-h::after{content:"";position:absolute;left:-34px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--rojo)}
+.fo-parte-h h2{font-size:18px;color:var(--turqui)}
+:root[data-theme="dark"] .fo-parte-h h2{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .fo-parte-h h2{color:var(--fg)}}
+.fo-mod:has(.fo-e-en-curso){border-color:var(--turqui);box-shadow:0 0 0 3px var(--azul-suave),var(--sh-2)}
+.fo-mod:has(.fo-e-pendiente){background:var(--bg);box-shadow:none}
+@media (max-width:640px){.fo-parte{padding-left:34px}.fo-parte-h::before{left:-34px}.fo-parte-h::after{left:-24px}}
+
+/* 8 · Video: pieza cinematográfica en turquí con reproducción roja */
+.fo-vid{background:radial-gradient(120% 140% at 0% 0%,#1E3A7A 0%,#14254F 55%,#0F1D3F 100%);border-radius:var(--r-lg);padding:20px 22px;gap:18px}
+.fo-play{background:var(--rojo);box-shadow:0 0 0 6px rgba(255,255,255,.12),0 8px 20px -6px rgba(200,16,46,.6)}
+
+/* 9 · Presentación: la diapositiva como un objeto sobre la mesa */
+.fo-stage{border-radius:var(--r-md);box-shadow:0 1px 2px rgba(16,24,40,.06),0 18px 36px -18px rgba(16,24,40,.35)}
+.fo-dots button[aria-current="true"]{background:var(--rojo)}
+
+/* 10 · Avisos y observaciones: nota con marca roja */
+.aviso{position:relative;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px 12px 44px;box-shadow:var(--sh-1)}
+.aviso::before{content:"!";position:absolute;left:14px;top:12px;width:20px;height:20px;border-radius:50%;background:var(--rojo-suave);color:var(--rojo);font:700 12px/20px var(--body);text-align:center}
+.aviso b,.aviso strong{color:var(--rojo)}
+
+/* 11 · Tarjetas de registro (planeaciones, módulos, repositorio): estado en el filo superior */
+.plan{position:relative;overflow:hidden;padding-top:20px}
+.plan::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--line-2)}
+.plan:has(.e-observaciones)::before{background:var(--rojo)}
+.plan:has(.e-revisada)::before{background:var(--ok)}
+.plan:has(.e-enviada)::before{background:#D9A441}
+.plan:has(.e-borrador)::before{background:var(--turqui)}
+.rp-card{border-radius:var(--r-lg)!important;box-shadow:var(--sh-1)}
+
+/* 12 · Conversación del asistente: turquí y blanco, avatar con anillo rojo */
+.as-head{padding-bottom:18px;border-bottom:1px solid var(--line)}
+.as-av{background:var(--turqui);box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--rojo);font-family:var(--display);font-weight:700}
+.as-av.grande{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--rojo)}
+.as-sug{border-radius:var(--r-md);border:1px solid var(--line);background:var(--card);box-shadow:var(--sh-1);font-weight:500;text-align:left;transition:border-color .15s,box-shadow .15s}
+.as-sug:hover{border-color:var(--rojo);box-shadow:0 0 0 3px var(--rojo-suave)}
+.as-msg.yo .as-b{background:var(--turqui);color:#fff;border-radius:16px 16px 4px 16px}
+.as-msg.bot .as-b{background:var(--card);border:1px solid var(--line);border-radius:16px 16px 16px 4px;box-shadow:var(--sh-1)}
+
+/* 13 · Barra de acciones fija: superficie translúcida */
+.barra,.co-barra{background:color-mix(in srgb,var(--card) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+/* 14 · Tablas de datos: encabezado sobrio y primera columna fuerte */
+.fo-tabla-w{box-shadow:var(--sh-1);background:var(--card)}
+th{background:var(--bg);color:var(--muted);border-bottom:1px solid var(--line)}
+td:first-child b{color:var(--turqui)}
+:root[data-theme="dark"] td:first-child b{color:var(--fg)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) td:first-child b{color:var(--fg)}}

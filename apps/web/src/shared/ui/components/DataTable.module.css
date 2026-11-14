@@ -1,0 +1,89 @@
+.wrapper {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  overflow: hidden;
+}
+
+/* Dentro de un Card: sin segunda tarjeta ni elevación */
+.embedded {
+  margin-inline: calc(-1 * var(--card-padding, 0px));
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* El desplazamiento horizontal es del contenedor, nunca de la página */
+.scroller {
+  position: relative;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-base);
+}
+
+.caption {
+  padding: var(--space-4);
+  color: var(--heading);
+  font-family: var(--font-display-stack);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+}
+
+.table th,
+.table td {
+  padding: 0.875rem var(--space-4);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.embedded th:first-child,
+.embedded td:first-child {
+  padding-left: var(--card-padding, var(--space-4));
+}
+
+.embedded th:last-child,
+.embedded td:last-child {
+  padding-right: var(--card-padding, var(--space-4));
+}
+
+.table thead th {
+  background: var(--bg);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover > * {
+  background: var(--on-surface-hover);
+}
+
+/* Primera columna: la que identifica la fila */
+.rowHeader {
+  color: var(--fg);
+  font-weight: var(--weight-semibold);
+}
+
+.numeric {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  color: var(--muted);
+  text-align: center !important;
+}

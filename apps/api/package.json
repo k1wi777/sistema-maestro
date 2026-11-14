@@ -19,6 +19,7 @@
     "db:demo:load": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env prisma/seed/run-demo-load.ts",
     "storage:init": "node --env-file-if-exists=.env dist/cli/init-storage.js",
     "admin:init-password": "node --env-file-if-exists=.env dist/cli/init-admin-password.js",
+    "openapi:export": "node --env-file-if-exists=.env dist/cli/export-openapi.js",
     "db:demo:clear": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env prisma/seed/run-demo-clear.ts",
     "typecheck:seed": "tsc -p prisma/tsconfig.json && tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json"
   },
