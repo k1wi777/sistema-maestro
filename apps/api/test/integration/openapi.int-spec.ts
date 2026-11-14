@@ -79,7 +79,10 @@ const BODYLESS = new Set([
 ]);
 
 // Respuestas que no son JSON: se documentan con su tipo de contenido.
-const NON_JSON_SUCCESS = new Map([['get /training-tracking/plans/{planId}/export', 'text/csv']]);
+const NON_JSON_SUCCESS = new Map([
+  ['get /training-tracking/plans/{planId}/export', 'text/csv'],
+  ['get /audit-log/export', 'text/csv'],
+]);
 
 describe('documentación OpenAPI', () => {
   let app: INestApplication;
