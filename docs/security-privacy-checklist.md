@@ -210,12 +210,11 @@ Dependen del entorno de producción, que está fuera de esta fase. No se cambió
 
 ## Aprobación de coordinación
 
-> Pendiente. Este documento queda listo para la revisión de coordinación; esta sección se completa
-> solo cuando coordinación lo aprueba.
+> Aprobada por coordinación académica.
 
-| Dato                       | Valor |
-| -------------------------- | ----- |
-| Aprobado por               |       |
-| Fecha de aprobación        |       |
-| Commit revisado y aprobado |       |
-| Observaciones              |       |
+| Dato                       | Valor                                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Aprobado por               | Coordinación académica (responsable del proyecto)                                                                                  |
+| Fecha de aprobación        | 2026-11-14                                                                                                                         |
+| Commit revisado y aprobado | `85f0108a257fc881895d7e7d0132dd632c21678e`                                                                                         |
+| Observaciones              | Se aceptan RA2 y RA3 tal como están descritos. P1 a P7 quedan como tareas del despliegue, fuera de esta fase. Sin otros cambios. |
