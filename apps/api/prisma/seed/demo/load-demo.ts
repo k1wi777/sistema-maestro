@@ -5,6 +5,7 @@ import {
   type ActivityConfigByType,
 } from '@gns/shared';
 import type { Client } from 'pg';
+import { PasswordHasher } from '../../../src/modules/identidad/credentials/password-hasher.ts';
 import { generateCertificateCode } from '../../../src/modules/formacion/certificates/certificate-code.ts';
 import { SCHOOL_YEAR } from '../initial/catalogs.data.ts';
 import { insertForId, insertRow, type Row } from '../sql.ts';
@@ -188,7 +189,15 @@ function assertActivityScript(script: DemoActivityScript, activity: ActivityFact
   }
 }
 
-export async function loadDemoData(client: Client): Promise<DemoSummary> {
+export interface LoadDemoOptions {
+  /** Contraseña (ya validada con la política) que se asigna a todos los usuarios demo. */
+  usersPassword?: string | undefined;
+}
+
+export async function loadDemoData(
+  client: Client,
+  options: LoadDemoOptions = {},
+): Promise<DemoSummary> {
   // Se rechaza antes de escribir cualquier fila.
   if (await isDemoLoaded(client)) {
     throw new Error(
@@ -206,16 +215,23 @@ export async function loadDemoData(client: Client): Promise<DemoSummary> {
   const ids = new Map<string, string>();
   const idOf = (key: string): string => required(ids, key, 'el registro');
 
+  const hasher = new PasswordHasher();
   for (const demoUser of DEMO_USERS) {
-    ids.set(
-      demoUser.key,
-      await insert('usuario', {
-        nombre_completo: demoUser.name,
-        correo_institucional: demoUser.email,
-        rol: demoUser.role,
-        estado: demoUser.status,
-      }),
-    );
+    const userId = await insert('usuario', {
+      nombre_completo: demoUser.name,
+      correo_institucional: demoUser.email,
+      rol: demoUser.role,
+      estado: demoUser.status,
+    });
+    ids.set(demoUser.key, userId);
+    // También el usuario inactivo: así su rechazo al ingresar se debe al estado y no a la falta
+    // de credencial. Un hash (con su sal) por usuario.
+    if (options.usersPassword) {
+      await insert('credencial_contrasena', {
+        usuario_id: userId,
+        hash: await hasher.hash(options.usersPassword),
+      });
+    }
   }
 
   for (const item of DEMO_ASSIGNMENTS) {

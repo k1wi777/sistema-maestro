@@ -79,7 +79,12 @@ jobs:
       - name: Tests (all)
         if: ${{ needs.changes.outputs.mode != 'affected' && needs.changes.outputs.mode != 'none' }}
         run: pnpm test
+      - name: Web unit tests
+        run: pnpm --filter @gns/web test
       - run: pnpm build
+        env:
+          # The web app is not deployed in this phase: a local value satisfies the build.
+          NEXT_PUBLIC_API_URL: http://localhost:3000
 
   database:
     name: Database migrations and tests
