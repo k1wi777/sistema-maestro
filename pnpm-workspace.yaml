@@ -27,5 +27,8 @@ allowBuilds:
 # usa multer (las subidas van directo al almacenamiento por URL firmada), así que no era
 # explotable, pero se fuerza la versión corregida. multer 2.5.0 se publicó el 2026-10-22; quitar
 # esta línea cuando @nestjs/platform-express 11.x la incluya y haya pasado el margen de dos semanas.
+minimumReleaseAgeExclude:
+  - lucide-react@1.73.0
+
 overrides:
   multer: 2.5.0

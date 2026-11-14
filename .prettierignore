@@ -3,3 +3,5 @@
 pnpm-lock.yaml
 # Cliente de Prisma generado.
 apps/api/src/generated/
+# Tablero de diseño de referencia (HTML y CSS ajenos, no se reformatean).
+docs/prototipo/

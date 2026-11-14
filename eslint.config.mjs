@@ -1,7 +1,41 @@
 import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
+import { readdirSync } from 'node:fs';
 import tseslint from 'typescript-eslint';
+
+// Frontend feature first: una feature solo conoce `@/shared` y `@gns/shared`.
+// Las features se leen del disco para que una carpeta nueva quede aislada sin tocar esto.
+const webSrc = `${import.meta.dirname}/apps/web/src`;
+const webFeatures = readdirSync(`${webSrc}/features`, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
+
+const lucideOnlyInIcons = {
+  name: 'lucide-react',
+  message:
+    'Los iconos se piden con <Icon name="…" /> de @/shared/ui; lucide-react solo se importa en shared/ui/icons.',
+};
+
+const importRule = (options) => ({
+  'no-restricted-imports': ['error', options],
+});
+
+const otherFeaturesPatterns = (own) =>
+  webFeatures
+    .filter((name) => name !== own)
+    .flatMap((other) => [
+      {
+        regex: `^@/features/${other}(/|$)`,
+        message: `La feature «${own}» no puede importar la feature «${other}»: lo común va a @/shared.`,
+      },
+      {
+        regex: `^(\\.\\./)+${other}(/|$)`,
+        message: `La feature «${own}» no puede importar la feature «${other}»: lo común va a @/shared.`,
+      },
+    ]);
 
 export default defineConfig(
   // ESLint no lee .gitignore: las exclusiones se declaran aquí.
@@ -56,6 +90,59 @@ export default defineConfig(
         },
       ],
     },
+  },
+  // Frontend: reglas de Next.js y de los hooks de React (ESLint 10, configuración plana).
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    plugins: { '@next/next': nextPlugin },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      // App Router: no existe el directorio pages.
+      '@next/next/no-html-link-for-pages': 'off',
+    },
+  },
+  {
+    files: ['apps/web/**/*.{ts,tsx}'],
+    extends: [reactHooks.configs.flat.recommended],
+  },
+  // lucide-react queda detrás de <Icon>: un único punto de control del estilo.
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: ['apps/web/src/shared/ui/icons/**'],
+    rules: importRule({ paths: [lucideOnlyInIcons] }),
+  },
+  ...webFeatures.map((feature) => ({
+    files: [`apps/web/src/features/${feature}/**/*.{ts,tsx}`],
+    rules: importRule({
+      paths: [lucideOnlyInIcons],
+      patterns: otherFeaturesPatterns(feature),
+    }),
+  })),
+  // shared no conoce a quienes lo usan.
+  {
+    files: ['apps/web/src/shared/**/*.{ts,tsx}'],
+    ignores: ['apps/web/src/shared/ui/icons/**'],
+    rules: importRule({
+      paths: [lucideOnlyInIcons],
+      patterns: [
+        {
+          regex: '^@/(features|app)(/|$)',
+          message: 'shared no puede importar de features ni de app.',
+        },
+      ],
+    }),
+  },
+  {
+    files: ['apps/web/src/shared/ui/icons/**/*.{ts,tsx}'],
+    rules: importRule({
+      patterns: [
+        {
+          regex: '^@/(features|app)(/|$)',
+          message: 'shared no puede importar de features ni de app.',
+        },
+      ],
+    }),
   },
   prettier,
 );

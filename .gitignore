@@ -25,3 +25,6 @@ apps/api/src/generated/
 # Impeccable (skill de diseño local de cada desarrollador)
 .impeccable/
 skills-lock.json
+
+# Next.js regenera este archivo en dev y build
+next-env.d.ts

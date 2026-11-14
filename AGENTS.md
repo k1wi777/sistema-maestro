@@ -84,7 +84,7 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 Todos se ejecutan desde la raíz del repositorio.
 
 - `pnpm install` — Instalar dependencias; al terminar compila `@gns/shared` (necesario para el lint con tipos).
-- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`).
+- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`) y el frontend Next.js (`apps/web`, puerto 3000). La página de muestra del sistema de diseño está en `/muestra`.
 - `pnpm build` — Build de todo el monorepo con Turborepo.
 - `pnpm lint` — ESLint + Prettier (solo comprobación); también corre en el hook de pre-commit sobre los archivos en stage.
 - `pnpm format` — Aplica el formato de Prettier.
@@ -101,7 +101,8 @@ Todos se ejecutan desde la raíz del repositorio.
 |------|-----------|
 | `apps/api/` | API NestJS (`@gns/api`); pruebas `*.spec.ts` junto al código. |
 | `apps/api/src/core/` | Núcleo transversal de la API; hoy, la configuración (variables de entorno validadas con Zod). |
-| `apps/web/` | Frontend (`@gns/web`); esqueleto TypeScript hasta FE-01 (Next.js). |
+| `apps/web/` | Frontend Next.js App Router (`@gns/web`): `src/app` (rutas), `src/features` (por funcionalidad) y `src/shared/ui` (sistema de diseño GNS). |
+| `docs/prototipo/` | Tablero de diseño v47 (HTML estático y CSS): referencia visual; la app no importa nada de aquí. |
 | `packages/shared/` | Tipos, esquemas Zod y constantes compartidos (`@gns/shared`). |
 | `docker-compose.yml` | Entorno local: PostgreSQL 16 y MinIO. |
 | `.github/workflows/` | CI con GitHub Actions: lint, pruebas y build en cada pull request. |
