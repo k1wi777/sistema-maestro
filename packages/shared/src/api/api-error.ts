@@ -9,6 +9,7 @@ export const ApiErrorCode = {
   ConsentRequired: 'consentimiento_requerido',
   NotFound: 'no_encontrado',
   Conflict: 'conflicto',
+  UnansweredQuestionClosed: 'pregunta_sin_respuesta_cerrada',
   TooManyRequests: 'demasiadas_peticiones',
   StorageUnavailable: 'almacenamiento_no_disponible',
   Internal: 'error_interno',
