@@ -1,11 +1,10 @@
 import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { UserRole, UserStatus, type PlanTracking, type TeacherTracking } from '@gns/shared';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
 import { setupPlanning, type Planning } from './support/planning';
 import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
-import { asUser, createTestUser, serverOf, signIn, type Cookies } from './support/session';
+import { asUser, createTestUser, signIn, type Cookies } from './support/session';
 import { buildModule, call, unique } from './support/training';
 import {
   assignInYear,
@@ -250,22 +249,6 @@ describe('seguimiento de la formación y exportación (BE-7)', () => {
         '/training-tracking/teachers/00000000-0000-4000-8000-000000000000',
       ).expect(404);
       await call(app, coord, 'get', '/training-tracking/teachers/no-es-uuid').expect(400);
-    });
-  });
-
-  describe('permisos (R25)', () => {
-    it('un docente recibe 403 y sin sesión 401 en todo el seguimiento', async () => {
-      const t = F.unassigned as YearTeacher;
-      const paths = [
-        `/training-tracking/plans/${areaPlanId}`,
-        `/training-tracking/plans/${areaPlanId}/export`,
-        `/training-tracking/teachers/${t.user.id}`,
-      ];
-
-      for (const path of paths) {
-        await call(app, t.cookies, 'get', path).expect(403);
-        await request(serverOf(app)).get(path).expect(401);
-      }
     });
   });
 

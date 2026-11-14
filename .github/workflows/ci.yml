@@ -22,6 +22,7 @@ jobs:
     outputs:
       mode: ${{ steps.plan.outputs.mode }}
       db: ${{ steps.plan.outputs.db }}
+      e2e: ${{ steps.plan.outputs.e2e }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -42,6 +43,7 @@ jobs:
           else
             echo "mode=all" >> "$GITHUB_OUTPUT"
             echo "db=true" >> "$GITHUB_OUTPUT"
+            echo "e2e=true" >> "$GITHUB_OUTPUT"
             echo "### Test selection: mode all (PR to main or push)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -130,3 +132,25 @@ jobs:
       - run: pnpm --filter @gns/api db:demo:load
       - run: pnpm test:db
       - run: pnpm --filter @gns/api db:demo:clear
+
+  # End-to-end tests of the three processes over the demo data, against real PostgreSQL and
+  # MinIO that Testcontainers starts in the runner (Docker is preinstalled). Same policy as the
+  # database job: always on PRs to main and pushes; on a PR to an epic only when the end-to-end
+  # tests or the seed data change. Fail-safe: a failed `changes` job runs it too.
+  e2e:
+    name: End-to-end tests
+    needs: changes
+    if: ${{ !cancelled() && ((needs.changes.outputs.mode != 'affected' && needs.changes.outputs.mode != 'none') || needs.changes.outputs.e2e == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:e2e

@@ -1,4 +1,5 @@
 import PDFDocument from 'pdfkit';
+import { BOGOTA_TIME_ZONE } from '../../../shared/time/bogota-time';
 
 export interface CertificatePdfData {
   teacherName: string;
@@ -11,12 +12,10 @@ export interface CertificatePdfData {
   code: string;
 }
 
-const TIME_ZONE = 'America/Bogota';
-
 /** «13 de noviembre de 2026» en la zona horaria del colegio. */
 export function formatIssueDate(date: Date): string {
   return new Intl.DateTimeFormat('es-CO', {
-    timeZone: TIME_ZONE,
+    timeZone: BOGOTA_TIME_ZONE,
     day: 'numeric',
     month: 'long',
     year: 'numeric',

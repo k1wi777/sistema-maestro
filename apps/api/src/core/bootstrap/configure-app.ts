@@ -50,6 +50,15 @@ function rejectForeignOrigin(allowedOrigins: readonly string[]) {
   };
 }
 
+function noStore(
+  _request: unknown,
+  response: { setHeader(name: string, value: string): void },
+  next: () => void,
+): void {
+  response.setHeader('Cache-Control', 'no-store');
+  next();
+}
+
 /**
  * Configuración que Nest solo admite sobre la aplicación (no como proveedores).
  * La llaman `main.ts` y las pruebas de integración, para que prueben lo mismo que
@@ -81,6 +90,11 @@ export function configureApp(
   // Primero: como middleware de Express alcanza también a las respuestas de error y a las
   // rutas inexistentes.
   app.use(helmet());
+
+  // Las respuestas llevan datos pedagógicos, nombres de pila de estudiantes y exportaciones CSV:
+  // ningún navegador ni proxy debe guardarlas. Como middleware, también alcanza a los errores y a
+  // las rutas inexistentes (Helmet no fija esta cabecera).
+  app.use(noStore);
 
   // Antes de CORS y del resto: una escritura desde un origen ajeno no debe ejecutarse.
   app.use(rejectForeignOrigin(config.get('CORS_ORIGINS', { infer: true })));

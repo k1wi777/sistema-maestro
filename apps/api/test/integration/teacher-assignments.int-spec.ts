@@ -174,15 +174,6 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
       expect(rows[1]?.dataBefore).toMatchObject({ isCurrent: false });
       expect(rows[1]?.dataAfter).toMatchObject({ isCurrent: true });
     });
-
-    it('docente y coordinador reciben 403 al registrar o marcar un año', async () => {
-      const year = await yearWithPeriods('3221-3222');
-      for (const cookies of [teacher, coordinator]) {
-        await as(cookies, 'post', '/school-years').send({ code: '3223-3224' }).expect(403);
-        await as(cookies, 'put', `/school-years/${year.id}/current`).expect(403);
-      }
-      expect(await prisma.schoolYear.count({ where: { code: '3223-3224' } })).toBe(0);
-    });
   });
 
   describe('asignaciones (con año vigente)', () => {

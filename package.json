@@ -10,6 +10,7 @@
     "dev": "turbo run dev",
     "test": "turbo run test",
     "test:db": "pnpm --filter @gns/api test:db",
+    "test:e2e": "pnpm --filter @gns/api test:e2e",
     "test:affected": "node scripts/test-affected.mjs",
     "lint": "eslint . --max-warnings 0 --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ && prettier --check . --cache --cache-strategy content --cache-location node_modules/.cache/prettier/.prettier-cache",
     "lint:cold": "eslint . --max-warnings 0 && prettier --check .",

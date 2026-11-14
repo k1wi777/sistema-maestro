@@ -21,3 +21,11 @@ allowBuilds:
   # Dependencia transitiva de swagger-ui-dist (@nestjs/swagger): su postinstall solo
   # envía telemetría de uso; Swagger UI funciona igual sin ejecutarlo.
   '@scarf/scarf': false
+
+# Corrección de seguridad (GHSA-q7qp-rjg7-q26m, severidad alta): @nestjs/platform-express 11.2.8
+# trae multer 2.4.0 (DoS por un fileFilter asíncrono pendiente tras cerrar la petición). La API no
+# usa multer (las subidas van directo al almacenamiento por URL firmada), así que no era
+# explotable, pero se fuerza la versión corregida. multer 2.5.0 se publicó el 2026-10-22; quitar
+# esta línea cuando @nestjs/platform-express 11.x la incluya y haya pasado el margen de dos semanas.
+overrides:
+  multer: 2.5.0

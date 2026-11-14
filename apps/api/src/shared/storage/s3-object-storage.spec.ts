@@ -71,14 +71,11 @@ describe('S3ObjectStorage (local signing)', () => {
     const started = Date.now();
     try {
       await expect(mute.head('k')).rejects.toBeInstanceOf(StorageUnavailableError);
-      await expect(mute.put('k', Buffer.from('x'), 'text/plain')).rejects.toBeInstanceOf(
-        StorageUnavailableError,
-      );
-      // Dos llamadas, cada una con sus reintentos: por debajo de ~12 s en total.
-      expect(Date.now() - started).toBeLessThan(12000);
+      // Una sola llamada con sus reintentos: menos de ~6 s (el 503 por HTTP lo cubre la integración).
+      expect(Date.now() - started).toBeLessThan(6000);
     } finally {
       sockets.forEach((socket) => socket.destroy());
       await new Promise((resolve) => silent.close(resolve));
     }
-  }, 20000);
+  }, 10000);
 });

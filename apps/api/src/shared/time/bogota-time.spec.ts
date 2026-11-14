@@ -1,5 +1,6 @@
 import {
   formatBogotaDateOnly,
+  formatBogotaDateTime,
   formatBogotaTimestamp,
   startOfBogotaDay,
   startOfNextBogotaDay,
@@ -34,5 +35,10 @@ describe('Colombia formats (R11, R12)', () => {
 
   it('writes midnight as 00 and not 24', () => {
     expect(formatBogotaTimestamp(new Date('2026-11-14T05:00:00Z'))).toBe('2026-11-14 00:00:00');
+  });
+
+  it('formats date and time to the minute', () => {
+    expect(formatBogotaDateTime(new Date('2026-11-14T02:30:00.000Z'))).toBe('2026-11-13 21:30');
+    expect(formatBogotaDateTime(new Date('2026-11-13T05:00:00.000Z'))).toBe('2026-11-13 00:00');
   });
 });
