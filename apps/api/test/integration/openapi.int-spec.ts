@@ -60,6 +60,7 @@ const BODYLESS = new Set([
   'post /observer-notes/{id}/submit',
   'put /shared-activities/{id}/favorite',
   'post /training-modules/{id}/publish',
+  'post /unanswered-questions/{id}/discard',
   'post /training-modules/{id}/withdraw',
   'post /training-modules/{id}/restore',
   'post /training-modules/{id}/activities/{activityId}/withdraw',

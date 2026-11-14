@@ -1,6 +1,7 @@
 export const PRODUCT_NAME = 'Plataforma GNS';
 
 export * from './api';
+export * from './assistant';
 export * from './constants/area';
 export * from './constants/data-consent';
 export * from './constants/audit-log';

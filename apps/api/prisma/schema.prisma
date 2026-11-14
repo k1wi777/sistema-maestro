@@ -36,24 +36,26 @@ model User {
   createdAt          DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt          DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  createdBy          User?               @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdUsers       User[]              @relation("UserCreatedBy")
-  dataConsents       DataConsent[]
-  teacherAssignments TeacherAssignment[]
-  lessonPlans        LessonPlan[]
-  reviews            Review[]
-  sharedActivities   SharedActivity[]
-  favoriteActivities FavoriteActivity[]
-  fieldJournals      FieldJournal[]
-  observerNotes      ObserverNote[]
-  moduleProgress     ModuleProgress[]
-  activityProgress   ActivityProgress[]
-  certificates       Certificate[]
-  uploadedFiles      StoredFile[]
-  updatedFaqEntries  FaqEntry[]
-  auditLogs          AuditLog[]
-  passwordCredential PasswordCredential?
-  sessions           Session[]
+  createdBy                     User?                          @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdUsers                  User[]                         @relation("UserCreatedBy")
+  dataConsents                  DataConsent[]
+  teacherAssignments            TeacherAssignment[]
+  lessonPlans                   LessonPlan[]
+  reviews                       Review[]
+  sharedActivities              SharedActivity[]
+  favoriteActivities            FavoriteActivity[]
+  fieldJournals                 FieldJournal[]
+  observerNotes                 ObserverNote[]
+  moduleProgress                ModuleProgress[]
+  activityProgress              ActivityProgress[]
+  certificates                  Certificate[]
+  uploadedFiles                 StoredFile[]
+  updatedFaqEntries             FaqEntry[]
+  closedUnansweredQuestions     UnansweredQuestion[]           @relation("UnansweredQuestionClosedBy")
+  unansweredQuestionOccurrences UnansweredQuestionOccurrence[]
+  auditLogs                     AuditLog[]
+  passwordCredential            PasswordCredential?
+  sessions                      Session[]
 
   @@index([createdById])
   @@map("usuario")
@@ -655,10 +657,58 @@ model FaqEntry {
   createdAt   DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt   DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  updatedBy           User?                @relation(fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  unansweredQuestions UnansweredQuestion[]
 
   @@index([updatedById])
   @@map("pregunta_frecuente")
+}
+
+// Pregunta que el asistente no supo responder, agrupada por su texto normalizado: una fila
+// pendiente por texto (índice único parcial de la migración assistant_search). Al cerrarse
+// (atendida o descartada) `text` y `normalizedText` pasan a NULL: el texto puede nombrar a
+// menores y deja de hacer falta, pero se conservan las ocurrencias, los contadores y el cierre.
+// La migración añade los CHECK de coherencia entre estado, texto, cierre y enlace.
+model UnansweredQuestion {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  text           String?   @map("texto") @db.VarChar(200)
+  normalizedText String?   @map("texto_normalizado") @db.VarChar(200)
+  times          Int       @default(1) @map("veces")
+  firstAskedAt   DateTime  @default(now()) @map("primera_vez") @db.Timestamptz(6)
+  lastAskedAt    DateTime  @default(now()) @map("ultima_vez") @db.Timestamptz(6)
+  status         String    @default("pendiente") @map("estado") @db.VarChar(12)
+  faqId          String?   @map("pregunta_frecuente_id") @db.Uuid
+  closedById     String?   @map("cerrada_por") @db.Uuid
+  closedAt       DateTime? @map("cerrada_en") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  faq         FaqEntry?                      @relation(fields: [faqId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  closedBy    User?                          @relation("UnansweredQuestionClosedBy", fields: [closedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  occurrences UnansweredQuestionOccurrence[]
+
+  @@index([faqId])
+  @@index([closedById])
+  @@index([status])
+  @@map("pregunta_sin_respuesta")
+}
+
+// Cada vez que alguien hace una pregunta sin respuesta: quién y cuándo, nunca el texto. Solo
+// inserción para la aplicación (la migración revoca UPDATE y DELETE a `app_gns`).
+model UnansweredQuestionOccurrence {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unansweredQuestionId String   @map("pregunta_sin_respuesta_id") @db.Uuid
+  userId               String   @map("usuario_id") @db.Uuid
+  askedAt              DateTime @default(now()) @map("preguntado_en") @db.Timestamptz(6)
+  createdAt            DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt            DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  unansweredQuestion UnansweredQuestion @relation(fields: [unansweredQuestionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user               User               @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([unansweredQuestionId, askedAt(sort: Desc)])
+  @@index([userId])
+  @@map("ocurrencia_pregunta_sin_respuesta")
 }
 
 // ---------- Auditoría ----------

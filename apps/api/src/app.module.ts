@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CoreModule } from './core/core.module';
 import { validateEnv } from './core/config/env.validation';
+import { AssistantModule } from './modules/asistente/assistant.module';
 import { StructureModule } from './modules/estructura/structure.module';
 import { IdentityModule } from './modules/identidad/identity.module';
 import { FormatsModule } from './modules/formatos/formats.module';
@@ -24,6 +25,7 @@ import { DatabaseModule } from './shared/database/database.module';
     PlanningModule,
     FormatsModule,
     TrainingModule,
+    AssistantModule,
   ],
 })
 export class AppModule {}
