@@ -1,0 +1,79 @@
+
+/* ================= Formularios por pasos (wizard) =================
+   Para los formularios largos que se llenan en orden: planeación y editor de módulo.
+   Los pasos no son obligatorios en secuencia: el docente puede saltar a cualquiera.
+   Cada paso se guarda solo; el último resume todo antes de enviar. */
+.wz-paso[hidden]{display:none!important}
+.wz{position:sticky;top:0;z-index:12;margin:0 -12px 24px;padding:14px 12px 0;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.wz-pasos{list-style:none;margin:0;padding:0;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px}
+.wz-pasos li{position:relative;min-width:0}
+.wz-pasos li:not(:last-child)::after{content:"";position:absolute;top:15px;left:40px;right:6px;height:2px;border-radius:2px;background:var(--line-2)}
+.wz-pasos li.hecho:not(:last-child)::after{background:var(--turqui)}
+.wz-pasos button{display:flex;align-items:flex-start;gap:10px;width:100%;padding:0 8px 14px 0;border:0;background:none;text-align:left;cursor:pointer;color:var(--muted);font:inherit;border-radius:10px}
+.wz-n{position:relative;z-index:1;display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--card);border:1.5px solid var(--line-2);box-sizing:border-box;font:600 13px var(--body);color:var(--muted);transition:background .2s,border-color .2s,color .2s}
+.wz-n svg.i{width:16px;height:16px;stroke-width:2.4}
+.wz-t{display:none}
+.wz-pasos li.hecho .wz-n{background:var(--turqui);border-color:var(--turqui);color:#fff}
+.wz-pasos li.actual .wz-n{background:var(--rojo);border-color:var(--rojo);color:#fff;box-shadow:0 0 0 4px var(--bg),0 6px 14px -6px rgba(16,24,40,.45)}
+.wz-pasos li.ajustado .wz-n{border-color:#D9A441;color:var(--warn)}
+.wz-pasos button:hover .wz-n{border-color:var(--turqui);color:var(--turqui)}
+.wz-pasos li.hecho button:hover .wz-n,.wz-pasos li.actual button:hover .wz-n{color:#fff}
+.wz-prog{height:3px;background:var(--line);border-radius:3px;overflow:hidden}
+.wz-prog span{display:block;height:100%;background:linear-gradient(90deg,var(--turqui),var(--rojo));border-radius:3px}
+.wz-movil{display:none}
+@media (min-width:1000px){
+  .wz-pasos button{flex-direction:column;gap:8px;padding:0 0 14px}
+  .wz-t{display:flex;flex-direction:column;min-width:0;font-size:13.5px;font-weight:600;line-height:1.3;color:var(--fg);padding-right:12px}
+  .wz-t small{font-size:12px;font-weight:500;color:var(--muted);margin-top:2px}
+  .wz-pasos li:not(.hecho):not(.actual) .wz-t{color:var(--muted)}
+  .wz-pasos li.actual .wz-t{color:var(--turqui)}
+  .wz-pasos li.actual .wz-t small{color:var(--rojo)}
+  .wz-pasos li.ajustado .wz-t small{color:var(--warn)}
+}
+:root[data-theme="dark"] .wz-pasos li.hecho .wz-n{background:#2A4386;border-color:#2A4386}
+:root[data-theme="dark"] .wz-pasos li.actual .wz-n{background:#B3132D;border-color:#B3132D}
+:root[data-theme="dark"] .wz-pasos li.actual .wz-t{color:var(--fg)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .wz-pasos li.hecho .wz-n{background:#2A4386;border-color:#2A4386}
+  :root:not([data-theme="light"]) .wz-pasos li.actual .wz-n{background:#B3132D;border-color:#B3132D}
+  :root:not([data-theme="light"]) .wz-pasos li.actual .wz-t{color:var(--fg)}
+  :root:not([data-theme="light"]) .wz-pasos li.hecho:not(:last-child)::after{background:#2A4386}}
+@media (max-width:999px){
+  .wz-pasos{display:flex;justify-content:space-between}
+  .wz-pasos li{flex:1}
+  .wz-pasos li:last-child{flex:none}
+  .wz-pasos button{padding-bottom:10px}
+  .wz-movil{display:flex;align-items:baseline;gap:10px;padding:0 0 12px}
+  .wz-movil span{font-size:12.5px;font-weight:600;color:var(--rojo);white-space:nowrap}
+  .wz-movil b{font-family:var(--display);font-size:16px;color:var(--fg);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
+@media (max-width:860px){.wz{position:static;margin-inline:0;padding-inline:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}}
+@media (max-width:420px){.wz-n{width:28px;height:28px;font-size:12px}.wz-pasos li:not(:last-child)::after{top:13px;left:34px}}
+
+/* Barra del asistente de pasos */
+.barra .estado-txt.guardado .punto{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 18%,transparent)}
+.barra .btn svg.i:last-child:not(:first-child){margin-left:2px}
+.wz-nav{align-items:center}
+.wz-nav-esp{flex:1}
+@media (max-width:640px){.wz-nav{flex-wrap:nowrap}.wz-nav .btn{padding-inline:12px}}
+
+/* Último paso: resumen antes de enviar */
+.wz-lista{list-style:none;margin:0;padding:0}
+.wz-lista li{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
+.wz-lista li:first-child{border-top:0;padding-top:4px}
+.wz-lista b{display:block;font-size:15px}
+.wz-lista small{display:block;font-size:13.5px;color:var(--muted);margin-top:2px}
+.wz-ic{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ok-suave);color:var(--ok);font:700 14px var(--body)}
+.wz-ic svg.i{width:15px;height:15px;stroke-width:2.4}
+.wz-lista li.falta .wz-ic{background:var(--warn-suave);color:var(--warn)}
+.wz-lista li.falta small{color:var(--warn)}
+.wz-lista .rv-b{opacity:1}
+.wz-envio{display:flex;gap:14px;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-top:8px;padding-top:18px;border-top:1px solid var(--line)}
+.wz-envio p{display:flex;gap:8px;align-items:flex-start;margin:0 auto 0 0;font-size:13.5px;color:var(--muted);max-width:52ch}
+.wz-envio p svg.i{flex:none;width:16px;height:16px;margin-top:2px}
+@media (max-width:640px){.wz-lista li{grid-template-columns:28px minmax(0,1fr)}.wz-lista li>button{grid-column:2;justify-self:start}}
+@media (prefers-reduced-motion: reduce){.wz-n{transition:none}}
+@media (max-width:640px){.barra .estado-txt.guardado::after{content:"Guardado"}}
+.wz-pasos li.sin .wz-n{border-style:dashed;background:transparent}
+.wz-regla{margin:12px 0 0;font-size:13px;color:var(--muted);max-width:80ch}
+@media (max-width:999px){.wz-regla{margin-top:0;padding-bottom:12px}}

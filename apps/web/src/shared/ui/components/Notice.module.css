@@ -1,0 +1,52 @@
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--tone-border);
+  border-radius: var(--radius-md);
+  background: var(--tone-bg);
+  color: var(--fg);
+  font-size: var(--text-base);
+  line-height: 1.55;
+}
+
+.icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--tone-ink);
+}
+
+.body {
+  min-width: 0;
+}
+
+.title {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--tone-ink);
+}
+
+.info {
+  --tone-ink: var(--blue);
+  --tone-bg: var(--blue-soft);
+  --tone-border: color-mix(in srgb, var(--blue) 25%, transparent);
+}
+
+.success {
+  --tone-ink: var(--ok);
+  --tone-bg: var(--ok-soft);
+  --tone-border: color-mix(in srgb, var(--ok) 25%, transparent);
+}
+
+.warning {
+  --tone-ink: var(--warn);
+  --tone-bg: var(--warn-soft);
+  --tone-border: color-mix(in srgb, var(--warn) 25%, transparent);
+}
+
+.error {
+  --tone-ink: var(--red);
+  --tone-bg: var(--red-soft);
+  --tone-border: color-mix(in srgb, var(--red) 25%, transparent);
+}

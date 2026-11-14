@@ -1,0 +1,66 @@
+/* Estilo común de los controles de texto, área y selección. */
+.control {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  background: var(--field);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  box-shadow: var(--shadow-1);
+}
+
+.control::placeholder {
+  color: var(--placeholder);
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--muted);
+}
+
+.control:focus-visible {
+  border-color: var(--focus);
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: 1px;
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--red);
+}
+
+.control:disabled {
+  background: var(--disabled-bg);
+  border-color: var(--line-strong);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.textarea {
+  min-height: 5.25rem;
+  field-sizing: content;
+  resize: vertical;
+}
+
+.select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1.15rem) 50%,
+    calc(100% - 0.85rem) 50%;
+  background-size:
+    0.3rem 0.3rem,
+    0.3rem 0.3rem;
+  background-repeat: no-repeat;
+}
+
+@media (pointer: coarse) {
+  .control {
+    min-height: 2.75rem;
+  }
+}
