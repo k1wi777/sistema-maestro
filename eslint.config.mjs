@@ -46,6 +46,7 @@ export default defineConfig(
       '**/.turbo/',
       '**/coverage/',
       '**/.next/',
+      'apps/web/src/shared/api/generated/',
       '.rei/',
       '.claude/',
     ],

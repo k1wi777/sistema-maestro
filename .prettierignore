@@ -5,3 +5,7 @@ pnpm-lock.yaml
 apps/api/src/generated/
 # Tablero de diseño de referencia (HTML y CSS ajenos, no se reformatean).
 docs/prototipo/
+# Contrato OpenAPI que escribe `pnpm api:contract` con JSON.stringify.
+apps/web/src/shared/api/openapi.json
+# Tipos generados por openapi-typescript (pnpm --filter @gns/web api:types).
+apps/web/src/shared/api/generated/

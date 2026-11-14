@@ -3,23 +3,33 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev",
+    "api:types": "openapi-typescript src/shared/api/openapi.json -o src/shared/api/generated/schema.ts",
+    "predev": "pnpm api:types",
+    "dev": "cross-env NEXT_TELEMETRY_DISABLED=1 next dev -p 3001",
+    "prebuild": "pnpm api:types",
     "build": "cross-env NEXT_TELEMETRY_DISABLED=1 next build",
-    "start": "cross-env NEXT_TELEMETRY_DISABLED=1 next start",
-    "typecheck": "tsc --noEmit"
+    "start": "cross-env NEXT_TELEMETRY_DISABLED=1 next start -p 3001",
+    "pretypecheck": "pnpm api:types",
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
     "@gns/shared": "workspace:*",
     "lucide-react": "1.73.0",
     "next": "16.4.6",
+    "openapi-fetch": "0.17.0",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@types/jest": "30.0.0",
     "@types/node": "26.6.6",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "typescript": "5.9.3",
-    "cross-env": "10.1.0"
+    "cross-env": "10.1.0",
+    "jest": "30.5.2",
+    "openapi-typescript": "7.13.0",
+    "ts-jest": "29.4.15",
+    "typescript": "5.9.3"
   }
 }

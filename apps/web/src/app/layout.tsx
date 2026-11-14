@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Josefin_Sans, Plus_Jakarta_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { SessionProvider } from '@/shared/session';
 import { THEME_INIT_SCRIPT } from '@/shared/ui';
 import '@/shared/ui/styles/tokens.css';
 import '@/shared/ui/styles/base.css';
@@ -50,7 +51,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

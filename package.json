@@ -16,7 +16,8 @@
     "lint:cold": "eslint . --max-warnings 0 && prettier --check .",
     "format": "prettier --write .",
     "prepare": "husky",
-    "postinstall": "turbo run build --filter=@gns/shared && pnpm --filter @gns/api db:generate"
+    "api:contract": "pnpm --filter @gns/api build && pnpm --filter @gns/api openapi:export && pnpm --filter @gns/web api:types",
+    "postinstall": "turbo run build --filter=@gns/shared && pnpm --filter @gns/api db:generate && pnpm --filter @gns/web api:types"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

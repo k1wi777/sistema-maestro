@@ -29,6 +29,7 @@ import {
   type SaveState,
   type StepperStep,
 } from '@/shared/ui';
+import { AccessDeniedNotice, ConsentPendingNotice, SessionEndedNotice } from '@/shared/session';
 
 import styles from './showcase.module.css';
 
@@ -372,6 +373,21 @@ export function Showcase() {
             onChange={setMulti}
           />
         </Card>
+
+        <section aria-labelledby="session-title">
+          <h2 id="session-title" className={styles.sectionTitle}>
+            Sesión y acceso
+          </h2>
+          <div className={styles.stackTight}>
+            <SessionEndedNotice />
+            <Card title="Acceso denegado">
+              <AccessDeniedNotice homePath="/docente" embedded />
+            </Card>
+            <Card title="Aviso de datos pendiente">
+              <ConsentPendingNotice onSignOut={() => undefined} embedded />
+            </Card>
+          </div>
+        </section>
 
         <section aria-labelledby="wizard-title">
           <h2 id="wizard-title" className={styles.sectionTitle}>

@@ -305,4 +305,34 @@ describe('validateEnv', () => {
       expect(validateEnv({ ...BASE, DATA_POLICY_VERSION: value }).DATA_POLICY_VERSION).toBe(value);
     });
   });
+
+  describe('development-only passwords', () => {
+    const SECRET_VALUE = 'valor-que-no-debe-aparecer-1';
+
+    it.each(['ADMIN_INITIAL_PASSWORD', 'DEMO_USERS_PASSWORD'])(
+      'accepts %s in development and test',
+      (name) => {
+        for (const NODE_ENV of ['development', 'test']) {
+          expect(validateEnv({ ...BASE, NODE_ENV, [name]: SECRET_VALUE })).toMatchObject({
+            [name]: SECRET_VALUE,
+          });
+        }
+      },
+    );
+
+    it.each(['ADMIN_INITIAL_PASSWORD', 'DEMO_USERS_PASSWORD'])(
+      'rejects %s in production naming the variable but never the value',
+      (name) => {
+        const message = errorMessageOf({
+          ...BASE,
+          NODE_ENV: 'production',
+          AUTH_COOKIE_SECURE: 'true',
+          STORAGE_ENDPOINT: 'https://storage.example.test',
+          [name]: SECRET_VALUE,
+        });
+        expect(message).toContain(`- ${name}:`);
+        expect(message).not.toContain(SECRET_VALUE);
+      },
+    );
+  });
 });

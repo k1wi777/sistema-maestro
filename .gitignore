@@ -28,3 +28,6 @@ skills-lock.json
 
 # Next.js regenera este archivo en dev y build
 next-env.d.ts
+
+# Tipos del contrato OpenAPI generados (pnpm --filter @gns/web api:types)
+apps/web/src/shared/api/generated/
