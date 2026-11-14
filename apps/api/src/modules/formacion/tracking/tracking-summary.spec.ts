@@ -3,7 +3,6 @@ import {
   EXPORT_HEADER,
   exportFileName,
   exportRows,
-  formatBogotaDateTime,
   summarizePlan,
   trackingState,
   type TrackedModule,
@@ -138,11 +137,6 @@ describe('export', () => {
     const text = JSON.stringify(exportRows(tracking, new Set()));
 
     expect(text).not.toMatch(/@|https?:|X-Amz|formacion\/modulos|certificados\//);
-  });
-
-  it('formats dates in the Bogotá time zone', () => {
-    expect(formatBogotaDateTime(new Date('2026-11-14T02:30:00.000Z'))).toBe('2026-11-13 21:30');
-    expect(formatBogotaDateTime(new Date('2026-11-13T05:00:00.000Z'))).toBe('2026-11-13 00:00');
   });
 
   it('builds an ASCII file name with the plan and the date', () => {

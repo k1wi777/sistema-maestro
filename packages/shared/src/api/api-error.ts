@@ -10,6 +10,7 @@ export const ApiErrorCode = {
   NotFound: 'no_encontrado',
   Conflict: 'conflicto',
   UnansweredQuestionClosed: 'pregunta_sin_respuesta_cerrada',
+  ExportExceedsLimit: 'exportacion_excede_limite',
   TooManyRequests: 'demasiadas_peticiones',
   StorageUnavailable: 'almacenamiento_no_disponible',
   Internal: 'error_interno',

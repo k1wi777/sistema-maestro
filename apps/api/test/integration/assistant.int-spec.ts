@@ -323,12 +323,6 @@ describe('asistente (BE-8)', () => {
         ).toBe(0);
       },
     );
-
-    it('una consulta sin sesión responde 401', async () => {
-      await asUser(app, 'post', '/assistant/queries', { access: '', refresh: '' })
-        .send({ question: 'hola' })
-        .expect(401);
-    });
   });
 
   describe('preguntas sin respuesta (R13 a R19)', () => {

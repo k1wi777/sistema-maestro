@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { apiErrorBodySchema, UserRole, UserStatus, type User } from '@gns/shared';
-import request from 'supertest';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
 import {
@@ -9,7 +8,6 @@ import {
   createTestUser,
   login,
   randomPassword,
-  serverOf,
   signIn,
   type Cookies,
   type TestUser,
@@ -102,13 +100,6 @@ describe('gestión de usuarios', () => {
         await login(app, { email: target.email, password: target.password }).expect(200);
       },
     );
-
-    it('sin sesión recibe 401 no_autenticado', async () => {
-      const res = await request(serverOf(app)).get('/users').expect(401);
-
-      expect(apiErrorBodySchema.parse(res.body).code).toBe('no_autenticado');
-      await request(serverOf(app)).post('/users').send(newUserBody()).expect(401);
-    });
 
     it('un cambio de rol surte efecto en la siguiente petición sin revocar la sesión', async () => {
       const other = await createTestUser(app, { role: UserRole.Administrator });

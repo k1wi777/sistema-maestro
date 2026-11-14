@@ -10,6 +10,7 @@
     "test:unit": "jest --selectProjects unit",
     "test:integration": "jest --selectProjects integration",
     "test:db": "jest -c jest.db.config.json --runInBand",
+    "test:e2e": "jest -c jest.e2e.config.json --runInBand",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
@@ -19,7 +20,7 @@
     "storage:init": "node --env-file-if-exists=.env dist/cli/init-storage.js",
     "admin:init-password": "node --env-file-if-exists=.env dist/cli/init-admin-password.js",
     "db:demo:clear": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env prisma/seed/run-demo-clear.ts",
-    "typecheck:seed": "tsc -p prisma/tsconfig.json && tsc -p test/tsconfig.json"
+    "typecheck:seed": "tsc -p prisma/tsconfig.json && tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "3.1155.0",

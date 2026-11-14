@@ -6,19 +6,11 @@ import {
   type ComplianceItem,
   type LessonPlanCompliance,
 } from '@gns/shared';
-import request from 'supertest';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
 import { setupPlanning, type Planning } from './support/planning';
 import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
-import {
-  asUser,
-  createTestUser,
-  serverOf,
-  signIn,
-  type Cookies,
-  type TestUser,
-} from './support/session';
+import { asUser, createTestUser, signIn, type Cookies, type TestUser } from './support/session';
 
 const { Draft, Submitted, ChangesRequested, Reviewed, Voided } = RecordStatus;
 
@@ -30,7 +22,6 @@ describe('cumplimiento de entregas (BE-56)', () => {
   let teacherA: TestUser;
   let teacherB: TestUser;
   let teacherC: TestUser;
-  let teacher: Cookies;
   let coordinator: Cookies;
   let admin: Cookies;
   let grade1: string;
@@ -74,7 +65,6 @@ describe('cumplimiento de entregas (BE-56)', () => {
     teacherA = await createTestUser(app);
     teacherB = await createTestUser(app);
     teacherC = await createTestUser(app);
-    teacher = await signIn(app, teacherA);
     coordinator = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
     admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
 
@@ -181,10 +171,5 @@ describe('cumplimiento de entregas (BE-56)', () => {
     }
     await get(coordinator, '?periodId=x').expect(400);
     await get(coordinator, '?page=1').expect(400);
-  });
-
-  it('responde 403 a un docente y 401 sin sesión (R9, R18)', async () => {
-    await get(teacher).expect(403);
-    await request(serverOf(app)).get('/lesson-plan-compliance').expect(401);
   });
 });

@@ -70,14 +70,15 @@ async function startStorage(password: string): Promise<StartedTestContainer> {
 }
 
 /**
- * Levanta un PostgreSQL temporal en un puerto aleatorio, aplica las migraciones con
+ * Entorno efímero compartido por las pruebas de integración y las de punta a punta (un solo
+ * sitio con las imágenes y sus digests). Levanta un PostgreSQL temporal en un puerto aleatorio, aplica las migraciones con
  * el superusuario y crea el usuario de la aplicación, que hereda de `app_gns`.
  * Las variables se fijan en process.env antes de crear los workers de Jest, que las
  * heredan; Prisma y @nestjs/config no pisan variables ya definidas, así que el
  * apps/api/.env local nunca gana. `DATABASE_URL` (la que usa la API) es la del
  * usuario de la aplicación; la del superusuario queda en `TEST_ADMIN_DATABASE_URL`.
  */
-export default async function globalSetup(): Promise<void> {
+export async function startTestEnvironment(): Promise<void> {
   const storagePassword = randomBytes(16).toString('hex');
   // PostgreSQL y MinIO arrancan en paralelo.
   const [container, storage] = await Promise.all([startContainer(), startStorage(storagePassword)]);
@@ -125,4 +126,8 @@ export default async function globalSetup(): Promise<void> {
   process.env.STORAGE_FORCE_PATH_STYLE = 'true';
   process.env.STORAGE_SIGNED_URL_TTL_SECONDS = '300';
   process.env.STORAGE_VIEW_URL_TTL_SECONDS = '7200';
+}
+
+export default async function globalSetup(): Promise<void> {
+  await startTestEnvironment();
 }

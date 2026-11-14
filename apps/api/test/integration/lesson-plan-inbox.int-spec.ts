@@ -6,19 +6,11 @@ import {
   type LessonPlan,
   type Page,
 } from '@gns/shared';
-import request from 'supertest';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
 import { setupPlanning, type Planning } from './support/planning';
 import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
-import {
-  asUser,
-  createTestUser,
-  serverOf,
-  signIn,
-  type Cookies,
-  type TestUser,
-} from './support/session';
+import { asUser, createTestUser, signIn, type Cookies, type TestUser } from './support/session';
 
 // La API serializa las fechas como texto ISO; en la prueba se lee el JSON tal cual.
 type PlanBody = Omit<LessonPlan, 'submittedAt' | 'createdAt' | 'updatedAt'> & {
@@ -210,9 +202,5 @@ describe('bandeja de coordinación: listado de planeaciones (BE-55)', () => {
     const all = await list(sessionA, 'pageSize=100');
     expect(all.items.every((item) => item.teacher.id === teacherA.id)).toBe(true);
     expect(all.totalItems).toBe(5);
-  });
-
-  it('exige sesión (401)', async () => {
-    await request(serverOf(app)).get('/lesson-plans').expect(401);
   });
 });

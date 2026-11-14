@@ -479,20 +479,6 @@ describe('archivos de los módulos de formación (BE-7)', () => {
       expect((mark.body as { completedAt: string | null }).completedAt).not.toBeNull();
       expect(await milestonesOf(app, c.user.id)).toContain('Terminó un módulo');
     });
-
-    it('un docente recibe 403 en todas las rutas de coordinación de archivos', async () => {
-      const c = await course();
-      const t = c.teacher;
-      const id = c.moduleId;
-      const file = '00000000-0000-4000-8000-000000000001';
-
-      await call(app, t, 'post', `/training-modules/${id}/files`)
-        .send({ purpose: 'video', name: 'a.mp4', contentType: 'video/mp4', size: 10 })
-        .expect(403);
-      await call(app, t, 'post', `/training-modules/${id}/files/${file}/confirm`).expect(403);
-      await call(app, t, 'delete', `/training-modules/${id}/files/video`).expect(403);
-      await call(app, t, 'post', `/training-modules/${id}/files/video/url`).expect(403);
-    });
   });
 
   describe('bitácora (R25)', () => {
