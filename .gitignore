@@ -21,3 +21,7 @@ coverage/
 
 # Cliente de Prisma generado (pnpm db:generate)
 apps/api/src/generated/
+
+# Impeccable (skill de diseño local de cada desarrollador)
+.impeccable/
+skills-lock.json
