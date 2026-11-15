@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
@@ -77,6 +78,9 @@ function Footer() {
     <footer className={styles.footer}>
       <p>© {INSTITUTION.displayName} · Montería</p>
       <LegalLinks />
+      <p>
+        <Link href="/verificar">Verificar un certificado</Link>
+      </p>
     </footer>
   );
 }

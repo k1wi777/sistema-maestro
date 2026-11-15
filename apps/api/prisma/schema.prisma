@@ -142,6 +142,7 @@ model Grade {
   lessonPlans        LessonPlan[]
   fieldJournals      FieldJournal[]
   observerNotes      ObserverNote[]
+  sharedActivities   SharedActivity[]
 
   @@index([levelId])
   @@map("grado")
@@ -302,6 +303,9 @@ model SharedActivity {
   authorId        String   @map("autor_id") @db.Uuid
   levelId         String?  @map("nivel_id") @db.Uuid
   areaId          String?  @map("area_id") @db.Uuid
+  gradeId         String?  @map("grado_id") @db.Uuid
+  learningCorner  String?  @map("rincon") @db.VarChar(60)
+  activityType    String   @default("actividad") @map("tipo") @db.VarChar(20)
   title           String   @map("titulo") @db.VarChar(160)
   objective       String?  @map("objetivo") @db.Text
   durationMinutes Int?     @map("duracion_min") @db.SmallInt
@@ -314,11 +318,13 @@ model SharedActivity {
   author    User               @relation(fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   level     EducationLevel?    @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   area      Area?              @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade     Grade?             @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   favorites FavoriteActivity[]
 
   @@index([authorId])
   @@index([levelId])
   @@index([areaId])
+  @@index([gradeId])
   @@map("actividad_repositorio")
 }
 

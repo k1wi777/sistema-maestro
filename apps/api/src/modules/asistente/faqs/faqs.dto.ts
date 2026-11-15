@@ -8,7 +8,7 @@ import {
   faqListSchema,
   updateFaqSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../shared/http/zod-dto';
 
 export class CreateFaqDto extends createZodDto(createFaqSchema) {}
 export class UpdateFaqDto extends createZodDto(updateFaqSchema) {}
@@ -20,4 +20,8 @@ export class FaqAdminPageDto extends createZodDto(createPageSchema(faqAdminViewS
 }) {}
 export class AssistantQueryDto extends createZodDto(assistantQuerySchema) {}
 // Las uniones no pueden ser clase base: se exponen como DTO valor para `@ZodResponse`.
-export const AssistantAnswerDto = createZodDto(assistantAnswerSchema);
+export const AssistantAnswerDto = createZodDto(
+  assistantAnswerSchema,
+  undefined,
+  'AssistantAnswerDto',
+);

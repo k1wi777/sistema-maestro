@@ -1,0 +1,97 @@
+/* Solo se ve al imprimir; los colores vienen de los tokens, que en impresión son siempre claros. */
+.sheet {
+  display: none;
+}
+
+@media print {
+  .sheet {
+    display: block;
+    color: var(--fg);
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 2px solid var(--red);
+  }
+
+  .kind {
+    margin: 0;
+    color: var(--heading);
+    font-size: 12pt;
+    font-weight: var(--weight-bold);
+  }
+
+  .title {
+    margin: var(--space-4) 0 var(--space-3);
+    color: var(--heading);
+    font-size: 18pt;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2) var(--space-6);
+    margin: 0 0 var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+  }
+
+  .facts dt {
+    color: var(--muted);
+    font-size: 8.5pt;
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+  }
+
+  .facts dd {
+    margin: 0;
+  }
+
+  .section {
+    margin: 0 0 var(--space-3);
+    break-inside: avoid;
+  }
+
+  .heading {
+    margin: 0 0 var(--space-1);
+    color: var(--heading);
+    font-size: 11.5pt;
+  }
+
+  .text {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .links {
+    margin: 0;
+    padding-left: var(--space-5);
+  }
+
+  .links li {
+    margin-bottom: var(--space-2);
+    break-inside: avoid;
+  }
+
+  .url {
+    color: var(--muted);
+    font-size: 9.5pt;
+    overflow-wrap: anywhere;
+  }
+
+  .footer {
+    margin-top: var(--space-5);
+    padding-top: var(--space-2);
+    border-top: 1px solid var(--line-strong);
+    color: var(--muted);
+    font-size: 9pt;
+  }
+}

@@ -8,9 +8,13 @@ import { DiscoveryService, ModulesContainer } from '@nestjs/core';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
+import { z } from 'zod';
 import { AppModule } from '../../src/app.module';
 import { buildOpenApiDocument } from '../../src/core/openapi/openapi';
 import { createTestApp } from './support/create-test-app';
+
+// Clave de metadata de `@ApiResponse` en @nestjs/swagger (su módulo de constantes no se exporta).
+const API_RESPONSE_METADATA = 'swagger/apiResponse';
 
 interface RegisteredRoute {
   method: string;
@@ -90,6 +94,172 @@ const NON_JSON_SUCCESS = new Map([
   ['get /audit-log/export', 'text/csv'],
 ]);
 
+// --- Coherencia entre los esquemas Zod de los DTO y el documento ---
+
+type JsonSchema = Record<string, unknown>;
+
+interface ZodDtoClass {
+  name: string;
+  schema: z.ZodType;
+}
+
+interface Shape {
+  kind: string;
+  nullable: boolean;
+  required: string[];
+  properties: Record<string, JsonSchema>;
+  items?: JsonSchema;
+  branches: JsonSchema[];
+}
+
+const isSchema = (value: unknown): value is JsonSchema =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isZodDtoClass = (value: unknown): value is ZodDtoClass =>
+  typeof value === 'function' && 'schema' in value && 'isZodDto' in value;
+
+/** Resuelve `$ref` (a `#/$defs/x` o a `#/components/schemas/x`) contra su raíz. */
+function resolveRef(schema: JsonSchema, defs: Record<string, unknown>): JsonSchema {
+  let current = schema;
+  while (typeof current.$ref === 'string') {
+    const target = defs[current.$ref.slice(current.$ref.lastIndexOf('/') + 1)];
+    if (!isSchema(target)) throw new Error(`Referencia sin resolver: ${current.$ref}`);
+    current = target;
+  }
+  return current;
+}
+
+/** Reduce un esquema a lo que importa al contrato: tipo, null, requeridos y estructura. */
+function shapeOf(schema: JsonSchema, defs: Record<string, unknown>): Shape {
+  const current = resolveRef(schema, defs);
+  let nullable = current.nullable === true;
+  const combined = (current.anyOf ?? current.oneOf) as JsonSchema[] | undefined;
+  if (combined) {
+    const isNull = (branch: JsonSchema) => resolveRef(branch, defs).type === 'null';
+    nullable ||= combined.some(isNull);
+    const rest = combined.filter((branch) => !isNull(branch));
+    if (rest.length === 1 && rest[0]) {
+      const inner = shapeOf(rest[0], defs);
+      return { ...inner, nullable: nullable || inner.nullable };
+    }
+    return {
+      kind: 'union',
+      nullable,
+      required: [],
+      properties: {},
+      branches: rest.map((branch) => resolveRef(branch, defs)),
+    };
+  }
+  const type = Array.isArray(current.type) ? current.type.join('|') : current.type;
+  const kind =
+    type === 'integer' || type === 'number' ? 'number' : typeof type === 'string' ? type : 'scalar';
+  return {
+    kind,
+    nullable,
+    required: Array.isArray(current.required) ? [...(current.required as string[])].sort() : [],
+    properties: isSchema(current.properties)
+      ? (current.properties as Record<string, JsonSchema>)
+      : {},
+    items: isSchema(current.items) ? current.items : undefined,
+    branches: [],
+  };
+}
+
+function compareSchemas(
+  expected: JsonSchema,
+  expectedDefs: Record<string, unknown>,
+  actual: JsonSchema,
+  actualDefs: Record<string, unknown>,
+  path: string,
+  diffs: string[],
+): void {
+  // Los esquemas del contrato no son recursivos; el límite evita un bucle si alguno lo fuese.
+  if (path.length > 400) return;
+  const want = shapeOf(expected, expectedDefs);
+  const got = shapeOf(actual, actualDefs);
+  const describe = (shape: Shape) => `${shape.kind}${shape.nullable ? ' | null' : ''}`;
+  if (describe(want) !== describe(got)) {
+    diffs.push(`${path}: esperado ${describe(want)}, obtenido ${describe(got)}`);
+    return;
+  }
+  if (want.required.join() !== got.required.join()) {
+    diffs.push(
+      `${path}: required esperado [${want.required.join()}], obtenido [${got.required.join()}]`,
+    );
+  }
+  const names = new Set([...Object.keys(want.properties), ...Object.keys(got.properties)]);
+  for (const name of names) {
+    const wantProperty = want.properties[name];
+    const gotProperty = got.properties[name];
+    if (!wantProperty || !gotProperty) {
+      diffs.push(
+        `${path}.${name}: ${wantProperty ? 'falta en el documento' : 'sobra en el documento'}`,
+      );
+      continue;
+    }
+    compareSchemas(wantProperty, expectedDefs, gotProperty, actualDefs, `${path}.${name}`, diffs);
+  }
+  if (want.items && got.items) {
+    compareSchemas(want.items, expectedDefs, got.items, actualDefs, `${path}[]`, diffs);
+  }
+  if (want.branches.length !== got.branches.length) {
+    diffs.push(
+      `${path}: ${want.branches.length} ramas esperadas, ${got.branches.length} obtenidas`,
+    );
+  } else {
+    want.branches.forEach((branch, index) => {
+      const other = got.branches[index];
+      if (other)
+        compareSchemas(branch, expectedDefs, other, actualDefs, `${path}<${index}>`, diffs);
+    });
+  }
+}
+
+interface ZodResponseRoute {
+  method: string;
+  openApiPath: string;
+  status: string;
+  dto: ZodDtoClass;
+  list: boolean;
+}
+
+/** DTO de Zod declarados como respuesta 2xx de cada handler (`@ZodResponse` → `@ApiResponse`). */
+function zodResponses(app: INestApplication): ZodResponseRoute[] {
+  const found: ZodResponseRoute[] = [];
+  for (const wrapper of new DiscoveryService(app.get(ModulesContainer)).getControllers()) {
+    const instance = wrapper.instance as object | undefined;
+    if (!instance) continue;
+    const controllerPath = Reflect.getMetadata(PATH_METADATA, wrapper.metatype as object) as string;
+    const prototype = Object.getPrototypeOf(instance) as Record<string, unknown>;
+    for (const name of Object.getOwnPropertyNames(prototype)) {
+      const handler = prototype[name];
+      if (typeof handler !== 'function') continue;
+      const method = Reflect.getMetadata(METHOD_METADATA, handler) as RequestMethod | undefined;
+      if (method === undefined) continue;
+      const path = Reflect.getMetadata(PATH_METADATA, handler) as string;
+      const responses = (Reflect.getMetadata(API_RESPONSE_METADATA, handler) ?? {}) as Record<
+        string,
+        { type?: unknown; isArray?: boolean }
+      >;
+      for (const [status, response] of Object.entries(responses)) {
+        if (!/^2/.test(status)) continue;
+        const declared = Array.isArray(response.type)
+          ? (response.type as unknown[])[0]
+          : response.type;
+        if (!isZodDtoClass(declared)) continue;
+        found.push({
+          method: RequestMethod[method].toLowerCase(),
+          openApiPath: joinPaths(controllerPath, path).replace(/:([A-Za-z]+)/g, '{$1}'),
+          status,
+          dto: declared,
+          list: Array.isArray(response.type) || response.isArray === true,
+        });
+      }
+    }
+  }
+  return found;
+}
+
 describe('documentación OpenAPI', () => {
   let app: INestApplication;
   let operations: Record<string, Record<string, Operation> | undefined>;
@@ -158,6 +328,67 @@ describe('documentación OpenAPI', () => {
         const schema = operation.requestBody?.content['application/json']?.schema;
         expect([label, schema !== undefined]).toEqual([label, true]);
       }
+    }
+  });
+
+  it('describe cada respuesta de Zod con el mismo tipo, null y requeridos que su esquema', () => {
+    const componentSchemas = (document.components?.schemas ?? {}) as Record<string, unknown>;
+    const responses = zodResponses(app);
+    expect(responses.length).toBeGreaterThan(50);
+
+    const diffs: string[] = [];
+    for (const { method, openApiPath, status, dto, list } of responses) {
+      const io = dto.name.endsWith('_Output') ? 'output' : 'input';
+      const { $defs = {}, ...expected } = z.toJSONSchema(dto.schema, {
+        io,
+        target: 'openapi-3.0',
+        unrepresentable: 'any',
+      }) as JsonSchema;
+      const actual = operations[openApiPath]?.[method]?.responses[status]?.content?.[
+        'application/json'
+      ]?.schema as JsonSchema | undefined;
+      const label = `${method.toUpperCase()} ${openApiPath}`;
+      if (!actual) {
+        diffs.push(`${label}: sin esquema de respuesta ${status}`);
+        continue;
+      }
+      const wanted: JsonSchema = list ? { type: 'array', items: expected } : expected;
+      const found: string[] = [];
+      compareSchemas(
+        wanted,
+        $defs as Record<string, unknown>,
+        actual,
+        componentSchemas,
+        '$',
+        found,
+      );
+      diffs.push(...found.map((diff) => `${label} → ${diff}`));
+    }
+    expect(diffs).toEqual([]);
+  });
+
+  it('no usa type en arreglo (OpenAPI 3.0) y documenta los historiales de revisión como arreglos', () => {
+    const arrayTypes: string[] = [];
+    const visit = (value: unknown, path: string) => {
+      if (Array.isArray(value)) {
+        value.forEach((item, index) => visit(item, `${path}[${index}]`));
+      } else if (isSchema(value)) {
+        if (Array.isArray(value.type)) arrayTypes.push(path);
+        for (const [key, child] of Object.entries(value)) visit(child, `${path}.${key}`);
+      }
+    };
+    visit(document, '#');
+    expect(arrayTypes).toEqual([]);
+
+    for (const path of [
+      '/lesson-plans/{id}/reviews',
+      '/field-journals/{id}/reviews',
+      '/observer-notes/{id}/reviews',
+    ]) {
+      const schema = operations[path]?.get?.responses['200']?.content?.['application/json']
+        ?.schema as JsonSchema | undefined;
+      const resolved = schema ? resolveRef(schema, document.components?.schemas ?? {}) : undefined;
+      expect([path, resolved?.type]).toEqual([path, 'array']);
     }
   });
 

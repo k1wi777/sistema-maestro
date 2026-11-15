@@ -52,7 +52,7 @@ import {
   wheelStampBodySchema,
   wheelStampResultSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../shared/http/zod-dto';
 
 // ---------- Coordinación: entradas ----------
 export class CreateTrainingPlanDto extends createZodDto(createTrainingPlanSchema) {}
@@ -117,5 +117,13 @@ export class ChallengeStepDto extends createZodDto(challengeStepSchema) {}
 export class ChallengeAnswerBodyDto extends createZodDto(challengeAnswerBodySchema) {}
 export class ChallengeAnswerResultDto extends createZodDto(challengeAnswerResultSchema, codec) {}
 // Las uniones no pueden ser clase base: se exponen como DTO valor para `@ZodResponse`.
-export const ActivityGameStepDto = createZodDto(activityGameStepSchema, codec);
-export const ActivityGameAnswerResultDto = createZodDto(activityGameAnswerResultSchema, codec);
+export const ActivityGameStepDto = createZodDto(
+  activityGameStepSchema,
+  codec,
+  'ActivityGameStepDto',
+);
+export const ActivityGameAnswerResultDto = createZodDto(
+  activityGameAnswerResultSchema,
+  codec,
+  'ActivityGameAnswerResultDto',
+);

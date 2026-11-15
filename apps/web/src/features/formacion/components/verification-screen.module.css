@@ -1,0 +1,39 @@
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  max-width: 36rem;
+}
+
+.form > :first-child {
+  flex: 1;
+  min-width: 14rem;
+}
+
+/* El botón queda a la altura del campo, no de su ayuda. */
+.form button {
+  margin-top: 1.75rem;
+}
+
+.result {
+  margin-top: var(--space-6);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.facts dd {
+  margin: 0;
+  color: var(--heading);
+  font-weight: var(--weight-semibold);
+}

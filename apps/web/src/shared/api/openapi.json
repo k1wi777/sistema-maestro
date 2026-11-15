@@ -5869,6 +5869,41 @@
             }
           },
           {
+            "name": "gradeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "learningCorner",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "name": "activityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "actividad",
+                "juego",
+                "proyecto",
+                "recurso_digital",
+                "video"
+              ]
+            }
+          },
+          {
             "name": "favorites",
             "required": false,
             "in": "query",
@@ -5991,6 +6026,113 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SharedActivityDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol insuficiente o aviso de datos sin aceptar",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con datos existentes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Demasiadas peticiones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "SharedActivities"
+        ]
+      }
+    },
+    "/shared-activities/learning-corners": {
+      "get": {
+        "operationId": "SharedActivitiesController_corners",
+        "parameters": [
+          {
+            "name": "levelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedActivityCornersDto_Output"
                 }
               }
             }
@@ -14853,7 +14995,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AugmentedZodDto"
+                  "$ref": "#/components/schemas/ActivityGameStepDto"
                 }
               }
             }
@@ -15010,7 +15152,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AugmentedZodDto"
+                  "$ref": "#/components/schemas/ActivityGameAnswerResultDto"
                 }
               }
             }
@@ -15117,7 +15259,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AugmentedZodDto"
+                  "$ref": "#/components/schemas/ActivityGameStepDto"
                 }
               }
             }
@@ -15319,7 +15461,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AugmentedZodDto_Output"
+                  "$ref": "#/components/schemas/AssistantAnswerDto_Output"
                 }
               }
             }
@@ -16342,10 +16484,8 @@
                   "type": "string"
                 },
                 "entity": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "entityId": {
                   "type": "string",
@@ -16354,10 +16494,8 @@
                   "nullable": true
                 },
                 "detail": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
@@ -16435,10 +16573,8 @@
             "type": "string"
           },
           "entity": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "entityId": {
             "type": "string",
@@ -16447,10 +16583,8 @@
             "nullable": true
           },
           "detail": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "dataBefore": {
             "nullable": true
@@ -17350,16 +17484,12 @@
                   "maximum": 9007199254740991
                 },
                 "startDate": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "endDate": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "createdAt": {
                   "type": "string",
@@ -17457,16 +17587,12 @@
             "maximum": 9007199254740991
           },
           "startDate": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "endDate": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -18199,82 +18325,56 @@
                   ]
                 },
                 "dateFrom": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "dateTo": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "topic": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "crossCuttingProject": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "expectedPerformance": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "learningCorner": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "curiocityStage": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "explorationMoment": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "developmentMoment": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "socializationMoment": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "closingMoment": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "resources": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "reasonableAdjustments": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "status": {
                   "type": "string",
@@ -18306,10 +18406,8 @@
                         "type": "string"
                       },
                       "name": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
+                        "type": "string",
+                        "nullable": true
                       },
                       "url": {
                         "type": "string"
@@ -18504,82 +18602,56 @@
             ]
           },
           "dateFrom": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "dateTo": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "topic": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "crossCuttingProject": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "expectedPerformance": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "learningCorner": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "curiocityStage": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "explorationMoment": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "developmentMoment": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "socializationMoment": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "closingMoment": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "resources": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "reasonableAdjustments": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string",
@@ -18611,10 +18683,8 @@
                   "type": "string"
                 },
                 "name": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "url": {
                   "type": "string"
@@ -19057,10 +19127,8 @@
               ]
             },
             "comment": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string",
+              "nullable": true
             },
             "reviewer": {
               "type": "object",
@@ -19171,10 +19239,8 @@
             "type": "string"
           },
           "name": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "url": {
             "type": "string"
@@ -19222,16 +19288,12 @@
                   "maximum": 9007199254740991
                 },
                 "startDate": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "endDate": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
@@ -19463,14 +19525,44 @@
                   ],
                   "nullable": true
                 },
+                "grade": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                },
+                "learningCorner": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "activityType": {
+                  "type": "string",
+                  "enum": [
+                    "actividad",
+                    "juego",
+                    "proyecto",
+                    "recurso_digital",
+                    "video"
+                  ]
+                },
                 "title": {
                   "type": "string"
                 },
                 "objective": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "durationMinutes": {
                   "type": "integer",
@@ -19479,19 +19571,15 @@
                   "nullable": true
                 },
                 "materials": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "steps": {
                   "type": "string"
                 },
                 "link": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "isFavorite": {
                   "type": "boolean"
@@ -19512,6 +19600,9 @@
                 "author",
                 "level",
                 "area",
+                "grade",
+                "learningCorner",
+                "activityType",
                 "title",
                 "objective",
                 "durationMinutes",
@@ -19552,6 +19643,22 @@
           "totalItems",
           "totalPages"
         ]
+      },
+      "SharedActivityCornersDto_Output": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
       },
       "SharedActivityDto": {
         "type": "object",
@@ -19614,14 +19721,44 @@
             ],
             "nullable": true
           },
+          "grade": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "nullable": true
+          },
+          "learningCorner": {
+            "type": "string",
+            "nullable": true
+          },
+          "activityType": {
+            "type": "string",
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
+          },
           "title": {
             "type": "string"
           },
           "objective": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "durationMinutes": {
             "type": "integer",
@@ -19630,19 +19767,15 @@
             "nullable": true
           },
           "materials": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "steps": {
             "type": "string"
           },
           "link": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "isFavorite": {
             "type": "boolean"
@@ -19663,6 +19796,9 @@
           "author",
           "level",
           "area",
+          "grade",
+          "learningCorner",
+          "activityType",
           "title",
           "objective",
           "durationMinutes",
@@ -19720,6 +19856,28 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
+          },
+          "gradeId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "learningCorner": {
+            "type": "string",
+            "maxLength": 60,
+            "nullable": true
+          },
+          "activityType": {
+            "default": "actividad",
+            "type": "string",
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           }
         },
         "required": [
@@ -19774,6 +19932,27 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
+          },
+          "gradeId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "learningCorner": {
+            "type": "string",
+            "maxLength": 60,
+            "nullable": true
+          },
+          "activityType": {
+            "type": "string",
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           }
         },
         "additionalProperties": false
@@ -20032,10 +20211,8 @@
                   "type": "string"
                 },
                 "lesson": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "eventType": {
                   "type": "string",
@@ -20055,16 +20232,12 @@
                   "type": "string"
                 },
                 "actions": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "reflection": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "createdAt": {
                   "type": "string",
@@ -20416,10 +20589,8 @@
               ]
             },
             "comment": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string",
+              "nullable": true
             },
             "reviewer": {
               "type": "object",
@@ -20547,25 +20718,19 @@
                   "type": "string"
                 },
                 "studentVersion": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "actions": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "familyInformed": {
                   "type": "boolean"
                 },
                 "followUp": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "status": {
                   "type": "string",
@@ -20698,25 +20863,19 @@
             "type": "string"
           },
           "studentVersion": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "actions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "familyInformed": {
             "type": "boolean"
           },
           "followUp": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string",
@@ -21018,10 +21177,8 @@
               ]
             },
             "comment": {
-              "type": [
-                "string",
-                "null"
-              ]
+              "type": "string",
+              "nullable": true
             },
             "reviewer": {
               "type": "object",
@@ -21104,10 +21261,8 @@
                   "type": "string"
                 },
                 "schoolYear": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "createdAt": {
                   "type": "string",
@@ -21120,10 +21275,8 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 },
                 "areaName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "moduleCounts": {
                   "type": "object",
@@ -21185,10 +21338,8 @@
           },
           "schoolYear": {
             "default": null,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -21214,10 +21365,8 @@
             "type": "string"
           },
           "schoolYear": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "createdAt": {
             "type": "string",
@@ -21248,10 +21397,8 @@
             "maxLength": 120
           },
           "schoolYear": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -21277,10 +21424,8 @@
                 "type": "string"
               },
               "schoolYear": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "createdAt": {
                 "type": "string",
@@ -21321,10 +21466,8 @@
                   "type": "string"
                 },
                 "subtitle": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "sortOrder": {
                   "type": "integer",
@@ -21352,10 +21495,8 @@
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       },
                       "number": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
+                        "type": "string",
+                        "nullable": true
                       },
                       "sortOrder": {
                         "type": "integer",
@@ -21457,10 +21598,8 @@
             "type": "string"
           },
           "subtitle": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "sortOrder": {
             "type": "integer",
@@ -21602,10 +21741,8 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "number": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "sortOrder": {
             "type": "integer",
@@ -21616,28 +21753,20 @@
             "type": "string"
           },
           "summary": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoTitle": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "presentationUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoSource": {
             "type": "string",
@@ -21649,10 +21778,8 @@
             "nullable": true
           },
           "videoEmbedUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoFile": {
             "type": "object",
@@ -21663,10 +21790,8 @@
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               },
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "contentType": {
                 "type": "string"
@@ -21695,10 +21820,8 @@
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               },
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "contentType": {
                 "type": "string"
@@ -21787,10 +21910,8 @@
             "type": "string"
           },
           "subtitle": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "sortOrder": {
             "type": "integer",
@@ -21818,10 +21939,8 @@
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                 },
                 "number": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "sortOrder": {
                   "type": "integer",
@@ -21898,10 +22017,8 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "number": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "sortOrder": {
             "type": "integer",
@@ -21912,28 +22029,20 @@
             "type": "string"
           },
           "summary": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoTitle": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "presentationUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoSource": {
             "type": "string",
@@ -21945,10 +22054,8 @@
             "nullable": true
           },
           "videoEmbedUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoFile": {
             "type": "object",
@@ -21959,10 +22066,8 @@
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               },
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "contentType": {
                 "type": "string"
@@ -21991,10 +22096,8 @@
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               },
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "contentType": {
                 "type": "string"
@@ -22059,16 +22162,12 @@
                   "maximum": 9007199254740991
                 },
                 "title": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "keyIdeas": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
@@ -22106,16 +22205,12 @@
                   "type": "string"
                 },
                 "feedback": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "trueFalseAnswer": {
-                  "type": [
-                    "boolean",
-                    "null"
-                  ]
+                  "type": "boolean",
+                  "nullable": true
                 },
                 "options": {
                   "type": "array",
@@ -22131,10 +22226,8 @@
                         "type": "string"
                       },
                       "isCorrect": {
-                        "type": [
-                          "boolean",
-                          "null"
-                        ]
+                        "type": "boolean",
+                        "nullable": true
                       },
                       "correctPosition": {
                         "type": "integer",
@@ -22194,10 +22287,8 @@
                   "type": "boolean"
                 },
                 "instructions": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "status": {
                   "type": "string",
@@ -22350,16 +22441,12 @@
             "maximum": 9007199254740991
           },
           "title": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "keyIdeas": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -22410,16 +22497,12 @@
             "type": "string"
           },
           "feedback": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "trueFalseAnswer": {
-            "type": "array",
-            "items": {
-              "type": "boolean"
-            }
+            "type": "boolean",
+            "nullable": true
           },
           "options": {
             "type": "array",
@@ -22435,10 +22518,8 @@
                   "type": "string"
                 },
                 "isCorrect": {
-                  "type": [
-                    "boolean",
-                    "null"
-                  ]
+                  "type": "boolean",
+                  "nullable": true
                 },
                 "correctPosition": {
                   "type": "integer",
@@ -22532,10 +22613,8 @@
             "type": "boolean"
           },
           "instructions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "type": "string",
@@ -22715,14 +22794,18 @@
                     "ruta"
                   ]
                 },
+                "moduleId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "nullable": true
+                },
                 "title": {
                   "type": "string"
                 },
                 "planName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "code": {
                   "type": "string"
@@ -22736,6 +22819,7 @@
               "required": [
                 "id",
                 "kind",
+                "moduleId",
                 "title",
                 "planName",
                 "code",
@@ -22773,10 +22857,8 @@
             "type": "string"
           },
           "planName": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "issuedAt": {
             "type": "string",
@@ -22815,16 +22897,12 @@
                 "nullable": true
               },
               "areaName": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "schoolYear": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               }
             },
             "required": [
@@ -22847,10 +22925,8 @@
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                 },
                 "number": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "title": {
                   "type": "string"
@@ -23003,10 +23079,8 @@
                   "type": "string"
                 },
                 "areaName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "modules": {
                   "type": "array",
@@ -23019,10 +23093,8 @@
                         "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                       },
                       "number": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
+                        "type": "string",
+                        "nullable": true
                       },
                       "title": {
                         "type": "string"
@@ -23090,14 +23162,18 @@
                     "ruta"
                   ]
                 },
+                "moduleId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "nullable": true
+                },
                 "title": {
                   "type": "string"
                 },
                 "planName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "code": {
                   "type": "string"
@@ -23111,6 +23187,7 @@
               "required": [
                 "id",
                 "kind",
+                "moduleId",
                 "title",
                 "planName",
                 "code",
@@ -23154,10 +23231,8 @@
                   "nullable": true
                 },
                 "areaName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "totals": {
                   "type": "object",
@@ -23193,10 +23268,8 @@
                         "type": "string"
                       },
                       "subtitle": {
-                        "type": [
-                          "string",
-                          "null"
-                        ]
+                        "type": "string",
+                        "nullable": true
                       },
                       "modules": {
                         "type": "array",
@@ -23209,19 +23282,15 @@
                               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                             },
                             "number": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
+                              "type": "string",
+                              "nullable": true
                             },
                             "title": {
                               "type": "string"
                             },
                             "summary": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
+                              "type": "string",
+                              "nullable": true
                             },
                             "videoSource": {
                               "type": "string",
@@ -23233,10 +23302,8 @@
                               "nullable": true
                             },
                             "videoEmbedUrl": {
-                              "type": [
-                                "string",
-                                "null"
-                              ]
+                              "type": "string",
+                              "nullable": true
                             },
                             "state": {
                               "type": "string",
@@ -23276,6 +23343,18 @@
                               "type": "integer",
                               "minimum": -9007199254740991,
                               "maximum": 9007199254740991,
+                              "nullable": true
+                            },
+                            "videoViewedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                              "nullable": true
+                            },
+                            "presentationViewedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
                               "nullable": true
                             },
                             "completedAt": {
@@ -23366,6 +23445,8 @@
                             "state",
                             "steps",
                             "bestScore",
+                            "videoViewedAt",
+                            "presentationViewedAt",
                             "completedAt",
                             "activities"
                           ],
@@ -23433,25 +23514,19 @@
             "additionalProperties": false
           },
           "number": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "title": {
             "type": "string"
           },
           "summary": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoSource": {
             "type": "string",
@@ -23463,10 +23538,8 @@
             "nullable": true
           },
           "videoEmbedUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "videoFile": {
             "type": "object",
@@ -23477,10 +23550,8 @@
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               },
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "contentType": {
                 "type": "string"
@@ -23501,16 +23572,12 @@
             "nullable": true
           },
           "videoTitle": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "presentationUrl": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "presentationFile": {
             "type": "object",
@@ -23521,10 +23588,8 @@
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               },
               "name": {
-                "type": [
-                  "string",
-                  "null"
-                ]
+                "type": "string",
+                "nullable": true
               },
               "contentType": {
                 "type": "string"
@@ -23555,16 +23620,12 @@
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                 },
                 "title": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "keyIdeas": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
@@ -23685,10 +23746,8 @@
                       "type": "boolean"
                     },
                     "instructions": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": "string",
+                      "nullable": true
                     },
                     "progress": {
                       "type": "object",
@@ -23852,10 +23911,8 @@
                       "type": "boolean"
                     },
                     "instructions": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": "string",
+                      "nullable": true
                     },
                     "progress": {
                       "type": "object",
@@ -23964,10 +24021,8 @@
                       "type": "boolean"
                     },
                     "instructions": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": "string",
+                      "nullable": true
                     },
                     "progress": {
                       "type": "object",
@@ -24076,10 +24131,8 @@
                       "type": "boolean"
                     },
                     "instructions": {
-                      "type": [
-                        "string",
-                        "null"
-                      ]
+                      "type": "string",
+                      "nullable": true
                     },
                     "progress": {
                       "type": "object",
@@ -24391,10 +24444,8 @@
             ]
           },
           "feedback": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "pointsGained": {
             "type": "integer",
@@ -24554,7 +24605,7 @@
         ],
         "additionalProperties": false
       },
-      "AugmentedZodDto": {
+      "ActivityGameStepDto": {
         "oneOf": [
           {
             "type": "object",
@@ -24787,6 +24838,216 @@
           }
         ]
       },
+      "ActivityGameAnswerResultDto": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "conecta"
+                ]
+              },
+              "correct": {
+                "type": "boolean"
+              },
+              "firstAttempt": {
+                "type": "boolean"
+              },
+              "pointsGained": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "streak": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "totalPoints": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "connected": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "roundOver": {
+                "type": "boolean"
+              },
+              "finished": {
+                "type": "boolean"
+              },
+              "result": {
+                "type": "object",
+                "properties": {
+                  "score": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "points": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "passed": {
+                    "type": "boolean"
+                  },
+                  "bestScore": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "bestPoints": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "completedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "score",
+                  "points",
+                  "passed",
+                  "bestScore",
+                  "bestPoints",
+                  "completedAt"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "type",
+              "correct",
+              "firstAttempt",
+              "pointsGained",
+              "streak",
+              "totalPoints",
+              "connected",
+              "roundOver",
+              "finished"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "verdad_o_mito"
+                ]
+              },
+              "correct": {
+                "type": "boolean"
+              },
+              "timedOut": {
+                "type": "boolean"
+              },
+              "isTrue": {
+                "type": "boolean"
+              },
+              "explanation": {
+                "type": "string"
+              },
+              "lives": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "pointsGained": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "streak": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "totalPoints": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "position": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "finished": {
+                "type": "boolean"
+              },
+              "result": {
+                "type": "object",
+                "properties": {
+                  "score": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "points": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "passed": {
+                    "type": "boolean"
+                  },
+                  "bestScore": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "bestPoints": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "completedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "score",
+                  "points",
+                  "passed",
+                  "bestScore",
+                  "bestPoints",
+                  "completedAt"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "type",
+              "correct",
+              "timedOut",
+              "isTrue",
+              "explanation",
+              "lives",
+              "pointsGained",
+              "streak",
+              "totalPoints",
+              "position",
+              "finished"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
       "FaqListDto_Output": {
         "type": "object",
         "properties": {
@@ -24810,10 +25071,8 @@
                   "type": "string"
                 },
                 "source": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 }
               },
               "required": [
@@ -24846,7 +25105,7 @@
         ],
         "additionalProperties": false
       },
-      "AugmentedZodDto_Output": {
+      "AssistantAnswerDto_Output": {
         "oneOf": [
           {
             "type": "object",
@@ -24875,10 +25134,8 @@
                     "type": "string"
                   },
                   "source": {
-                    "type": [
-                      "string",
-                      "null"
-                    ]
+                    "type": "string",
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -24989,16 +25246,12 @@
                   "type": "string"
                 },
                 "source": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "keywords": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "isActive": {
                   "type": "boolean"
@@ -25081,16 +25334,12 @@
             "type": "string"
           },
           "source": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "keywords": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "isActive": {
             "type": "boolean"
@@ -25226,10 +25475,8 @@
                   "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                 },
                 "text": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
+                  "type": "string",
+                  "nullable": true
                 },
                 "times": {
                   "type": "integer",
@@ -25358,10 +25605,8 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
           "text": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "type": "string",
+            "nullable": true
           },
           "times": {
             "type": "integer",

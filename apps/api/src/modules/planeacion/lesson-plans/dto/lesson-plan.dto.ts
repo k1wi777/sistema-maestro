@@ -9,7 +9,7 @@ import {
   updateLessonPlanSchema,
   voidLessonPlanSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 import { z } from 'zod';
 
 export class LessonPlanDto extends createZodDto(lessonPlanSchema, { codec: true }) {}

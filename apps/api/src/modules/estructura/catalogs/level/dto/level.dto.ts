@@ -5,7 +5,7 @@ import {
   levelSchema,
   updateLevelSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../../shared/http/zod-dto';
 
 export class LevelDto extends createZodDto(levelSchema, { codec: true }) {}
 export class LevelPageDto extends createZodDto(createPageSchema(levelSchema), { codec: true }) {}

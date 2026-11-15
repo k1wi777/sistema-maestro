@@ -1,0 +1,107 @@
+/*
+ * Conecta. Se apoya en el marco del Desafío (challenge.module.css) y trae solo sus columnas. Estilo
+ * de .bn-i y .bn-d del tablero: conceptos claros, datos azules, conectados en verde. Colores de
+ * tokens.css; ningún texto por debajo de 12 px y objetivos táctiles de al menos 44 px.
+ */
+.hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.92;
+}
+
+.status {
+  font-weight: var(--weight-bold);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: var(--space-3);
+}
+
+.column {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.concept,
+.fact {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  box-shadow:
+    inset 0 1px 0 var(--game-white-22),
+    inset 0 -3px 0 var(--game-black-18);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  text-align: left;
+  transition: transform 0.08s;
+}
+
+.concept {
+  background: var(--on-solid);
+  color: var(--game-ink);
+  font-weight: var(--weight-bold);
+}
+
+.fact {
+  background: linear-gradient(180deg, var(--game-blue-top), var(--game-blue-bottom));
+  color: var(--on-solid);
+  font-weight: var(--weight-semibold);
+}
+
+.concept:hover:not(:disabled):not([aria-disabled='true']),
+.fact:hover:not(:disabled):not([aria-disabled='true']) {
+  transform: translateY(-1px);
+}
+
+.concept[aria-disabled='true'],
+.fact[aria-disabled='true'] {
+  cursor: default;
+}
+
+.concept:focus-visible,
+.fact:focus-visible {
+  outline: 3px solid var(--on-solid);
+  outline-offset: 3px;
+}
+
+.selected {
+  box-shadow: 0 0 0 4px var(--game-streak);
+}
+
+.connected,
+.connected:disabled {
+  background: linear-gradient(180deg, var(--game-ok-top), var(--game-ok-bottom));
+  color: var(--on-solid);
+  cursor: default;
+  opacity: 1;
+}
+
+@media (max-width: 560px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .concept,
+  .fact {
+    transition: none;
+  }
+
+  .concept:hover:not(:disabled),
+  .fact:hover:not(:disabled) {
+    transform: none;
+  }
+}

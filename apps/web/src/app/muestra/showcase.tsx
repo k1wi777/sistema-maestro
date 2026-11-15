@@ -4,11 +4,13 @@ import { useState } from 'react';
 
 import {
   ActionBar,
+  ActionMenu,
   BrandMark,
   Button,
   Card,
   Checkbox,
   DataTable,
+  Dialog,
   Icon,
   Notice,
   Observation,
@@ -113,6 +115,8 @@ export function Showcase() {
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [visited, setVisited] = useState<string[]>([]);
   const [objectives, setObjectives] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [lastAction, setLastAction] = useState('Ninguna todavía');
 
   function changeStep(nextId: string) {
     // Aquí la feature real guardaría el paso que se deja; la muestra lo simula en memoria.
@@ -372,6 +376,52 @@ export function Showcase() {
             values={multi}
             onChange={setMulti}
           />
+        </Card>
+
+        <Card title="Diálogo y menú de acciones">
+          <div className={styles.row}>
+            <Button variant="outline" onClick={() => setDialogOpen(true)}>
+              Abrir diálogo
+            </Button>
+            <ActionMenu
+              label="Más"
+              icon="puntos"
+              items={[
+                {
+                  id: 'all',
+                  label: 'Ver todo el formulario',
+                  icon: 'capas',
+                  onSelect: () => setLastAction('Ver todo el formulario'),
+                },
+                {
+                  id: 'pdf',
+                  label: 'Exportar PDF',
+                  icon: 'bajar',
+                  onSelect: () => setLastAction('Exportar PDF'),
+                },
+                { id: 'off', label: 'Acción no disponible', disabled: true, onSelect: () => {} },
+              ]}
+            />
+          </div>
+          <p className={styles.small}>Última acción del menú: {lastAction}</p>
+          <Dialog
+            open={dialogOpen}
+            title="Anular planeación"
+            description="La planeación queda anulada y no se puede editar; coordinación conserva la constancia."
+            onClose={() => setDialogOpen(false)}
+            footer={
+              <>
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="danger" onClick={() => setDialogOpen(false)}>
+                  Anular planeación
+                </Button>
+              </>
+            }
+          >
+            <TextArea label="Motivo" required />
+          </Dialog>
         </Card>
 
         <section aria-labelledby="session-title">

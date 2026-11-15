@@ -9,7 +9,7 @@ import {
   userSchema,
   userStatusSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 import { z } from 'zod';
 import { USER_SORT_FIELDS } from '../user.repository';
 

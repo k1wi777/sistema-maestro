@@ -5,7 +5,7 @@ import {
   createPageSchema,
   updateAreaSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../../shared/http/zod-dto';
 
 export class AreaDto extends createZodDto(areaSchema, { codec: true }) {}
 export class AreaPageDto extends createZodDto(createPageSchema(areaSchema), { codec: true }) {}

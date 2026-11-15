@@ -1,0 +1,150 @@
+.text {
+  margin: 0 0 var(--space-3);
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.fileName {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.video {
+  display: block;
+  width: 100%;
+  max-height: 32rem;
+  background: var(--game-bg-bottom);
+  border-radius: var(--radius-lg);
+}
+
+.frame {
+  display: block;
+  width: 100%;
+  height: min(70vh, 40rem);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.image {
+  display: block;
+  width: 100%;
+  max-height: 40rem;
+  object-fit: contain;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.complement {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--line-strong);
+}
+
+/* ---------- Diapositivas ---------- */
+.deck {
+  border-radius: var(--radius-lg);
+}
+
+.deck:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* La diapositiva es una «hoja» clara en ambos temas, como en el tablero. */
+.slide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 16 / 9;
+  max-width: 100%;
+  overflow: hidden;
+  padding: clamp(0.875rem, 3.2%, 2.125rem) clamp(1rem, 4.5%, 3rem);
+  background: var(--on-solid);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--game-ink);
+}
+
+.slideHead {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--seal-ring);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.slideTitle {
+  margin: clamp(0.375rem, 2%, 1.125rem) 0 clamp(0.375rem, 1.6%, 0.875rem);
+  color: var(--game-ink);
+  font-size: clamp(1.0625rem, 3vw, 1.875rem);
+}
+
+.slideIdeas {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.1875rem, 1%, 0.5625rem);
+  margin: 0;
+  padding-left: 1.1em;
+  overflow: auto;
+  font-size: clamp(0.8125rem, 1.75vw, 1.0625rem);
+  line-height: 1.4;
+}
+
+.slideIdeas li::marker {
+  color: var(--seal-ring);
+}
+
+.slideBar {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--game-ink) 0 70%,
+    var(--on-solid) 70% 72%,
+    var(--seal-ring) 72%
+  );
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.count {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 600px) {
+  .slide {
+    aspect-ratio: auto;
+    min-height: 18.75rem;
+    padding-bottom: 1.625rem;
+  }
+
+  .slideIdeas {
+    overflow: visible;
+    font-size: var(--text-base);
+  }
+}

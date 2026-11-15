@@ -7,6 +7,7 @@ import {
   RecordStatus,
   ReviewAction,
   ReviewRecordType,
+  SharedActivityType,
   StoredFilePurpose,
   StoredFileStatus,
   CHALLENGE_DEFAULT_APPROVAL_THRESHOLD,
@@ -39,6 +40,7 @@ import {
   insertReview,
   insertSchoolYear,
   insertSession,
+  insertSharedActivity,
   insertStoredFile,
   insertTeacherAssignment,
   insertTrainingActivity,
@@ -201,6 +203,14 @@ const CASES: CheckCase[] = [
     allowed: Object.values(TeacherAssignmentStatus),
     rejected: ['inactiva', 'Activa'],
     insert: insertTeacherAssignment,
+    updatable: true,
+  },
+  {
+    table: 'actividad_repositorio',
+    column: 'tipo',
+    allowed: Object.values(SharedActivityType),
+    rejected: ['Juego', 'taller'],
+    insert: insertSharedActivity,
     updatable: true,
   },
   {
@@ -646,6 +656,46 @@ describe('check constraints', () => {
           [(await insertSession(db.client)).id],
         );
       },
+    );
+  });
+});
+
+describe('actividad_repositorio: grado, rincón y tipo', () => {
+  it('rejects a grade that does not exist', async () => {
+    await expectSqlError(
+      db.client,
+      FOREIGN_KEY_VIOLATION,
+      `INSERT INTO actividad_repositorio (autor_id, titulo, pasos, grado_id)
+       VALUES ($1, 'Actividad', 'Paso', gen_random_uuid())`,
+      [(await insertUser(db.client)).id],
+    );
+  });
+
+  it('leaves a row inserted without the new columns as an activity without grade or corner', async () => {
+    const row = await insertSharedActivity(db.client);
+
+    expect(row).toMatchObject({ tipo: 'actividad', grado_id: null, rincon: null });
+  });
+
+  it('stores the grade and the corner when given', async () => {
+    const grade = await insertGrade(db.client);
+
+    const row = await insertSharedActivity(db.client, {
+      grado_id: grade.id,
+      nivel_id: grade.nivel_id,
+      rincon: 'Sweet Home',
+    });
+
+    expect(row).toMatchObject({ grado_id: grade.id, rincon: 'Sweet Home' });
+  });
+
+  it('limits the corner to 60 characters', async () => {
+    await expectSqlError(
+      db.client,
+      '22001',
+      `INSERT INTO actividad_repositorio (autor_id, titulo, pasos, rincon)
+       VALUES ($1, 'Actividad', 'Paso', $2)`,
+      [(await insertUser(db.client)).id, 'x'.repeat(61)],
     );
   });
 });

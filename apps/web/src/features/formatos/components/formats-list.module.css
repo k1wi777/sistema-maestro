@@ -1,0 +1,75 @@
+/* Estilos comunes de las dos listas de la sección Formatos (diario y observador). */
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.intro {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--muted);
+}
+
+.count {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* La tarjeta entera abre el registro: el enlace se estira sobre ella. */
+.item {
+  position: relative;
+  display: flex;
+}
+
+.item > * {
+  flex: 1;
+}
+
+.stretched::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+}
+
+.excerpt {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--fg);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.flag {
+  margin: 0;
+  color: var(--warn);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+}

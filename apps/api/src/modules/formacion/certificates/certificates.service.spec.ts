@@ -325,7 +325,7 @@ describe('CertificatesService downloads and verification', () => {
     expect(own.items.map((item) => item.id)).toContain(moduleCertificate.id);
     expect(other.items).toEqual([]);
     expect(Object.keys(own.items[0] ?? {}).sort()).toEqual(
-      ['code', 'id', 'issuedAt', 'kind', 'planName', 'title'].sort(),
+      ['code', 'id', 'issuedAt', 'kind', 'moduleId', 'planName', 'title'].sort(),
     );
   });
 

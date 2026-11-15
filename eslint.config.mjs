@@ -19,6 +19,17 @@ const lucideOnlyInIcons = {
     'Los iconos se piden con <Icon name="…" /> de @/shared/ui; lucide-react solo se importa en shared/ui/icons.',
 };
 
+const zodDtoRestriction = {
+  paths: [
+    {
+      name: 'nestjs-zod',
+      importNames: ['createZodDto'],
+      message:
+        'Importa createZodDto de shared/http/zod-dto (ruta relativa), que corrige los nullable del contrato OpenAPI.',
+    },
+  ],
+};
+
 const importRule = (options) => ({
   'no-restricted-imports': ['error', options],
 });
@@ -66,11 +77,20 @@ export default defineConfig(
     files: ['**/*.{js,mjs,cjs}', '**/prisma.config.ts'],
     extends: [tseslint.configs.disableTypeChecked],
   },
+  // Los DTO se crean con el envoltorio de shared/http/zod-dto.ts, que corrige los
+  // `nullable` del contrato OpenAPI; solo ese archivo importa createZodDto de nestjs-zod.
+  // (La regla siguiente la repite porque en configuración plana la última sustituye a la anterior.)
+  {
+    files: ['apps/api/src/**/*.ts', 'apps/api/test/**/*.ts'],
+    ignores: ['apps/api/src/shared/http/zod-dto.ts'],
+    rules: { 'no-restricted-imports': ['error', zodDtoRestriction] },
+  },
   // Solo el repository toca la base: Prisma se importa únicamente desde la
   // infraestructura de base de datos y los prisma-*.repository.ts.
   {
     files: ['apps/api/src/**/*.ts', 'apps/api/test/integration/example/**/*.ts'],
     ignores: [
+      'apps/api/src/shared/http/zod-dto.ts',
       'apps/api/src/shared/database/**',
       'apps/api/src/shared/repository/prisma-*.ts',
       '**/prisma-*.repository.ts',
@@ -81,6 +101,7 @@ export default defineConfig(
       'no-restricted-imports': [
         'error',
         {
+          ...zodDtoRestriction,
           patterns: [
             {
               regex: '(^@prisma/|generated/prisma)',

@@ -3,7 +3,7 @@ import {
   lessonPlanResourceParamsSchema,
   lessonPlanResourceSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../../shared/http/zod-dto';
 
 export class LessonPlanResourceDto extends createZodDto(lessonPlanResourceSchema, {
   codec: true,

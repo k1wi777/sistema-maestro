@@ -174,6 +174,29 @@ function required<T>(map: Map<string, T>, key: string, what: string): T {
   return value;
 }
 
+/** Resuelve el grado de una actividad del repositorio y exige que sea del nivel de la actividad. */
+async function sharedActivityGradeId(
+  client: Client,
+  references: References,
+  item: { key: string; grade: string | null },
+  levelId: string,
+): Promise<string | null> {
+  if (item.grade === null) {
+    return null;
+  }
+  const gradeId = required(references.grades, item.grade, 'el grado');
+  const grade = await client.query<{ nivel_id: string }>(
+    `SELECT nivel_id FROM grado WHERE id = $1`,
+    [gradeId],
+  );
+  if (grade.rows[0]?.nivel_id !== levelId) {
+    throw new Error(
+      `El grado «${item.grade}» de la actividad demo «${item.key}» no es del nivel de la actividad`,
+    );
+  }
+  return gradeId;
+}
+
 /** Comprueba que una actividad solo figure completada si cumple su regla (Decisión 3). */
 function assertActivityScript(script: DemoActivityScript, activity: ActivityFacts): void {
   const config = activity.config as { umbral_aprobacion?: number; tarjetas?: unknown[] };
@@ -340,12 +363,17 @@ export async function loadDemoData(
   await loadTraining(references, ids, insert);
 
   for (const item of DEMO_SHARED_ACTIVITIES) {
+    const levelId = required(references.levels, item.level, 'el nivel');
+    const gradeId = await sharedActivityGradeId(client, references, item, levelId);
     ids.set(
       `activity:${item.key}`,
       await insert('actividad_repositorio', {
         autor_id: idOf(item.author),
-        nivel_id: required(references.levels, item.level, 'el nivel'),
+        nivel_id: levelId,
         area_id: item.area === null ? null : required(references.areas, item.area, 'el área'),
+        grado_id: gradeId,
+        rincon: item.learningCorner,
+        tipo: item.activityType,
         titulo: item.title,
         objetivo: item.objective,
         duracion_min: item.durationMinutes,

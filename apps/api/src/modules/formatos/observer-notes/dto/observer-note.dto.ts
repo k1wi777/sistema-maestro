@@ -9,7 +9,7 @@ import {
   updateObserverNoteSchema,
   voidRecordSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 import { z } from 'zod';
 
 export class ObserverNoteDto extends createZodDto(observerNoteSchema, { codec: true }) {}

@@ -1,12 +1,20 @@
-import type { SharedActivity, SharedActivityFilters, SharedActivitySortField } from '@gns/shared';
+import type {
+  SharedActivity,
+  SharedActivityFilters,
+  SharedActivitySortField,
+  SharedActivityType,
+} from '@gns/shared';
 import type { ReadRepository } from '../../../shared/repository/repository';
 
-/** Actividad con autor, nivel y área anidados; `isFavorite` depende de quien consulta y lo añade el servicio. */
+/** Actividad con autor, nivel, área y grado anidados; `isFavorite` depende de quien consulta y lo añade el servicio. */
 export type SharedActivityView = Omit<SharedActivity, 'isFavorite'>;
 
 export type SharedActivityContent = {
   levelId: string | null;
   areaId: string | null;
+  gradeId: string | null;
+  learningCorner: string | null;
+  activityType: SharedActivityType;
   title: string;
   objective: string | null;
   durationMinutes: number | null;
@@ -46,6 +54,8 @@ export interface SharedActivityRepository extends ReadRepository<
   /** Idempotente: no falla si no estaba marcada. */
   removeFavorite(userId: string, activityId: string): Promise<void>;
   countFavorites(activityId: string): Promise<number>;
+  /** Rincones distintos (plegados), con la variante más reciente, de la A a la Z y con tope. */
+  findCorners(levelId?: string): Promise<string[]>;
 }
 
 export const SHARED_ACTIVITY_REPOSITORY = Symbol('SHARED_ACTIVITY_REPOSITORY');

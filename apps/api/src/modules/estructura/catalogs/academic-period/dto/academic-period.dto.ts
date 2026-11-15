@@ -5,7 +5,7 @@ import {
   createPageSchema,
   updateAcademicPeriodSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../../shared/http/zod-dto';
 
 export class AcademicPeriodDto extends createZodDto(academicPeriodSchema, { codec: true }) {}
 export class AcademicPeriodPageDto extends createZodDto(createPageSchema(academicPeriodSchema), {

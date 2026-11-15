@@ -5,7 +5,7 @@ import {
   isoDateTimeSchema,
   queryBoolean,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../src/shared/http/zod-dto';
 import { z } from 'zod';
 import { FAQ_EXAMPLE_SORT_FIELDS } from './faq-example.repository';
 

@@ -297,7 +297,9 @@ describe('teacher projection', () => {
     const route = projectRoute(
       '2026-2027',
       [plan(2, ID(91), 'Matemáticas'), plan(1, null, null)],
-      new Map([[ID(102), progress({ moduleId: ID(102), completedAt: UPDATED })]]),
+      new Map([
+        [ID(102), progress({ moduleId: ID(102), videoViewedAt: UPDATED, completedAt: UPDATED })],
+      ]),
       new Map(),
     );
 
@@ -305,6 +307,10 @@ describe('teacher projection', () => {
     expect(route.plans[0]?.sections.map((section) => section.title)).toEqual(['Con módulos']);
     expect(route.plans[0]?.totals).toEqual({ modules: 1, completed: 1 });
     expect(route.plans[1]?.totals).toEqual({ modules: 1, completed: 0 });
+    expect(route.plans[0]?.sections[0]?.modules[0]).toMatchObject({
+      videoViewedAt: UPDATED,
+      presentationViewedAt: null,
+    });
     expect(teacherRouteSchema.safeEncode(route).success).toBe(true);
   });
 });

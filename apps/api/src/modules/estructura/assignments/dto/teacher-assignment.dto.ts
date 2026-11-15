@@ -7,7 +7,7 @@ import {
   updateTeacherAssignmentSchema,
   updateTeacherAssignmentStatusSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 
 export class TeacherAssignmentDto extends createZodDto(teacherAssignmentSchema, { codec: true }) {}
 export class TeacherAssignmentPageDto extends createZodDto(

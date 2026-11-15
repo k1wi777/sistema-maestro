@@ -8,6 +8,8 @@ const kinds = Object.values(CertificateKind) as [CertificateKind, ...Certificate
 export const certificateSummarySchema = z.strictObject({
   id: z.uuid(),
   kind: z.enum(kinds),
+  /** Módulo certificado; `null` en el certificado de la ruta completa. */
+  moduleId: z.uuid().nullable(),
   title: z.string(),
   planName: z.string().nullable(),
   code: z.string(),

@@ -1,0 +1,122 @@
+/* Estilos comunes de las pantallas de detalle (hoja del diario y anotación del observador). */
+
+/* En impresión la pantalla entera se oculta: solo se imprime la hoja de JournalPrint. */
+@media print {
+  .screen {
+    display: none;
+  }
+}
+
+.back {
+  margin-bottom: var(--space-4);
+}
+
+.headerBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.code {
+  padding: 3px var(--space-3);
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.notices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.notices:empty {
+  display: none;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.text {
+  margin: 0;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.facts dd {
+  margin: var(--space-1) 0 0;
+  color: var(--fg);
+  font-weight: var(--weight-semibold);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.saveStatus[data-badge='error'] {
+  color: var(--red);
+  font-weight: var(--weight-semibold);
+}
+
+@media (max-width: 640px) {
+  .form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compact > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* La barra flotante se centra en la columna de contenido, no bajo el menú lateral (16.5 rem). */
+@media (min-width: 861px) {
+  .screen .actionBar {
+    left: 16.5rem;
+  }
+}
