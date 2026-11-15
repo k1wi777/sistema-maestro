@@ -1,6 +1,13 @@
+import type { TeacherActivity } from '@gns/shared';
+
 import { finishList, moduleSections } from './module-steps';
 import { DATE, makeModule, uuid } from './test-fixtures';
-import { makeTeacherActivity } from './test-fixtures-activities';
+import {
+  makeSimulatorActivity,
+  makeTeacherActivity,
+  makeTrueOrMythActivity,
+  makeWheelActivity,
+} from './test-fixtures-activities';
 
 const complete = () =>
   makeModule({
@@ -52,7 +59,11 @@ describe('moduleSections', () => {
 
   it('returns no sections for an empty module', () => {
     expect(moduleSections(makeModule())).toEqual([]);
-    expect(finishList(makeModule())).toEqual({ items: [], hasOptionalNote: false });
+    expect(finishList(makeModule())).toEqual({
+      items: [],
+      hasRequired: false,
+      hasOptionalNote: false,
+    });
   });
 });
 
@@ -107,5 +118,64 @@ describe('finishList', () => {
     });
 
     expect(finishList(item).hasOptionalNote).toBe(false);
+  });
+});
+
+describe('finishList with activities', () => {
+  const withActivities = (...activities: TeacherActivity[]) => makeModule({ activities });
+
+  it('describes the progress of each required activity by type', () => {
+    const wheel = makeWheelActivity({ id: uuid(1), title: 'Ruleta' });
+    wheel.progress = { ...wheel.progress, stamps: ['a'] };
+    const list = finishList(
+      withActivities(
+        wheel,
+        makeTeacherActivity({ id: uuid(2), title: 'Conecta' }),
+        makeTrueOrMythActivity({
+          id: uuid(3),
+          title: 'Mito',
+          progress: {
+            completedAt: null,
+            bestScore: 55,
+            bestPoints: 10,
+            attempts: 1,
+            stamps: [],
+          },
+        }),
+        makeSimulatorActivity({ id: uuid(4), title: 'Sim', isRequired: true }),
+      ),
+    );
+
+    expect(list.items.map((item) => item.label)).toEqual([
+      'Ruleta · 1 de 3 sellos',
+      'Conecta · necesitas 80%, aún sin intentos',
+      'Mito · necesitas 70%, llevas 55%',
+      'Sim · úsalo una vez',
+    ]);
+    expect(list.hasRequired).toBe(true);
+  });
+
+  it('says a used simulator is used', () => {
+    const sim = makeSimulatorActivity({ title: 'Sim', isRequired: true });
+    sim.progress = { ...sim.progress, completedAt: DATE };
+
+    expect(finishList(withActivities(sim)).items[0]).toMatchObject({
+      label: 'Sim · usado',
+      done: true,
+    });
+  });
+
+  it('has contents but nothing required when every activity is optional', () => {
+    const list = finishList(
+      withActivities(
+        makeSimulatorActivity({ isRequired: false }),
+        makeTeacherActivity({ isRequired: false }),
+      ),
+    );
+
+    expect(moduleSections(withActivities(makeSimulatorActivity())).length).toBe(1);
+    expect(list.items).toEqual([]);
+    expect(list.hasRequired).toBe(false);
+    expect(list.hasOptionalNote).toBe(true);
   });
 });

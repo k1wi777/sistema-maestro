@@ -1,4 +1,4 @@
-import type { TeacherModule } from '@gns/shared';
+import { TrainingActivityType, type TeacherActivity, type TeacherModule } from '@gns/shared';
 
 export type SectionKind = 'video' | 'challenge' | 'presentation' | 'activities';
 
@@ -37,8 +37,25 @@ export interface FinishItem {
 
 export interface FinishList {
   items: FinishItem[];
+  /** Hay al menos un elemento obligatorio; si no, el módulo se termina con el primer avance. */
+  hasRequired: boolean;
   /** Hay actividades opcionales: se explica que no bloquean el certificado. */
   hasOptionalNote: boolean;
+}
+
+/** Etiqueta de una actividad obligatoria con su avance según el tipo (R18). */
+function activityLabel(activity: TeacherActivity): string {
+  const { progress } = activity;
+  switch (activity.type) {
+    case TrainingActivityType.WheelPassport:
+      return `${activity.title} · ${progress.stamps.length} de ${activity.config.tarjetas.length} sellos`;
+    case TrainingActivityType.Simulator:
+      return `${activity.title} · ${progress.completedAt !== null ? 'usado' : 'úsalo una vez'}`;
+    default:
+      return `${activity.title} · necesitas ${activity.config.umbral_aprobacion}%, ${
+        progress.bestScore === null ? 'aún sin intentos' : `llevas ${progress.bestScore}%`
+      }`;
+  }
 }
 
 /** «Para terminar», derivada de `moduleSections` para que nunca discrepe de la numeración. */
@@ -67,7 +84,7 @@ export function finishList(module: TeacherModule): FinishList {
         if (activity.isRequired) {
           items.push({
             key: activity.id,
-            label: activity.title,
+            label: activityLabel(activity),
             done: activity.progress.completedAt !== null,
           });
         }
@@ -76,6 +93,7 @@ export function finishList(module: TeacherModule): FinishList {
   }
   return {
     items,
+    hasRequired: items.length > 0,
     hasOptionalNote: module.activities.some((activity) => !activity.isRequired),
   };
 }

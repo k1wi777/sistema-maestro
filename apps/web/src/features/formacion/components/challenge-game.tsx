@@ -7,15 +7,9 @@ import { useChallenge } from '../hooks/use-challenge';
 import type { BestAttempt, ChallengeState } from '../model/challenge';
 import { challengeKeyAction } from '../model/challenge-keys';
 import { challengeTiles } from '../model/challenge-tiles';
-import {
-  ChallengeBusy,
-  ChallengeError,
-  ChallengeFinal,
-  ChallengeLobby,
-  ChallengeLost,
-} from './challenge-panels';
 import { ChallengeQuestion } from './challenge-question';
 import styles from './challenge.module.css';
+import { GameBusy, GameError, GameFinal, GameLobby, GameLost } from './game-panels';
 
 const bestOf = (module: TeacherModule): BestAttempt | null =>
   module.progress.bestScore === null
@@ -137,7 +131,7 @@ export function ChallengeGame({
 
   let body;
   if (state.phase === 'starting' || state.phase === 'loadingNext') {
-    body = <ChallengeBusy>Preparando la pregunta…</ChallengeBusy>;
+    body = <GameBusy>Preparando la pregunta…</GameBusy>;
   } else if (
     (state.phase === 'question' || state.phase === 'submitting' || state.phase === 'answered') &&
     state.step
@@ -150,14 +144,36 @@ export function ChallengeGame({
         handlers={handlers}
       />
     );
-  } else if (state.phase === 'finished') {
-    body = <ChallengeFinal module={module} state={state} onStart={game.start} />;
+  } else if (state.phase === 'finished' && state.final) {
+    body = (
+      <GameFinal
+        final={state.final}
+        best={state.best}
+        passedTitle="¡Aprobaste el Desafío GNS!"
+        threshold={module.challenge.approvalThreshold}
+        subject="este módulo"
+        onStart={game.start}
+      />
+    );
   } else if (state.phase === 'lost') {
-    body = <ChallengeLost best={state.best} onStart={game.start} />;
+    body = <GameLost best={state.best} onStart={game.start} />;
   } else if (state.phase === 'error') {
-    body = <ChallengeError message={state.errorMessage ?? ''} onRetry={game.retry} />;
+    body = <GameError message={state.errorMessage ?? ''} onRetry={game.retry} />;
   } else {
-    body = <ChallengeLobby module={module} best={state.best} onStart={game.start} />;
+    const { questionCount, approvalThreshold } = module.challenge;
+    body = (
+      <GameLobby
+        kicker="Desafío"
+        name="GNS"
+        intro="Responde con rapidez y constancia: cada acierto suma puntos y la racha los multiplica."
+        rules={[
+          questionCount === 1 ? '1 pregunta' : `${questionCount} preguntas`,
+          `Apruebas con ${approvalThreshold}%`,
+        ]}
+        best={state.best}
+        onStart={game.start}
+      />
+    );
   }
 
   return (

@@ -61,6 +61,8 @@
   --game-ok-bottom: #17643e;
   --game-bad-top: #c8102e;
   --game-bad-bottom: #a30c25;
+  --game-truth-top: #24804f;
+  --game-truth-bottom: #1b6a41;
   --game-seal: #1e7a4c;
   --game-seal-halo: rgb(95 192 142 / 0.45);
   --game-black-18: rgb(0 0 0 / 0.18);
