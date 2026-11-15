@@ -6,6 +6,7 @@ import {
   SEARCH_FOLD_FROM,
   SEARCH_FOLD_TO,
   searchWords,
+  sharedActivityCornersQuerySchema,
   sharedActivityListQuerySchema,
   updateSharedActivitySchema,
 } from '@gns/shared';
@@ -85,6 +86,66 @@ describe('esquemas de actividad compartida', () => {
       link: null,
       levelId: null,
     });
+  });
+});
+
+describe('grado, rincón y tipo de actividad', () => {
+  it('al crear, el tipo es actividad por defecto y grado y rincón son opcionales', () => {
+    expect(createSharedActivitySchema.parse(valid)).toMatchObject({ activityType: 'actividad' });
+    const parsed = createSharedActivitySchema.parse({
+      ...valid,
+      gradeId: UUID,
+      learningCorner: '  Sweet Home ',
+      activityType: 'recurso_digital',
+    });
+    expect(parsed).toMatchObject({
+      gradeId: UUID,
+      learningCorner: 'Sweet Home',
+      activityType: 'recurso_digital',
+    });
+    expect(createSharedActivitySchema.parse({ ...valid, learningCorner: '  ' })).toMatchObject({
+      learningCorner: null,
+    });
+  });
+
+  it('rechaza un tipo no admitido o nulo, un grado no UUID y un rincón de 61 caracteres', () => {
+    for (const activityType of ['Juego', 'taller', null]) {
+      expect(createSharedActivitySchema.safeParse({ ...valid, activityType }).success).toBe(false);
+      expect(updateSharedActivitySchema.safeParse({ activityType }).success).toBe(false);
+    }
+    expect(createSharedActivitySchema.safeParse({ ...valid, gradeId: 'x' }).success).toBe(false);
+    expect(
+      createSharedActivitySchema.safeParse({ ...valid, learningCorner: 'x'.repeat(61) }).success,
+    ).toBe(false);
+    expect(
+      createSharedActivitySchema.safeParse({ ...valid, learningCorner: 'x'.repeat(60) }).success,
+    ).toBe(true);
+  });
+
+  it('la edición no rellena el tipo y admite vaciar grado y rincón', () => {
+    expect(updateSharedActivitySchema.parse({ title: 'Nuevo' })).toEqual({ title: 'Nuevo' });
+    expect(updateSharedActivitySchema.parse({ gradeId: null, learningCorner: '' })).toEqual({
+      gradeId: null,
+      learningCorner: null,
+    });
+  });
+
+  it('los filtros nuevos se validan y la ruta de rincones admite solo levelId', () => {
+    expect(
+      sharedActivityListQuerySchema.parse({
+        gradeId: UUID,
+        learningCorner: ' Sweet Home ',
+        activityType: 'juego',
+      }).filters,
+    ).toEqual({ gradeId: UUID, learningCorner: 'Sweet Home', activityType: 'juego' });
+    expect(sharedActivityListQuerySchema.safeParse({ activityType: 'taller' }).success).toBe(false);
+    expect(sharedActivityListQuerySchema.safeParse({ gradeId: 'x' }).success).toBe(false);
+    expect(sharedActivityListQuerySchema.safeParse({ learningCorner: ' ' }).success).toBe(false);
+    expect(
+      sharedActivityListQuerySchema.safeParse({ learningCorner: 'x'.repeat(61) }).success,
+    ).toBe(false);
+    expect(sharedActivityCornersQuerySchema.parse({ levelId: UUID })).toEqual({ levelId: UUID });
+    expect(sharedActivityCornersQuerySchema.safeParse({ levelId: 'x' }).success).toBe(false);
   });
 });
 

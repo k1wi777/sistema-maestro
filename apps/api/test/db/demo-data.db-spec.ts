@@ -468,6 +468,35 @@ describe('demo shared activities and favorites (BE-5)', () => {
     }
   });
 
+  it('classifies activities by grade, corner and type with the grade in the activity level (FE-2)', async () => {
+    const activities = await rows(
+      `SELECT a.tipo, a.grado_id, a.rincon, a.nivel_id, g.nivel_id AS nivel_del_grado
+       FROM actividad_repositorio a LEFT JOIN grado g ON g.id = a.grado_id
+       WHERE a.autor_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE],
+    );
+
+    expect(activities.some((row) => row.grado_id !== null)).toBe(true);
+    expect(activities.some((row) => row.grado_id === null)).toBe(true);
+    expect(activities.some((row) => row.rincon !== null)).toBe(true);
+    expect(activities.some((row) => row.rincon === null)).toBe(true);
+    expect(new Set(activities.map((row) => row.tipo)).size).toBeGreaterThanOrEqual(3);
+    for (const row of activities.filter((item) => item.grado_id !== null)) {
+      expect(row.nivel_del_grado).toBe(row.nivel_id);
+    }
+  });
+
+  it('has an activity that matches a demo lesson plan in grade, area and corner (FE-2)', async () => {
+    const matches = await rows(
+      `SELECT a.id FROM actividad_repositorio a
+       JOIN planeacion p ON p.grado_id = a.grado_id AND p.area_id = a.area_id AND p.rincon = a.rincon
+       WHERE a.autor_id IN ${DEMO_TEACHERS} AND p.docente_id IN ${DEMO_TEACHERS}`,
+      [DEMO_LIKE],
+    );
+
+    expect(matches.length).toBeGreaterThanOrEqual(1);
+  });
+
   it('only links to http or https pages and carries no student data', async () => {
     const links = await rows(
       `SELECT enlace FROM actividad_repositorio WHERE autor_id IN ${DEMO_TEACHERS} AND enlace IS NOT NULL`,

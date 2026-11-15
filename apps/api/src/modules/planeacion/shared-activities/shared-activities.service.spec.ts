@@ -3,6 +3,7 @@ import { UserRole } from '@gns/shared';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import type { AreasService } from '../../estructura/catalogs/area/areas.service';
+import type { GradesService } from '../../estructura/catalogs/grade/grades.service';
 import type { LevelsService } from '../../estructura/catalogs/level/levels.service';
 import { SharedActivitiesService } from './shared-activities.service';
 import type {
@@ -22,6 +23,9 @@ const view = (overrides: Partial<SharedActivityView> = {}): SharedActivityView =
   author: { id: 'author', fullName: 'Autora Uno' },
   level: null,
   area: null,
+  grade: null,
+  learningCorner: null,
+  activityType: 'actividad',
   title: 'Canción del agua',
   objective: null,
   durationMinutes: null,
@@ -38,6 +42,9 @@ const record: SharedActivityRecord = {
   authorId: 'author',
   levelId: null,
   areaId: null,
+  gradeId: null,
+  learningCorner: null,
+  activityType: 'actividad',
   title: 'Canción del agua',
   objective: null,
   durationMinutes: null,
@@ -48,8 +55,24 @@ const record: SharedActivityRecord = {
   updatedAt: NOW,
 };
 
+const LEVEL_A = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1b01';
+const LEVEL_B = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1b02';
+const GRADE_A = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1c01';
+const GRADE_B = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1c02';
+const GRADE_MISSING = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1c99';
+const GRADES: Record<string, { id: string; levelId: string }> = {
+  [GRADE_A]: { id: GRADE_A, levelId: LEVEL_A },
+  [GRADE_B]: { id: GRADE_B, levelId: LEVEL_B },
+};
+
 function setup(
-  options: { stored?: boolean; level?: boolean; area?: boolean; favorites?: string[] } = {},
+  options: {
+    stored?: boolean;
+    level?: boolean;
+    area?: boolean;
+    favorites?: string[];
+    storedRecord?: Partial<SharedActivityRecord>;
+  } = {},
 ) {
   const exists = options.stored !== false;
   const repository = {
@@ -63,7 +86,9 @@ function setup(
         totalPages: 1,
       }),
     ),
-    findRecordById: jest.fn(() => Promise.resolve(exists ? record : null)),
+    findRecordById: jest.fn(() =>
+      Promise.resolve(exists ? { ...record, ...options.storedRecord } : null),
+    ),
     create: jest.fn(() => Promise.resolve(view())),
     update: jest.fn(() => Promise.resolve(view({ title: 'Nuevo' }))),
     lock: jest.fn(() => Promise.resolve()),
@@ -74,13 +99,18 @@ function setup(
     addFavorite: jest.fn(() => Promise.resolve()),
     removeFavorite: jest.fn(() => Promise.resolve()),
     countFavorites: jest.fn(() => Promise.resolve(3)),
+    findCorners: jest.fn(() => Promise.resolve(['Sweet Home'])),
   } satisfies SharedActivityRepository;
   const levels = { find: jest.fn(() => Promise.resolve(options.level === false ? null : {})) };
   const areas = { find: jest.fn(() => Promise.resolve(options.area === false ? null : {})) };
+  const grades = {
+    find: jest.fn((id: string) => Promise.resolve(GRADES[id] ?? null)),
+  };
   const service = new SharedActivitiesService(
     repository,
     levels as unknown as LevelsService,
     areas as unknown as AreasService,
+    grades as unknown as GradesService,
   );
   return { service, repository };
 }
@@ -134,7 +164,7 @@ describe('SharedActivitiesService: lectura', () => {
 });
 
 describe('SharedActivitiesService.create', () => {
-  const input = { title: 'Canción', steps: 'Cantar' };
+  const input = { title: 'Canción', steps: 'Cantar', activityType: 'actividad' as const };
 
   it('guarda con el usuario como autor y valores nulos por defecto', async () => {
     const { service, repository } = setup();
@@ -145,6 +175,9 @@ describe('SharedActivitiesService.create', () => {
       authorId: 'author',
       levelId: null,
       areaId: null,
+      gradeId: null,
+      learningCorner: null,
+      activityType: 'actividad',
       title: 'Canción',
       objective: null,
       durationMinutes: null,
@@ -167,6 +200,125 @@ describe('SharedActivitiesService.create', () => {
         setup({ level: false, area: false }).service.create(author, { ...input, levelId, areaId }),
       ),
     ).toEqual(['levelId', 'areaId']);
+  });
+
+  it('con grado y sin nivel, deriva el nivel del grado', async () => {
+    const { service, repository } = setup();
+
+    await service.create(author, { ...input, gradeId: GRADE_A, learningCorner: 'Sweet Home' });
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ levelId: LEVEL_A, gradeId: GRADE_A, learningCorner: 'Sweet Home' }),
+    );
+  });
+
+  it('responde 400 en gradeId si el grado no existe o es de otro nivel', async () => {
+    const { service } = setup();
+
+    expect(await fieldsOf(service.create(author, { ...input, gradeId: GRADE_MISSING }))).toEqual([
+      'gradeId',
+    ]);
+    expect(
+      await fieldsOf(service.create(author, { ...input, gradeId: GRADE_B, levelId: LEVEL_A })),
+    ).toEqual(['gradeId']);
+    expect(
+      await fieldsOf(
+        setup({ level: false, area: false }).service.create(author, {
+          ...input,
+          gradeId: GRADE_MISSING,
+          levelId: LEVEL_A,
+          areaId: LEVEL_B,
+        }),
+      ),
+    ).toEqual(['levelId', 'areaId', 'gradeId']);
+  });
+
+  it('acepta un grado con el nivel de ese grado', async () => {
+    const { service, repository } = setup();
+
+    await service.create(author, { ...input, gradeId: GRADE_B, levelId: LEVEL_B });
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ levelId: LEVEL_B, gradeId: GRADE_B }),
+    );
+  });
+});
+
+describe('SharedActivitiesService.update: grado, rincón y tipo', () => {
+  it('cambiar de grado arrastra el nivel del nuevo grado', async () => {
+    const { service, repository } = setup({ storedRecord: { gradeId: GRADE_A, levelId: LEVEL_A } });
+
+    await service.update(author, 'act-1', { gradeId: GRADE_B });
+
+    expect(repository.update).toHaveBeenCalledWith('act-1', { gradeId: GRADE_B, levelId: LEVEL_B });
+  });
+
+  it('cambiar solo el nivel con un grado guardado de otro nivel responde 400', async () => {
+    const { service } = setup({ storedRecord: { gradeId: GRADE_A, levelId: LEVEL_A } });
+
+    expect(await fieldsOf(service.update(author, 'act-1', { levelId: LEVEL_B }))).toEqual([
+      'gradeId',
+    ]);
+  });
+
+  it('vaciar el grado y el rincón no valida el grado ni toca el nivel', async () => {
+    const { service, repository } = setup({ storedRecord: { gradeId: GRADE_A, levelId: LEVEL_A } });
+
+    await service.update(author, 'act-1', { gradeId: null, learningCorner: null });
+
+    expect(repository.update).toHaveBeenCalledWith('act-1', {
+      gradeId: null,
+      learningCorner: null,
+    });
+  });
+
+  it('responde 400 si el grado enviado no existe', async () => {
+    const { service } = setup();
+
+    expect(await fieldsOf(service.update(author, 'act-1', { gradeId: GRADE_MISSING }))).toEqual([
+      'gradeId',
+    ]);
+  });
+
+  it('editar el tipo o el rincón no consulta el grado', async () => {
+    const { service, repository } = setup({ storedRecord: { gradeId: GRADE_A } });
+
+    await service.update(author, 'act-1', { activityType: 'video', learningCorner: 'Cine' });
+
+    expect(repository.update).toHaveBeenCalledWith('act-1', {
+      activityType: 'video',
+      learningCorner: 'Cine',
+    });
+  });
+});
+
+describe('SharedActivitiesService: filtro por grado y rincones', () => {
+  it('traduce el grado al nivel para incluir las de todo el nivel', async () => {
+    const { service, repository } = setup();
+
+    await service.list(author, { ...listQuery, filters: { gradeId: GRADE_A } });
+
+    const [query] = (repository.findPage.mock.calls as unknown[][])[0] ?? [];
+    expect(query).toMatchObject({ filters: { gradeId: GRADE_A, gradeLevelId: LEVEL_A } });
+  });
+
+  it('un grado inexistente devuelve una página vacía sin consultar', async () => {
+    const { service, repository } = setup();
+
+    const page = await service.list(author, {
+      ...listQuery,
+      filters: { gradeId: GRADE_MISSING },
+    });
+
+    expect(page).toMatchObject({ items: [], totalItems: 0, totalPages: 0 });
+    expect(repository.findPage).not.toHaveBeenCalled();
+  });
+
+  it('los rincones se piden al repository con el nivel', async () => {
+    const { service, repository } = setup();
+
+    expect(await service.corners(LEVEL_A)).toEqual({ items: ['Sweet Home'] });
+    expect(repository.findCorners).toHaveBeenCalledWith(LEVEL_A);
   });
 });
 

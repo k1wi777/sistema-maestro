@@ -5869,6 +5869,41 @@
             }
           },
           {
+            "name": "gradeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          },
+          {
+            "name": "learningCorner",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minLength": 1,
+              "maxLength": 60,
+              "type": "string"
+            }
+          },
+          {
+            "name": "activityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "actividad",
+                "juego",
+                "proyecto",
+                "recurso_digital",
+                "video"
+              ]
+            }
+          },
+          {
             "name": "favorites",
             "required": false,
             "in": "query",
@@ -5991,6 +6026,113 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SharedActivityDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol insuficiente o aviso de datos sin aceptar",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con datos existentes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Demasiadas peticiones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "SharedActivities"
+        ]
+      }
+    },
+    "/shared-activities/learning-corners": {
+      "get": {
+        "operationId": "SharedActivitiesController_corners",
+        "parameters": [
+          {
+            "name": "levelId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedActivityCornersDto_Output"
                 }
               }
             }
@@ -19463,6 +19605,40 @@
                   ],
                   "nullable": true
                 },
+                "grade": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "nullable": true
+                },
+                "learningCorner": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "activityType": {
+                  "type": "string",
+                  "enum": [
+                    "actividad",
+                    "juego",
+                    "proyecto",
+                    "recurso_digital",
+                    "video"
+                  ]
+                },
                 "title": {
                   "type": "string"
                 },
@@ -19512,6 +19688,9 @@
                 "author",
                 "level",
                 "area",
+                "grade",
+                "learningCorner",
+                "activityType",
                 "title",
                 "objective",
                 "durationMinutes",
@@ -19552,6 +19731,22 @@
           "totalItems",
           "totalPages"
         ]
+      },
+      "SharedActivityCornersDto_Output": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 200,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "additionalProperties": false
       },
       "SharedActivityDto": {
         "type": "object",
@@ -19614,6 +19809,40 @@
             ],
             "nullable": true
           },
+          "grade": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "nullable": true
+          },
+          "learningCorner": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "activityType": {
+            "type": "string",
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
+          },
           "title": {
             "type": "string"
           },
@@ -19663,6 +19892,9 @@
           "author",
           "level",
           "area",
+          "grade",
+          "learningCorner",
+          "activityType",
           "title",
           "objective",
           "durationMinutes",
@@ -19720,6 +19952,28 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
+          },
+          "gradeId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "learningCorner": {
+            "type": "string",
+            "maxLength": 60,
+            "nullable": true
+          },
+          "activityType": {
+            "default": "actividad",
+            "type": "string",
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           }
         },
         "required": [
@@ -19774,6 +20028,27 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
             "nullable": true
+          },
+          "gradeId": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+            "nullable": true
+          },
+          "learningCorner": {
+            "type": "string",
+            "maxLength": 60,
+            "nullable": true
+          },
+          "activityType": {
+            "type": "string",
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           }
         },
         "additionalProperties": false

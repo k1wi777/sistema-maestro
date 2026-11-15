@@ -120,6 +120,15 @@ export async function insertLessonPlanResource(client: Client, values: Values = 
   });
 }
 
+export async function insertSharedActivity(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'actividad_repositorio', {
+    autor_id: await idOf(insertUser(client)),
+    titulo: 'Actividad de prueba',
+    pasos: '1. Paso de prueba.',
+    ...values,
+  });
+}
+
 export async function insertReview(client: Client, values: Values = {}): Promise<Row> {
   return insertRow(client, 'revision', {
     tipo_registro: 'planeacion',

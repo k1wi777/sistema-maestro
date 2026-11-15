@@ -4,7 +4,8 @@ import { apiErrorBodySchema, UserRole, type Page, type SharedActivity } from '@g
 import request from 'supertest';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
-import { auditRows } from './support/planning';
+import { auditRows, createPlan, setupPlanning } from './support/planning';
+import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
 import {
   asUser,
   createTestUser,
@@ -37,6 +38,8 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
   let otherLevelId: string;
   let areaId: string;
   let otherAreaId: string;
+  let gradeId: string;
+  let otherGradeId: string;
 
   type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
   const call = (cookies: Cookies, method: Method, path: string) =>
@@ -72,6 +75,13 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
     areaId = (await prisma.area.create({ data: { name: `Área ${t}a`, type: 'asignatura' } })).id;
     otherAreaId = (await prisma.area.create({ data: { name: `Área ${t}b`, type: 'asignatura' } }))
       .id;
+    gradeId = (await prisma.grade.create({ data: { name: `Grado ${t}a`, levelId, sortOrder: 1 } }))
+      .id;
+    otherGradeId = (
+      await prisma.grade.create({
+        data: { name: `Grado ${t}b`, levelId: otherLevelId, sortOrder: 1 },
+      })
+    ).id;
   });
 
   afterAll(async () => {
@@ -411,9 +421,265 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
     });
   });
 
+  describe('grado, rincón y tipo (FE-2)', () => {
+    const fieldsOf = async (method: Method, path: string, body: Record<string, unknown>) => {
+      const res = await call(author, method, path).send(body).expect(400);
+      return (apiErrorBodySchema.parse(res.body).errors ?? []).map((e) => e.field).sort();
+    };
+    const idsOf = async (query: string) =>
+      (await listBy(author, `pageSize=100&${query}`)).items.map((item) => item.title).sort();
+
+    it('guarda y devuelve grado, rincón y tipo; sin tipo guarda actividad y el nivel sale del grado', async () => {
+      const full = await share(author, {
+        title: 'Completa',
+        steps: 'p',
+        gradeId,
+        learningCorner: '  Sweet Home ',
+        activityType: 'juego',
+      });
+      const minimal = await share(author, { title: 'Sin clasificar', steps: 'p' });
+
+      expect(full).toMatchObject({
+        grade: { id: gradeId },
+        level: { id: levelId },
+        learningCorner: 'Sweet Home',
+        activityType: 'juego',
+      });
+      expect(minimal).toMatchObject({
+        grade: null,
+        learningCorner: null,
+        activityType: 'actividad',
+      });
+      const detail = await call(other, 'get', `/shared-activities/${full.id}`).expect(200);
+      expect(detail.body).toMatchObject({ grade: { id: gradeId }, activityType: 'juego' });
+    });
+
+    it('responde 400 por campo: grado inexistente o de otro nivel, tipo y rincón inválidos', async () => {
+      const base = { title: 'T', steps: 'S' };
+
+      expect(await fieldsOf('post', '/shared-activities', { ...base, gradeId: MISSING })).toEqual([
+        'gradeId',
+      ]);
+      expect(
+        await fieldsOf('post', '/shared-activities', { ...base, gradeId: otherGradeId, levelId }),
+      ).toEqual(['gradeId']);
+      expect(
+        await fieldsOf('post', '/shared-activities', { ...base, activityType: 'taller' }),
+      ).toEqual(['activityType']);
+      expect(await fieldsOf('post', '/shared-activities', { ...base, activityType: null })).toEqual(
+        ['activityType'],
+      );
+      expect(
+        await fieldsOf('post', '/shared-activities', { ...base, learningCorner: 'x'.repeat(61) }),
+      ).toEqual(['learningCorner']);
+      expect(
+        await prisma.sharedActivity.count({ where: { title: 'T', authorId: authorUser.id } }),
+      ).toBe(0);
+    });
+
+    it('al editar cambia el grado arrastrando el nivel, rechaza incoherencias y vacía con null', async () => {
+      const created = await share(author, {
+        title: 'Editable',
+        steps: 'p',
+        gradeId,
+        learningCorner: 'Lectura',
+        activityType: 'proyecto',
+      });
+      const path = `/shared-activities/${created.id}`;
+
+      expect(await fieldsOf('patch', path, { levelId: otherLevelId })).toEqual(['gradeId']);
+      expect(await fieldsOf('patch', path, { gradeId: otherGradeId, levelId })).toEqual([
+        'gradeId',
+      ]);
+      expect(await fieldsOf('patch', path, { activityType: null })).toEqual(['activityType']);
+
+      const moved = await call(author, 'patch', path).send({ gradeId: otherGradeId }).expect(200);
+      expect(moved.body).toMatchObject({
+        grade: { id: otherGradeId },
+        level: { id: otherLevelId },
+        learningCorner: 'Lectura',
+        activityType: 'proyecto',
+      });
+
+      const cleared = await call(author, 'patch', path)
+        .send({ gradeId: null, learningCorner: '  ' })
+        .expect(200);
+      expect(cleared.body).toMatchObject({
+        grade: null,
+        learningCorner: null,
+        level: { id: otherLevelId },
+        title: 'Editable',
+        activityType: 'proyecto',
+      });
+
+      const typed = await call(author, 'patch', path).send({ activityType: 'video' }).expect(200);
+      expect(typed.body).toMatchObject({ activityType: 'video', grade: null });
+    });
+
+    it('filtra por grado (con las de todo el nivel), rincón sin tildes, tipo y combinados', async () => {
+      const t = token();
+      await share(author, {
+        title: `G1 ${t}`,
+        steps: 'p',
+        gradeId,
+        learningCorner: 'Zona Matemática',
+        activityType: 'juego',
+      });
+      await share(author, { title: `G2 ${t}`, steps: 'p', levelId, activityType: 'video' });
+      await share(author, {
+        title: `G3 ${t}`,
+        steps: 'p',
+        gradeId: otherGradeId,
+        learningCorner: 'zona matematica',
+        activityType: 'juego',
+      });
+      await share(author, { title: `G4 ${t}`, steps: 'p', levelId: otherLevelId });
+
+      const q = `q=${t}`;
+      expect(await idsOf(`${q}&gradeId=${gradeId}`)).toEqual([`G1 ${t}`, `G2 ${t}`]);
+      expect(await idsOf(`${q}&gradeId=${otherGradeId}`)).toEqual([`G3 ${t}`, `G4 ${t}`]);
+      expect(await idsOf(`${q}&gradeId=${MISSING}`)).toEqual([]);
+      expect(
+        await idsOf(`${q}&learningCorner=${encodeURIComponent('  ZONA MATEMÁTICA ')}`),
+      ).toEqual([`G1 ${t}`, `G3 ${t}`]);
+      expect(await idsOf(`${q}&activityType=juego`)).toEqual([`G1 ${t}`, `G3 ${t}`]);
+      expect(await idsOf(`${q}&activityType=video&gradeId=${gradeId}`)).toEqual([`G2 ${t}`]);
+      expect(
+        await idsOf(`${q}&activityType=juego&gradeId=${gradeId}&learningCorner=zona%20matematica`),
+      ).toEqual([`G1 ${t}`]);
+      for (const query of ['activityType=taller', 'gradeId=x', 'learningCorner=%20']) {
+        await call(author, 'get', `/shared-activities?${query}`).expect(400);
+      }
+    });
+
+    it('la búsqueda con texto también encuentra por rincón', async () => {
+      const t = token();
+      await share(author, { title: `Rincón ${t}`, steps: 'p', learningCorner: `Cuentería ${t}` });
+
+      expect(await search(other, `cuenteria ${t}`)).toEqual([`Rincón ${t}`]);
+    });
+
+    it('lista los rincones distintos en orden alfabético, sin variantes repetidas y por nivel', async () => {
+      const t = token();
+      const own = await prisma.educationLevel.create({
+        data: { name: `Nivel ${t}c`, sortOrder: 9 },
+      });
+      await share(author, {
+        title: 'r1',
+        steps: 'p',
+        levelId: own.id,
+        learningCorner: `zeta ${t}`,
+      });
+      await share(author, {
+        title: 'r2',
+        steps: 'p',
+        levelId: own.id,
+        learningCorner: `Álamo ${t}`,
+      });
+      await share(author, {
+        title: 'r3',
+        steps: 'p',
+        levelId: own.id,
+        learningCorner: `alamo ${t}`,
+      });
+      await share(author, { title: 'r4', steps: 'p', levelId: own.id });
+      await share(other, { title: 'r5', steps: 'p', learningCorner: `Fuera ${t}` });
+
+      for (const cookies of [author, other, coordinator, admin]) {
+        const res = await call(
+          cookies,
+          'get',
+          `/shared-activities/learning-corners?levelId=${own.id}`,
+        ).expect(200);
+        expect(res.body).toEqual({ items: [`alamo ${t}`, `zeta ${t}`] });
+      }
+      const all = (await call(author, 'get', '/shared-activities/learning-corners').expect(200))
+        .body as { items: string[] };
+      expect(all.items).toEqual(expect.arrayContaining([`Fuera ${t}`, `zeta ${t}`]));
+      expect(all.items.filter((item) => item.toLowerCase().includes(`alamo ${t}`))).toHaveLength(1);
+      await call(author, 'get', '/shared-activities/learning-corners?levelId=x').expect(400);
+    });
+
+    it('registra grado, rincón y tipo en la bitácora al compartir, editar y retirar', async () => {
+      const created = await share(author, {
+        title: 'Auditada',
+        steps: 'p',
+        gradeId,
+        learningCorner: 'Sweet Home',
+        activityType: 'juego',
+      });
+      await call(author, 'patch', `/shared-activities/${created.id}`)
+        .send({ gradeId: null, learningCorner: null, activityType: 'video' })
+        .expect(200);
+      await call(author, 'delete', `/shared-activities/${created.id}`).expect(204);
+
+      const [shared, edited, removed] = await auditRows(app, created.id);
+
+      expect(shared?.dataAfter).toMatchObject({
+        gradeId,
+        learningCorner: 'Sweet Home',
+        activityType: 'juego',
+      });
+      expect(edited?.dataBefore).toMatchObject({
+        gradeId,
+        learningCorner: 'Sweet Home',
+        activityType: 'juego',
+      });
+      expect(edited?.dataAfter).toMatchObject({
+        gradeId: null,
+        learningCorner: null,
+        activityType: 'video',
+      });
+      expect(removed?.dataBefore).toMatchObject({
+        gradeId: null,
+        learningCorner: null,
+        activityType: 'video',
+      });
+    });
+  });
+
+  describe('herencia desde una planeación (FE-2, R14)', () => {
+    let release: () => Promise<void>;
+
+    beforeAll(async () => {
+      release = await holdSchoolYearLock('shared');
+    }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
+
+    afterAll(async () => {
+      await release();
+    });
+
+    it('comparte con el grado y el rincón de una planeación creada por la API, sin enviar el nivel', async () => {
+      const planning = await setupPlanning(app);
+      const target = await planning.gradeAndArea('Bachillerato');
+      await planning.assign(authorUser.id, target.gradeId, target.areaId);
+      const plan = await createPlan(app, author, {
+        ...target,
+        periodId: planning.periods[1],
+        learningCorner: 'Zona STEAM+H',
+      });
+
+      const activity = await share(author, {
+        title: 'Desde la planeación',
+        steps: 'p',
+        areaId: plan.area.id,
+        gradeId: plan.grade.id,
+        learningCorner: plan.learningCorner,
+      });
+
+      expect(activity).toMatchObject({
+        grade: { id: plan.grade.id },
+        level: { id: plan.level.id },
+        area: { id: plan.area.id },
+        learningCorner: 'Zona STEAM+H',
+      });
+    });
+  });
+
   it('exige sesión en todas las rutas (R18)', async () => {
     const server = serverOf(app);
     await request(server).get('/shared-activities').expect(401);
+    await request(server).get('/shared-activities/learning-corners').expect(401);
     await request(server).post('/shared-activities').send({}).expect(401);
     await request(server).put(`/shared-activities/${MISSING}/favorite`).expect(401);
   });

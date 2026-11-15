@@ -5,6 +5,7 @@ import {
   type ListQuery,
   type Page,
   type SharedActivity,
+  type SharedActivityCorners,
   type SharedActivityListFilters,
   type SharedActivitySortField,
   type UpdateSharedActivityInput,
@@ -12,6 +13,7 @@ import {
 import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import { AreasService } from '../../estructura/catalogs/area/areas.service';
+import { GradesService } from '../../estructura/catalogs/grade/grades.service';
 import { LevelsService } from '../../estructura/catalogs/level/levels.service';
 import {
   SHARED_ACTIVITY_REPOSITORY,
@@ -34,19 +36,38 @@ export class SharedActivitiesService {
     @Inject(SHARED_ACTIVITY_REPOSITORY) private readonly repository: SharedActivityRepository,
     private readonly levels: LevelsService,
     private readonly areas: AreasService,
+    private readonly grades: GradesService,
   ) {}
 
   // ---------- Lectura ----------
 
-  /** `favorites=true` se traduce al usuario de la sesión: el id nunca viene de la query. */
+  /**
+   * `favorites=true` se traduce al usuario de la sesión: el id nunca viene de la query. El grado
+   * del filtro se traduce a su nivel para incluir las actividades de todo el nivel; si el grado
+   * no existe la página queda vacía.
+   */
   async list(
     user: RequestUser,
     query: ListQuery<SharedActivityListFilters, SharedActivitySortField>,
   ): Promise<Page<SharedActivity>> {
     const { favorites, ...filters } = query.filters;
+    let gradeLevelId: string | undefined;
+    if (filters.gradeId) {
+      const grade = await this.grades.find(filters.gradeId);
+      if (!grade) {
+        return {
+          items: [],
+          page: query.page,
+          pageSize: query.pageSize,
+          totalItems: 0,
+          totalPages: 0,
+        };
+      }
+      gradeLevelId = grade.levelId;
+    }
     const page = await this.repository.findPage({
       ...query,
-      filters: { ...filters, favoriteOf: favorites ? user.id : undefined },
+      filters: { ...filters, gradeLevelId, favoriteOf: favorites ? user.id : undefined },
     });
     const favoriteIds = new Set(
       await this.repository.findFavoriteIds(
@@ -68,6 +89,11 @@ export class SharedActivitiesService {
     return this.withFavorite(user, view);
   }
 
+  /** Rincones distintos en uso, opcionalmente solo los de un nivel. */
+  async corners(levelId?: string): Promise<SharedActivityCorners> {
+    return { items: await this.repository.findCorners(levelId) };
+  }
+
   /** Fila sin relaciones para la bitácora; sin comprobar autoría (no sale por la API). */
   findRaw(id: string): Promise<SharedActivityRecord | null> {
     return this.repository.findRecordById(id);
@@ -84,11 +110,14 @@ export class SharedActivitiesService {
   // ---------- Escritura del autor ----------
 
   async create(user: RequestUser, input: CreateSharedActivityInput): Promise<SharedActivity> {
-    await this.requireCatalogs(input);
+    const { levelId } = await this.resolveClassification(null, input);
     const created = await this.repository.create({
       authorId: user.id,
-      levelId: input.levelId ?? null,
+      levelId: levelId ?? input.levelId ?? null,
       areaId: input.areaId ?? null,
+      gradeId: input.gradeId ?? null,
+      learningCorner: input.learningCorner ?? null,
+      activityType: input.activityType,
       title: input.title,
       objective: input.objective ?? null,
       durationMinutes: input.durationMinutes ?? null,
@@ -104,11 +133,12 @@ export class SharedActivitiesService {
     id: string,
     input: UpdateSharedActivityInput,
   ): Promise<SharedActivity> {
-    await this.requireOwn(user, id);
-    await this.requireCatalogs(input);
-    const changes: SharedActivityChanges = Object.fromEntries(
-      Object.entries(input).filter(([, value]) => value !== undefined),
-    );
+    const stored = await this.requireOwn(user, id);
+    const { levelId } = await this.resolveClassification(stored, input);
+    const changes: SharedActivityChanges = {
+      ...Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined)),
+      ...(levelId === undefined ? {} : { levelId }),
+    };
     const updated = await this.repository.update(id, changes);
     return this.withFavorite(user, updated);
   }
@@ -160,18 +190,41 @@ export class SharedActivitiesService {
     return record;
   }
 
-  /** Nivel y área deben existir: 400 por campo en lugar del 409 genérico de una FK. */
-  private async requireCatalogs(input: { levelId?: string | null; areaId?: string | null }) {
+  /**
+   * Nivel, área y grado deben existir y el grado debe ser del nivel con que queda la actividad
+   * (400 por campo en lugar del 409 genérico de una FK). Se evalúa el estado final: lo enviado
+   * y, si falta, lo guardado. Con grado, el nivel se deriva del grado cuando la petición no trae
+   * un nivel; se devuelve ese nivel derivado (`undefined` si no hay que tocarlo).
+   */
+  private async resolveClassification(
+    stored: Pick<SharedActivityRecord, 'gradeId'> | null,
+    input: { levelId?: string | null; areaId?: string | null; gradeId?: string | null },
+  ): Promise<{ levelId?: string }> {
     const errors: ApiFieldError[] = [];
-    if (input.levelId && !(await this.levels.find(input.levelId))) {
+    const levelExists = !input.levelId || Boolean(await this.levels.find(input.levelId));
+    if (!levelExists) {
       errors.push({ field: 'levelId', reason: 'no existe' });
     }
     if (input.areaId && !(await this.areas.find(input.areaId))) {
       errors.push({ field: 'areaId', reason: 'no existe' });
     }
+    const gradeId = input.gradeId === undefined ? (stored?.gradeId ?? null) : input.gradeId;
+    const touchesGrade = input.gradeId !== undefined || input.levelId !== undefined;
+    let derivedLevelId: string | undefined;
+    if (gradeId && touchesGrade) {
+      const grade = await this.grades.find(gradeId);
+      if (!grade) {
+        errors.push({ field: 'gradeId', reason: 'no existe' });
+      } else if (!input.levelId) {
+        derivedLevelId = grade.levelId;
+      } else if (levelExists && grade.levelId !== input.levelId) {
+        errors.push({ field: 'gradeId', reason: 'no pertenece al nivel' });
+      }
+    }
     if (errors.length > 0) {
       throw new RequestValidationException(errors);
     }
+    return { levelId: derivedLevelId };
   }
 
   private async withFavorite(user: RequestUser, view: SharedActivityView): Promise<SharedActivity> {

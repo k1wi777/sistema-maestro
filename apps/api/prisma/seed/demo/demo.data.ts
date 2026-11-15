@@ -6,6 +6,7 @@ import {
   RecordStatus,
   ReviewAction,
   ReviewRecordType,
+  SharedActivityType,
   UserRole,
   UserStatus,
 } from '@gns/shared';
@@ -904,6 +905,10 @@ export interface DemoSharedActivity {
   level: string;
   /** Nombre del área del catálogo inicial; nulo si la actividad no es de un área. */
   area: string | null;
+  /** Nombre del grado del catálogo inicial, siempre del `level`; nulo: sirve a todo el nivel. */
+  grade: string | null;
+  learningCorner: string | null;
+  activityType: SharedActivityType;
   title: string;
   objective: string;
   durationMinutes: number;
@@ -921,6 +926,9 @@ export const DEMO_SHARED_ACTIVITIES: readonly DemoSharedActivity[] = [
     author: VALERIA,
     level: 'Preescolar bajo',
     area: 'Dimensión comunicativa',
+    grade: 'Red',
+    learningCorner: 'Lectura e imágenes',
+    activityType: SharedActivityType.Activity,
     title: 'El cuento viajero',
     objective: 'Contar una historia corta con apoyo de imágenes y respetar los turnos para hablar.',
     durationMinutes: 30,
@@ -935,6 +943,9 @@ export const DEMO_SHARED_ACTIVITIES: readonly DemoSharedActivity[] = [
     author: JULIAN,
     level: 'Preescolar alto (KTF)',
     area: 'Pre-ciencias',
+    grade: null,
+    learningCorner: null,
+    activityType: SharedActivityType.Game,
     title: 'Mini laboratorio de flotar y hundir',
     objective: 'Predecir y comprobar qué objetos cotidianos flotan o se hunden en el agua.',
     durationMinutes: 40,
@@ -949,6 +960,9 @@ export const DEMO_SHARED_ACTIVITIES: readonly DemoSharedActivity[] = [
     author: SOFIA,
     level: 'Primaria',
     area: 'Matemáticas',
+    grade: '3°',
+    learningCorner: 'Zona de pensamiento lógico-matemático',
+    activityType: SharedActivityType.Game,
     title: 'La tienda del salón: sumas con monedas de cartón',
     objective: 'Resolver sumas y restas con valores de dinero en situaciones de compra y venta.',
     durationMinutes: 50,
@@ -963,6 +977,9 @@ export const DEMO_SHARED_ACTIVITIES: readonly DemoSharedActivity[] = [
     author: ANDRES,
     level: 'Bachillerato',
     area: 'Física',
+    grade: '10°',
+    learningCorner: null,
+    activityType: SharedActivityType.Project,
     title: 'Rampas y fuerzas: ¿qué tan rápido baja?',
     objective: 'Relacionar la inclinación de una rampa con el tiempo de descenso de un carrito.',
     durationMinutes: 60,
@@ -977,6 +994,9 @@ export const DEMO_SHARED_ACTIVITIES: readonly DemoSharedActivity[] = [
     author: DANIELA,
     level: 'Bachillerato',
     area: null,
+    grade: null,
+    learningCorner: null,
+    activityType: SharedActivityType.DigitalResource,
     title: 'Feria de ideas en tres minutos',
     objective: 'Presentar una idea de emprendimiento de forma clara y breve ante el grupo.',
     durationMinutes: 90,

@@ -93,6 +93,7 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'post', path: '/observer-notes/:id/return', access: COORD },
   { method: 'get', path: '/observer-notes/:id/reviews', access: TEACHER },
   { method: 'get', path: '/shared-activities', access: TEACHER },
+  { method: 'get', path: '/shared-activities/learning-corners', access: TEACHER },
   { method: 'get', path: '/shared-activities/:id', access: TEACHER },
   { method: 'post', path: '/shared-activities', access: TEACHER },
   { method: 'patch', path: '/shared-activities/:id', access: TEACHER },
