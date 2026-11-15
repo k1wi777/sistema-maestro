@@ -3,6 +3,8 @@ import {
   foldSearchText,
   SEARCH_FOLD_FROM,
   SEARCH_FOLD_TO,
+  SHARED_ACTIVITY_CORNERS_MAX_ITEMS,
+  SharedActivityType,
   searchWords,
   type ListQuery,
   type Page,
@@ -23,27 +25,41 @@ import type {
   SharedActivityView,
 } from './shared-activity.repository';
 
-// Autor sin correo; nivel y área solo con su nombre.
+// Autor sin correo; nivel, área y grado solo con su nombre.
 const INCLUDE = {
   author: { select: { id: true, fullName: true } },
   level: { select: { id: true, name: true } },
   area: { select: { id: true, name: true } },
+  grade: { select: { id: true, name: true } },
 } satisfies Prisma.SharedActivityInclude;
 
 type SharedActivityRow = Prisma.SharedActivityGetPayload<{ include: typeof INCLUDE }>;
 
-/** Los ids que ya cumplen la búsqueda se suman a los demás filtros. */
+/** Los ids que ya cumplen la búsqueda de texto y de rincón se suman a los demás filtros. */
 interface SearchedFilters extends SharedActivityFilters {
   ids?: string[];
 }
 
 /** Columnas de texto donde busca `q` (identificadores fijos, nunca del cliente). */
-const SEARCH_COLUMNS = ['titulo', 'objetivo', 'materiales', 'pasos'].map((name) =>
+const SEARCH_COLUMNS = ['titulo', 'objetivo', 'materiales', 'pasos', 'rincon'].map((name) =>
   Prisma.raw(name),
 );
 
 /** Escapa `\`, `%` y `_` para que el término se busque literalmente en `ILIKE`. */
+/** Rincón plegado (sin tildes, mayúsculas ni espacios en los extremos) para comparar y agrupar. */
+const FOLDED_CORNER = Prisma.sql`lower(translate(btrim(rincon), ${SEARCH_FOLD_FROM}::text, ${SEARCH_FOLD_TO}::text))`;
+
 const escapeLike = (term: string): string => term.replace(/[\\%_]/g, (char) => `\\${char}`);
+
+const ACTIVITY_TYPES: readonly string[] = Object.values(SharedActivityType);
+
+/** La columna es texto: el CHECK de la base garantiza que sea uno de los valores admitidos. */
+const toActivityType = (value: string): SharedActivityType => {
+  if (!ACTIVITY_TYPES.includes(value)) {
+    throw new Error(`Tipo de actividad inesperado: ${value}`);
+  }
+  return value as SharedActivityType;
+};
 
 @Injectable()
 export class PrismaSharedActivityRepository
@@ -68,11 +84,11 @@ export class PrismaSharedActivityRepository
   override async findPage(
     query: ListQuery<SearchedFilters, SharedActivitySortField>,
   ): Promise<Page<SharedActivityView>> {
-    const { q, ...filters } = query.filters;
-    if (q === undefined) {
+    const { q, learningCorner, ...filters } = query.filters;
+    if (q === undefined && learningCorner === undefined) {
       return super.findPage(query);
     }
-    const ids = await this.searchIds(q);
+    const ids = await this.findMatchingIds(q, learningCorner);
     return super.findPage({ ...query, filters: { ...filters, ids } });
   }
 
@@ -86,6 +102,9 @@ export class PrismaSharedActivityRepository
       authorId: row.authorId,
       levelId: row.levelId,
       areaId: row.areaId,
+      gradeId: row.gradeId,
+      learningCorner: row.learningCorner,
+      activityType: toActivityType(row.activityType),
       title: row.title,
       objective: row.objective,
       durationMinutes: row.durationMinutes,
@@ -148,20 +167,45 @@ export class PrismaSharedActivityRepository
     return this.prisma.db.favoriteActivity.count({ where: { activityId } });
   }
 
+  async findCorners(levelId?: string): Promise<string[]> {
+    const where = levelId ? Prisma.sql`AND nivel_id = ${levelId}::uuid` : Prisma.empty;
+    // Un valor por rincón plegado: el texto visible es el de la variante más reciente.
+    const rows = await this.prisma.db.$queryRaw<{ rincon: string }[]>(Prisma.sql`
+      SELECT rincon FROM (
+        SELECT DISTINCT ON (folded) rincon FROM (
+          SELECT btrim(rincon) AS rincon, ${FOLDED_CORNER} AS folded, actualizado_en
+          FROM actividad_repositorio
+          WHERE rincon IS NOT NULL AND btrim(rincon) <> '' ${where}
+        ) AS candidates
+        ORDER BY folded, actualizado_en DESC
+      ) AS corners
+      ORDER BY lower(rincon), rincon
+      LIMIT ${SHARED_ACTIVITY_CORNERS_MAX_ITEMS}
+    `);
+    return rows.map((row) => row.rincon);
+  }
+
   /**
-   * Cada palabra debe aparecer en título, objetivo, materiales o pasos (AND entre palabras,
-   * OR entre columnas). La columna y el término se pliegan igual: `translate` en la base y
-   * `foldSearchText` en TypeScript; `ILIKE` ignora las mayúsculas.
+   * Cada palabra debe aparecer en título, objetivo, materiales, pasos o rincón (AND entre
+   * palabras, OR entre columnas) y el rincón, si se filtra, debe coincidir al plegarlo. La
+   * columna y el término se pliegan igual: `translate` en la base y `foldSearchText` en
+   * TypeScript; `ILIKE` ignora las mayúsculas.
    */
-  private async searchIds(q: string): Promise<string[]> {
-    const words = searchWords(q).map((word) => `%${escapeLike(foldSearchText(word))}%`);
-    const conditions = words.map((pattern) => {
-      const anyColumn = SEARCH_COLUMNS.map(
-        (column) =>
-          Prisma.sql`translate(${column}, ${SEARCH_FOLD_FROM}::text, ${SEARCH_FOLD_TO}::text) ILIKE ${pattern}::text`,
+  private async findMatchingIds(q?: string, learningCorner?: string): Promise<string[]> {
+    const conditions: Prisma.Sql[] = searchWords(q ?? '')
+      .map((word) => `%${escapeLike(foldSearchText(word))}%`)
+      .map((pattern) => {
+        const anyColumn = SEARCH_COLUMNS.map(
+          (column) =>
+            Prisma.sql`translate(${column}, ${SEARCH_FOLD_FROM}::text, ${SEARCH_FOLD_TO}::text) ILIKE ${pattern}::text`,
+        );
+        return Prisma.sql`(${Prisma.join(anyColumn, ' OR ')})`;
+      });
+    if (learningCorner !== undefined) {
+      conditions.push(
+        Prisma.sql`${FOLDED_CORNER} = lower(${foldSearchText(learningCorner)}::text)`,
       );
-      return Prisma.sql`(${Prisma.join(anyColumn, ' OR ')})`;
-    });
+    }
     const rows = await this.prisma.db.$queryRaw<{ id: string }[]>(
       Prisma.sql`SELECT id FROM actividad_repositorio WHERE ${Prisma.join(conditions, ' AND ')}`,
     );
@@ -184,6 +228,11 @@ export class PrismaSharedActivityRepository
       authorId: filters.authorId,
       levelId: filters.levelId,
       areaId: filters.areaId,
+      activityType: filters.activityType,
+      // Un grado incluye las actividades de todo el nivel (sin grado) de su nivel.
+      OR: filters.gradeId
+        ? [{ gradeId: filters.gradeId }, { gradeId: null, levelId: filters.gradeLevelId ?? null }]
+        : undefined,
       favorites: filters.favoriteOf ? { some: { userId: filters.favoriteOf } } : undefined,
     };
   }
@@ -194,6 +243,9 @@ export class PrismaSharedActivityRepository
       author: { id: row.author.id, fullName: row.author.fullName },
       level: row.level ? { id: row.level.id, name: row.level.name } : null,
       area: row.area ? { id: row.area.id, name: row.area.name } : null,
+      grade: row.grade ? { id: row.grade.id, name: row.grade.name } : null,
+      learningCorner: row.learningCorner,
+      activityType: toActivityType(row.activityType),
       title: row.title,
       objective: row.objective,
       durationMinutes: row.durationMinutes,

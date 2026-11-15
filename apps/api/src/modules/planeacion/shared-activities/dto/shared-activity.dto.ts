@@ -1,6 +1,8 @@
 import {
   createPageSchema,
   createSharedActivitySchema,
+  sharedActivityCornersQuerySchema,
+  sharedActivityCornersSchema,
   sharedActivityListQuerySchema,
   sharedActivitySchema,
   updateSharedActivitySchema,
@@ -14,3 +16,5 @@ export class SharedActivityPageDto extends createZodDto(createPageSchema(sharedA
 export class SharedActivityListQueryDto extends createZodDto(sharedActivityListQuerySchema) {}
 export class CreateSharedActivityDto extends createZodDto(createSharedActivitySchema) {}
 export class UpdateSharedActivityDto extends createZodDto(updateSharedActivitySchema) {}
+export class SharedActivityCornersQueryDto extends createZodDto(sharedActivityCornersQuerySchema) {}
+export class SharedActivityCornersDto extends createZodDto(sharedActivityCornersSchema) {}

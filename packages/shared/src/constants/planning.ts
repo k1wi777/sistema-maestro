@@ -18,6 +18,16 @@ export const DigitalTool = {
 } as const;
 export type DigitalTool = (typeof DigitalTool)[keyof typeof DigitalTool];
 
+/** Tipo de una actividad del repositorio de la comunidad (`actividad_repositorio.tipo`). */
+export const SharedActivityType = {
+  Activity: 'actividad',
+  Game: 'juego',
+  Project: 'proyecto',
+  DigitalResource: 'recurso_digital',
+  Video: 'video',
+} as const;
+export type SharedActivityType = (typeof SharedActivityType)[keyof typeof SharedActivityType];
+
 /**
  * Estados de una planeación que cuentan como entregada en el cumplimiento: la envió el docente
  * y que coordinación la devolviera o revisara no la convierte en no entregada. `borrador` y

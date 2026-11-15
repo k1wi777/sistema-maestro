@@ -8,6 +8,8 @@ import { RequireRole } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   CreateSharedActivityDto,
+  SharedActivityCornersDto,
+  SharedActivityCornersQueryDto,
   SharedActivityDto,
   SharedActivityListQueryDto,
   SharedActivityPageDto,
@@ -29,6 +31,13 @@ export class SharedActivitiesController {
   @ZodResponse({ status: 200, type: SharedActivityPageDto })
   list(@CurrentUser() user: RequestUser, @Query() query: SharedActivityListQueryDto) {
     return this.activities.list(user, query);
+  }
+
+  /** Antes de `:id` para que Nest no la enrute a la lectura por id. */
+  @Get('learning-corners')
+  @ZodResponse({ status: 200, type: SharedActivityCornersDto })
+  corners(@Query() { levelId }: SharedActivityCornersQueryDto) {
+    return this.activities.corners(levelId);
   }
 
   @Get(':id')
