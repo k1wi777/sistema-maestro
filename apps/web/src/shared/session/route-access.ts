@@ -19,6 +19,13 @@ export function homePathFor(role: UserRole): ProtectedRoute {
   return role === UserRole.Teacher ? '/docente' : '/coordinacion';
 }
 
+/** Vistas que el rol alcanza, de la más baja a la más alta (docente → coordinación). */
+export function availableViews(role: UserRole): ProtectedRoute[] {
+  return (Object.keys(PROTECTED_ROUTES) as ProtectedRoute[]).filter((route) =>
+    roleSatisfies(role, PROTECTED_ROUTES[route]),
+  );
+}
+
 export type AccessDecision =
   'loading' | 'unavailable' | 'redirect-login' | 'forbidden' | 'consent-pending' | 'allowed';
 

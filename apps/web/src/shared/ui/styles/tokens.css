@@ -39,6 +39,15 @@
   --on-solid: #ffffff;
   --seal-ring: #c8102e;
 
+  /* Fijos sobre fondos de marca oscuros (panel de marca, menú lateral, velo del aviso) */
+  --on-solid-muted: rgb(255 255 255 / 0.78);
+  --on-solid-faint: rgb(255 255 255 / 0.6);
+  --on-solid-line: rgb(255 255 255 / 0.22);
+  --on-solid-hover: rgb(255 255 255 / 0.1);
+  --on-solid-active: rgb(255 255 255 / 0.16);
+  --brand-accent-on-dark: #ff5a6e;
+  --overlay: rgb(10 18 40 / 0.62);
+
   /* Colores por rol del tema: lo que cambia entre claro y oscuro */
   --action: var(--navy);
   --action-hover: var(--navy-hover);

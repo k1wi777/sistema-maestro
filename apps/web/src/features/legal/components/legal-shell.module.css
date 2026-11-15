@@ -1,0 +1,16 @@
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 861px) {
+  .top {
+    padding-inline: var(--space-8);
+  }
+}

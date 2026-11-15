@@ -14,7 +14,7 @@ import {
 } from './support/session';
 
 const VERSION = process.env.DATA_POLICY_VERSION ?? '';
-const ALL_BOXES = { policy: true, authorization: true, minors: true, security: true };
+const ALL_BOXES = { policy: true, authorization: true, terms: true };
 
 interface StatusBody {
   policyVersion: string;
@@ -64,17 +64,17 @@ describe('consentimiento de datos', () => {
       expect(new Date(after.acceptedAt ?? '').getTime()).toBeGreaterThanOrEqual(started - 1000);
     });
 
-    it('guarda la aceptación con las cuatro casillas y la escribe en la bitácora', async () => {
+    it('guarda la aceptación con las tres casillas y la escribe en la bitácora', async () => {
       const { user, cookies } = await pending(UserRole.Coordinator);
 
       const res = await accept(cookies).expect(201);
 
       const body = res.body as { id: string; policyVersion: string; items: string[] };
       expect(body.policyVersion).toBe(VERSION);
-      expect(body.items).toEqual(['politica', 'autorizo', 'menores', 'seguridad']);
+      expect(body.items).toEqual(['politica', 'autorizo', 'terminos']);
       const row = await prisma.dataConsent.findUniqueOrThrow({ where: { id: body.id } });
       expect(row).toMatchObject({ userId: user.id, policyVersion: VERSION });
-      expect(row.checkedItems).toEqual(['politica', 'autorizo', 'menores', 'seguridad']);
+      expect(row.checkedItems).toEqual(['politica', 'autorizo', 'terminos']);
       const logged = await prisma.auditLog.findMany({
         where: { type: AuditLogType.DataConsent, userId: user.id },
       });
@@ -89,7 +89,7 @@ describe('consentimiento de datos', () => {
   });
 
   describe('datos inválidos y conflictos (R10, R11)', () => {
-    it.each(['policy', 'authorization', 'minors', 'security'])(
+    it.each(['policy', 'authorization', 'terms'])(
       'responde 400 con el campo items.%s si falta o no está marcada, sin registrar nada',
       async (key) => {
         const { user, cookies } = await pending();
