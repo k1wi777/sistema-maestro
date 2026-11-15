@@ -1,0 +1,69 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.selects {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
+  width: 100%;
+  max-width: 40rem;
+}
+
+.count {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* La tarjeta entera abre la planeación: el enlace se estira sobre ella. */
+.item {
+  position: relative;
+  display: flex;
+}
+
+.item > * {
+  flex: 1;
+}
+
+.stretched::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--radius-lg);
+}
+
+.performance {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--fg);
+  font-size: var(--text-base);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+}

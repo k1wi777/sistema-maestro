@@ -353,3 +353,15 @@ a.item:hover {
     transition: none;
   }
 }
+
+/* Impresión (exportar a PDF): solo el contenido, sin menú ni barra superior. */
+@media print {
+  .shell {
+    display: block;
+    min-height: 0;
+  }
+
+  .aside {
+    display: none;
+  }
+}

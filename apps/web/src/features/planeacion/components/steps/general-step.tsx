@@ -1,0 +1,96 @@
+import { crossCuttingProjectFor } from '@gns/shared';
+
+import { Card, Select, TextInput } from '@/shared/ui';
+
+import type { CatalogPeriod } from '../../api/catalogs';
+import { FIELD_MAX_LENGTH, dateRangeError } from '../../model/form-state';
+import styles from './steps.module.css';
+import type { StepProps } from './step-types';
+
+interface GeneralStepProps extends StepProps {
+  /** Periodos del año vigente; `null` si no se pudieron cargar (el periodo queda fijo). */
+  periods: CatalogPeriod[] | null;
+}
+
+export function GeneralStep({
+  plan,
+  draft,
+  errors,
+  readOnly,
+  onChange,
+  number,
+  periods,
+}: GeneralStepProps) {
+  const periodNumber =
+    periods?.find((period) => period.id === draft.periodId)?.number ?? plan.period.number;
+  const project = crossCuttingProjectFor(plan.level.name, periodNumber);
+  const rangeError = dateRangeError(draft);
+  const periodOptions = (periods ?? [{ id: plan.period.id, number: plan.period.number }]).map(
+    (period) => ({ value: period.id, label: `Periodo ${period.number}` }),
+  );
+
+  return (
+    <Card title="Datos generales" step={number}>
+      <dl className={styles.facts}>
+        <div className={styles.fact}>
+          <dt>Docente</dt>
+          <dd>{plan.teacher.fullName}</dd>
+        </div>
+        <div className={styles.fact}>
+          <dt>Nivel</dt>
+          <dd>{plan.level.name}</dd>
+        </div>
+        <div className={styles.fact}>
+          <dt>Grado</dt>
+          <dd>{plan.grade.name}</dd>
+        </div>
+        <div className={styles.fact}>
+          <dt>Área</dt>
+          <dd>{plan.area.name}</dd>
+        </div>
+        <div className={styles.fact}>
+          <dt>Proyecto transversal</dt>
+          <dd>{project ?? 'Sin proyecto en este periodo'}</dd>
+        </div>
+      </dl>
+      <div className={styles.grid}>
+        <Select
+          label="Periodo"
+          options={periodOptions}
+          value={draft.periodId}
+          disabled={readOnly || periods === null}
+          error={errors.periodId}
+          onChange={(event) => onChange('periodId', event.target.value)}
+        />
+        <div />
+        <TextInput
+          label="Desde"
+          type="date"
+          value={draft.dateFrom}
+          readOnly={readOnly}
+          error={errors.dateFrom}
+          onChange={(event) => onChange('dateFrom', event.target.value)}
+        />
+        <TextInput
+          label="Hasta"
+          type="date"
+          value={draft.dateTo}
+          readOnly={readOnly}
+          error={errors.dateTo ?? rangeError ?? undefined}
+          onChange={(event) => onChange('dateTo', event.target.value)}
+        />
+        <div className={styles.full}>
+          <TextInput
+            label="Proyecto o tema"
+            maxLength={FIELD_MAX_LENGTH.topic}
+            placeholder="Ej. Proyecto mensual «Mi cuerpo en movimiento»"
+            value={draft.topic}
+            readOnly={readOnly}
+            error={errors.topic}
+            onChange={(event) => onChange('topic', event.target.value)}
+          />
+        </div>
+      </div>
+    </Card>
+  );
+}

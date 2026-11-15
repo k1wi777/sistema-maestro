@@ -61,3 +61,10 @@
     gap: 6px;
   }
 }
+
+@media print {
+  .spacer,
+  .bar {
+    display: none;
+  }
+}

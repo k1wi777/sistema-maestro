@@ -1,0 +1,7 @@
+.text {
+  margin: 0;
+}
+
+.retry {
+  margin: var(--space-2) 0 0;
+}
