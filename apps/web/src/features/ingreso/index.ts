@@ -1,1 +1,1 @@
-export { IngresoScreen } from './components/ingreso-screen';
+export { IngresoFallback, IngresoScreen } from './components/ingreso-screen';

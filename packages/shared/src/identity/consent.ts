@@ -6,7 +6,7 @@ const MAX_POLICY_VERSION = 20;
 
 const checkedBox = z.literal(true, { error: 'debe marcarse' });
 
-/** Aceptación del aviso: la versión vista y las cuatro casillas, todas marcadas. */
+/** Aceptación del aviso: la versión vista y las tres casillas, todas marcadas. */
 export const acceptConsentSchema = z
   .object({
     policyVersion: z
@@ -17,8 +17,7 @@ export const acceptConsentSchema = z
       .object({
         policy: checkedBox,
         authorization: checkedBox,
-        minors: checkedBox,
-        security: checkedBox,
+        terms: checkedBox,
       })
       .strict(),
   })

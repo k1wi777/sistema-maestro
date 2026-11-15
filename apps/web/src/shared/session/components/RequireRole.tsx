@@ -6,12 +6,10 @@ import { useEffect, type ReactNode } from 'react';
 
 import { PageContainer } from '@/shared/ui';
 
-import { loginPath } from '../return-path';
+import { consentPath, loginPath } from '../return-path';
 import { decideAccess, homePathFor } from '../route-access';
 import { useSession } from '../session-provider';
 import { AccessDeniedNotice } from './AccessDeniedNotice';
-import { ConsentPendingNotice } from './ConsentPendingNotice';
-import { SessionBar } from './SessionBar';
 import { SessionUnavailableNotice } from './SessionUnavailableNotice';
 
 export interface RequireRoleProps {
@@ -25,7 +23,7 @@ export interface RequireRoleProps {
  * hace la API; aquí solo se decide qué pintar según la sesión.
  */
 export function RequireRole({ role, children }: RequireRoleProps) {
-  const { state, signOut, refreshSession } = useSession();
+  const { state, refreshSession } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const decision = decideAccess(state, role);
@@ -33,27 +31,24 @@ export function RequireRole({ role, children }: RequireRoleProps) {
   useEffect(() => {
     if (decision === 'redirect-login') {
       router.replace(loginPath(state, pathname));
+    } else if (decision === 'consent-pending') {
+      // El aviso vive en `/ingreso`: ninguna sección se pinta sin aceptarlo.
+      router.replace(consentPath(pathname));
     }
   }, [decision, state, pathname, router]);
 
   switch (decision) {
     case 'allowed':
-      return state.status === 'authenticated' ? (
-        <>
-          <SessionBar user={state.user} onSignOut={() => void signOut()} />
-          {children}
-        </>
-      ) : null;
+      return state.status === 'authenticated' ? <>{children}</> : null;
     case 'forbidden':
       return state.status === 'authenticated' ? (
         <AccessDeniedNotice homePath={homePathFor(state.user.role)} />
       ) : null;
-    case 'consent-pending':
-      return <ConsentPendingNotice onSignOut={() => void signOut()} />;
     case 'unavailable':
       return <SessionUnavailableNotice onRetry={() => void refreshSession()} />;
     case 'loading':
     case 'redirect-login':
+    case 'consent-pending':
       return (
         <PageContainer>
           <p role="status" aria-busy="true">

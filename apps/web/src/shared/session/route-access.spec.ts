@@ -1,7 +1,8 @@
-import { decideAccess, homePathFor, type AccessDecision } from './route-access';
+import { availableViews, decideAccess, homePathFor, type AccessDecision } from './route-access';
 import {
   applyResolution,
   endSession,
+  initialsOf,
   requireConsent,
   type CurrentUser,
   type SessionState,
@@ -16,7 +17,12 @@ const user = (role: CurrentUser['role']): CurrentUser => ({
 const auth = (
   role: CurrentUser['role'],
   consent: 'accepted' | 'pending' = 'accepted',
-): SessionState => ({ status: 'authenticated', user: user(role), consent });
+): SessionState => ({
+  status: 'authenticated',
+  user: user(role),
+  consent,
+  policyVersion: '2026-2',
+});
 
 describe('decideAccess', () => {
   const cases: [string, SessionState, 'docente' | 'coordinador', AccessDecision][] = [
@@ -35,6 +41,17 @@ describe('decideAccess', () => {
   ];
   it.each(cases)('%s', (_label, state, required, expected) => {
     expect(decideAccess(state, required)).toBe(expected);
+  });
+});
+
+describe('availableViews', () => {
+  it('el docente solo alcanza su vista', () => {
+    expect(availableViews('docente')).toEqual(['/docente']);
+  });
+
+  it('coordinación y administración alcanzan las dos vistas', () => {
+    expect(availableViews('coordinador')).toEqual(['/docente', '/coordinacion']);
+    expect(availableViews('administrador')).toEqual(['/docente', '/coordinacion']);
   });
 });
 
@@ -76,9 +93,26 @@ describe('transiciones de sesión', () => {
     expect(
       applyResolution(
         auth('docente'),
-        { kind: 'authenticated', user: user('coordinador'), consent: 'pending' },
+        {
+          kind: 'authenticated',
+          user: user('coordinador'),
+          consent: 'pending',
+          policyVersion: '2026-3',
+        },
         true,
       ),
-    ).toEqual(auth('coordinador', 'pending'));
+    ).toEqual({ ...auth('coordinador', 'pending'), policyVersion: '2026-3' });
+  });
+});
+
+describe('initialsOf', () => {
+  it.each([
+    ['Marcela Rojas', 'MR'],
+    ['laura méndez', 'LM'],
+    ['Saide Del Carmen Barguil', 'SB'],
+    ['Cher', 'C'],
+    ['  ', ''],
+  ])('%j → %j', (name, expected) => {
+    expect(initialsOf(name)).toBe(expected);
   });
 });

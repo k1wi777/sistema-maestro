@@ -90,14 +90,14 @@ describe('changePasswordSchema', () => {
 describe('acceptConsentSchema', () => {
   const valid = {
     policyVersion: '2026-1',
-    items: { policy: true, authorization: true, minors: true, security: true },
+    items: { policy: true, authorization: true, terms: true },
   };
 
-  it('accepts the four boxes checked', () => {
+  it('accepts the three boxes checked', () => {
     expect(acceptConsentSchema.safeParse(valid).success).toBe(true);
   });
 
-  it.each(['policy', 'authorization', 'minors', 'security'])(
+  it.each(['policy', 'authorization', 'terms'])(
     'rejects %s missing or unchecked, naming the field',
     (key) => {
       const missing = { ...valid.items } as Record<string, unknown>;

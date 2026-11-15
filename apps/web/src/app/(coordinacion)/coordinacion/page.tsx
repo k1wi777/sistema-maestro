@@ -1,9 +1,7 @@
-import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
-import { CoordinacionScreen } from '@/features/coordinacion';
+import { VIEWS, firstSectionHref } from '@/shared/shell';
 
-export const metadata: Metadata = { title: 'Coordinación académica' };
-
-export default function CoordinacionPage() {
-  return <CoordinacionScreen />;
+export default function Page() {
+  redirect(firstSectionHref(VIEWS['/coordinacion']));
 }

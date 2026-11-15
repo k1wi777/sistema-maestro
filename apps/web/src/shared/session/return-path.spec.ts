@@ -1,4 +1,4 @@
-import { loginPath, safeReturnPath } from './return-path';
+import { consentPath, loginPath, safeReturnPath } from './return-path';
 
 describe('safeReturnPath', () => {
   it.each([
@@ -40,6 +40,12 @@ describe('safeReturnPath', () => {
   it('usa la vista propia si no hay valor', () => {
     expect(safeReturnPath(null, 'coordinador')).toBe('/coordinacion');
     expect(safeReturnPath(undefined, 'administrador')).toBe('/coordinacion');
+  });
+});
+
+describe('consentPath', () => {
+  it('lleva la ruta actual como retorno', () => {
+    expect(consentPath('/docente/planeacion')).toBe('/ingreso?volver=%2Fdocente%2Fplaneacion');
   });
 });
 
