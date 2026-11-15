@@ -29,7 +29,7 @@ import {
   type SaveState,
   type StepperStep,
 } from '@/shared/ui';
-import { AccessDeniedNotice, ConsentPendingNotice, SessionEndedNotice } from '@/shared/session';
+import { AccessDeniedNotice, SessionEndedNotice } from '@/shared/session';
 
 import styles from './showcase.module.css';
 
@@ -382,9 +382,6 @@ export function Showcase() {
             <SessionEndedNotice />
             <Card title="Acceso denegado">
               <AccessDeniedNotice homePath="/docente" embedded />
-            </Card>
-            <Card title="Aviso de datos pendiente">
-              <ConsentPendingNotice onSignOut={() => undefined} embedded />
             </Card>
           </div>
         </section>

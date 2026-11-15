@@ -1,116 +1,163 @@
 'use client';
 
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, type SyntheticEvent } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
+import { INSTITUTION, LegalLinks } from '@/shared/legal';
 import {
   REASON_PARAM,
   RETURN_PARAM,
   SESSION_EXPIRED_REASON,
-  SessionEndedNotice,
+  availableViews,
   safeReturnPath,
   useSession,
-  type SignInField,
+  type SessionState,
 } from '@/shared/session';
-import { Button, Checkbox, Notice, PageContainer, PageHeader, TextInput } from '@/shared/ui';
 
+import { ingresoView } from '../ingreso-view';
+import { ConsentDialog } from './consent-dialog';
 import styles from './ingreso-screen.module.css';
+import { LoginForm } from './login-form';
+import { ViewChooser } from './view-chooser';
 
-/** Ingreso mínimo y funcional; FE-11 lo rediseña con la pantalla definitiva. */
+const RULES = { safeReturnPath, availableViews };
+
+/** Panel de marca del tablero: escudo, nombre, lema y texto institucional. */
+function BrandPanel({ compact }: { compact: boolean }) {
+  return (
+    <section
+      className={styles.brand}
+      aria-label={compact ? undefined : INSTITUTION.displayName}
+      aria-hidden={compact || undefined}
+      inert={compact}
+    >
+      <div className={styles.brandInner}>
+        <div className={styles.logo}>
+          <Image
+            src="/escudo-gns.webp"
+            alt={compact ? '' : 'Escudo de George Noble School'}
+            width={72}
+            height={72}
+            className={styles.seal}
+            priority
+          />
+          <div>
+            <span className={styles.logoName}>
+              George Noble
+              <br />
+              School
+            </span>
+            <span className={styles.logoPlace}>Montería · Colombia</span>
+          </div>
+        </div>
+        <p className={styles.motto}>
+          Make it <span className={styles.mottoAccent}>possible</span>
+        </p>
+        {compact ? null : (
+          <>
+            <p className={styles.lead}>
+              Plataforma institucional para planear, registrar y acompañar el trabajo pedagógico de
+              nuestros docentes.
+            </p>
+            <ul className={styles.facts}>
+              <li>Colegio bilingüe</li>
+              <li>Calendario B</li>
+              <li>Acreditado por Cognia</li>
+            </ul>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className={styles.footer}>
+      <p>© {INSTITUTION.displayName} · Montería</p>
+      <LegalLinks />
+    </footer>
+  );
+}
+
+function AccessCard({ children }: { children: ReactNode }) {
+  return (
+    <div className={styles.card}>
+      {children}
+      <Footer />
+    </div>
+  );
+}
+
+function view(state: SessionState, returnTo: string | null) {
+  return ingresoView(state, returnTo, RULES);
+}
+
+/** Marco de la pantalla: panel de marca y acceso; con el aviso abierto, ambos quedan `inert`. */
+function IngresoFrame({
+  consent,
+  overlay,
+  children,
+}: {
+  consent: boolean;
+  overlay?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className={styles.login}>
+      <BrandPanel compact={consent} />
+      <main className={styles.access} inert={consent} aria-hidden={consent || undefined}>
+        {consent ? null : <AccessCard>{children}</AccessCard>}
+      </main>
+      {overlay}
+    </div>
+  );
+}
+
+/**
+ * Lo que se sirve en el HTML antes de que haya parámetros de la URL ni sesión: el formulario con
+ * «Ingresar» deshabilitado. Así, mientras la página no hidrata, no hay nada que enviar.
+ */
+export function IngresoFallback() {
+  return (
+    <IngresoFrame consent={false}>
+      <LoginForm loading sessionEnded={false} />
+    </IngresoFrame>
+  );
+}
+
+/** Ingreso: formulario, aviso de datos o selección de vista según la sesión (`ingresoView`). */
 export function IngresoScreen() {
-  const { state, signIn } = useSession();
+  const { state } = useSession();
   const router = useRouter();
   const params = useSearchParams();
   const returnTo = params.get(RETURN_PARAM);
   const sessionEnded = params.get(REASON_PARAM) === SESSION_EXPIRED_REASON;
+  const current = view(state, returnTo);
+  const target = current.kind === 'navigate' ? current.to : null;
+  const consent = current.kind === 'consent';
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<SignInField, string>>>({});
-
-  // Quien ya tiene sesión no necesita esta pantalla: va a su vista propia (o a su retorno).
+  // Con sesión y el aviso vigente aceptado no hay nada que hacer aquí: se va a la vista.
   useEffect(() => {
-    if (state.status === 'authenticated') {
-      router.replace(safeReturnPath(returnTo, state.user.role));
+    if (target) {
+      router.replace(target);
     }
-  }, [state, returnTo, router]);
+  }, [target, router]);
 
-  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError(null);
-    setFieldErrors({});
-    const result = await signIn({ email: email.trim(), password, rememberMe });
-    if (result.ok) {
-      // Se mantiene «enviando» hasta que la navegación desmonte la pantalla.
-      router.replace(safeReturnPath(returnTo, result.user.role));
-      return;
-    }
-    setSubmitting(false);
-    setPassword('');
-    setFieldErrors(result.fieldErrors);
-    setError(result.error.message);
-  }
-
-  if (state.status === 'authenticated') {
-    return (
-      <PageContainer>
+  return (
+    <IngresoFrame consent={consent} overlay={consent ? <ConsentDialog /> : null}>
+      {current.kind === 'form' ? (
+        <LoginForm loading={current.busy} sessionEnded={sessionEnded} />
+      ) : null}
+      {current.kind === 'chooser' && state.status === 'authenticated' ? (
+        <ViewChooser user={state.user} />
+      ) : null}
+      {current.kind === 'navigate' ? (
         <p role="status" aria-busy="true">
           Cargando…
         </p>
-      </PageContainer>
-    );
-  }
-
-  return (
-    <PageContainer>
-      <PageHeader
-        context="Ingreso"
-        title="Bienvenida a la Plataforma GNS"
-        description="Ingresa con tu cuenta institucional."
-      />
-      <form
-        method="post"
-        onSubmit={(event) => void handleSubmit(event)}
-        className={styles.form}
-        noValidate
-      >
-        {sessionEnded ? <SessionEndedNotice /> : null}
-        {error ? <Notice tone="error">{error}</Notice> : null}
-        <TextInput
-          label="Correo institucional"
-          type="email"
-          name="email"
-          autoComplete="username"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          error={fieldErrors.email}
-          required
-        />
-        <TextInput
-          label="Contraseña"
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          error={fieldErrors.password}
-          required
-        />
-        <Checkbox
-          label="Mantener la sesión iniciada"
-          checked={rememberMe}
-          onChange={(event) => setRememberMe(event.target.checked)}
-        />
-        <div>
-          <Button type="submit" disabled={submitting} endIcon="flecha">
-            {submitting ? 'Ingresando…' : 'Ingresar'}
-          </Button>
-        </div>
-      </form>
-    </PageContainer>
+      ) : null}
+    </IngresoFrame>
   );
 }

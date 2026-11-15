@@ -16816,13 +16816,7 @@
                   true
                 ]
               },
-              "minors": {
-                "type": "boolean",
-                "enum": [
-                  true
-                ]
-              },
-              "security": {
+              "terms": {
                 "type": "boolean",
                 "enum": [
                   true
@@ -16832,8 +16826,7 @@
             "required": [
               "policy",
               "authorization",
-              "minors",
-              "security"
+              "terms"
             ],
             "additionalProperties": false
           }
@@ -16867,6 +16860,7 @@
               "enum": [
                 "politica",
                 "autorizo",
+                "terminos",
                 "menores",
                 "seguridad"
               ]

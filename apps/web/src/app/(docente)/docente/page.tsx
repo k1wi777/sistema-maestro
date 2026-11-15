@@ -1,9 +1,7 @@
-import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 
-import { DocenteScreen } from '@/features/docente';
+import { VIEWS, firstSectionHref } from '@/shared/shell';
 
-export const metadata: Metadata = { title: 'Vista docente' };
-
-export default function DocentePage() {
-  return <DocenteScreen />;
+export default function Page() {
+  redirect(firstSectionHref(VIEWS['/docente']));
 }

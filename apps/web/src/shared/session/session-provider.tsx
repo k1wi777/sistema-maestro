@@ -32,6 +32,11 @@ export type SignInResult =
   | { ok: true; user: CurrentUser }
   | { ok: false; error: ApiError; fieldErrors: Partial<Record<SignInField, string>> };
 
+export type AcceptConsentResult = { ok: true } | { ok: false; error: ApiError };
+
+/** 409 de la API: la versión cambió o ya se aceptó (otra pestaña). */
+const CONFLICT = 409;
+
 export interface SessionContextValue {
   state: SessionState;
   /** Valida con `loginSchema`, inicia sesión y resuelve el aviso de datos. */
@@ -42,6 +47,11 @@ export interface SessionContextValue {
   }) => Promise<SignInResult>;
   /** Cierra la sesión en la API (si falla, la descarta igual) y lleva a `/ingreso`. */
   signOut: () => Promise<void>;
+  /**
+   * Registra la aceptación del aviso (las tres casillas, ya marcadas) con la versión de los textos
+   * que el usuario vio. Un 409 cuenta como éxito solo si la API ya tiene la versión vigente aceptada.
+   */
+  acceptConsent: (policyVersion: string) => Promise<AcceptConsentResult>;
   /** Vuelve a resolver la sesión con la API (rol y aviso vigentes). */
   refreshSession: () => Promise<void>;
 }
@@ -153,9 +163,27 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     router.replace('/ingreso');
   }, [router]);
 
+  const acceptConsent = useCallback<SessionContextValue['acceptConsent']>(async (policyVersion) => {
+    const result = await callApi(() =>
+      api.POST('/consent', {
+        body: { policyVersion, items: { policy: true, authorization: true, terms: true } },
+      }),
+    );
+    if (!result.ok && result.error.statusCode !== CONFLICT) {
+      return { ok: false, error: result.error };
+    }
+    const resolution = await resolveSession();
+    lastResolvedAt.current = Date.now();
+    setState((previous) => applyResolution(previous, resolution, true));
+    if (!result.ok && !(resolution.kind === 'authenticated' && resolution.consent === 'accepted')) {
+      return { ok: false, error: result.error };
+    }
+    return { ok: true };
+  }, []);
+
   const value = useMemo(
-    () => ({ state, signIn, signOut, refreshSession }),
-    [state, signIn, signOut, refreshSession],
+    () => ({ state, signIn, signOut, acceptConsent, refreshSession }),
+    [state, signIn, signOut, acceptConsent, refreshSession],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

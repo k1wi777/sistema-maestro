@@ -8,13 +8,13 @@ export type ConsentState = 'accepted' | 'pending';
 export type SessionState =
   | { status: 'loading' }
   | { status: 'anonymous'; signedOut?: boolean }
-  | { status: 'authenticated'; user: CurrentUser; consent: ConsentState }
+  | { status: 'authenticated'; user: CurrentUser; consent: ConsentState; policyVersion: string }
   | { status: 'unavailable' }
   | { status: 'ended' };
 
 /** Resultado de resolver la sesión contra la API (`/auth/me` y `/consent`). */
 export type Resolution =
-  | { kind: 'authenticated'; user: CurrentUser; consent: ConsentState }
+  | { kind: 'authenticated'; user: CurrentUser; consent: ConsentState; policyVersion: string }
   | { kind: 'anonymous' }
   | { kind: 'unavailable' };
 
@@ -32,7 +32,12 @@ export function applyResolution(
 ): SessionState {
   switch (resolution.kind) {
     case 'authenticated':
-      return { status: 'authenticated', user: resolution.user, consent: resolution.consent };
+      return {
+        status: 'authenticated',
+        user: resolution.user,
+        consent: resolution.consent,
+        policyVersion: resolution.policyVersion,
+      };
     case 'anonymous':
       return previous.status === 'ended' ? previous : { status: 'anonymous' };
     case 'unavailable':
@@ -60,4 +65,15 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export function roleLabel(role: UserRole): string {
   return ROLE_LABELS[role];
+}
+
+/** Iniciales para el avatar: la primera letra del primer y del último nombre. */
+export function initialsOf(fullName: string): string {
+  const words = fullName.trim().split(/\s+/).filter(Boolean);
+  const first = words[0];
+  const last = words.length > 1 ? words[words.length - 1] : undefined;
+  return [first, last]
+    .filter((word): word is string => word !== undefined)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('');
 }

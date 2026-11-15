@@ -21,7 +21,7 @@ import {
 
 type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-const ALL_BOXES = { policy: true, authorization: true, minors: true, security: true };
+const ALL_BOXES = { policy: true, authorization: true, terms: true };
 
 /** Sesión de un usuario demo, tal como la tendría el navegador (cookies y `Origin`). */
 export interface DemoSession {

@@ -31,6 +31,11 @@ export function safeReturnPath(value: string | null | undefined, role: UserRole)
   return value;
 }
 
+/** Destino de `/ingreso` para quien debe aceptar el aviso de datos estando en `pathname`. */
+export function consentPath(pathname: string): string {
+  return `/ingreso?${RETURN_PARAM}=${encodeURIComponent(pathname)}`;
+}
+
 /** Destino de `/ingreso` para quien debe iniciar sesión estando en `pathname`. */
 export function loginPath(state: SessionState, pathname: string): string {
   if (state.status === 'anonymous' && state.signedOut) {

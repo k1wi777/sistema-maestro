@@ -27,5 +27,6 @@ export async function resolveSession(): Promise<Resolution> {
     kind: 'authenticated',
     user: me.data,
     consent: consent.data.accepted ? 'accepted' : 'pending',
+    policyVersion: consent.data.policyVersion,
   };
 }

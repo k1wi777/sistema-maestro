@@ -8,7 +8,7 @@ import { ConsentService } from './consent.service';
 const VERSION = '2026-1';
 const INPUT = {
   policyVersion: VERSION,
-  items: { policy: true, authorization: true, minors: true, security: true },
+  items: { policy: true, authorization: true, terms: true },
 } as const;
 
 function setup(existing: ConsentRecord | null = null) {
@@ -59,7 +59,7 @@ describe('ConsentService', () => {
     });
   });
 
-  it('records the four boxes with the server date', async () => {
+  it('records the three boxes with the server date', async () => {
     const { service, create } = setup();
     const before = Date.now();
 
