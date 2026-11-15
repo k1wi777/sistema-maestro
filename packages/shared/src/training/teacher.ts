@@ -48,6 +48,8 @@ export const teacherModuleSummarySchema = z.strictObject({
     activities: z.number().int(),
   }),
   bestScore: z.number().int().nullable(),
+  videoViewedAt: nullableDate,
+  presentationViewedAt: nullableDate,
   completedAt: nullableDate,
   activities: z.array(teacherActivitySummarySchema),
 });

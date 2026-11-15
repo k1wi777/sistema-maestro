@@ -117,6 +117,8 @@ function projectModuleSummary(
       activities: row.activities.length,
     },
     bestScore: progress?.bestScore ?? null,
+    videoViewedAt: progress?.videoViewedAt ?? null,
+    presentationViewedAt: progress?.presentationViewedAt ?? null,
     completedAt: progress?.completedAt ?? null,
     activities: row.activities.map((activity) =>
       projectActivitySummary(activity, activityProgress.get(activity.id)),

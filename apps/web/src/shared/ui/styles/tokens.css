@@ -39,6 +39,54 @@
   --on-solid: #ffffff;
   --seal-ring: #c8102e;
 
+  /*
+   * Desafío GNS: el juego conserva su fondo azul profundo y sus cuatro colores en ambos temas,
+   * como en el tablero (layer-pulido.css), por eso no cambian con el tema ni con la impresión.
+   */
+  --game-bg-top: #1e3a7a;
+  --game-bg-mid: #14254f;
+  --game-bg-bottom: #0f1d3f;
+  --game-ink: #14254f;
+  --game-track: #e4e8f1;
+  --game-streak: #f2b705;
+  --game-red-top: #d61838;
+  --game-red-bottom: #b30e29;
+  --game-blue-top: #2a5fcc;
+  --game-blue-bottom: #1d4fb8;
+  --game-yellow-top: #f7c52b;
+  --game-yellow-bottom: #e9ae00;
+  --game-green-top: #2a9160;
+  --game-green-bottom: #1f7a4d;
+  --game-ok-top: #1e7a4c;
+  --game-ok-bottom: #17643e;
+  --game-bad-top: #c8102e;
+  --game-bad-bottom: #a30c25;
+  --game-seal: #1e7a4c;
+  --game-seal-halo: rgb(95 192 142 / 0.45);
+  --game-black-18: rgb(0 0 0 / 0.18);
+  --game-black-2: rgb(0 0 0 / 0.2);
+  --game-black-25: rgb(0 0 0 / 0.25);
+  --game-black-3: rgb(0 0 0 / 0.3);
+  --game-black-5: rgb(0 0 0 / 0.5);
+  --game-black-6: rgb(0 0 0 / 0.6);
+  --game-black-7: rgb(0 0 0 / 0.7);
+  --game-ink-12: rgb(20 37 79 / 0.12);
+  --game-ink-18: rgb(20 37 79 / 0.18);
+  --game-seal-35: rgb(200 16 46 / 0.35);
+  --game-white-07: rgb(255 255 255 / 0.07);
+  --game-white-08: rgb(255 255 255 / 0.08);
+  --game-white-1: rgb(255 255 255 / 0.1);
+  --game-white-12: rgb(255 255 255 / 0.12);
+  --game-white-14: rgb(255 255 255 / 0.14);
+  --game-white-16: rgb(255 255 255 / 0.16);
+  --game-white-18: rgb(255 255 255 / 0.18);
+  --game-white-2: rgb(255 255 255 / 0.2);
+  --game-white-22: rgb(255 255 255 / 0.22);
+  --game-white-25: rgb(255 255 255 / 0.25);
+  --game-white-6: rgb(255 255 255 / 0.6);
+  --game-white-8: rgb(255 255 255 / 0.8);
+  --game-white-82: rgb(255 255 255 / 0.82);
+
   /* Fijos sobre fondos de marca oscuros (panel de marca, menú lateral, velo del aviso) */
   --on-solid-muted: rgb(255 255 255 / 0.78);
   --on-solid-faint: rgb(255 255 255 / 0.6);

@@ -1,0 +1,113 @@
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+
+.count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.count b {
+  color: var(--red);
+  font-family: var(--font-display-stack);
+  font-size: 2.5rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.count span {
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+
+.bar {
+  flex: 1;
+  min-width: 10rem;
+  height: 0.5rem;
+  overflow: hidden;
+  background: var(--blue-soft);
+  border-radius: var(--radius-pill);
+}
+
+.bar span {
+  display: block;
+  height: 100%;
+  background: var(--red);
+  border-radius: var(--radius-pill);
+  transition: width 0.4s;
+}
+
+.percent {
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.continue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) var(--space-6);
+  background: var(--blue-soft);
+  border-radius: var(--radius-lg);
+}
+
+.continue p {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+
+.continueLabel {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.plan {
+  margin-top: var(--space-8);
+}
+
+.planTitle {
+  margin-bottom: var(--space-4);
+  color: var(--heading);
+  font-size: var(--text-xl);
+}
+
+.part {
+  margin-bottom: var(--space-6);
+}
+
+.partTitle {
+  color: var(--heading);
+  font-size: var(--text-lg);
+}
+
+.partSubtitle {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.modules {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17.5rem), 1fr));
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
