@@ -55,3 +55,13 @@ export function formatTime(instant: Date): string {
     timeZone: TIME_ZONE,
   }).format(instant);
 }
+
+/** Fecha de calendario `AAAA-MM-DD` como «6 nov 2026». */
+export function formatDayWithYear(date: string): string {
+  return `${formatDay(date)} ${date.slice(0, 4)}`;
+}
+
+/** Hoy como `AAAA-MM-DD` en hora de Colombia (UTC−5), para proponer la fecha de un registro. */
+export function todayInColombia(now: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(now);
+}

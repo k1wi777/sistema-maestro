@@ -1,6 +1,6 @@
 import { RecordStatus } from '@gns/shared';
 
-import { STATUS_INFO, STATUS_ORDER, canVoid, isEditable, readOnlyNotice } from './status';
+import { STATUS_INFO, STATUS_ORDER, canVoid, isEditable } from './status';
 
 describe('status', () => {
   it('describes every status exactly once', () => {
@@ -16,19 +16,11 @@ describe('status', () => {
     expect(STATUS_INFO.anulado.tone).toBe('danger');
   });
 
-  it('lets the owner edit only drafts and plans with observations', () => {
+  it('lets the owner edit only drafts and records with observations', () => {
     expect(STATUS_ORDER.filter(isEditable)).toEqual(['borrador', 'observaciones']);
   });
 
-  it('lets the owner void drafts, submitted plans and plans with observations', () => {
+  it('lets the owner void drafts, submitted records and records with observations', () => {
     expect(STATUS_ORDER.filter(canVoid)).toEqual(['borrador', 'enviada', 'observaciones']);
-  });
-
-  it('explains the read-only states only', () => {
-    expect(readOnlyNotice('borrador')).toBeNull();
-    expect(readOnlyNotice('observaciones')).toBeNull();
-    expect(readOnlyNotice('enviada')?.text).toContain('coordinación la está revisando');
-    expect(readOnlyNotice('revisada')).not.toBeNull();
-    expect(readOnlyNotice('anulado')).not.toBeNull();
   });
 });

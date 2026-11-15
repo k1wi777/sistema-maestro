@@ -3,7 +3,7 @@ import type { LessonPlan, Review } from '@gns/shared';
 import type { ApiResult } from '@/shared/api';
 
 import { getLessonPlan, listLessonPlanReviews } from '../api/lesson-plans';
-import { useRemote, type RemoteState } from './use-remote';
+import { useRemote, type RemoteState } from '@/shared/data';
 
 export interface LessonPlanWithReviews {
   plan: LessonPlan;

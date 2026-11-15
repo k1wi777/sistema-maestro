@@ -1,4 +1,5 @@
-import { networkError, type ApiResult } from '@/shared/api';
+import { networkError } from './api-error';
+import type { ApiResult } from './client';
 
 /** Lo único que se pide a un esquema de `@gns/shared`: validar y devolver el valor tipado. */
 export interface Parser<T> {

@@ -1,0 +1,108 @@
+.note {
+  margin: 0 0 var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-base);
+}
+
+.newEntry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.newEntryTitle {
+  margin: 0;
+  color: var(--heading);
+  font-size: var(--text-base);
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.entryTop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.entryDate {
+  color: var(--heading);
+}
+
+.entryLesson {
+  color: var(--muted);
+}
+
+.entryActions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.entryText {
+  margin: 0;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.detail {
+  margin: 0;
+  color: var(--fg);
+  font-size: var(--text-base);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.adjusted {
+  margin: 0;
+  color: var(--warn);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.signature {
+  margin: 0;
+}
+
+.reviewNote {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.reviewAdjusted {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+}

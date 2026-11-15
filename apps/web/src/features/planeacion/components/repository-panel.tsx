@@ -13,11 +13,11 @@ import { Button, Notice, SegmentedFilter, Select, TextInput } from '@/shared/ui'
 
 import { setSharedActivityFavorite } from '../api/shared-activities';
 import { readyOr, useActivityCatalogs } from '../hooks/use-activity-catalogs';
-import { useQueryParams } from '../hooks/use-query-params';
+import { useQueryParams } from '@/shared/data';
 import { useSharedActivities } from '../hooks/use-shared-activities';
 import { ACTIVITY_TYPE_OPTIONS } from '../model/activity-types';
 import { ActivityCard } from './activity-card';
-import { LoadError, Loading } from './load-error';
+import { LoadError, Loading } from '@/shared/data';
 import styles from './repository-panel.module.css';
 import { ShareActivityDialog, type ShareActivityMode } from './share-activity-dialog';
 import { WithdrawDialog } from './withdraw-dialog';
