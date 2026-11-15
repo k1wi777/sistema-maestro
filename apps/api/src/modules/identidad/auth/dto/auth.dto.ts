@@ -1,5 +1,5 @@
 import { changePasswordSchema, currentUserSchema, loginSchema } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 
 export class LoginDto extends createZodDto(loginSchema) {}
 export class ChangePasswordDto extends createZodDto(changePasswordSchema) {}

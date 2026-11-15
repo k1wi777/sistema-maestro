@@ -6,10 +6,9 @@ export interface Parser<T> {
 }
 
 /**
- * Valida con el esquema compartido la respuesta de la API. Los tipos generados del contrato
- * describen mal los campos que aceptan `null` (los muestran como `string[]`) y las fechas, así que
- * la feature trabaja con los tipos de `@gns/shared`; una respuesta que no los cumple se trata como
- * un fallo de conexión en lugar de pintar datos corruptos.
+ * Valida con el esquema compartido la respuesta de la API y la decodifica: las fechas llegan como
+ * texto ISO y la feature trabaja con `Date` (tipos de `@gns/shared`). Una respuesta que no cumple
+ * el esquema se trata como un fallo de conexión en lugar de pintar datos corruptos.
  */
 export function parseResult<T>(result: ApiResult<unknown>, parser: Parser<T>): ApiResult<T> {
   if (!result.ok) {

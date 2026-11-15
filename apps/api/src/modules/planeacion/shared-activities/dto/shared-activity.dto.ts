@@ -7,7 +7,7 @@ import {
   sharedActivitySchema,
   updateSharedActivitySchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 
 export class SharedActivityDto extends createZodDto(sharedActivitySchema, { codec: true }) {}
 export class SharedActivityPageDto extends createZodDto(createPageSchema(sharedActivitySchema), {

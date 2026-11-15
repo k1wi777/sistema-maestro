@@ -4,7 +4,7 @@ import {
   schoolYearEntitySchema,
   schoolYearListQuerySchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 
 export class SchoolYearDto extends createZodDto(schoolYearEntitySchema, { codec: true }) {}
 export class SchoolYearPageDto extends createZodDto(createPageSchema(schoolYearEntitySchema), {

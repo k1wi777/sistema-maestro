@@ -11,7 +11,7 @@ import {
   updateFieldJournalEntrySchema,
   voidRecordSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../shared/http/zod-dto';
 import { z } from 'zod';
 
 export class FieldJournalDto extends createZodDto(fieldJournalSchema, { codec: true }) {}

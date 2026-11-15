@@ -5,7 +5,7 @@ import {
   gradeSchema,
   updateGradeSchema,
 } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../../../shared/http/zod-dto';
 
 export class GradeDto extends createZodDto(gradeSchema, { codec: true }) {}
 export class GradePageDto extends createZodDto(createPageSchema(gradeSchema), { codec: true }) {}

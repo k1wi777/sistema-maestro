@@ -1,5 +1,5 @@
 import { createPageSchema, unansweredListQuerySchema, unansweredQuestionSchema } from '@gns/shared';
-import { createZodDto } from 'nestjs-zod';
+import { createZodDto } from '../../../shared/http/zod-dto';
 
 export class UnansweredQuestionDto extends createZodDto(unansweredQuestionSchema, {
   codec: true,
