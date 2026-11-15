@@ -56,7 +56,7 @@ function ModuleView({
   data: TeacherModule;
   refresh: () => Promise<ApiError | null>;
 }) {
-  const { module, markVideo, markPresentation, challengeFinished } = useModuleView(data, refresh);
+  const { module, markVideo, markPresentation, progressChanged } = useModuleView(data, refresh);
   const sections = moduleSections(module);
   const state = MODULE_STATE_INFO[module.state];
 
@@ -85,13 +85,13 @@ function ModuleView({
               <Card key={kind} title={SECTION_TITLE[kind]} step={number}>
                 {kind === 'video' ? <VideoSection module={module} onMark={markVideo} /> : null}
                 {kind === 'challenge' ? (
-                  <ChallengeGame module={module} onFinished={challengeFinished} />
+                  <ChallengeGame module={module} onFinished={progressChanged} />
                 ) : null}
                 {kind === 'presentation' ? (
                   <PresentationSection module={module} onMark={markPresentation} />
                 ) : null}
                 {kind === 'activities' ? (
-                  <ActivitiesSection activities={module.activities} />
+                  <ActivitiesSection activities={module.activities} onProgress={progressChanged} />
                 ) : null}
               </Card>
             ))}

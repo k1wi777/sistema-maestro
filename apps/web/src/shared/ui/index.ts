@@ -39,6 +39,7 @@ export { Tabs, type TabItem, type TabsProps } from './components/Tabs';
 export { TextArea, type TextAreaProps } from './components/TextArea';
 export { TextInput, type TextInputProps } from './components/TextInput';
 export { Icon, type IconFill, type IconProps } from './icons/Icon';
+export { isOpenStrokeIcon } from './icons/registry';
 export type { FillableIconName, IconName, OpenStrokeIconName } from './icons/registry';
 export { THEME_INIT_SCRIPT } from './theme/theme';
 export { ThemeToggle } from './theme/ThemeToggle';

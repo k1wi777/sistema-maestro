@@ -2,6 +2,8 @@
 
 import { useRef, type KeyboardEvent } from 'react';
 
+import { Icon } from '../icons/Icon';
+import type { IconName } from '../icons/registry';
 import { cx } from './cx';
 import styles from './SegmentedFilter.module.css';
 
@@ -10,6 +12,8 @@ export interface SegmentedOption<Value extends string> {
   label: string;
   /** Contador opcional (p. ej. registros por estado). */
   count?: number;
+  /** Icono decorativo antes del texto (el texto sigue dando el nombre accesible). */
+  icon?: IconName;
 }
 
 interface BaseProps<Value extends string> {
@@ -98,6 +102,7 @@ export function SegmentedFilter<Value extends string>(props: SegmentedFilterProp
             }}
             onKeyDown={(event) => onKeyDown(event, index)}
           >
+            {option.icon ? <Icon name={option.icon} size={16} /> : null}
             {option.label}
             {option.count !== undefined ? (
               <span className={styles.count}>

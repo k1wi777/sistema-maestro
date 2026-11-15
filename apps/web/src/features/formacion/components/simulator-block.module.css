@@ -1,0 +1,189 @@
+/*
+ * Simulador. Estilo de .sim-* del tablero: entradas en la superficie del tema (se ven en claro y
+ * oscuro) y resultados en el panel azul profundo del juego, con filete rojo. Colores de tokens.css;
+ * ningún texto por debajo de 12 px.
+ */
+.block {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.selector {
+  align-self: flex-start;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.title {
+  margin: 0;
+  color: var(--heading);
+  font-size: var(--text-md);
+}
+
+.state {
+  width: 100%;
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.text {
+  width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: var(--space-4);
+}
+
+.inputs {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.range label {
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.range label b {
+  margin-left: var(--space-1);
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.range input[type='range'] {
+  width: 100%;
+  min-height: 2.75rem;
+  accent-color: var(--red);
+  background: none;
+}
+
+.option {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.optionLabel {
+  color: var(--fg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.results {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-5);
+  background: linear-gradient(0deg, var(--seal-ring) 0 4px, var(--game-bg-mid) 4px);
+  border-radius: var(--radius-lg);
+  color: var(--on-solid);
+}
+
+.big {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  font-family: var(--font-display-stack);
+  line-height: 1.05;
+}
+
+.bigLabel {
+  margin-bottom: var(--space-1);
+  font-family: var(--font-body-stack);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  opacity: 0.9;
+}
+
+.big b {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.big small {
+  margin-top: var(--space-1);
+  font-family: var(--font-body-stack);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  opacity: 0.88;
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--game-white-16);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.row dt {
+  min-width: 0;
+}
+
+.row dd {
+  margin: 0;
+  font-weight: var(--weight-bold);
+  text-align: right;
+}
+
+.note {
+  margin: 0;
+  color: var(--game-streak);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.privacy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 760px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

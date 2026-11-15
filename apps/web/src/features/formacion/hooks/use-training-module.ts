@@ -63,9 +63,12 @@ export function useModuleView(module: TeacherModule, refresh: () => Promise<ApiE
     [applyMark, module.id],
   );
 
-  /** Un juego terminó: si cerró el módulo se anuncia ya y luego se actualiza con la API. */
-  const challengeFinished = useCallback(
-    (completed: boolean) => {
+  /**
+   * Hubo un avance en un juego. El Desafío sabe si cerró el módulo (`completed`) y se anuncia ya; las
+   * actividades no lo saben y llaman sin argumento. En ambos casos se actualiza con la API.
+   */
+  const progressChanged = useCallback(
+    (completed?: boolean) => {
       if (completed) {
         setMarks((current) => ({ ...current, completed: true }));
       }
@@ -84,5 +87,5 @@ export function useModuleView(module: TeacherModule, refresh: () => Promise<ApiE
     },
   };
 
-  return { module: shown, markVideo, markPresentation, challengeFinished };
+  return { module: shown, markVideo, markPresentation, progressChanged };
 }

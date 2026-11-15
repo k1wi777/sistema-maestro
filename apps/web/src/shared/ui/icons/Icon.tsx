@@ -42,7 +42,7 @@ export function Icon({ name, size = 20, label, fill = 'none', className, style }
       fill={effectiveFill === 'none' ? 'none' : 'currentColor'}
       fillOpacity={FILL_OPACITY[effectiveFill]}
       className={className}
-      style={style}
+      style={{ flexShrink: 0, ...style }}
       aria-hidden={label ? undefined : true}
       aria-label={label}
       role={label ? 'img' : undefined}
