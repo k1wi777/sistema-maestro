@@ -182,3 +182,32 @@
   --shadow-3: 0 16px 36px -12px rgb(0 0 0 / 0.6);
   --shadow-float: 0 4px 10px -2px rgb(0 0 0 / 0.4), 0 24px 48px -16px rgb(0 0 0 / 0.7);
 }
+
+/*
+ * Impresión (exportar a PDF): el papel siempre usa los valores claros, aunque la pantalla esté en
+ * tema oscuro. Va al final y repite los selectores del tema oscuro para ganar por orden.
+ */
+@media print {
+  :root,
+  :root:not([data-theme='light']),
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --navy: #14254f;
+    --blue: #1f3d8a;
+    --blue-soft: #eef2fb;
+    --red: #c8102e;
+    --red-soft: #fdeef0;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --fg: #0f172a;
+    --muted: #535d71;
+    --line: #e4e7ec;
+    --line-strong: #d5dae3;
+    --ok: #1e7a4c;
+    --ok-soft: #e8f5ee;
+    --warn: #8a5a00;
+    --warn-soft: #fdf4e1;
+    --tint: #f1f4fa;
+    --heading: var(--navy);
+  }
+}

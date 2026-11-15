@@ -1,5 +1,6 @@
 // API pública del sistema de diseño GNS. Las features importan solo desde '@/shared/ui'.
 export { ActionBar, type ActionBarProps } from './components/ActionBar';
+export { ActionMenu, type ActionMenuItem, type ActionMenuProps } from './components/ActionMenu';
 export { BrandMark, type BrandMarkProps } from './components/BrandMark';
 export {
   Button,
@@ -12,6 +13,7 @@ export {
 export { Card, type CardProps } from './components/Card';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { DataTable, type DataTableColumn, type DataTableProps } from './components/DataTable';
+export { Dialog, type DialogProps } from './components/Dialog';
 export { Field, type FieldControlProps, type FieldProps } from './components/Field';
 export { Notice, type NoticeProps, type NoticeTone } from './components/Notice';
 export { Observation, type ObservationProps } from './components/Observation';

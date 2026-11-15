@@ -19,6 +19,8 @@ export interface StepSummaryProps {
   /** Nota previa al envío (qué pasa al enviar). */
   note?: ReactNode;
   submitLabel: string;
+  /** Texto del botón de cada ítem («Ir al paso» por defecto). */
+  goLabel?: string;
   onSubmit: () => void;
   /** Si algo falta, el envío queda deshabilitado salvo que la feature lo permita. */
   submitDisabled?: boolean;
@@ -31,6 +33,7 @@ export function StepSummary({
   onGoToStep,
   note,
   submitLabel,
+  goLabel = 'Ir al paso',
   onSubmit,
   submitDisabled,
   className,
@@ -58,7 +61,7 @@ export function StepSummary({
               </span>
             </div>
             <Button variant="outline" size="sm" onClick={() => onGoToStep(item.id)}>
-              {`Ir al paso`}
+              {goLabel}
               <span className="sr-only">{`: ${item.title}`}</span>
             </Button>
           </li>
