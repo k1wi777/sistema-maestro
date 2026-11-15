@@ -21,7 +21,7 @@ import {
   type FormField,
   type FormValues,
 } from '../model/form-state';
-import { isEditable } from '../model/status';
+import { isEditable } from '@/shared/records';
 
 /** Respuesta 409 de la API: la planeación ya no está en un estado que admita el cambio. */
 const CONFLICT_STATUS = 409;

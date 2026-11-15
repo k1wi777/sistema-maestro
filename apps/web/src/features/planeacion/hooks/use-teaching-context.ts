@@ -6,7 +6,7 @@ import {
   type AssignmentGrade,
   type CatalogPeriod,
 } from '../api/catalogs';
-import { useRemote, type RemoteState } from './use-remote';
+import { useRemote, type RemoteState } from '@/shared/data';
 
 /** Lo que el docente puede planear: sus asignaciones activas y los periodos del año vigente. */
 export interface TeachingContext {

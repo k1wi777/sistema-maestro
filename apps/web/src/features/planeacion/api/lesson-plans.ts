@@ -10,9 +10,14 @@ import {
   type Review,
 } from '@gns/shared';
 
-import { api, callApi, type ApiResult, type components } from '@/shared/api';
-
-import { parseListResult, parseResult } from './parse';
+import {
+  api,
+  callApi,
+  parseListResult,
+  parseResult,
+  type ApiResult,
+  type components,
+} from '@/shared/api';
 
 type Schemas = components['schemas'];
 

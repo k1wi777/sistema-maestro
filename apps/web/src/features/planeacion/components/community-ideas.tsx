@@ -6,7 +6,7 @@ import { ActionMenu, ButtonLink, Button, Notice, StatusBadge } from '@/shared/ui
 import { useSharedActivities } from '../hooks/use-shared-activities';
 import { ACTIVITY_TYPE_LABELS } from '../model/activity-types';
 import { MOMENTS, type MomentField } from '../model/steps';
-import { LoadError, Loading } from './load-error';
+import { LoadError, Loading } from '@/shared/data';
 import styles from './community-ideas.module.css';
 
 const IDEAS_PAGE_SIZE = 5;

@@ -25,7 +25,7 @@ import {
 
 import { addLessonPlanResource, createLessonPlan } from '../api/lesson-plans';
 import { getSharedActivity } from '../api/shared-activities';
-import { useRemote } from '../hooks/use-remote';
+import { useRemote } from '@/shared/data';
 import {
   NO_SCHOOL_YEAR_STATUS,
   useTeachingContext,
@@ -33,7 +33,7 @@ import {
 } from '../hooks/use-teaching-context';
 import { activityLinkResource, activityToPlanContent } from '../model/activity-mapping';
 import { dateRangeError, mapApiErrors, type FormErrors } from '../model/form-state';
-import { LoadError, Loading } from './load-error';
+import { LoadError, Loading } from '@/shared/data';
 import styles from './new-lesson-plan.module.css';
 
 interface NewPlanValues {

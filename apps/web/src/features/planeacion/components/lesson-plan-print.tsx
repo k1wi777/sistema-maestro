@@ -4,7 +4,7 @@ import { formatDateRange, formatDateTime } from '@/shared/format/dates';
 import { BrandMark } from '@/shared/ui';
 
 import { MOMENTS } from '../model/steps';
-import { STATUS_INFO } from '../model/status';
+import { STATUS_INFO } from '@/shared/records';
 import styles from './lesson-plan-print.module.css';
 
 function Section({ title, text }: { title: string; text: string | null }) {

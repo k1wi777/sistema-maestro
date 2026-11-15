@@ -1,7 +1,7 @@
 import type { SharedActivity, SharedActivityListFilters } from '@gns/shared';
 
 import { listSharedActivities } from '../api/shared-activities';
-import { usePagedList, type PagedList } from './use-paged-list';
+import { usePagedList, type PagedList } from '@/shared/data';
 
 export const ACTIVITY_PAGE_SIZE = 12;
 

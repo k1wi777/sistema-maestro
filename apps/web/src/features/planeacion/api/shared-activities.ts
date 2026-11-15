@@ -7,9 +7,7 @@ import {
   type SharedActivityListFilters,
 } from '@gns/shared';
 
-import { api, callApi, type ApiResult, type components } from '@/shared/api';
-
-import { parseResult } from './parse';
+import { api, callApi, parseResult, type ApiResult, type components } from '@/shared/api';
 
 type Schemas = components['schemas'];
 

@@ -20,14 +20,14 @@ import {
 
 import { useLessonPlan } from '../hooks/use-lesson-plan';
 import { useLessonPlanEditor } from '../hooks/use-lesson-plan-editor';
-import { useQueryParams } from '../hooks/use-query-params';
+import { useQueryParams } from '@/shared/data';
 import { useTeachingContext } from '../hooks/use-teaching-context';
 import { appendToMoment, planToActivityDraft } from '../model/activity-mapping';
 import { latestFeedback } from '../model/coordination-feedback';
 import type { FormErrors } from '../model/form-state';
-import { printTitle, printWithTitle } from '../model/print';
+import { printTitle } from '../model/print';
+import { readOnlyNotice } from '../model/read-only-notice';
 import { buildReviewSummary } from '../model/review-summary';
-import { STATUS_INFO, canVoid, readOnlyNotice } from '../model/status';
 import {
   CONTENT_STEPS,
   FIRST_STEP,
@@ -44,7 +44,7 @@ import {
 import { CommunityIdeas, type IdeaUseResult } from './community-ideas';
 import { CoordinationFeedbackNotice } from './coordination-feedback';
 import { LessonPlanPrint } from './lesson-plan-print';
-import { LoadError, Loading } from './load-error';
+import { LoadError, Loading } from '@/shared/data';
 import styles from './lesson-plan-editor.module.css';
 import { DigitalStep } from './steps/digital-step';
 import { GeneralStep } from './steps/general-step';
@@ -54,7 +54,7 @@ import { PerformanceStep } from './steps/performance-step';
 import { ResourcesStep } from './steps/resources-step';
 import { ReviewStep } from './steps/review-step';
 import { SubmitDialog } from './submit-dialog';
-import { VoidDialog } from './void-dialog';
+import { STATUS_INFO, VoidRecordDialog, canVoid, printWithTitle } from '@/shared/records';
 
 const CONFLICT_MESSAGE =
   'La planeación cambió de estado en el servidor, así que se recargó con su estado actual.';
@@ -564,7 +564,15 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
           }}
         />
       ) : null}
-      {voidOpen ? <VoidDialog onClose={() => setVoidOpen(false)} onConfirm={handleVoid} /> : null}
+      {voidOpen ? (
+        <VoidRecordDialog
+          title="Anular planeación"
+          description="La planeación queda anulada y no se puede editar; coordinación conserva la constancia."
+          confirmLabel="Anular planeación"
+          onClose={() => setVoidOpen(false)}
+          onConfirm={handleVoid}
+        />
+      ) : null}
     </PageContainer>
   );
 }

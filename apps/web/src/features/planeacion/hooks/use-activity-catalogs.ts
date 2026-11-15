@@ -9,7 +9,7 @@ import {
   type CatalogLevel,
 } from '../api/catalogs';
 import { listLearningCorners } from '../api/shared-activities';
-import { useRemote, type Remote } from './use-remote';
+import { useRemote, type Remote } from '@/shared/data';
 
 export interface ActivityCatalogs {
   levels: Remote<CatalogLevel[]>;

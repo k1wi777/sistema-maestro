@@ -1,4 +1,12 @@
-import { formatDateRange, formatDateTime, formatDay, formatShortDate, formatTime } from './dates';
+import {
+  formatDateRange,
+  formatDateTime,
+  formatDay,
+  formatDayWithYear,
+  formatShortDate,
+  formatTime,
+  todayInColombia,
+} from './dates';
 
 describe('dates', () => {
   it('formats a calendar day without shifting it by the time zone', () => {
@@ -19,5 +27,15 @@ describe('dates', () => {
     expect(formatShortDate(instant)).toBe('7 nov');
     expect(formatTime(instant)).toMatch(/^10:30\s?p\.\s?m\.$/);
     expect(formatDateTime(instant)).toContain('7 nov 2026');
+  });
+
+  it('adds the year to a calendar day', () => {
+    expect(formatDayWithYear('2026-11-06')).toBe('6 nov 2026');
+  });
+
+  it('proposes today in Colombia, not in UTC', () => {
+    // 03:30 UTC del 8 de noviembre sigue siendo el 7 en Bogotá.
+    expect(todayInColombia(new Date('2026-11-08T03:30:00Z'))).toBe('2026-11-07');
+    expect(todayInColombia(new Date('2026-11-08T15:00:00Z'))).toBe('2026-11-08');
   });
 });

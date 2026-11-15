@@ -1,7 +1,7 @@
 import type { LessonPlan, LessonPlanFilters } from '@gns/shared';
 
 import { listLessonPlans } from '../api/lesson-plans';
-import { usePagedList, type PagedList } from './use-paged-list';
+import { usePagedList, type PagedList } from '@/shared/data';
 
 export const LESSON_PLAN_PAGE_SIZE = 20;
 

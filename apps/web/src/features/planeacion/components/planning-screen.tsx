@@ -2,7 +2,7 @@
 
 import { ButtonLink, PageContainer, PageHeader, Tabs } from '@/shared/ui';
 
-import { useQueryParams } from '../hooks/use-query-params';
+import { useQueryParams } from '@/shared/data';
 import { LessonPlanList } from './lesson-plan-list';
 import { RepositoryPanel } from './repository-panel';
 

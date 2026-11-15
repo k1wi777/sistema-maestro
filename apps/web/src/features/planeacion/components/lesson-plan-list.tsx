@@ -18,10 +18,10 @@ import {
 } from '@/shared/ui';
 
 import { useLessonPlanList } from '../hooks/use-lesson-plan-list';
-import { useQueryParams } from '../hooks/use-query-params';
+import { useQueryParams } from '@/shared/data';
 import { useTeachingContext } from '../hooks/use-teaching-context';
-import { STATUS_INFO, STATUS_ORDER, isEditable } from '../model/status';
-import { LoadError, Loading } from './load-error';
+import { STATUS_INFO, STATUS_ORDER, isEditable } from '@/shared/records';
+import { LoadError, Loading } from '@/shared/data';
 import styles from './lesson-plan-list.module.css';
 
 const ALL = 'todas';

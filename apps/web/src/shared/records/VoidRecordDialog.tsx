@@ -1,23 +1,33 @@
-import { VOID_REASON_MAX_LENGTH, VOID_REASON_MIN_LENGTH, voidLessonPlanSchema } from '@gns/shared';
+import { VOID_REASON_MAX_LENGTH, VOID_REASON_MIN_LENGTH, voidRecordSchema } from '@gns/shared';
 import { useState } from 'react';
 
 import { Button, Dialog, Notice, TextArea } from '@/shared/ui';
 
-interface VoidDialogProps {
+interface VoidRecordDialogProps {
+  title: string;
+  description: string;
+  /** Texto del botón de confirmación (p. ej. «Anular hoja»). */
+  confirmLabel: string;
   onClose: () => void;
   /** Devuelve el motivo del fallo, o `null` si se anuló. */
   onConfirm: (reason: string) => Promise<string | null>;
 }
 
-/** Anular una planeación propia: pide el motivo (queda en la bitácora) y confirma. */
-export function VoidDialog({ onClose, onConfirm }: VoidDialogProps) {
+/** Anular un registro propio: pide el motivo (queda en la bitácora) y confirma. */
+export function VoidRecordDialog({
+  title,
+  description,
+  confirmLabel,
+  onClose,
+  onConfirm,
+}: VoidRecordDialogProps) {
   const [reason, setReason] = useState('');
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleConfirm() {
-    const parsed = voidLessonPlanSchema.safeParse({ reason });
+    const parsed = voidRecordSchema.safeParse({ reason });
     if (!parsed.success) {
       setFieldError(parsed.error.issues[0]?.message ?? 'El motivo no es válido.');
       return;
@@ -34,8 +44,8 @@ export function VoidDialog({ onClose, onConfirm }: VoidDialogProps) {
   return (
     <Dialog
       open
-      title="Anular planeación"
-      description="La planeación queda anulada y no se puede editar; coordinación conserva la constancia."
+      title={title}
+      description={description}
       onClose={onClose}
       footer={
         <>
@@ -43,7 +53,7 @@ export function VoidDialog({ onClose, onConfirm }: VoidDialogProps) {
             Cancelar
           </Button>
           <Button variant="danger" disabled={busy} onClick={() => void handleConfirm()}>
-            {busy ? 'Anulando…' : 'Anular planeación'}
+            {busy ? 'Anulando…' : confirmLabel}
           </Button>
         </>
       }
