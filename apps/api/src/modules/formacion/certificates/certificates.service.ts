@@ -57,6 +57,7 @@ const kindOf = (record: CertificateRecord): CertificateKind =>
 const toSummary = (record: CertificateRecord): CertificateSummary => ({
   id: record.id,
   kind: kindOf(record),
+  moduleId: record.moduleId,
   title: record.title,
   planName: record.planName,
   code: record.code,

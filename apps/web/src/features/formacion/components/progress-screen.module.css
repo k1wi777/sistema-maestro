@@ -1,0 +1,45 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.nameLabel {
+  margin: 0 0 var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.name {
+  margin: 0 0 var(--space-2);
+  color: var(--heading);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.moduleLink {
+  font-weight: var(--weight-semibold);
+}
+
+.yes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--ok);
+  font-weight: var(--weight-bold);
+}
+
+.no {
+  color: var(--muted);
+}
+
+.na {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}

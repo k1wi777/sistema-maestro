@@ -196,7 +196,7 @@ describe('certificados verificables de la formación (BE-7)', () => {
       const ids = new Set((await rows(b)).map((row) => row.id));
       expect(items.some((item) => ids.has(item.id))).toBe(false);
       expect(Object.keys(items[0] ?? {}).sort()).toEqual(
-        ['code', 'id', 'issuedAt', 'kind', 'planName', 'title'].sort(),
+        ['code', 'id', 'issuedAt', 'kind', 'moduleId', 'planName', 'title'].sort(),
       );
     });
 
