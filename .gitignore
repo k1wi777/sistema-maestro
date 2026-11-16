@@ -31,3 +31,8 @@ next-env.d.ts
 
 # Tipos del contrato OpenAPI generados (pnpm --filter @gns/web api:types)
 apps/web/src/shared/api/generated/
+
+# Pruebas de navegador (Playwright): informes, trazas y sesiones guardadas de los actores
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/e2e/.auth/
