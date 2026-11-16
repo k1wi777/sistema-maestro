@@ -5,7 +5,15 @@ import { PPTX_CONTENT_TYPE, VideoSource, type ModuleFilePurpose } from '@gns/sha
 import { useState } from 'react';
 
 import { LoadError, Loading, useRemote } from '@/shared/data';
-import { ButtonLink, Card, Notice, Select, StatusBadge } from '@/shared/ui';
+import {
+  ButtonLink,
+  Card,
+  Notice,
+  Select,
+  StatusBadge,
+  YouTubeEmbed,
+  youTubeEmbedSrc,
+} from '@/shared/ui';
 
 import { fileUrl } from '../../api/files';
 import { ActivityPreview } from '../activity-editor/activity-preview';
@@ -108,6 +116,7 @@ export function PreviewStep({ editor, number }: StepProps) {
   const hasAnything = Object.values(contents).some(Boolean);
   const [previewId, setPreviewId] = useState('');
   const previewed = activities.find((activity) => activity.id === previewId) ?? activities[0];
+  const embedSrc = youTubeEmbedSrc(detail.videoEmbedUrl, detail.videoUrl);
 
   return (
     <Card title="Vista previa" step={number}>
@@ -140,15 +149,26 @@ export function PreviewStep({ editor, number }: StepProps) {
               fileId={detail.videoFile.id}
               title={detail.videoTitle ?? `Video del módulo ${detail.title}`}
             />
-          ) : detail.videoEmbedUrl ? (
-            <iframe
-              className={styles.frame}
-              src={detail.videoEmbedUrl}
-              title={detail.videoTitle ?? `Video del módulo ${detail.title}`}
-              allow="encrypted-media; picture-in-picture"
-              allowFullScreen
-              referrerPolicy="strict-origin-when-cross-origin"
-            />
+          ) : embedSrc ? (
+            <>
+              <YouTubeEmbed
+                src={embedSrc}
+                title={detail.videoTitle ?? `Video del módulo ${detail.title}`}
+              />
+              {detail.videoUrl ? (
+                <div>
+                  <ButtonLink
+                    href={detail.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="outline"
+                    endIcon="externo"
+                  >
+                    Ver en YouTube
+                  </ButtonLink>
+                </div>
+              ) : null}
+            </>
           ) : detail.videoUrl ? (
             <div>
               <ButtonLink

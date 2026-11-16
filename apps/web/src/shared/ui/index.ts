@@ -39,6 +39,8 @@ export {
 export { Tabs, type TabItem, type TabsProps } from './components/Tabs';
 export { TextArea, type TextAreaProps } from './components/TextArea';
 export { TextInput, type TextInputProps } from './components/TextInput';
+export { YouTubeEmbed, type YouTubeEmbedProps } from './components/YouTubeEmbed';
+export { youTubeEmbedSrc } from './components/youtube-embed';
 export {
   emojiIcon,
   GENERIC_ICON,
