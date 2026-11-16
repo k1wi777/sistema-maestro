@@ -22,7 +22,7 @@ export function Observation({
   children,
 }: ObservationProps) {
   return (
-    <aside className={cx(styles.observation, className)}>
+    <aside role="note" className={cx(styles.observation, className)}>
       <Icon name="comentario" size={20} fill="tone" className={styles.icon} />
       <div className={styles.body}>
         <strong className={styles.title}>{title}</strong>

@@ -161,6 +161,7 @@ export function ActivitiesStep({ editor, number }: StepProps) {
                 </div>
                 <div className={styles.activityActions}>
                   <Button
+                    context={`actividad «${activity.title}»`}
                     variant="outline"
                     size="sm"
                     startIcon="lapiz"
@@ -169,9 +170,9 @@ export function ActivitiesStep({ editor, number }: StepProps) {
                     onClick={() => void activityEditor.openExisting(activity)}
                   >
                     Editar
-                    <span className="sr-only">{`: ${activity.title}`}</span>
                   </Button>
                   <Button
+                    context={`actividad «${activity.title}»`}
                     variant="outline"
                     size="sm"
                     startIcon="arriba"
@@ -179,9 +180,9 @@ export function ActivitiesStep({ editor, number }: StepProps) {
                     onClick={() => move(activity, -1)}
                   >
                     Subir
-                    <span className="sr-only">{`: ${activity.title}`}</span>
                   </Button>
                   <Button
+                    context={`actividad «${activity.title}»`}
                     variant="outline"
                     size="sm"
                     startIcon="abajo"
@@ -189,22 +190,25 @@ export function ActivitiesStep({ editor, number }: StepProps) {
                     onClick={() => move(activity, 1)}
                   >
                     Bajar
-                    <span className="sr-only">{`: ${activity.title}`}</span>
                   </Button>
                   {out ? (
-                    <Button size="sm" disabled={busy} onClick={() => restore(activity)}>
+                    <Button
+                      context={`actividad «${activity.title}»`}
+                      size="sm"
+                      disabled={busy}
+                      onClick={() => restore(activity)}
+                    >
                       Restaurar
-                      <span className="sr-only">{`: ${activity.title}`}</span>
                     </Button>
                   ) : (
                     <Button
+                      context={`actividad «${activity.title}»`}
                       variant="outline"
                       size="sm"
                       disabled={busy}
                       onClick={() => setWithdrawing(activity)}
                     >
                       Quitar del módulo
-                      <span className="sr-only">{`: ${activity.title}`}</span>
                     </Button>
                   )}
                 </div>

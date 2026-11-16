@@ -28,15 +28,25 @@ export function JournalEntryCard({ entry, adjusted, onEdit, onRemove }: JournalE
         {onEdit || onRemove ? (
           <span className={styles.entryActions}>
             {onEdit ? (
-              <Button variant="outline" size="sm" startIcon="lapiz" onClick={onEdit}>
+              <Button
+                context={`registro del ${label}`}
+                variant="outline"
+                size="sm"
+                startIcon="lapiz"
+                onClick={onEdit}
+              >
                 Editar
-                <span className="sr-only">{`: ${label}`}</span>
               </Button>
             ) : null}
             {onRemove ? (
-              <Button variant="outline" size="sm" startIcon="anular" onClick={onRemove}>
+              <Button
+                context={`registro del ${label}`}
+                variant="outline"
+                size="sm"
+                startIcon="anular"
+                onClick={onRemove}
+              >
                 Quitar
-                <span className="sr-only">{`: ${label}`}</span>
               </Button>
             ) : null}
           </span>

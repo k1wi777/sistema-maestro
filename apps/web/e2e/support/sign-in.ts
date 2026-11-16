@@ -30,7 +30,9 @@ export async function submitCredentials(page: Page, actor: Actor): Promise<void>
  */
 export async function signInThroughUi(page: Page, actor: Actor): Promise<void> {
   await submitCredentials(page, actor);
-  await acceptDataNotice(page);
+  if (!actor.noticeAccepted) {
+    await acceptDataNotice(page);
+  }
   const chooser = page.getByRole('navigation', { name: 'Vistas disponibles' });
   await expect
     .poll(async () => new URL(page.url()).pathname.startsWith('/docente') || chooser.isVisible())

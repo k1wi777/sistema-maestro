@@ -183,18 +183,22 @@ export function FaqAdminScreen() {
                             {faq.isActive ? 'Activa' : 'Inactiva'}
                           </StatusBadge>
                           <div className={styles.actions}>
-                            <Button variant="outline" size="sm" onClick={() => setEditing({ faq })}>
+                            <Button
+                              context={`pregunta frecuente «${faq.question}»`}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditing({ faq })}
+                            >
                               Editar
-                              <span className="sr-only">{`: ${faq.question}`}</span>
                             </Button>
                             <Button
+                              context={`pregunta frecuente «${faq.question}»`}
                               variant="outline"
                               size="sm"
                               disabled={togglingId === faq.id}
                               onClick={() => void toggle(faq)}
                             >
                               {faq.isActive ? 'Desactivar' : 'Activar'}
-                              <span className="sr-only">{`: ${faq.question}`}</span>
                             </Button>
                           </div>
                         </li>
@@ -285,9 +289,13 @@ function PendingRow({
         </span>
       </div>
       <div className={styles.actions}>
-        <Button variant="secondary" size="sm" onClick={() => onCreate({ id: question.id, text })}>
+        <Button
+          context={`para la pregunta «${text}»`}
+          variant="secondary"
+          size="sm"
+          onClick={() => onCreate({ id: question.id, text })}
+        >
           Crear respuesta
-          <span className="sr-only">{`: ${text}`}</span>
         </Button>
       </div>
     </li>

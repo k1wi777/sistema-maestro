@@ -14,7 +14,32 @@ interface ButtonLookProps {
   size?: ButtonSize;
   startIcon?: IconName;
   endIcon?: IconName;
+  /**
+   * Contexto para lectores de pantalla («pregunta frecuente «X»»): el nombre accesible pasa a ser
+   * «<texto visible> <contexto>» (WCAG 2.5.3), igual en todos los navegadores. Requiere que el
+   * contenido visible sea texto.
+   */
+  context?: string;
   children: ReactNode;
+}
+
+/** Texto plano de un contenido compuesto solo por cadenas y números (para el nombre accesible). */
+function plainText(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(plainText).join('');
+  }
+  return '';
+}
+
+/** Nombre accesible de un control con contexto: «<texto visible> <contexto>». */
+function labelWithContext(children: ReactNode, context: string | undefined): string | undefined {
+  if (!context) {
+    return undefined;
+  }
+  return `${plainText(children).trim()} ${context}`;
 }
 
 function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: string): string {
@@ -45,13 +70,19 @@ export function Button({
   size = 'md',
   startIcon,
   endIcon,
+  context,
   children,
   className,
   type = 'button',
   ...rest
 }: ButtonProps) {
   return (
-    <button type={type} className={buttonClass(variant, size, className)} {...rest}>
+    <button
+      type={type}
+      className={buttonClass(variant, size, className)}
+      aria-label={labelWithContext(children, context)}
+      {...rest}
+    >
       <ButtonContent size={size} startIcon={startIcon} endIcon={endIcon}>
         {children}
       </ButtonContent>
@@ -72,6 +103,7 @@ export function ButtonLink({
   size = 'md',
   startIcon,
   endIcon,
+  context,
   children,
   className,
   href,
@@ -79,7 +111,13 @@ export function ButtonLink({
   rel,
 }: ButtonLinkProps) {
   return (
-    <Link href={href} target={target} rel={rel} className={buttonClass(variant, size, className)}>
+    <Link
+      href={href}
+      target={target}
+      rel={rel}
+      className={buttonClass(variant, size, className)}
+      aria-label={labelWithContext(children, context)}
+    >
       <ButtonContent size={size} startIcon={startIcon} endIcon={endIcon}>
         {children}
       </ButtonContent>

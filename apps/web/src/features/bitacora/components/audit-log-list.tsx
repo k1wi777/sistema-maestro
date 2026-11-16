@@ -24,14 +24,22 @@ function RowActions({
   const user = entry.user;
   return (
     <span className={styles.actions}>
-      <Button variant="outline" size="sm" onClick={() => onOpen(entry)}>
+      <Button
+        context={`del movimiento «${entry.action}» de ${who}`}
+        variant="outline"
+        size="sm"
+        onClick={() => onOpen(entry)}
+      >
         Ver detalle
-        <span className="sr-only">{`: ${entry.action} de ${who}`}</span>
       </Button>
       {user ? (
-        <Button variant="outline" size="sm" onClick={() => onFilterUser(user.id)}>
+        <Button
+          context={`(${user.name})`}
+          variant="outline"
+          size="sm"
+          onClick={() => onFilterUser(user.id)}
+        >
           Ver solo este usuario
-          <span className="sr-only">{`: ${user.name}`}</span>
         </Button>
       ) : null}
     </span>

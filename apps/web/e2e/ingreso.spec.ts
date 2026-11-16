@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { ACTORS } from './support/actors';
+import { expectAccessible } from './support/accessibility';
 import { acceptDataNotice, submitCredentials } from './support/sign-in';
 
 // Valeria Montenueva no la usa ningún otro recorrido: su ingreso es el que se prueba aquí y su
@@ -16,6 +17,9 @@ test('ingreso con aviso de datos: sin aceptarlo no se ve ninguna sección proteg
   const accept = notice.getByRole('button', { name: 'Acepto y continuar' });
   await expect(accept).toBeDisabled();
   await expect(page.getByRole('navigation', { name: 'Panel Docente' })).toHaveCount(0);
+
+  // El aviso de datos solo existe en este momento: se revisa aquí con él abierto.
+  await expectAccessible(page, 'ingreso · aviso de datos');
 
   // Con sesión pero sin aceptar, una ruta protegida devuelve al aviso y no pinta su contenido.
   await page.goto('/docente/planeacion');

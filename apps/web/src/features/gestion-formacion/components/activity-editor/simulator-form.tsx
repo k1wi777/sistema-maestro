@@ -209,6 +209,7 @@ function InputFields({
                 }
               />
               <Button
+                context={`opción ${position + 1}`}
                 variant="outline"
                 size="sm"
                 disabled={disabled || input.options.length <= 2}
@@ -225,7 +226,6 @@ function InputFields({
                 }
               >
                 Quitar
-                <span className="sr-only">{` opción ${position + 1}`}</span>
               </Button>
             </div>
           ))}

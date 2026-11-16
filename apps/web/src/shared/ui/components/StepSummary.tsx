@@ -60,9 +60,13 @@ export function StepSummary({
                 {item.detail}
               </span>
             </div>
-            <Button variant="outline" size="sm" onClick={() => onGoToStep(item.id)}>
+            <Button
+              context={`el paso «${item.title}»`}
+              variant="outline"
+              size="sm"
+              onClick={() => onGoToStep(item.id)}
+            >
               {goLabel}
-              <span className="sr-only">{`: ${item.title}`}</span>
             </Button>
           </li>
         ))}

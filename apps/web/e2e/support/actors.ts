@@ -11,16 +11,19 @@ export interface Actor {
   email: string;
   /** Sesión guardada por el proyecto `setup`. */
   sessionFile: string;
+  /** Ya aceptó el aviso de datos en un ingreso anterior de la misma ejecución. */
+  noticeAccepted?: boolean;
 }
 
 const AUTH_DIR = join(__dirname, '..', '.auth');
 
-function actor(key: string, name: string): Actor {
+function actor(key: string, name: string, sessionName = key, noticeAccepted = false): Actor {
   return {
+    noticeAccepted,
     key,
     name,
     email: `${key}@${DEMO_EMAIL_DOMAIN}`,
-    sessionFile: join(AUTH_DIR, `${key}.json`),
+    sessionFile: join(AUTH_DIR, `${sessionName}.json`),
   };
 }
 
@@ -31,6 +34,15 @@ export const ACTORS = {
   formatsTeacher: actor('andres.penaverde', 'Andrés Peñaverde'),
   formatsCoordinator: actor('tomas.aldaverde', 'Tomás Aldaverde'),
   trainingTeacher: actor('daniela.fontalba', 'Daniela Fontalba'),
+  // Revisión de accesibilidad (FE-42): Julián no lo usa ningún recorrido y la segunda sesión de
+  // Elena va en otro archivo, para no compartir el token de renovación con `planningCoordinator`.
+  accessibilityTeacher: actor('julian.casaverde', 'Julián Casaverde'),
+  accessibilityCoordinator: actor(
+    'elena.ravassa',
+    'Elena Ravassa',
+    'elena.ravassa.accessibility',
+    true,
+  ),
   // Ingresa por la interfaz en `ingreso.spec.ts`, que guarda su sesión para `role-protection`.
   signInTeacher: actor('valeria.montenueva', 'Valeria Montenueva'),
 } as const;
@@ -42,6 +54,8 @@ export const SETUP_ACTORS: readonly Actor[] = [
   ACTORS.formatsTeacher,
   ACTORS.formatsCoordinator,
   ACTORS.trainingTeacher,
+  ACTORS.accessibilityTeacher,
+  ACTORS.accessibilityCoordinator,
 ];
 
 /** Marcador único por ejecución para los textos que escriben los recorridos (R12). */

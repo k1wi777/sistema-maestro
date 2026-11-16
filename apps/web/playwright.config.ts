@@ -47,6 +47,11 @@ export default defineConfig({
     },
     { name: 'formats', testMatch: /formats\.spec\.ts/, dependencies: ['setup'] },
     { name: 'training', testMatch: /training\.spec\.ts/, dependencies: ['setup'] },
+    {
+      name: 'accessibility',
+      testMatch: /accessibility\.spec\.ts/,
+      dependencies: ['setup'],
+    },
     { name: 'ingreso', testMatch: /ingreso\.spec\.ts/ },
     { name: 'role', testMatch: /role-protection\.spec\.ts/, dependencies: ['ingreso'] },
   ],

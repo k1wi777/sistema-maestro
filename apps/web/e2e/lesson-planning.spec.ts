@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { statusBadge } from './support/status';
 import { ACTORS, runMarker } from './support/actors';
 import { openAs, type ActorPage } from './support/browser';
 
@@ -38,7 +39,7 @@ test.describe('Planeación: del borrador a la aprobación', () => {
       .getByRole('dialog', { name: 'Enviar a coordinación' })
       .getByRole('button', { name: 'Enviar a coordinación' })
       .click();
-    await expect(page.getByText('Enviada · pendiente de revisión').first()).toBeVisible();
+    await expect(statusBadge(page, 'Enviada · pendiente de revisión')).toBeVisible();
   }
 
   test('el docente crea la planeación, la completa y la envía', async () => {
@@ -53,7 +54,7 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await page.getByRole('button', { name: 'Crear y continuar' }).click();
 
     await expect(page.getByRole('heading', { level: 1, name: new RegExp(TOPIC) })).toBeVisible();
-    await expect(page.getByText('Borrador', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(page, 'Borrador')).toBeVisible();
     planUrl = new URL(page.url()).pathname;
 
     // Sin el Momento 2 el envío está bloqueado.
@@ -84,7 +85,7 @@ test.describe('Planeación: del borrador a la aprobación', () => {
       .getByRole('dialog', { name: 'Devolver con observaciones' })
       .getByRole('button', { name: 'Devolver' })
       .click();
-    await expect(page.getByText('Con observaciones', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(page, 'Con observaciones')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Historial' })).toContainText(OBSERVATION);
   });
 
@@ -95,9 +96,7 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await expect(card).toContainText('Con observaciones');
     await card.getByRole('link', { name: /Continuar/ }).click();
 
-    const feedback = page
-      .getByRole('complementary')
-      .filter({ hasText: 'Observaciones de coordinación' });
+    const feedback = page.getByRole('note').filter({ hasText: 'Observaciones de coordinación' });
     await expect(feedback).toContainText(OBSERVATION);
     await expect(feedback).toContainText('Elena Ravassa');
 
@@ -129,6 +128,6 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await teacher.page.goto('/docente/planeacion');
     await expect(planCard(teacher.page)).toContainText('Revisada');
     await teacher.page.goto(planUrl);
-    await expect(teacher.page.getByText('Revisada', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(teacher.page, 'Revisada')).toBeVisible();
   });
 });

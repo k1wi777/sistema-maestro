@@ -1,7 +1,7 @@
 'use client';
 
 import { ChallengeQuestionType, type ChallengeStep } from '@gns/shared';
-import { useEffect, useRef, type CSSProperties } from 'react';
+import { useEffect, useId, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/shared/ui';
 
@@ -228,17 +228,23 @@ export function ChallengeQuestion({
   const remaining = useCountdown(question.seconds, running, handlers.timeout);
   const percent = question.seconds > 0 ? Math.min(100, (remaining / question.seconds) * 100) : 0;
   const seconds = Math.ceil(remaining);
+  const promptId = useId();
 
   return (
-    <div className={styles.questionScreen}>
+    <div className={styles.questionScreen} role="group" aria-labelledby={promptId}>
       <div className={styles.top}>
-        <span className={styles.counter}>{`${step.position} / ${step.total}`}</span>
-        <span className={styles.points} aria-label={`${state.points} puntos`}>
-          {`${state.points} pts`}
+        <span className={styles.counter}>
+          <span aria-hidden="true">{`${step.position} / ${step.total}`}</span>
+          <span className="sr-only">{`Pregunta ${step.position} de ${step.total}`}</span>
         </span>
-        <span className={styles.streak} aria-label={`Racha de ${state.streak}`}>
+        <span className={styles.points}>
+          <span aria-hidden="true">{`${state.points} pts`}</span>
+          <span className="sr-only">{`${state.points} puntos`}</span>
+        </span>
+        <span className={styles.streak}>
           <Icon name="llama" size={15} fill="solid" />
-          {state.streak}
+          <span aria-hidden="true">{state.streak}</span>
+          <span className="sr-only">{`Racha de ${state.streak}`}</span>
         </span>
       </div>
       <div className={styles.timeBar} aria-hidden="true">
@@ -246,7 +252,7 @@ export function ChallengeQuestion({
       </div>
       <div className={styles.prompt}>
         <span className={styles.promptType}>{PROMPT_LABEL[question.type]}</span>
-        <p>{question.prompt}</p>
+        <p id={promptId}>{question.prompt}</p>
         <div
           className={styles.ring}
           style={{ '--pct': `${percent}%` } as CSSProperties}

@@ -110,6 +110,13 @@ export function GameFinal({
 
 /** La API ya no tiene la partida (se reinició en otra pestaña o quedó obsoleta). */
 export function GameLost({ best, onStart }: { best: BestAttempt | null; onStart: () => void }) {
+  const startRef = useRef<HTMLButtonElement>(null);
+
+  // El panel reemplaza a la pregunta: el foco pasa a su acción y no se pierde en el cuerpo.
+  useEffect(() => {
+    startRef.current?.focus({ preventScroll: true });
+  }, []);
+
   return (
     <div className={styles.lobby}>
       <h3 className={styles.finalTitle}>Esta partida ya no está disponible</h3>
@@ -118,7 +125,7 @@ export function GameLost({ best, onStart }: { best: BestAttempt | null; onStart:
         se conservan: puedes empezar una partida nueva.
       </p>
       <BestLine best={best} />
-      <button type="button" className={styles.play} onClick={onStart}>
+      <button ref={startRef} type="button" className={styles.play} onClick={onStart}>
         Empezar de nuevo
       </button>
     </div>
@@ -127,11 +134,17 @@ export function GameLost({ best, onStart }: { best: BestAttempt | null; onStart:
 
 /** Fallo de conexión en medio de la partida: se conserva la pantalla y se ofrece reintentar. */
 export function GameError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const retryRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    retryRef.current?.focus({ preventScroll: true });
+  }, []);
+
   return (
     <div className={styles.lobby} role="alert">
       <h3 className={styles.finalTitle}>No pudimos continuar</h3>
       <p className={styles.sub}>{message}</p>
-      <button type="button" className={styles.play} onClick={onRetry}>
+      <button ref={retryRef} type="button" className={styles.play} onClick={onRetry}>
         Reintentar
       </button>
     </div>

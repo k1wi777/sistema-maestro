@@ -8,12 +8,12 @@ import styles from './legal-shell.module.css';
 export function LegalShell({ children }: { children: ReactNode }) {
   return (
     <>
-      <div className={styles.top}>
+      <header className={styles.top}>
         <BrandMark tagline="Montería · Colombia" />
         <ButtonLink href="/ingreso" variant="outline" size="sm" startIcon="volver">
           Volver
         </ButtonLink>
-      </div>
+      </header>
       {children}
     </>
   );

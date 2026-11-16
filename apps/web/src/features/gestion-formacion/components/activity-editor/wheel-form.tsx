@@ -143,10 +143,10 @@ function CardFields({
                 name={radioName}
                 checked={card.correct === index}
                 disabled={disabled}
+                aria-label={`Correcta opción ${index + 1}`}
                 onChange={() => set({ correct: index })}
               />
               Correcta
-              <span className="sr-only">{` opción ${index + 1}`}</span>
             </label>
             <TextInput
               label={`Opción ${index + 1}`}
@@ -162,13 +162,13 @@ function CardFields({
               }
             />
             <Button
+              context={`opción ${index + 1}`}
               variant="outline"
               size="sm"
               disabled={disabled || card.options.length <= MIN_OPTIONS}
               onClick={() => onChange(removeOption(card, index))}
             >
               Quitar
-              <span className="sr-only">{` opción ${index + 1}`}</span>
             </Button>
           </div>
         ))}
@@ -266,6 +266,7 @@ export function WheelForm({
                     <StatusBadge tone="danger">Revisa esta tarjeta</StatusBadge>
                   ) : null}
                   <Button
+                    context={`${name}`}
                     variant="outline"
                     size="sm"
                     startIcon="lapiz"
@@ -273,7 +274,6 @@ export function WheelForm({
                     onClick={() => setOpenIndex(open ? null : index)}
                   >
                     {open ? 'Cerrar' : 'Editar'}
-                    <span className="sr-only">{` ${name}`}</span>
                   </Button>
                 </div>
                 {open ? (
