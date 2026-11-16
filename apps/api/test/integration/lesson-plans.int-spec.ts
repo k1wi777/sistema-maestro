@@ -6,6 +6,7 @@ import {
   auditRows,
   createPlan,
   forceStatus,
+  planBody,
   setupPlanning,
   SUBMITTABLE_CONTENT,
   type LessonPlanBody,
@@ -111,7 +112,7 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
         { studentName: 'Ana' },
       ]) {
         const res = await as(teacher, 'post', '/lesson-plans')
-          .send({ ...secondary, periodId: planning.periods[1], ...extra })
+          .send(planBody({ ...secondary, periodId: planning.periods[1], ...extra }))
           .expect(400);
 
         expect(errorOf(res.body).code).toBe(ApiErrorCode.Validation);
@@ -128,10 +129,10 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
       for (const target of [
         foreign,
         withdrawn,
-        { gradeId: secondary.gradeId, areaId: foreign.areaId },
+        { gradeId: foreign.gradeId, areaId: secondary.areaId },
       ]) {
         const res = await as(teacher, 'post', '/lesson-plans')
-          .send({ gradeId: target.gradeId, areaId: target.areaId, periodId: planning.periods[1] })
+          .send(planBody({ ...target, periodId: planning.periods[1] }))
           .expect(403);
 
         expect(errorOf(res.body).code).toBe(ApiErrorCode.Forbidden);
@@ -142,7 +143,7 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
     it('responde 400 con periodId si el periodo es de otro año o no existe', async () => {
       for (const periodId of [planning.otherYearPeriodId, '0b9d6c1e-2f4a-4d7e-8a1c-3d6e8f0a1b3c']) {
         const res = await as(teacher, 'post', '/lesson-plans')
-          .send({ ...secondary, periodId })
+          .send(planBody({ ...secondary, periodId }))
           .expect(400);
 
         expect(errorOf(res.body).errors?.map((e) => e.field)).toEqual(['periodId']);
@@ -154,27 +155,183 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
       await planning.assign(teacherUser.id, primary.gradeId, primary.areaId);
 
       const res = await as(teacher, 'post', '/lesson-plans')
-        .send({ ...primary, periodId: planning.periods[1], curiocityStage: 'Creo' })
+        .send(planBody({ ...primary, periodId: planning.periods[1], curiocityStage: 'Creo' }))
         .expect(400);
 
       expect(errorOf(res.body).errors?.map((e) => e.field)).toEqual(['curiocityStage']);
       expect((await plan({ curiocityStage: 'Creo' })).curiocityStage).toBe('Creo');
       await as(teacher, 'post', '/lesson-plans')
-        .send({ ...secondary, periodId: planning.periods[1], curiocityStage: 'Otra' })
+        .send(planBody({ ...secondary, periodId: planning.periods[1], curiocityStage: 'Otra' }))
         .expect(400);
     });
 
     it('responde 400 con dateTo si la fecha final es anterior a la inicial', async () => {
       const res = await as(teacher, 'post', '/lesson-plans')
-        .send({
-          ...secondary,
-          periodId: planning.periods[1],
-          dateFrom: '2026-09-25',
-          dateTo: '2026-09-21',
-        })
+        .send(
+          planBody({
+            ...secondary,
+            periodId: planning.periods[1],
+            dateFrom: '2026-09-25',
+            dateTo: '2026-09-21',
+          }),
+        )
         .expect(400);
 
       expect(errorOf(res.body).errors?.map((e) => e.field)).toEqual(['dateTo']);
+    });
+  });
+
+  describe('varias dimensiones o asignaturas (#99)', () => {
+    let chemistryId: string;
+    let unofferedId: string;
+
+    beforeAll(async () => {
+      // «Química» pertenece a las áreas de bachillerato aunque el docente no la tenga asignada.
+      await prisma.area.createMany({
+        data: [{ name: 'Química', type: 'asignatura' }],
+        skipDuplicates: true,
+      });
+      chemistryId = (await prisma.area.findUniqueOrThrow({ where: { name: 'Química' } })).id;
+      unofferedId = (
+        await prisma.area.create({
+          data: { name: `Fuera del nivel ${Date.now()}`, type: 'asignatura' },
+        })
+      ).id;
+    });
+
+    const send = (areaIds: unknown) =>
+      as(teacher, 'post', '/lesson-plans').send({
+        gradeId: secondary.gradeId,
+        periodId: planning.periods[1],
+        areaIds,
+      });
+    const areaIdsInDb = async (id: string) =>
+      (await prisma.lessonPlanArea.findMany({ where: { lessonPlanId: id } }))
+        .map((entry) => entry.areaId)
+        .sort();
+
+    it('guarda varias áreas (la asignada y otra del nivel), las devuelve por nombre y audita el conjunto', async () => {
+      const res = await send([secondary.areaId, chemistryId]).expect(201);
+      const created = res.body as LessonPlanBody;
+
+      expect(created.areas.map((area) => area.name)).toEqual(
+        [...created.areas.map((area) => area.name)].sort((a, b) => a.localeCompare(b, 'es')),
+      );
+      expect(new Set(created.areas.map((area) => area.id))).toEqual(
+        new Set([secondary.areaId, chemistryId]),
+      );
+      expect(await areaIdsInDb(created.id)).toEqual([secondary.areaId, chemistryId].sort());
+      const rows = await auditRows(app, created.id);
+      expect(rows[0]?.dataAfter).toMatchObject({
+        areaIds: [secondary.areaId, chemistryId].sort(),
+      });
+    });
+
+    it('responde 400 con areaIds.<i> si un área no se ofrece para el grado, y no crea nada', async () => {
+      const mine = { where: { teacherId: teacherUser.id } };
+      const before = await prisma.lessonPlan.count(mine);
+
+      const res = await send([secondary.areaId, unofferedId]).expect(400);
+
+      expect(errorOf(res.body).errors).toEqual([
+        { field: 'areaIds.1', reason: 'no está disponible para el grado' },
+      ]);
+      expect(await prisma.lessonPlan.count(mine)).toBe(before);
+    });
+
+    it.each([[[]], ['texto'], [undefined]])('rechaza areaIds %j (400 areaIds)', async (areaIds) => {
+      const res = await send(areaIds).expect(400);
+
+      expect(errorOf(res.body).errors?.[0]?.field).toMatch(/^areaIds/);
+    });
+
+    it('rechaza áreas repetidas y el campo anterior areaId (400)', async () => {
+      const repeated = await send([secondary.areaId, secondary.areaId]).expect(400);
+      const legacy = await as(teacher, 'post', '/lesson-plans')
+        .send({
+          gradeId: secondary.gradeId,
+          areaId: secondary.areaId,
+          periodId: planning.periods[1],
+        })
+        .expect(400);
+
+      expect(errorOf(repeated.body).errors?.[0]?.field).toBe('areaIds');
+      expect(errorOf(legacy.body).code).toBe(ApiErrorCode.Validation);
+    });
+
+    it('edita las áreas: conserva las guardadas, valida las nuevas y audita antes y después', async () => {
+      const created = await plan();
+
+      await as(teacher, 'patch', `/lesson-plans/${created.id}`)
+        .send({ areaIds: [secondary.areaId, chemistryId] })
+        .expect(200);
+      const invalid = await as(teacher, 'patch', `/lesson-plans/${created.id}`)
+        .send({ areaIds: [secondary.areaId, unofferedId] })
+        .expect(400);
+      const rows = await auditRows(app, created.id);
+
+      expect(errorOf(invalid.body).errors?.map((e) => e.field)).toEqual(['areaIds.1']);
+      expect(await areaIdsInDb(created.id)).toEqual([secondary.areaId, chemistryId].sort());
+      expect(rows.map((r) => r.action)).toEqual(['Creó una planeación', 'Editó una planeación']);
+      expect(rows[1]?.dataBefore).toMatchObject({ areaIds: [secondary.areaId] });
+      expect(rows[1]?.dataAfter).toMatchObject({
+        areaIds: [secondary.areaId, chemistryId].sort(),
+      });
+
+      await as(teacher, 'patch', `/lesson-plans/${created.id}`)
+        .send({ areaIds: [chemistryId] })
+        .expect(200);
+      expect(await areaIdsInDb(created.id)).toEqual([chemistryId]);
+    });
+
+    it('el filtro areaId incluye toda planeación que tenga esa área entre las suyas', async () => {
+      const both = (await send([secondary.areaId, chemistryId]).expect(201)).body as LessonPlanBody;
+      const onlyChemistry = (await send([chemistryId]).expect(201)).body as LessonPlanBody;
+      const onlyAssigned = await plan();
+      const idsFor = async (areaId: string) =>
+        (
+          (await as(teacher, 'get', `/lesson-plans?pageSize=100&areaId=${areaId}`).expect(200))
+            .body as PageBody
+        ).items.map((item) => item.id);
+
+      const byChemistry = await idsFor(chemistryId);
+      const byAssigned = await idsFor(secondary.areaId);
+
+      expect(byChemistry).toEqual(expect.arrayContaining([both.id, onlyChemistry.id]));
+      expect(byChemistry).not.toContain(onlyAssigned.id);
+      expect(byAssigned).toEqual(expect.arrayContaining([both.id, onlyAssigned.id]));
+      expect(byAssigned).not.toContain(onlyChemistry.id);
+      // Una planeación con dos áreas aparece una sola vez al filtrar.
+      expect(byChemistry.filter((id) => id === both.id)).toHaveLength(1);
+    });
+
+    it('coordinación no puede ajustar las áreas al aprobar o devolver (400)', async () => {
+      const created = await plan({ ...SUBMITTABLE_CONTENT });
+      await forceStatus(app, created.id, RecordStatus.Submitted);
+
+      for (const action of ['approve', 'return']) {
+        const res = await as(coordinator, 'post', `/lesson-plans/${created.id}/${action}`)
+          .send({ comment: 'Revisar', changes: { areaIds: [chemistryId] } })
+          .expect(400);
+        expect(errorOf(res.body).code).toBe(ApiErrorCode.Validation);
+      }
+      expect(await areaIdsInDb(created.id)).toEqual([secondary.areaId]);
+    });
+
+    it('GET /lesson-plans/options ofrece solo los grados del docente con las áreas del nivel y las asignadas', async () => {
+      const res = await as(teacher, 'get', '/lesson-plans/options').expect(200);
+      const body = res.body as {
+        schoolYear: string;
+        grades: { grade: { id: string }; areas: { id: string; assigned: boolean }[] }[];
+      };
+      const foreign = await planning.gradeAndArea('Bachillerato');
+
+      const entry = body.grades.find((candidate) => candidate.grade.id === secondary.gradeId);
+      expect(body.schoolYear).toBe(planning.year);
+      expect(entry?.areas.find((area) => area.id === secondary.areaId)?.assigned).toBe(true);
+      expect(entry?.areas.find((area) => area.id === chemistryId)?.assigned).toBe(false);
+      expect(entry?.areas.some((area) => area.id === unofferedId)).toBe(false);
+      expect(body.grades.some((candidate) => candidate.grade.id === foreign.gradeId)).toBe(false);
     });
   });
 

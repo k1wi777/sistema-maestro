@@ -1,4 +1,12 @@
-import { buildPatch, dateRangeError, dirtyFields, mapApiErrors, toFormValues } from './form-state';
+import {
+  areaIdsToValue,
+  buildPatch,
+  dateRangeError,
+  dirtyFields,
+  mapApiErrors,
+  toFormValues,
+  valueToAreaIds,
+} from './form-state';
 import { makePlan, makeValues } from './test-fixtures';
 
 describe('form state', () => {
@@ -67,5 +75,36 @@ describe('form state', () => {
       other: ['otro motivo'],
     });
     expect(mapApiErrors(undefined)).toEqual({ fields: {}, other: [] });
+  });
+
+  it('compares the areas as a set and sends them only when they change', () => {
+    const A = '11111111-1111-4111-8111-111111111111';
+    const B = '22222222-2222-4222-8222-222222222222';
+    expect(areaIdsToValue([B, A])).toBe(areaIdsToValue([A, B]));
+    expect(valueToAreaIds(areaIdsToValue([B, A]))).toEqual([A, B]);
+    expect(valueToAreaIds('')).toEqual([]);
+
+    const saved = makeValues({ areaIds: areaIdsToValue([A]) });
+    expect(buildPatch(saved, makeValues({ areaIds: areaIdsToValue([A]) }))).toEqual({
+      kind: 'unchanged',
+    });
+    expect(buildPatch(saved, makeValues({ areaIds: areaIdsToValue([B, A]) }))).toEqual({
+      kind: 'patch',
+      fields: ['areaIds'],
+      body: { areaIds: [A, B] },
+    });
+  });
+
+  it('rejects an empty selection of areas on the areaIds field', () => {
+    const saved = makeValues({ areaIds: '11111111-1111-4111-8111-111111111111' });
+    const result = buildPatch(saved, makeValues({ areaIds: '' }));
+    expect(result.kind).toBe('invalid');
+    expect(result.kind === 'invalid' && result.errors.areaIds).toContain('al menos una');
+  });
+
+  it('maps API errors on areaIds.<i> to the areaIds field', () => {
+    expect(
+      mapApiErrors([{ field: 'areaIds.1', reason: 'no está disponible para el grado' }]),
+    ).toEqual({ fields: { areaIds: 'no está disponible para el grado' }, other: [] });
   });
 });

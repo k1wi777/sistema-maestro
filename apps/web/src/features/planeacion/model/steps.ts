@@ -121,9 +121,9 @@ export function stepState(
   return filled === step.contentFields.length ? 'done' : 'pending';
 }
 
-/** Paso del editor en que se escribe un campo del formulario (el periodo está en «Datos generales»). */
+/** Paso del editor en que se escribe un campo del formulario (el periodo y las áreas están en «Datos generales»). */
 export function stepOfFormField(field: string): StepId | null {
-  if (field === 'periodId') {
+  if (field === 'periodId' || field === 'areaIds') {
     return 'datos';
   }
   const found = STEPS.find(

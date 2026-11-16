@@ -39,7 +39,12 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["docente", "coordinador", "administrador", "desconocido"]
+              "enum": [
+                "docente",
+                "coordinador",
+                "administrador",
+                "desconocido"
+              ]
             }
           },
           {
@@ -167,7 +172,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AuditLog"]
+        "tags": [
+          "AuditLog"
+        ]
       }
     },
     "/audit-log/export": {
@@ -190,7 +197,12 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["docente", "coordinador", "administrador", "desconocido"]
+              "enum": [
+                "docente",
+                "coordinador",
+                "administrador",
+                "desconocido"
+              ]
             }
           },
           {
@@ -318,7 +330,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AuditLog"]
+        "tags": [
+          "AuditLog"
+        ]
       }
     },
     "/audit-log/{id}": {
@@ -422,7 +436,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AuditLog"]
+        "tags": [
+          "AuditLog"
+        ]
       }
     },
     "/auth/login": {
@@ -501,7 +517,9 @@
             }
           }
         },
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/auth/refresh": {
@@ -570,7 +588,9 @@
             }
           }
         },
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/auth/logout": {
@@ -632,7 +652,9 @@
             }
           }
         },
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/auth/me": {
@@ -726,7 +748,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/auth/password": {
@@ -823,7 +847,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Auth"]
+        "tags": [
+          "Auth"
+        ]
       }
     },
     "/users": {
@@ -855,7 +881,11 @@
             "schema": {
               "default": "fullName",
               "type": "string",
-              "enum": ["fullName", "email", "createdAt"]
+              "enum": [
+                "fullName",
+                "email",
+                "createdAt"
+              ]
             }
           },
           {
@@ -865,7 +895,10 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -874,7 +907,11 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["docente", "coordinador", "administrador"]
+              "enum": [
+                "docente",
+                "coordinador",
+                "administrador"
+              ]
             }
           },
           {
@@ -883,7 +920,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["activo", "inactivo"]
+              "enum": [
+                "activo",
+                "inactivo"
+              ]
             }
           },
           {
@@ -984,7 +1024,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       },
       "post": {
         "operationId": "UsersController_create",
@@ -1086,7 +1128,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/{id}": {
@@ -1191,7 +1235,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       },
       "patch": {
         "operationId": "UsersController_update",
@@ -1304,7 +1350,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/{id}/status": {
@@ -1419,7 +1467,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/users/{id}/password": {
@@ -1527,7 +1577,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Users"]
+        "tags": [
+          "Users"
+        ]
       }
     },
     "/consent": {
@@ -1621,7 +1673,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Consent"]
+        "tags": [
+          "Consent"
+        ]
       },
       "post": {
         "operationId": "ConsentController_accept",
@@ -1723,7 +1777,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Consent"]
+        "tags": [
+          "Consent"
+        ]
       }
     },
     "/levels": {
@@ -1755,7 +1811,10 @@
             "schema": {
               "default": "sortOrder",
               "type": "string",
-              "enum": ["sortOrder", "name"]
+              "enum": [
+                "sortOrder",
+                "name"
+              ]
             }
           },
           {
@@ -1765,7 +1824,10 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           }
         ],
@@ -1856,7 +1918,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Levels"]
+        "tags": [
+          "Levels"
+        ]
       },
       "post": {
         "operationId": "LevelsController_create",
@@ -1958,7 +2022,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Levels"]
+        "tags": [
+          "Levels"
+        ]
       }
     },
     "/levels/{id}": {
@@ -2073,7 +2139,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Levels"]
+        "tags": [
+          "Levels"
+        ]
       }
     },
     "/grades": {
@@ -2105,7 +2173,10 @@
             "schema": {
               "default": "sortOrder",
               "type": "string",
-              "enum": ["sortOrder", "name"]
+              "enum": [
+                "sortOrder",
+                "name"
+              ]
             }
           },
           {
@@ -2115,7 +2186,10 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -2216,7 +2290,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Grades"]
+        "tags": [
+          "Grades"
+        ]
       },
       "post": {
         "operationId": "GradesController_create",
@@ -2318,7 +2394,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Grades"]
+        "tags": [
+          "Grades"
+        ]
       }
     },
     "/grades/{id}": {
@@ -2433,7 +2511,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Grades"]
+        "tags": [
+          "Grades"
+        ]
       }
     },
     "/areas": {
@@ -2465,7 +2545,10 @@
             "schema": {
               "default": "name",
               "type": "string",
-              "enum": ["name", "type"]
+              "enum": [
+                "name",
+                "type"
+              ]
             }
           },
           {
@@ -2475,7 +2558,10 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -2484,7 +2570,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["asignatura", "dimension"]
+              "enum": [
+                "asignatura",
+                "dimension"
+              ]
             }
           }
         ],
@@ -2575,7 +2664,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Areas"]
+        "tags": [
+          "Areas"
+        ]
       },
       "post": {
         "operationId": "AreasController_create",
@@ -2677,7 +2768,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Areas"]
+        "tags": [
+          "Areas"
+        ]
       }
     },
     "/areas/{id}": {
@@ -2792,7 +2885,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Areas"]
+        "tags": [
+          "Areas"
+        ]
       }
     },
     "/academic-periods": {
@@ -2824,7 +2919,10 @@
             "schema": {
               "default": "schoolYear",
               "type": "string",
-              "enum": ["schoolYear", "number"]
+              "enum": [
+                "schoolYear",
+                "number"
+              ]
             }
           },
           {
@@ -2834,7 +2932,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -2933,7 +3034,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AcademicPeriods"]
+        "tags": [
+          "AcademicPeriods"
+        ]
       },
       "post": {
         "operationId": "AcademicPeriodsController_create",
@@ -3035,7 +3138,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AcademicPeriods"]
+        "tags": [
+          "AcademicPeriods"
+        ]
       }
     },
     "/academic-periods/{id}": {
@@ -3150,7 +3255,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AcademicPeriods"]
+        "tags": [
+          "AcademicPeriods"
+        ]
       }
     },
     "/school-years": {
@@ -3182,7 +3289,9 @@
             "schema": {
               "default": "code",
               "type": "string",
-              "enum": ["code"]
+              "enum": [
+                "code"
+              ]
             }
           },
           {
@@ -3192,7 +3301,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -3201,7 +3313,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             }
           }
         ],
@@ -3292,7 +3407,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SchoolYears"]
+        "tags": [
+          "SchoolYears"
+        ]
       },
       "post": {
         "operationId": "SchoolYearsController_create",
@@ -3394,7 +3511,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SchoolYears"]
+        "tags": [
+          "SchoolYears"
+        ]
       }
     },
     "/school-years/current": {
@@ -3488,7 +3607,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SchoolYears"]
+        "tags": [
+          "SchoolYears"
+        ]
       }
     },
     "/school-years/{id}/current": {
@@ -3593,7 +3714,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SchoolYears"]
+        "tags": [
+          "SchoolYears"
+        ]
       }
     },
     "/teacher-assignments": {
@@ -3625,7 +3748,10 @@
             "schema": {
               "default": "createdAt",
               "type": "string",
-              "enum": ["createdAt", "schoolYear"]
+              "enum": [
+                "createdAt",
+                "schoolYear"
+              ]
             }
           },
           {
@@ -3635,7 +3761,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -3682,7 +3811,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["activa", "retirada"]
+              "enum": [
+                "activa",
+                "retirada"
+              ]
             }
           }
         ],
@@ -3773,7 +3905,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TeacherAssignments"]
+        "tags": [
+          "TeacherAssignments"
+        ]
       },
       "post": {
         "operationId": "TeacherAssignmentsController_create",
@@ -3875,7 +4009,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TeacherAssignments"]
+        "tags": [
+          "TeacherAssignments"
+        ]
       }
     },
     "/teacher-assignments/{id}": {
@@ -3990,7 +4126,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TeacherAssignments"]
+        "tags": [
+          "TeacherAssignments"
+        ]
       }
     },
     "/teacher-assignments/{id}/status": {
@@ -4105,7 +4243,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TeacherAssignments"]
+        "tags": [
+          "TeacherAssignments"
+        ]
       }
     },
     "/me/assignments": {
@@ -4199,7 +4339,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyAssignments"]
+        "tags": [
+          "MyAssignments"
+        ]
       }
     },
     "/lesson-plans": {
@@ -4231,7 +4373,11 @@
             "schema": {
               "default": "updatedAt",
               "type": "string",
-              "enum": ["updatedAt", "createdAt", "submittedAt"]
+              "enum": [
+                "updatedAt",
+                "createdAt",
+                "submittedAt"
+              ]
             }
           },
           {
@@ -4241,7 +4387,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -4250,7 +4399,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+              "enum": [
+                "borrador",
+                "enviada",
+                "observaciones",
+                "revisada",
+                "anulado"
+              ]
             }
           },
           {
@@ -4381,7 +4536,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlans"]
+        "tags": [
+          "LessonPlans"
+        ]
       },
       "post": {
         "operationId": "LessonPlansController_create",
@@ -4483,7 +4640,108 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlans"]
+        "tags": [
+          "LessonPlans"
+        ]
+      }
+    },
+    "/lesson-plans/options": {
+      "get": {
+        "operationId": "LessonPlansController_options",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonPlanOptionsDto_Output"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin sesión válida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Rol insuficiente o aviso de datos sin aceptar",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicto con datos existentes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Demasiadas peticiones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "cookie": []
+          },
+          {
+            "cookie": []
+          }
+        ],
+        "tags": [
+          "LessonPlans"
+        ]
       }
     },
     "/lesson-plans/{id}": {
@@ -4588,7 +4846,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlans"]
+        "tags": [
+          "LessonPlans"
+        ]
       },
       "patch": {
         "operationId": "LessonPlansController_update",
@@ -4701,7 +4961,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlans"]
+        "tags": [
+          "LessonPlans"
+        ]
       }
     },
     "/lesson-plans/{id}/submit": {
@@ -4806,7 +5068,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlans"]
+        "tags": [
+          "LessonPlans"
+        ]
       }
     },
     "/lesson-plans/{id}/void": {
@@ -4921,7 +5185,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlans"]
+        "tags": [
+          "LessonPlans"
+        ]
       }
     },
     "/lesson-plans/{id}/approve": {
@@ -5036,7 +5302,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlanReview"]
+        "tags": [
+          "LessonPlanReview"
+        ]
       }
     },
     "/lesson-plans/{id}/return": {
@@ -5151,7 +5419,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlanReview"]
+        "tags": [
+          "LessonPlanReview"
+        ]
       }
     },
     "/lesson-plans/{id}/reviews": {
@@ -5259,7 +5529,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlanReview"]
+        "tags": [
+          "LessonPlanReview"
+        ]
       }
     },
     "/lesson-plans/{id}/resources": {
@@ -5374,7 +5646,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlanResources"]
+        "tags": [
+          "LessonPlanResources"
+        ]
       }
     },
     "/lesson-plans/{id}/resources/{resourceId}": {
@@ -5482,7 +5756,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlanResources"]
+        "tags": [
+          "LessonPlanResources"
+        ]
       }
     },
     "/lesson-plan-compliance": {
@@ -5597,7 +5873,9 @@
             "cookie": []
           }
         ],
-        "tags": ["LessonPlanCompliance"]
+        "tags": [
+          "LessonPlanCompliance"
+        ]
       }
     },
     "/shared-activities": {
@@ -5629,7 +5907,11 @@
             "schema": {
               "default": "createdAt",
               "type": "string",
-              "enum": ["createdAt", "updatedAt", "title"]
+              "enum": [
+                "createdAt",
+                "updatedAt",
+                "title"
+              ]
             }
           },
           {
@@ -5639,7 +5921,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -5708,7 +5993,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["actividad", "juego", "proyecto", "recurso_digital", "video"]
+              "enum": [
+                "actividad",
+                "juego",
+                "proyecto",
+                "recurso_digital",
+                "video"
+              ]
             }
           },
           {
@@ -5717,7 +6008,9 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true"]
+              "enum": [
+                "true"
+              ]
             }
           }
         ],
@@ -5808,7 +6101,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivities"]
+        "tags": [
+          "SharedActivities"
+        ]
       },
       "post": {
         "operationId": "SharedActivitiesController_create",
@@ -5910,7 +6205,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivities"]
+        "tags": [
+          "SharedActivities"
+        ]
       }
     },
     "/shared-activities/learning-corners": {
@@ -6015,7 +6312,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivities"]
+        "tags": [
+          "SharedActivities"
+        ]
       }
     },
     "/shared-activities/{id}": {
@@ -6120,7 +6419,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivities"]
+        "tags": [
+          "SharedActivities"
+        ]
       },
       "patch": {
         "operationId": "SharedActivitiesController_update",
@@ -6233,7 +6534,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivities"]
+        "tags": [
+          "SharedActivities"
+        ]
       },
       "delete": {
         "operationId": "SharedActivitiesController_remove",
@@ -6329,7 +6632,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivities"]
+        "tags": [
+          "SharedActivities"
+        ]
       }
     },
     "/shared-activities/{id}/favorite": {
@@ -6427,7 +6732,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivityFavorites"]
+        "tags": [
+          "SharedActivityFavorites"
+        ]
       },
       "delete": {
         "operationId": "SharedActivityFavoritesController_unfavorite",
@@ -6523,7 +6830,9 @@
             "cookie": []
           }
         ],
-        "tags": ["SharedActivityFavorites"]
+        "tags": [
+          "SharedActivityFavorites"
+        ]
       }
     },
     "/field-journals": {
@@ -6555,7 +6864,11 @@
             "schema": {
               "default": "updatedAt",
               "type": "string",
-              "enum": ["updatedAt", "createdAt", "submittedAt"]
+              "enum": [
+                "updatedAt",
+                "createdAt",
+                "submittedAt"
+              ]
             }
           },
           {
@@ -6565,7 +6878,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -6574,7 +6890,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+              "enum": [
+                "borrador",
+                "enviada",
+                "observaciones",
+                "revisada",
+                "anulado"
+              ]
             }
           },
           {
@@ -6695,7 +7017,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournals"]
+        "tags": [
+          "FieldJournals"
+        ]
       },
       "post": {
         "operationId": "FieldJournalsController_create",
@@ -6797,7 +7121,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournals"]
+        "tags": [
+          "FieldJournals"
+        ]
       }
     },
     "/field-journals/{id}": {
@@ -6902,7 +7228,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournals"]
+        "tags": [
+          "FieldJournals"
+        ]
       }
     },
     "/field-journals/{id}/submit": {
@@ -7007,7 +7335,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournals"]
+        "tags": [
+          "FieldJournals"
+        ]
       }
     },
     "/field-journals/{id}/void": {
@@ -7122,7 +7452,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournals"]
+        "tags": [
+          "FieldJournals"
+        ]
       }
     },
     "/field-journals/{id}/entries": {
@@ -7237,7 +7569,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournalEntries"]
+        "tags": [
+          "FieldJournalEntries"
+        ]
       }
     },
     "/field-journals/{id}/entries/{entryId}": {
@@ -7362,7 +7696,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournalEntries"]
+        "tags": [
+          "FieldJournalEntries"
+        ]
       },
       "delete": {
         "operationId": "FieldJournalEntriesController_remove",
@@ -7475,7 +7811,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournalEntries"]
+        "tags": [
+          "FieldJournalEntries"
+        ]
       }
     },
     "/field-journals/{id}/approve": {
@@ -7590,7 +7928,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournalReview"]
+        "tags": [
+          "FieldJournalReview"
+        ]
       }
     },
     "/field-journals/{id}/return": {
@@ -7705,7 +8045,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournalReview"]
+        "tags": [
+          "FieldJournalReview"
+        ]
       }
     },
     "/field-journals/{id}/reviews": {
@@ -7813,7 +8155,9 @@
             "cookie": []
           }
         ],
-        "tags": ["FieldJournalReview"]
+        "tags": [
+          "FieldJournalReview"
+        ]
       }
     },
     "/observer-notes": {
@@ -7845,7 +8189,12 @@
             "schema": {
               "default": "priority",
               "type": "string",
-              "enum": ["priority", "date", "updatedAt", "createdAt"]
+              "enum": [
+                "priority",
+                "date",
+                "updatedAt",
+                "createdAt"
+              ]
             }
           },
           {
@@ -7855,7 +8204,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -7864,7 +8216,13 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+              "enum": [
+                "borrador",
+                "enviada",
+                "observaciones",
+                "revisada",
+                "anulado"
+              ]
             }
           },
           {
@@ -7883,7 +8241,14 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+              "enum": [
+                "positiva",
+                "academica",
+                "tipo_i",
+                "tipo_ii",
+                "tipo_iii",
+                "otra"
+              ]
             }
           },
           {
@@ -7994,7 +8359,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNotes"]
+        "tags": [
+          "ObserverNotes"
+        ]
       },
       "post": {
         "operationId": "ObserverNotesController_create",
@@ -8096,7 +8463,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNotes"]
+        "tags": [
+          "ObserverNotes"
+        ]
       }
     },
     "/observer-notes/{id}": {
@@ -8201,7 +8570,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNotes"]
+        "tags": [
+          "ObserverNotes"
+        ]
       },
       "patch": {
         "operationId": "ObserverNotesController_update",
@@ -8314,7 +8685,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNotes"]
+        "tags": [
+          "ObserverNotes"
+        ]
       }
     },
     "/observer-notes/{id}/submit": {
@@ -8419,7 +8792,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNotes"]
+        "tags": [
+          "ObserverNotes"
+        ]
       }
     },
     "/observer-notes/{id}/void": {
@@ -8534,7 +8909,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNotes"]
+        "tags": [
+          "ObserverNotes"
+        ]
       }
     },
     "/observer-notes/{id}/approve": {
@@ -8649,7 +9026,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNoteReview"]
+        "tags": [
+          "ObserverNoteReview"
+        ]
       }
     },
     "/observer-notes/{id}/return": {
@@ -8764,7 +9143,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNoteReview"]
+        "tags": [
+          "ObserverNoteReview"
+        ]
       }
     },
     "/observer-notes/{id}/reviews": {
@@ -8872,7 +9253,9 @@
             "cookie": []
           }
         ],
-        "tags": ["ObserverNoteReview"]
+        "tags": [
+          "ObserverNoteReview"
+        ]
       }
     },
     "/training-plans": {
@@ -8966,7 +9349,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingPlans"]
+        "tags": [
+          "TrainingPlans"
+        ]
       },
       "post": {
         "operationId": "TrainingPlansController_create",
@@ -9068,7 +9453,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingPlans"]
+        "tags": [
+          "TrainingPlans"
+        ]
       }
     },
     "/training-plans/{id}": {
@@ -9183,7 +9570,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingPlans"]
+        "tags": [
+          "TrainingPlans"
+        ]
       }
     },
     "/training-plans/{id}/sections": {
@@ -9288,7 +9677,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingPlans"]
+        "tags": [
+          "TrainingPlans"
+        ]
       },
       "post": {
         "operationId": "TrainingPlansController_createSection",
@@ -9401,7 +9792,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingPlans"]
+        "tags": [
+          "TrainingPlans"
+        ]
       }
     },
     "/training-plans/{id}/section-order": {
@@ -9516,7 +9909,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingPlans"]
+        "tags": [
+          "TrainingPlans"
+        ]
       }
     },
     "/training-sections/{id}": {
@@ -9631,7 +10026,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingSections"]
+        "tags": [
+          "TrainingSections"
+        ]
       },
       "delete": {
         "operationId": "TrainingSectionsController_remove",
@@ -9727,7 +10124,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingSections"]
+        "tags": [
+          "TrainingSections"
+        ]
       }
     },
     "/training-sections/{id}/modules": {
@@ -9842,7 +10241,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingSections"]
+        "tags": [
+          "TrainingSections"
+        ]
       }
     },
     "/training-sections/{id}/module-order": {
@@ -9957,7 +10358,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingSections"]
+        "tags": [
+          "TrainingSections"
+        ]
       }
     },
     "/training-modules/{id}": {
@@ -10062,7 +10465,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       },
       "patch": {
         "operationId": "TrainingModulesController_update",
@@ -10175,7 +10580,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/publish": {
@@ -10280,7 +10687,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/withdraw": {
@@ -10385,7 +10794,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/restore": {
@@ -10490,7 +10901,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/slides": {
@@ -10605,7 +11018,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/slides/{slideId}": {
@@ -10730,7 +11145,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       },
       "delete": {
         "operationId": "TrainingModulesController_removeSlide",
@@ -10836,7 +11253,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/slide-order": {
@@ -10951,7 +11370,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/questions": {
@@ -10980,7 +11401,9 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["opcion"]
+                        "enum": [
+                          "opcion"
+                        ]
                       },
                       "prompt": {
                         "type": "string",
@@ -11009,12 +11432,19 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["text", "isCorrect"],
+                          "required": [
+                            "text",
+                            "isCorrect"
+                          ],
                           "additionalProperties": false
                         }
                       }
                     },
-                    "required": ["type", "prompt", "options"],
+                    "required": [
+                      "type",
+                      "prompt",
+                      "options"
+                    ],
                     "additionalProperties": false
                   },
                   {
@@ -11022,7 +11452,9 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["vf"]
+                        "enum": [
+                          "vf"
+                        ]
                       },
                       "prompt": {
                         "type": "string",
@@ -11039,7 +11471,11 @@
                         "type": "boolean"
                       }
                     },
-                    "required": ["type", "prompt", "trueFalseAnswer"],
+                    "required": [
+                      "type",
+                      "prompt",
+                      "trueFalseAnswer"
+                    ],
                     "additionalProperties": false
                   },
                   {
@@ -11047,7 +11483,9 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["orden"]
+                        "enum": [
+                          "orden"
+                        ]
                       },
                       "prompt": {
                         "type": "string",
@@ -11071,7 +11509,11 @@
                         }
                       }
                     },
-                    "required": ["type", "prompt", "steps"],
+                    "required": [
+                      "type",
+                      "prompt",
+                      "steps"
+                    ],
                     "additionalProperties": false
                   }
                 ]
@@ -11166,7 +11608,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/questions/{questionId}": {
@@ -11205,7 +11649,9 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["opcion"]
+                        "enum": [
+                          "opcion"
+                        ]
                       },
                       "prompt": {
                         "type": "string",
@@ -11234,12 +11680,19 @@
                               "type": "boolean"
                             }
                           },
-                          "required": ["text", "isCorrect"],
+                          "required": [
+                            "text",
+                            "isCorrect"
+                          ],
                           "additionalProperties": false
                         }
                       }
                     },
-                    "required": ["type", "prompt", "options"],
+                    "required": [
+                      "type",
+                      "prompt",
+                      "options"
+                    ],
                     "additionalProperties": false
                   },
                   {
@@ -11247,7 +11700,9 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["vf"]
+                        "enum": [
+                          "vf"
+                        ]
                       },
                       "prompt": {
                         "type": "string",
@@ -11264,7 +11719,11 @@
                         "type": "boolean"
                       }
                     },
-                    "required": ["type", "prompt", "trueFalseAnswer"],
+                    "required": [
+                      "type",
+                      "prompt",
+                      "trueFalseAnswer"
+                    ],
                     "additionalProperties": false
                   },
                   {
@@ -11272,7 +11731,9 @@
                     "properties": {
                       "type": {
                         "type": "string",
-                        "enum": ["orden"]
+                        "enum": [
+                          "orden"
+                        ]
                       },
                       "prompt": {
                         "type": "string",
@@ -11296,7 +11757,11 @@
                         }
                       }
                     },
-                    "required": ["type", "prompt", "steps"],
+                    "required": [
+                      "type",
+                      "prompt",
+                      "steps"
+                    ],
                     "additionalProperties": false
                   }
                 ]
@@ -11391,7 +11856,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       },
       "delete": {
         "operationId": "TrainingModulesController_removeQuestion",
@@ -11497,7 +11964,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/question-order": {
@@ -11612,7 +12081,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/activities": {
@@ -11727,7 +12198,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/activities/{activityId}": {
@@ -11852,7 +12325,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/activities/{activityId}/withdraw": {
@@ -11967,7 +12442,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/activities/{activityId}/restore": {
@@ -12082,7 +12559,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/activity-order": {
@@ -12197,7 +12676,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModules"]
+        "tags": [
+          "TrainingModules"
+        ]
       }
     },
     "/training-modules/{id}/files": {
@@ -12312,7 +12793,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModuleFiles"]
+        "tags": [
+          "TrainingModuleFiles"
+        ]
       }
     },
     "/training-modules/{id}/files/{fileId}/confirm": {
@@ -12427,7 +12910,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModuleFiles"]
+        "tags": [
+          "TrainingModuleFiles"
+        ]
       }
     },
     "/training-modules/{id}/files/{purpose}": {
@@ -12450,7 +12935,10 @@
             "in": "path",
             "schema": {
               "type": "string",
-              "enum": ["video", "presentacion"]
+              "enum": [
+                "video",
+                "presentacion"
+              ]
             }
           }
         ],
@@ -12541,7 +13029,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModuleFiles"]
+        "tags": [
+          "TrainingModuleFiles"
+        ]
       }
     },
     "/training-modules/{id}/files/{purpose}/url": {
@@ -12564,7 +13054,10 @@
             "in": "path",
             "schema": {
               "type": "string",
-              "enum": ["video", "presentacion"]
+              "enum": [
+                "video",
+                "presentacion"
+              ]
             }
           }
         ],
@@ -12655,7 +13148,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingModuleFiles"]
+        "tags": [
+          "TrainingModuleFiles"
+        ]
       }
     },
     "/training-certificates": {
@@ -12760,7 +13255,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingCertificates"]
+        "tags": [
+          "TrainingCertificates"
+        ]
       }
     },
     "/training-certificates/{id}/download": {
@@ -12865,7 +13362,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingCertificates"]
+        "tags": [
+          "TrainingCertificates"
+        ]
       }
     },
     "/certificates/verify/{code}": {
@@ -12944,7 +13443,9 @@
             }
           }
         },
-        "tags": ["CertificateVerification"]
+        "tags": [
+          "CertificateVerification"
+        ]
       }
     },
     "/training-tracking/plans/{planId}": {
@@ -13049,7 +13550,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingTracking"]
+        "tags": [
+          "TrainingTracking"
+        ]
       }
     },
     "/training-tracking/plans/{planId}/export": {
@@ -13154,7 +13657,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingTracking"]
+        "tags": [
+          "TrainingTracking"
+        ]
       }
     },
     "/training-tracking/teachers/{teacherId}": {
@@ -13259,7 +13764,9 @@
             "cookie": []
           }
         ],
-        "tags": ["TrainingTracking"]
+        "tags": [
+          "TrainingTracking"
+        ]
       }
     },
     "/me/training/route": {
@@ -13353,7 +13860,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}": {
@@ -13458,7 +13967,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}/files/{purpose}/url": {
@@ -13481,7 +13992,10 @@
             "in": "path",
             "schema": {
               "type": "string",
-              "enum": ["video", "presentacion"]
+              "enum": [
+                "video",
+                "presentacion"
+              ]
             }
           }
         ],
@@ -13572,7 +14086,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/certificates": {
@@ -13666,7 +14182,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/certificates/{id}/download": {
@@ -13771,7 +14289,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}/video-viewed": {
@@ -13876,7 +14396,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}/presentation-viewed": {
@@ -13981,7 +14503,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}/challenge": {
@@ -14086,7 +14610,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}/challenge/answer": {
@@ -14201,7 +14727,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/modules/{moduleId}/challenge/next": {
@@ -14306,7 +14834,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/activities/{activityId}/stamps": {
@@ -14421,7 +14951,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/activities/{activityId}/use": {
@@ -14536,7 +15068,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/activities/{activityId}/game": {
@@ -14641,7 +15175,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/activities/{activityId}/game/answer": {
@@ -14679,7 +15215,10 @@
                         "maxLength": 64
                       }
                     },
-                    "required": ["conceptToken", "factToken"],
+                    "required": [
+                      "conceptToken",
+                      "factToken"
+                    ],
                     "additionalProperties": false
                   },
                   {
@@ -14695,7 +15234,10 @@
                         "type": "boolean"
                       }
                     },
-                    "required": ["position", "value"],
+                    "required": [
+                      "position",
+                      "value"
+                    ],
                     "additionalProperties": false
                   }
                 ]
@@ -14790,7 +15332,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/me/training/activities/{activityId}/game/next": {
@@ -14895,7 +15439,9 @@
             "cookie": []
           }
         ],
-        "tags": ["MyTraining"]
+        "tags": [
+          "MyTraining"
+        ]
       }
     },
     "/assistant/faqs": {
@@ -14989,7 +15535,9 @@
             "cookie": []
           }
         ],
-        "tags": ["AssistantFaqs"]
+        "tags": [
+          "AssistantFaqs"
+        ]
       }
     },
     "/assistant/queries": {
@@ -15093,7 +15641,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Assistant"]
+        "tags": [
+          "Assistant"
+        ]
       }
     },
     "/faqs": {
@@ -15125,7 +15675,11 @@
             "schema": {
               "default": "category",
               "type": "string",
-              "enum": ["category", "question", "updatedAt"]
+              "enum": [
+                "category",
+                "question",
+                "updatedAt"
+              ]
             }
           },
           {
@@ -15135,7 +15689,10 @@
             "schema": {
               "default": "asc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -15144,7 +15701,10 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["true", "false"]
+              "enum": [
+                "true",
+                "false"
+              ]
             }
           },
           {
@@ -15249,7 +15809,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Faqs"]
+        "tags": [
+          "Faqs"
+        ]
       },
       "post": {
         "operationId": "FaqsController_create",
@@ -15351,7 +15913,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Faqs"]
+        "tags": [
+          "Faqs"
+        ]
       }
     },
     "/faqs/{id}": {
@@ -15456,7 +16020,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Faqs"]
+        "tags": [
+          "Faqs"
+        ]
       },
       "patch": {
         "operationId": "FaqsController_update",
@@ -15569,7 +16135,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Faqs"]
+        "tags": [
+          "Faqs"
+        ]
       }
     },
     "/unanswered-questions": {
@@ -15601,7 +16169,10 @@
             "schema": {
               "default": "times",
               "type": "string",
-              "enum": ["times", "lastAskedAt"]
+              "enum": [
+                "times",
+                "lastAskedAt"
+              ]
             }
           },
           {
@@ -15611,7 +16182,10 @@
             "schema": {
               "default": "desc",
               "type": "string",
-              "enum": ["asc", "desc"]
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -15621,7 +16195,11 @@
             "schema": {
               "default": "pendiente",
               "type": "string",
-              "enum": ["pendiente", "atendida", "descartada"]
+              "enum": [
+                "pendiente",
+                "atendida",
+                "descartada"
+              ]
             }
           }
         ],
@@ -15712,7 +16290,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Unanswered"]
+        "tags": [
+          "Unanswered"
+        ]
       }
     },
     "/unanswered-questions/{id}": {
@@ -15817,7 +16397,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Unanswered"]
+        "tags": [
+          "Unanswered"
+        ]
       }
     },
     "/unanswered-questions/{id}/discard": {
@@ -15922,7 +16504,9 @@
             "cookie": []
           }
         ],
-        "tags": ["Unanswered"]
+        "tags": [
+          "Unanswered"
+        ]
       }
     }
   },
@@ -15972,7 +16556,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"],
+                  "required": [
+                    "id",
+                    "name"
+                  ],
                   "nullable": true
                 },
                 "role": {
@@ -16029,7 +16616,10 @@
             "nullable": true
           }
         },
-        "required": ["items", "nextCursor"]
+        "required": [
+          "items",
+          "nextCursor"
+        ]
       },
       "AuditLogEntryDetailDto": {
         "type": "object",
@@ -16055,7 +16645,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"],
+            "required": [
+              "id",
+              "name"
+            ],
             "nullable": true
           },
           "role": {
@@ -16130,7 +16723,10 @@
             "type": "boolean"
           }
         },
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "additionalProperties": false
       },
       "CurrentUserDto_Output": {
@@ -16149,10 +16745,19 @@
           },
           "role": {
             "type": "string",
-            "enum": ["docente", "coordinador", "administrador"]
+            "enum": [
+              "docente",
+              "coordinador",
+              "administrador"
+            ]
           }
         },
-        "required": ["id", "fullName", "email", "role"],
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "role"
+        ],
         "additionalProperties": false
       },
       "ChangePasswordDto": {
@@ -16169,7 +16774,10 @@
             "maxLength": 128
           }
         },
-        "required": ["currentPassword", "newPassword"],
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
         "additionalProperties": false
       },
       "UserPageDto": {
@@ -16193,11 +16801,18 @@
                 },
                 "role": {
                   "type": "string",
-                  "enum": ["docente", "coordinador", "administrador"]
+                  "enum": [
+                    "docente",
+                    "coordinador",
+                    "administrador"
+                  ]
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["activo", "inactivo"]
+                  "enum": [
+                    "activo",
+                    "inactivo"
+                  ]
                 },
                 "createdById": {
                   "type": "string",
@@ -16211,7 +16826,15 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "fullName", "email", "role", "status", "createdById", "createdAt"]
+              "required": [
+                "id",
+                "fullName",
+                "email",
+                "role",
+                "status",
+                "createdById",
+                "createdAt"
+              ]
             }
           },
           "page": {
@@ -16235,7 +16858,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "UserDto": {
         "type": "object",
@@ -16253,11 +16882,18 @@
           },
           "role": {
             "type": "string",
-            "enum": ["docente", "coordinador", "administrador"]
+            "enum": [
+              "docente",
+              "coordinador",
+              "administrador"
+            ]
           },
           "status": {
             "type": "string",
-            "enum": ["activo", "inactivo"]
+            "enum": [
+              "activo",
+              "inactivo"
+            ]
           },
           "createdById": {
             "type": "string",
@@ -16271,7 +16907,15 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "fullName", "email", "role", "status", "createdById", "createdAt"]
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "role",
+          "status",
+          "createdById",
+          "createdAt"
+        ]
       },
       "CreateUserDto": {
         "type": "object",
@@ -16287,7 +16931,11 @@
           },
           "role": {
             "type": "string",
-            "enum": ["docente", "coordinador", "administrador"]
+            "enum": [
+              "docente",
+              "coordinador",
+              "administrador"
+            ]
           },
           "password": {
             "type": "string",
@@ -16295,7 +16943,12 @@
             "maxLength": 128
           }
         },
-        "required": ["fullName", "email", "role", "password"],
+        "required": [
+          "fullName",
+          "email",
+          "role",
+          "password"
+        ],
         "additionalProperties": false
       },
       "UpdateUserDto": {
@@ -16312,7 +16965,11 @@
           },
           "role": {
             "type": "string",
-            "enum": ["docente", "coordinador", "administrador"]
+            "enum": [
+              "docente",
+              "coordinador",
+              "administrador"
+            ]
           }
         },
         "additionalProperties": false
@@ -16322,10 +16979,15 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["activo", "inactivo"]
+            "enum": [
+              "activo",
+              "inactivo"
+            ]
           }
         },
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "additionalProperties": false
       },
       "ResetPasswordDto": {
@@ -16337,7 +16999,9 @@
             "maxLength": 128
           }
         },
-        "required": ["password"],
+        "required": [
+          "password"
+        ],
         "additionalProperties": false
       },
       "ConsentStatusDto": {
@@ -16356,7 +17020,11 @@
             "nullable": true
           }
         },
-        "required": ["policyVersion", "accepted", "acceptedAt"]
+        "required": [
+          "policyVersion",
+          "accepted",
+          "acceptedAt"
+        ]
       },
       "AcceptConsentDto": {
         "type": "object",
@@ -16371,22 +17039,35 @@
             "properties": {
               "policy": {
                 "type": "boolean",
-                "enum": [true]
+                "enum": [
+                  true
+                ]
               },
               "authorization": {
                 "type": "boolean",
-                "enum": [true]
+                "enum": [
+                  true
+                ]
               },
               "terms": {
                 "type": "boolean",
-                "enum": [true]
+                "enum": [
+                  true
+                ]
               }
             },
-            "required": ["policy", "authorization", "terms"],
+            "required": [
+              "policy",
+              "authorization",
+              "terms"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["policyVersion", "items"],
+        "required": [
+          "policyVersion",
+          "items"
+        ],
         "additionalProperties": false
       },
       "DataConsentDto": {
@@ -16409,11 +17090,22 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["politica", "autorizo", "terminos", "menores", "seguridad"]
+              "enum": [
+                "politica",
+                "autorizo",
+                "terminos",
+                "menores",
+                "seguridad"
+              ]
             }
           }
         },
-        "required": ["id", "policyVersion", "acceptedAt", "items"]
+        "required": [
+          "id",
+          "policyVersion",
+          "acceptedAt",
+          "items"
+        ]
       },
       "LevelPageDto": {
         "type": "object",
@@ -16447,7 +17139,13 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "name", "sortOrder", "createdAt", "updatedAt"]
+              "required": [
+                "id",
+                "name",
+                "sortOrder",
+                "createdAt",
+                "updatedAt"
+              ]
             }
           },
           "page": {
@@ -16471,7 +17169,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "CreateLevelDto": {
         "type": "object",
@@ -16487,7 +17191,10 @@
             "maximum": 32767
           }
         },
-        "required": ["name", "sortOrder"],
+        "required": [
+          "name",
+          "sortOrder"
+        ],
         "additionalProperties": false
       },
       "LevelDto": {
@@ -16517,7 +17224,13 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "name", "sortOrder", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "name",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "UpdateLevelDto": {
         "type": "object",
@@ -16572,7 +17285,14 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "levelId", "name", "sortOrder", "createdAt", "updatedAt"]
+              "required": [
+                "id",
+                "levelId",
+                "name",
+                "sortOrder",
+                "createdAt",
+                "updatedAt"
+              ]
             }
           },
           "page": {
@@ -16596,7 +17316,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "CreateGradeDto": {
         "type": "object",
@@ -16617,7 +17343,11 @@
             "maximum": 32767
           }
         },
-        "required": ["name", "levelId", "sortOrder"],
+        "required": [
+          "name",
+          "levelId",
+          "sortOrder"
+        ],
         "additionalProperties": false
       },
       "GradeDto": {
@@ -16652,7 +17382,14 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "levelId", "name", "sortOrder", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "levelId",
+          "name",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "UpdateGradeDto": {
         "type": "object",
@@ -16693,7 +17430,10 @@
                 },
                 "type": {
                   "type": "string",
-                  "enum": ["asignatura", "dimension"]
+                  "enum": [
+                    "asignatura",
+                    "dimension"
+                  ]
                 },
                 "createdAt": {
                   "type": "string",
@@ -16706,7 +17446,13 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "name", "type", "createdAt", "updatedAt"]
+              "required": [
+                "id",
+                "name",
+                "type",
+                "createdAt",
+                "updatedAt"
+              ]
             }
           },
           "page": {
@@ -16730,7 +17476,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "CreateAreaDto": {
         "type": "object",
@@ -16742,10 +17494,16 @@
           },
           "type": {
             "type": "string",
-            "enum": ["asignatura", "dimension"]
+            "enum": [
+              "asignatura",
+              "dimension"
+            ]
           }
         },
-        "required": ["name", "type"],
+        "required": [
+          "name",
+          "type"
+        ],
         "additionalProperties": false
       },
       "AreaDto": {
@@ -16761,7 +17519,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["asignatura", "dimension"]
+            "enum": [
+              "asignatura",
+              "dimension"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -16774,7 +17535,13 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "name", "type", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "name",
+          "type",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "UpdateAreaDto": {
         "type": "object",
@@ -16786,7 +17553,10 @@
           },
           "type": {
             "type": "string",
-            "enum": ["asignatura", "dimension"]
+            "enum": [
+              "asignatura",
+              "dimension"
+            ]
           }
         },
         "additionalProperties": false
@@ -16863,7 +17633,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "CreateAcademicPeriodDto": {
         "type": "object",
@@ -16887,7 +17663,10 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
           }
         },
-        "required": ["schoolYear", "number"],
+        "required": [
+          "schoolYear",
+          "number"
+        ],
         "additionalProperties": false
       },
       "AcademicPeriodDto": {
@@ -16925,7 +17704,15 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "schoolYear", "number", "startDate", "endDate", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "schoolYear",
+          "number",
+          "startDate",
+          "endDate",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "UpdateAcademicPeriodDto": {
         "type": "object",
@@ -16975,7 +17762,13 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "code", "isCurrent", "createdAt", "updatedAt"]
+              "required": [
+                "id",
+                "code",
+                "isCurrent",
+                "createdAt",
+                "updatedAt"
+              ]
             }
           },
           "page": {
@@ -16999,7 +17792,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "SchoolYearDto": {
         "type": "object",
@@ -17026,7 +17825,13 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "code", "isCurrent", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "code",
+          "isCurrent",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "CreateSchoolYearDto": {
         "type": "object",
@@ -17035,7 +17840,9 @@
             "type": "string"
           }
         },
-        "required": ["code"],
+        "required": [
+          "code"
+        ],
         "additionalProperties": false
       },
       "TeacherAssignmentPageDto": {
@@ -17056,7 +17863,10 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["activa", "retirada"]
+                  "enum": [
+                    "activa",
+                    "retirada"
+                  ]
                 },
                 "isHomeroomTeacher": {
                   "type": "boolean"
@@ -17074,10 +17884,17 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["activo", "inactivo"]
+                      "enum": [
+                        "activo",
+                        "inactivo"
+                      ]
                     }
                   },
-                  "required": ["id", "fullName", "status"]
+                  "required": [
+                    "id",
+                    "fullName",
+                    "status"
+                  ]
                 },
                 "grade": {
                   "type": "object",
@@ -17096,7 +17913,11 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["id", "name", "sortOrder"]
+                  "required": [
+                    "id",
+                    "name",
+                    "sortOrder"
+                  ]
                 },
                 "level": {
                   "type": "object",
@@ -17110,7 +17931,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": [
+                    "id",
+                    "name"
+                  ]
                 },
                 "area": {
                   "type": "object",
@@ -17125,10 +17949,17 @@
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["asignatura", "dimension"]
+                      "enum": [
+                        "asignatura",
+                        "dimension"
+                      ]
                     }
                   },
-                  "required": ["id", "name", "type"]
+                  "required": [
+                    "id",
+                    "name",
+                    "type"
+                  ]
                 },
                 "createdAt": {
                   "type": "string",
@@ -17176,7 +18007,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "CreateTeacherAssignmentDto": {
         "type": "object",
@@ -17204,7 +18041,11 @@
             "type": "string"
           }
         },
-        "required": ["teacherId", "gradeId", "areaId"],
+        "required": [
+          "teacherId",
+          "gradeId",
+          "areaId"
+        ],
         "additionalProperties": false
       },
       "TeacherAssignmentDto": {
@@ -17220,7 +18061,10 @@
           },
           "status": {
             "type": "string",
-            "enum": ["activa", "retirada"]
+            "enum": [
+              "activa",
+              "retirada"
+            ]
           },
           "isHomeroomTeacher": {
             "type": "boolean"
@@ -17238,10 +18082,17 @@
               },
               "status": {
                 "type": "string",
-                "enum": ["activo", "inactivo"]
+                "enum": [
+                  "activo",
+                  "inactivo"
+                ]
               }
             },
-            "required": ["id", "fullName", "status"]
+            "required": [
+              "id",
+              "fullName",
+              "status"
+            ]
           },
           "grade": {
             "type": "object",
@@ -17260,7 +18111,11 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "sortOrder"]
+            "required": [
+              "id",
+              "name",
+              "sortOrder"
+            ]
           },
           "level": {
             "type": "object",
@@ -17274,7 +18129,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"]
+            "required": [
+              "id",
+              "name"
+            ]
           },
           "area": {
             "type": "object",
@@ -17289,10 +18147,17 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["asignatura", "dimension"]
+                "enum": [
+                  "asignatura",
+                  "dimension"
+                ]
               }
             },
-            "required": ["id", "name", "type"]
+            "required": [
+              "id",
+              "name",
+              "type"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -17325,7 +18190,9 @@
             "type": "boolean"
           }
         },
-        "required": ["isHomeroomTeacher"],
+        "required": [
+          "isHomeroomTeacher"
+        ],
         "additionalProperties": false
       },
       "UpdateTeacherAssignmentStatusDto": {
@@ -17333,10 +18200,15 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["activa", "retirada"]
+            "enum": [
+              "activa",
+              "retirada"
+            ]
           }
         },
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "additionalProperties": false
       },
       "MyAssignmentsDto_Output": {
@@ -17367,7 +18239,11 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["id", "name", "sortOrder"],
+                  "required": [
+                    "id",
+                    "name",
+                    "sortOrder"
+                  ],
                   "additionalProperties": false
                 },
                 "level": {
@@ -17382,7 +18258,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"],
+                  "required": [
+                    "id",
+                    "name"
+                  ],
                   "additionalProperties": false
                 },
                 "isHomeroomTeacher": {
@@ -17408,20 +18287,36 @@
                       },
                       "type": {
                         "type": "string",
-                        "enum": ["asignatura", "dimension"]
+                        "enum": [
+                          "asignatura",
+                          "dimension"
+                        ]
                       }
                     },
-                    "required": ["assignmentId", "id", "name", "type"],
+                    "required": [
+                      "assignmentId",
+                      "id",
+                      "name",
+                      "type"
+                    ],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": ["grade", "level", "isHomeroomTeacher", "areas"],
+              "required": [
+                "grade",
+                "level",
+                "isHomeroomTeacher",
+                "areas"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["schoolYear", "grades"],
+        "required": [
+          "schoolYear",
+          "grades"
+        ],
         "additionalProperties": false
       },
       "LessonPlanPageDto": {
@@ -17449,7 +18344,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "fullName"]
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
                 },
                 "grade": {
                   "type": "object",
@@ -17463,7 +18361,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": [
+                    "id",
+                    "name"
+                  ]
                 },
                 "level": {
                   "type": "object",
@@ -17477,21 +18378,31 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": [
+                    "id",
+                    "name"
+                  ]
                 },
-                "area": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid",
-                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                "areas": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "name": {
+                        "type": "string"
+                      }
                     },
-                    "name": {
-                      "type": "string"
-                    }
-                  },
-                  "required": ["id", "name"]
+                    "required": [
+                      "id",
+                      "name"
+                    ]
+                  }
                 },
                 "period": {
                   "type": "object",
@@ -17510,7 +18421,11 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "number", "schoolYear"]
+                  "required": [
+                    "id",
+                    "number",
+                    "schoolYear"
+                  ]
                 },
                 "dateFrom": {
                   "type": "string",
@@ -17566,7 +18481,13 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+                  "enum": [
+                    "borrador",
+                    "enviada",
+                    "observaciones",
+                    "revisada",
+                    "anulado"
+                  ]
                 },
                 "submittedAt": {
                   "type": "string",
@@ -17606,7 +18527,14 @@
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                       }
                     },
-                    "required": ["id", "tool", "name", "url", "moment", "createdAt"]
+                    "required": [
+                      "id",
+                      "tool",
+                      "name",
+                      "url",
+                      "moment",
+                      "createdAt"
+                    ]
                   }
                 },
                 "createdAt": {
@@ -17625,7 +18553,7 @@
                 "teacher",
                 "grade",
                 "level",
-                "area",
+                "areas",
                 "period",
                 "dateFrom",
                 "dateTo",
@@ -17669,7 +18597,115 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
+      },
+      "LessonPlanOptionsDto_Output": {
+        "type": "object",
+        "properties": {
+          "schoolYear": {
+            "type": "string"
+          },
+          "grades": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "grade": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "sortOrder": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "sortOrder"
+                  ],
+                  "additionalProperties": false
+                },
+                "level": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "additionalProperties": false
+                },
+                "areas": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "asignatura",
+                          "dimension"
+                        ]
+                      },
+                      "assigned": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "type",
+                      "assigned"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "grade",
+                "level",
+                "areas"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "schoolYear",
+          "grades"
+        ],
+        "additionalProperties": false
       },
       "LessonPlanDto": {
         "type": "object",
@@ -17691,7 +18727,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "fullName"]
+            "required": [
+              "id",
+              "fullName"
+            ]
           },
           "grade": {
             "type": "object",
@@ -17705,7 +18744,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"]
+            "required": [
+              "id",
+              "name"
+            ]
           },
           "level": {
             "type": "object",
@@ -17719,21 +18761,31 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"]
+            "required": [
+              "id",
+              "name"
+            ]
           },
-          "area": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "format": "uuid",
-                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          "areas": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                "name": {
+                  "type": "string"
+                }
               },
-              "name": {
-                "type": "string"
-              }
-            },
-            "required": ["id", "name"]
+              "required": [
+                "id",
+                "name"
+              ]
+            }
           },
           "period": {
             "type": "object",
@@ -17752,7 +18804,11 @@
                 "type": "string"
               }
             },
-            "required": ["id", "number", "schoolYear"]
+            "required": [
+              "id",
+              "number",
+              "schoolYear"
+            ]
           },
           "dateFrom": {
             "type": "string",
@@ -17808,7 +18864,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+            "enum": [
+              "borrador",
+              "enviada",
+              "observaciones",
+              "revisada",
+              "anulado"
+            ]
           },
           "submittedAt": {
             "type": "string",
@@ -17848,7 +18910,14 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "tool", "name", "url", "moment", "createdAt"]
+              "required": [
+                "id",
+                "tool",
+                "name",
+                "url",
+                "moment",
+                "createdAt"
+              ]
             }
           },
           "createdAt": {
@@ -17867,7 +18936,7 @@
           "teacher",
           "grade",
           "level",
-          "area",
+          "areas",
           "period",
           "dateFrom",
           "dateTo",
@@ -17897,10 +18966,15 @@
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           },
-          "areaId": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          "areaIds": {
+            "minItems": 1,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
           },
           "periodId": {
             "type": "string",
@@ -17936,7 +19010,13 @@
           },
           "curiocityStage": {
             "type": "string",
-            "enum": ["Investigo", "Interactúo", "Creo", "Presento", null],
+            "enum": [
+              "Investigo",
+              "Interactúo",
+              "Creo",
+              "Presento",
+              null
+            ],
             "nullable": true
           },
           "explorationMoment": {
@@ -17970,7 +19050,11 @@
             "nullable": true
           }
         },
-        "required": ["gradeId", "areaId", "periodId"],
+        "required": [
+          "gradeId",
+          "areaIds",
+          "periodId"
+        ],
         "additionalProperties": false
       },
       "UpdateLessonPlanDto": {
@@ -17980,6 +19064,16 @@
             "type": "string",
             "format": "uuid",
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          },
+          "areaIds": {
+            "minItems": 1,
+            "maxItems": 30,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
           },
           "dateFrom": {
             "type": "string",
@@ -18010,7 +19104,13 @@
           },
           "curiocityStage": {
             "type": "string",
-            "enum": ["Investigo", "Interactúo", "Creo", "Presento", null],
+            "enum": [
+              "Investigo",
+              "Interactúo",
+              "Creo",
+              "Presento",
+              null
+            ],
             "nullable": true
           },
           "explorationMoment": {
@@ -18055,7 +19155,9 @@
             "maxLength": 300
           }
         },
-        "required": ["reason"],
+        "required": [
+          "reason"
+        ],
         "additionalProperties": false
       },
       "ApproveLessonPlanDto": {
@@ -18097,7 +19199,13 @@
               },
               "curiocityStage": {
                 "type": "string",
-                "enum": ["Investigo", "Interactúo", "Creo", "Presento", null],
+                "enum": [
+                  "Investigo",
+                  "Interactúo",
+                  "Creo",
+                  "Presento",
+                  null
+                ],
                 "nullable": true
               },
               "explorationMoment": {
@@ -18176,7 +19284,13 @@
               },
               "curiocityStage": {
                 "type": "string",
-                "enum": ["Investigo", "Interactúo", "Creo", "Presento", null],
+                "enum": [
+                  "Investigo",
+                  "Interactúo",
+                  "Creo",
+                  "Presento",
+                  null
+                ],
                 "nullable": true
               },
               "explorationMoment": {
@@ -18213,7 +19327,9 @@
             "additionalProperties": false
           }
         },
-        "required": ["comment"],
+        "required": [
+          "comment"
+        ],
         "additionalProperties": false
       },
       "ReviewListDto": {
@@ -18228,7 +19344,11 @@
             },
             "action": {
               "type": "string",
-              "enum": ["ajuste", "observaciones", "aprobada"]
+              "enum": [
+                "ajuste",
+                "observaciones",
+                "aprobada"
+              ]
             },
             "comment": {
               "type": "string",
@@ -18246,7 +19366,10 @@
                   "type": "string"
                 }
               },
-              "required": ["id", "fullName"]
+              "required": [
+                "id",
+                "fullName"
+              ]
             },
             "date": {
               "type": "string",
@@ -18270,11 +19393,23 @@
                   "before": {},
                   "after": {}
                 },
-                "required": ["field", "before", "after"]
+                "required": [
+                  "field",
+                  "before",
+                  "after"
+                ]
               }
             }
           },
-          "required": ["id", "action", "comment", "reviewer", "date", "adjustedFields", "changes"]
+          "required": [
+            "id",
+            "action",
+            "comment",
+            "reviewer",
+            "date",
+            "adjustedFields",
+            "changes"
+          ]
         }
       },
       "CreateLessonPlanResourceDto": {
@@ -18310,7 +19445,11 @@
             "nullable": true
           }
         },
-        "required": ["tool", "name", "url"],
+        "required": [
+          "tool",
+          "name",
+          "url"
+        ],
         "additionalProperties": false
       },
       "LessonPlanResourceDto": {
@@ -18343,7 +19482,14 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "tool", "name", "url", "moment", "createdAt"]
+        "required": [
+          "id",
+          "tool",
+          "name",
+          "url",
+          "moment",
+          "createdAt"
+        ]
       },
       "LessonPlanComplianceDto_Output": {
         "type": "object",
@@ -18375,7 +19521,12 @@
                   "nullable": true
                 }
               },
-              "required": ["id", "number", "startDate", "endDate"],
+              "required": [
+                "id",
+                "number",
+                "startDate",
+                "endDate"
+              ],
               "additionalProperties": false
             }
           },
@@ -18396,7 +19547,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "fullName"],
+                  "required": [
+                    "id",
+                    "fullName"
+                  ],
                   "additionalProperties": false
                 },
                 "deliveredCount": {
@@ -18426,7 +19580,10 @@
                             "type": "string"
                           }
                         },
-                        "required": ["id", "name"],
+                        "required": [
+                          "id",
+                          "name"
+                        ],
                         "additionalProperties": false
                       },
                       "level": {
@@ -18441,7 +19598,10 @@
                             "type": "string"
                           }
                         },
-                        "required": ["id", "name"],
+                        "required": [
+                          "id",
+                          "name"
+                        ],
                         "additionalProperties": false
                       },
                       "area": {
@@ -18456,7 +19616,10 @@
                             "type": "string"
                           }
                         },
-                        "required": ["id", "name"],
+                        "required": [
+                          "id",
+                          "name"
+                        ],
                         "additionalProperties": false
                       },
                       "period": {
@@ -18473,12 +19636,18 @@
                             "maximum": 9007199254740991
                           }
                         },
-                        "required": ["id", "number"],
+                        "required": [
+                          "id",
+                          "number"
+                        ],
                         "additionalProperties": false
                       },
                       "status": {
                         "type": "string",
-                        "enum": ["entregado", "pendiente"]
+                        "enum": [
+                          "entregado",
+                          "pendiente"
+                        ]
                       },
                       "deliveredCount": {
                         "type": "integer",
@@ -18486,17 +19655,33 @@
                         "maximum": 9007199254740991
                       }
                     },
-                    "required": ["grade", "level", "area", "period", "status", "deliveredCount"],
+                    "required": [
+                      "grade",
+                      "level",
+                      "area",
+                      "period",
+                      "status",
+                      "deliveredCount"
+                    ],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": ["teacher", "deliveredCount", "pendingCount", "items"],
+              "required": [
+                "teacher",
+                "deliveredCount",
+                "pendingCount",
+                "items"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["schoolYear", "periods", "teachers"],
+        "required": [
+          "schoolYear",
+          "periods",
+          "teachers"
+        ],
         "additionalProperties": false
       },
       "SharedActivityPageDto": {
@@ -18524,7 +19709,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "fullName"]
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
                 },
                 "level": {
                   "type": "object",
@@ -18538,7 +19726,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"],
+                  "required": [
+                    "id",
+                    "name"
+                  ],
                   "nullable": true
                 },
                 "area": {
@@ -18553,7 +19744,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"],
+                  "required": [
+                    "id",
+                    "name"
+                  ],
                   "nullable": true
                 },
                 "grade": {
@@ -18568,7 +19762,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"],
+                  "required": [
+                    "id",
+                    "name"
+                  ],
                   "nullable": true
                 },
                 "learningCorner": {
@@ -18577,7 +19774,13 @@
                 },
                 "activityType": {
                   "type": "string",
-                  "enum": ["actividad", "juego", "proyecto", "recurso_digital", "video"]
+                  "enum": [
+                    "actividad",
+                    "juego",
+                    "proyecto",
+                    "recurso_digital",
+                    "video"
+                  ]
                 },
                 "title": {
                   "type": "string"
@@ -18658,7 +19861,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "SharedActivityCornersDto_Output": {
         "type": "object",
@@ -18671,7 +19880,9 @@
             }
           }
         },
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "additionalProperties": false
       },
       "SharedActivityDto": {
@@ -18694,7 +19905,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "fullName"]
+            "required": [
+              "id",
+              "fullName"
+            ]
           },
           "level": {
             "type": "object",
@@ -18708,7 +19922,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"],
+            "required": [
+              "id",
+              "name"
+            ],
             "nullable": true
           },
           "area": {
@@ -18723,7 +19940,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"],
+            "required": [
+              "id",
+              "name"
+            ],
             "nullable": true
           },
           "grade": {
@@ -18738,7 +19958,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"],
+            "required": [
+              "id",
+              "name"
+            ],
             "nullable": true
           },
           "learningCorner": {
@@ -18747,7 +19970,13 @@
           },
           "activityType": {
             "type": "string",
-            "enum": ["actividad", "juego", "proyecto", "recurso_digital", "video"]
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           },
           "title": {
             "type": "string"
@@ -18867,10 +20096,19 @@
           "activityType": {
             "default": "actividad",
             "type": "string",
-            "enum": ["actividad", "juego", "proyecto", "recurso_digital", "video"]
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           }
         },
-        "required": ["title", "steps"],
+        "required": [
+          "title",
+          "steps"
+        ],
         "additionalProperties": false
       },
       "UpdateSharedActivityDto": {
@@ -18933,7 +20171,13 @@
           },
           "activityType": {
             "type": "string",
-            "enum": ["actividad", "juego", "proyecto", "recurso_digital", "video"]
+            "enum": [
+              "actividad",
+              "juego",
+              "proyecto",
+              "recurso_digital",
+              "video"
+            ]
           }
         },
         "additionalProperties": false
@@ -18963,7 +20207,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "fullName"]
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
                 },
                 "grade": {
                   "type": "object",
@@ -18977,7 +20224,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": [
+                    "id",
+                    "name"
+                  ]
                 },
                 "period": {
                   "type": "object",
@@ -18996,11 +20246,21 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "number", "schoolYear"]
+                  "required": [
+                    "id",
+                    "number",
+                    "schoolYear"
+                  ]
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+                  "enum": [
+                    "borrador",
+                    "enviada",
+                    "observaciones",
+                    "revisada",
+                    "anulado"
+                  ]
                 },
                 "submittedAt": {
                   "type": "string",
@@ -19058,7 +20318,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "FieldJournalDto": {
         "type": "object",
@@ -19080,7 +20346,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "fullName"]
+            "required": [
+              "id",
+              "fullName"
+            ]
           },
           "grade": {
             "type": "object",
@@ -19094,7 +20363,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"]
+            "required": [
+              "id",
+              "name"
+            ]
           },
           "period": {
             "type": "object",
@@ -19113,11 +20385,21 @@
                 "type": "string"
               }
             },
-            "required": ["id", "number", "schoolYear"]
+            "required": [
+              "id",
+              "number",
+              "schoolYear"
+            ]
           },
           "status": {
             "type": "string",
-            "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+            "enum": [
+              "borrador",
+              "enviada",
+              "observaciones",
+              "revisada",
+              "anulado"
+            ]
           },
           "submittedAt": {
             "type": "string",
@@ -19159,7 +20441,11 @@
                 },
                 "eventType": {
                   "type": "string",
-                  "enum": ["grupo", "positivo", "mejorar"]
+                  "enum": [
+                    "grupo",
+                    "positivo",
+                    "mejorar"
+                  ]
                 },
                 "students": {
                   "type": "array",
@@ -19231,7 +20517,10 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
-        "required": ["gradeId", "periodId"],
+        "required": [
+          "gradeId",
+          "periodId"
+        ],
         "additionalProperties": false
       },
       "VoidFieldJournalDto": {
@@ -19243,7 +20532,9 @@
             "maxLength": 300
           }
         },
-        "required": ["reason"],
+        "required": [
+          "reason"
+        ],
         "additionalProperties": false
       },
       "CreateFieldJournalEntryDto": {
@@ -19261,7 +20552,11 @@
           },
           "eventType": {
             "type": "string",
-            "enum": ["grupo", "positivo", "mejorar"]
+            "enum": [
+              "grupo",
+              "positivo",
+              "mejorar"
+            ]
           },
           "students": {
             "maxItems": 12,
@@ -19286,7 +20581,12 @@
             "nullable": true
           }
         },
-        "required": ["date", "lesson", "eventType", "description"],
+        "required": [
+          "date",
+          "lesson",
+          "eventType",
+          "description"
+        ],
         "additionalProperties": false
       },
       "UpdateFieldJournalEntryDto": {
@@ -19304,7 +20604,11 @@
           },
           "eventType": {
             "type": "string",
-            "enum": ["grupo", "positivo", "mejorar"]
+            "enum": [
+              "grupo",
+              "positivo",
+              "mejorar"
+            ]
           },
           "students": {
             "maxItems": 12,
@@ -19365,7 +20669,11 @@
                     },
                     "eventType": {
                       "type": "string",
-                      "enum": ["grupo", "positivo", "mejorar"]
+                      "enum": [
+                        "grupo",
+                        "positivo",
+                        "mejorar"
+                      ]
                     },
                     "students": {
                       "maxItems": 12,
@@ -19390,12 +20698,16 @@
                       "nullable": true
                     }
                   },
-                  "required": ["id"],
+                  "required": [
+                    "id"
+                  ],
                   "additionalProperties": false
                 }
               }
             },
-            "required": ["entries"],
+            "required": [
+              "entries"
+            ],
             "additionalProperties": false
           }
         },
@@ -19436,7 +20748,11 @@
                     },
                     "eventType": {
                       "type": "string",
-                      "enum": ["grupo", "positivo", "mejorar"]
+                      "enum": [
+                        "grupo",
+                        "positivo",
+                        "mejorar"
+                      ]
                     },
                     "students": {
                       "maxItems": 12,
@@ -19461,16 +20777,22 @@
                       "nullable": true
                     }
                   },
-                  "required": ["id"],
+                  "required": [
+                    "id"
+                  ],
                   "additionalProperties": false
                 }
               }
             },
-            "required": ["entries"],
+            "required": [
+              "entries"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["comment"],
+        "required": [
+          "comment"
+        ],
         "additionalProperties": false
       },
       "FieldJournalReviewListDto": {
@@ -19485,7 +20807,11 @@
             },
             "action": {
               "type": "string",
-              "enum": ["ajuste", "observaciones", "aprobada"]
+              "enum": [
+                "ajuste",
+                "observaciones",
+                "aprobada"
+              ]
             },
             "comment": {
               "type": "string",
@@ -19503,7 +20829,10 @@
                   "type": "string"
                 }
               },
-              "required": ["id", "fullName"]
+              "required": [
+                "id",
+                "fullName"
+              ]
             },
             "date": {
               "type": "string",
@@ -19527,11 +20856,23 @@
                   "before": {},
                   "after": {}
                 },
-                "required": ["field", "before", "after"]
+                "required": [
+                  "field",
+                  "before",
+                  "after"
+                ]
               }
             }
           },
-          "required": ["id", "action", "comment", "reviewer", "date", "adjustedFields", "changes"]
+          "required": [
+            "id",
+            "action",
+            "comment",
+            "reviewer",
+            "date",
+            "adjustedFields",
+            "changes"
+          ]
         }
       },
       "ObserverNotePageDto": {
@@ -19559,7 +20900,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "fullName"]
+                  "required": [
+                    "id",
+                    "fullName"
+                  ]
                 },
                 "grade": {
                   "type": "object",
@@ -19573,7 +20917,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": [
+                    "id",
+                    "name"
+                  ]
                 },
                 "studentFirstName": {
                   "type": "string"
@@ -19583,7 +20930,14 @@
                 },
                 "type": {
                   "type": "string",
-                  "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+                  "enum": [
+                    "positiva",
+                    "academica",
+                    "tipo_i",
+                    "tipo_ii",
+                    "tipo_iii",
+                    "otra"
+                  ]
                 },
                 "description": {
                   "type": "string"
@@ -19609,7 +20963,13 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+                  "enum": [
+                    "borrador",
+                    "enviada",
+                    "observaciones",
+                    "revisada",
+                    "anulado"
+                  ]
                 },
                 "createdAt": {
                   "type": "string",
@@ -19662,7 +21022,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "ObserverNoteDto": {
         "type": "object",
@@ -19684,7 +21050,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "fullName"]
+            "required": [
+              "id",
+              "fullName"
+            ]
           },
           "grade": {
             "type": "object",
@@ -19698,7 +21067,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"]
+            "required": [
+              "id",
+              "name"
+            ]
           },
           "studentFirstName": {
             "type": "string"
@@ -19708,7 +21080,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+            "enum": [
+              "positiva",
+              "academica",
+              "tipo_i",
+              "tipo_ii",
+              "tipo_iii",
+              "otra"
+            ]
           },
           "description": {
             "type": "string"
@@ -19734,7 +21113,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["borrador", "enviada", "observaciones", "revisada", "anulado"]
+            "enum": [
+              "borrador",
+              "enviada",
+              "observaciones",
+              "revisada",
+              "anulado"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -19778,7 +21163,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+            "enum": [
+              "positiva",
+              "academica",
+              "tipo_i",
+              "tipo_ii",
+              "tipo_iii",
+              "otra"
+            ]
           },
           "description": {
             "type": "string",
@@ -19815,7 +21207,13 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
-        "required": ["studentFirstName", "date", "type", "description", "gradeId"],
+        "required": [
+          "studentFirstName",
+          "date",
+          "type",
+          "description",
+          "gradeId"
+        ],
         "additionalProperties": false
       },
       "UpdateObserverNoteDto": {
@@ -19831,7 +21229,14 @@
           },
           "type": {
             "type": "string",
-            "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+            "enum": [
+              "positiva",
+              "academica",
+              "tipo_i",
+              "tipo_ii",
+              "tipo_iii",
+              "otra"
+            ]
           },
           "description": {
             "type": "string",
@@ -19873,7 +21278,9 @@
             "maxLength": 300
           }
         },
-        "required": ["reason"],
+        "required": [
+          "reason"
+        ],
         "additionalProperties": false
       },
       "ApproveObserverNoteDto": {
@@ -19896,7 +21303,14 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+                "enum": [
+                  "positiva",
+                  "academica",
+                  "tipo_i",
+                  "tipo_ii",
+                  "tipo_iii",
+                  "otra"
+                ]
               },
               "description": {
                 "type": "string",
@@ -19953,7 +21367,14 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["positiva", "academica", "tipo_i", "tipo_ii", "tipo_iii", "otra"]
+                "enum": [
+                  "positiva",
+                  "academica",
+                  "tipo_i",
+                  "tipo_ii",
+                  "tipo_iii",
+                  "otra"
+                ]
               },
               "description": {
                 "type": "string",
@@ -19987,7 +21408,9 @@
             "additionalProperties": false
           }
         },
-        "required": ["comment"],
+        "required": [
+          "comment"
+        ],
         "additionalProperties": false
       },
       "ObserverNoteReviewListDto": {
@@ -20002,7 +21425,11 @@
             },
             "action": {
               "type": "string",
-              "enum": ["ajuste", "observaciones", "aprobada"]
+              "enum": [
+                "ajuste",
+                "observaciones",
+                "aprobada"
+              ]
             },
             "comment": {
               "type": "string",
@@ -20020,7 +21447,10 @@
                   "type": "string"
                 }
               },
-              "required": ["id", "fullName"]
+              "required": [
+                "id",
+                "fullName"
+              ]
             },
             "date": {
               "type": "string",
@@ -20044,11 +21474,23 @@
                   "before": {},
                   "after": {}
                 },
-                "required": ["field", "before", "after"]
+                "required": [
+                  "field",
+                  "before",
+                  "after"
+                ]
               }
             }
           },
-          "required": ["id", "action", "comment", "reviewer", "date", "adjustedFields", "changes"]
+          "required": [
+            "id",
+            "action",
+            "comment",
+            "reviewer",
+            "date",
+            "adjustedFields",
+            "changes"
+          ]
         }
       },
       "TrainingPlanListDto": {
@@ -20110,7 +21552,11 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["draft", "active", "outOfPlan"]
+                  "required": [
+                    "draft",
+                    "active",
+                    "outOfPlan"
+                  ]
                 }
               },
               "required": [
@@ -20126,7 +21572,9 @@
             }
           }
         },
-        "required": ["items"]
+        "required": [
+          "items"
+        ]
       },
       "CreateTrainingPlanDto": {
         "type": "object",
@@ -20149,7 +21597,9 @@
             "nullable": true
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "additionalProperties": false
       },
       "TrainingPlanDto": {
@@ -20184,7 +21634,14 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "areaId", "name", "schoolYear", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "areaId",
+          "name",
+          "schoolYear",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "UpdateTrainingPlanDto": {
         "type": "object",
@@ -20236,7 +21693,14 @@
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               }
             },
-            "required": ["id", "areaId", "name", "schoolYear", "createdAt", "updatedAt"]
+            "required": [
+              "id",
+              "areaId",
+              "name",
+              "schoolYear",
+              "createdAt",
+              "updatedAt"
+            ]
           },
           "sections": {
             "type": "array",
@@ -20299,7 +21763,11 @@
                       },
                       "status": {
                         "type": "string",
-                        "enum": ["borrador", "activo", "fuera_del_plan"]
+                        "enum": [
+                          "borrador",
+                          "activo",
+                          "fuera_del_plan"
+                        ]
                       },
                       "slideCount": {
                         "type": "integer",
@@ -20343,7 +21811,10 @@
             }
           }
         },
-        "required": ["plan", "sections"]
+        "required": [
+          "plan",
+          "sections"
+        ]
       },
       "CreateTrainingSectionDto": {
         "type": "object",
@@ -20360,7 +21831,9 @@
             "nullable": true
           }
         },
-        "required": ["title"],
+        "required": [
+          "title"
+        ],
         "additionalProperties": false
       },
       "TrainingSectionDto": {
@@ -20399,7 +21872,15 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["id", "planId", "title", "subtitle", "sortOrder", "createdAt", "updatedAt"]
+        "required": [
+          "id",
+          "planId",
+          "title",
+          "subtitle",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
       },
       "OrderDto": {
         "type": "object",
@@ -20415,7 +21896,9 @@
             }
           }
         },
-        "required": ["ids"],
+        "required": [
+          "ids"
+        ],
         "additionalProperties": false
       },
       "UpdateTrainingSectionDto": {
@@ -20489,7 +21972,9 @@
             "nullable": true
           }
         },
-        "required": ["title"],
+        "required": [
+          "title"
+        ],
         "additionalProperties": false
       },
       "TrainingModuleDto": {
@@ -20540,7 +22025,11 @@
           },
           "videoSource": {
             "type": "string",
-            "enum": ["youtube", "archivo", null],
+            "enum": [
+              "youtube",
+              "archivo",
+              null
+            ],
             "nullable": true
           },
           "videoEmbedUrl": {
@@ -20568,7 +22057,12 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "contentType", "size"],
+            "required": [
+              "id",
+              "name",
+              "contentType",
+              "size"
+            ],
             "additionalProperties": false,
             "nullable": true
           },
@@ -20593,13 +22087,22 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "contentType", "size"],
+            "required": [
+              "id",
+              "name",
+              "contentType",
+              "size"
+            ],
             "additionalProperties": false,
             "nullable": true
           },
           "status": {
             "type": "string",
-            "enum": ["borrador", "activo", "fuera_del_plan"]
+            "enum": [
+              "borrador",
+              "activo",
+              "fuera_del_plan"
+            ]
           },
           "approvalThreshold": {
             "type": "integer",
@@ -20704,7 +22207,11 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["borrador", "activo", "fuera_del_plan"]
+                  "enum": [
+                    "borrador",
+                    "activo",
+                    "fuera_del_plan"
+                  ]
                 },
                 "slideCount": {
                   "type": "integer",
@@ -20794,7 +22301,11 @@
           },
           "videoSource": {
             "type": "string",
-            "enum": ["youtube", "archivo", null],
+            "enum": [
+              "youtube",
+              "archivo",
+              null
+            ],
             "nullable": true
           },
           "videoEmbedUrl": {
@@ -20822,7 +22333,12 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "contentType", "size"],
+            "required": [
+              "id",
+              "name",
+              "contentType",
+              "size"
+            ],
             "additionalProperties": false,
             "nullable": true
           },
@@ -20847,13 +22363,22 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "contentType", "size"],
+            "required": [
+              "id",
+              "name",
+              "contentType",
+              "size"
+            ],
             "additionalProperties": false,
             "nullable": true
           },
           "status": {
             "type": "string",
-            "enum": ["borrador", "activo", "fuera_del_plan"]
+            "enum": [
+              "borrador",
+              "activo",
+              "fuera_del_plan"
+            ]
           },
           "approvalThreshold": {
             "type": "integer",
@@ -20900,7 +22425,12 @@
                   "nullable": true
                 }
               },
-              "required": ["id", "sortOrder", "title", "keyIdeas"]
+              "required": [
+                "id",
+                "sortOrder",
+                "title",
+                "keyIdeas"
+              ]
             }
           },
           "questions": {
@@ -20920,7 +22450,11 @@
                 },
                 "type": {
                   "type": "string",
-                  "enum": ["opcion", "vf", "orden"]
+                  "enum": [
+                    "opcion",
+                    "vf",
+                    "orden"
+                  ]
                 },
                 "prompt": {
                   "type": "string"
@@ -20957,7 +22491,12 @@
                         "nullable": true
                       }
                     },
-                    "required": ["id", "text", "isCorrect", "correctPosition"]
+                    "required": [
+                      "id",
+                      "text",
+                      "isCorrect",
+                      "correctPosition"
+                    ]
                   }
                 }
               },
@@ -20984,7 +22523,12 @@
                 },
                 "type": {
                   "type": "string",
-                  "enum": ["ruleta_pasaporte", "conecta", "verdad_o_mito", "simulador"]
+                  "enum": [
+                    "ruleta_pasaporte",
+                    "conecta",
+                    "verdad_o_mito",
+                    "simulador"
+                  ]
                 },
                 "sortOrder": {
                   "type": "integer",
@@ -21003,7 +22547,10 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["activo", "fuera_del_plan"]
+                  "enum": [
+                    "activo",
+                    "fuera_del_plan"
+                  ]
                 },
                 "config": {
                   "type": "object",
@@ -21130,7 +22677,9 @@
             "maxLength": 2000
           }
         },
-        "required": ["keyIdeas"],
+        "required": [
+          "keyIdeas"
+        ],
         "additionalProperties": false
       },
       "SlideDto": {
@@ -21155,7 +22704,12 @@
             "nullable": true
           }
         },
-        "required": ["id", "sortOrder", "title", "keyIdeas"]
+        "required": [
+          "id",
+          "sortOrder",
+          "title",
+          "keyIdeas"
+        ]
       },
       "UpdateSlideDto": {
         "type": "object",
@@ -21188,7 +22742,11 @@
           },
           "type": {
             "type": "string",
-            "enum": ["opcion", "vf", "orden"]
+            "enum": [
+              "opcion",
+              "vf",
+              "orden"
+            ]
           },
           "prompt": {
             "type": "string"
@@ -21225,18 +22783,36 @@
                   "nullable": true
                 }
               },
-              "required": ["id", "text", "isCorrect", "correctPosition"]
+              "required": [
+                "id",
+                "text",
+                "isCorrect",
+                "correctPosition"
+              ]
             }
           }
         },
-        "required": ["id", "sortOrder", "type", "prompt", "feedback", "trueFalseAnswer", "options"]
+        "required": [
+          "id",
+          "sortOrder",
+          "type",
+          "prompt",
+          "feedback",
+          "trueFalseAnswer",
+          "options"
+        ]
       },
       "CreateActivityDto": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["ruleta_pasaporte", "conecta", "verdad_o_mito", "simulador"]
+            "enum": [
+              "ruleta_pasaporte",
+              "conecta",
+              "verdad_o_mito",
+              "simulador"
+            ]
           },
           "title": {
             "type": "string",
@@ -21255,7 +22831,12 @@
           },
           "config": {}
         },
-        "required": ["type", "title", "isRequired", "config"],
+        "required": [
+          "type",
+          "title",
+          "isRequired",
+          "config"
+        ],
         "additionalProperties": false
       },
       "ActivityDto": {
@@ -21268,7 +22849,12 @@
           },
           "type": {
             "type": "string",
-            "enum": ["ruleta_pasaporte", "conecta", "verdad_o_mito", "simulador"]
+            "enum": [
+              "ruleta_pasaporte",
+              "conecta",
+              "verdad_o_mito",
+              "simulador"
+            ]
           },
           "sortOrder": {
             "type": "integer",
@@ -21287,7 +22873,10 @@
           },
           "status": {
             "type": "string",
-            "enum": ["activo", "fuera_del_plan"]
+            "enum": [
+              "activo",
+              "fuera_del_plan"
+            ]
           },
           "config": {
             "type": "object",
@@ -21343,7 +22932,10 @@
         "properties": {
           "purpose": {
             "type": "string",
-            "enum": ["video", "presentacion"]
+            "enum": [
+              "video",
+              "presentacion"
+            ]
           },
           "name": {
             "type": "string",
@@ -21362,7 +22954,12 @@
             "minimum": 0
           }
         },
-        "required": ["purpose", "name", "contentType", "size"],
+        "required": [
+          "purpose",
+          "name",
+          "contentType",
+          "size"
+        ],
         "additionalProperties": false
       },
       "ModuleFileUploadResultDto": {
@@ -21382,7 +22979,9 @@
               },
               "method": {
                 "type": "string",
-                "enum": ["PUT"]
+                "enum": [
+                  "PUT"
+                ]
               },
               "headers": {
                 "type": "object",
@@ -21396,11 +22995,19 @@
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
               }
             },
-            "required": ["url", "method", "headers", "expiresAt"],
+            "required": [
+              "url",
+              "method",
+              "headers",
+              "expiresAt"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["fileId", "upload"],
+        "required": [
+          "fileId",
+          "upload"
+        ],
         "additionalProperties": false
       },
       "SignedUrlDto": {
@@ -21416,7 +23023,10 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["url", "expiresAt"],
+        "required": [
+          "url",
+          "expiresAt"
+        ],
         "additionalProperties": false
       },
       "CertificateListDto": {
@@ -21434,7 +23044,10 @@
                 },
                 "kind": {
                   "type": "string",
-                  "enum": ["modulo", "ruta"]
+                  "enum": [
+                    "modulo",
+                    "ruta"
+                  ]
                 },
                 "moduleId": {
                   "type": "string",
@@ -21458,12 +23071,22 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "kind", "moduleId", "title", "planName", "code", "issuedAt"],
+              "required": [
+                "id",
+                "kind",
+                "moduleId",
+                "title",
+                "planName",
+                "code",
+                "issuedAt"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "additionalProperties": false
       },
       "CertificateVerificationDto": {
@@ -21471,14 +23094,19 @@
         "properties": {
           "valid": {
             "type": "boolean",
-            "enum": [true]
+            "enum": [
+              true
+            ]
           },
           "teacherName": {
             "type": "string"
           },
           "kind": {
             "type": "string",
-            "enum": ["modulo", "ruta"]
+            "enum": [
+              "modulo",
+              "ruta"
+            ]
           },
           "title": {
             "type": "string"
@@ -21493,7 +23121,14 @@
             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
           }
         },
-        "required": ["valid", "teacherName", "kind", "title", "planName", "issuedAt"],
+        "required": [
+          "valid",
+          "teacherName",
+          "kind",
+          "title",
+          "planName",
+          "issuedAt"
+        ],
         "additionalProperties": false
       },
       "PlanTrackingDto": {
@@ -21525,7 +23160,13 @@
                 "nullable": true
               }
             },
-            "required": ["id", "name", "areaId", "areaName", "schoolYear"],
+            "required": [
+              "id",
+              "name",
+              "areaId",
+              "areaName",
+              "schoolYear"
+            ],
             "additionalProperties": false
           },
           "modules": {
@@ -21567,11 +23208,21 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["notStarted", "inProgress", "done"],
+                  "required": [
+                    "notStarted",
+                    "inProgress",
+                    "done"
+                  ],
                   "additionalProperties": false
                 }
               },
-              "required": ["id", "number", "title", "sectionTitle", "totals"],
+              "required": [
+                "id",
+                "number",
+                "title",
+                "sectionTitle",
+                "totals"
+              ],
               "additionalProperties": false
             }
           },
@@ -21600,7 +23251,11 @@
                       },
                       "state": {
                         "type": "string",
-                        "enum": ["sin_iniciar", "en_curso", "terminado"]
+                        "enum": [
+                          "sin_iniciar",
+                          "en_curso",
+                          "terminado"
+                        ]
                       },
                       "completedAt": {
                         "type": "string",
@@ -21615,17 +23270,30 @@
                         "nullable": true
                       }
                     },
-                    "required": ["moduleId", "state", "completedAt", "bestScore"],
+                    "required": [
+                      "moduleId",
+                      "state",
+                      "completedAt",
+                      "bestScore"
+                    ],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": ["id", "name", "modules"],
+              "required": [
+                "id",
+                "name",
+                "modules"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["plan", "modules", "teachers"],
+        "required": [
+          "plan",
+          "modules",
+          "teachers"
+        ],
         "additionalProperties": false
       },
       "TeacherTrackingDto": {
@@ -21643,7 +23311,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "name"],
+            "required": [
+              "id",
+              "name"
+            ],
             "additionalProperties": false
           },
           "schoolYear": {
@@ -21688,7 +23359,11 @@
                       },
                       "state": {
                         "type": "string",
-                        "enum": ["sin_iniciar", "en_curso", "terminado"]
+                        "enum": [
+                          "sin_iniciar",
+                          "en_curso",
+                          "terminado"
+                        ]
                       },
                       "completedAt": {
                         "type": "string",
@@ -21716,7 +23391,12 @@
                   }
                 }
               },
-              "required": ["id", "name", "areaName", "modules"],
+              "required": [
+                "id",
+                "name",
+                "areaName",
+                "modules"
+              ],
               "additionalProperties": false
             }
           },
@@ -21732,7 +23412,10 @@
                 },
                 "kind": {
                   "type": "string",
-                  "enum": ["modulo", "ruta"]
+                  "enum": [
+                    "modulo",
+                    "ruta"
+                  ]
                 },
                 "moduleId": {
                   "type": "string",
@@ -21756,12 +23439,25 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "kind", "moduleId", "title", "planName", "code", "issuedAt"],
+              "required": [
+                "id",
+                "kind",
+                "moduleId",
+                "title",
+                "planName",
+                "code",
+                "issuedAt"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["teacher", "schoolYear", "plans", "certificates"],
+        "required": [
+          "teacher",
+          "schoolYear",
+          "plans",
+          "certificates"
+        ],
         "additionalProperties": false
       },
       "TeacherRouteDto": {
@@ -21807,7 +23503,10 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["modules", "completed"],
+                  "required": [
+                    "modules",
+                    "completed"
+                  ],
                   "additionalProperties": false
                 },
                 "sections": {
@@ -21850,7 +23549,11 @@
                             },
                             "videoSource": {
                               "type": "string",
-                              "enum": ["youtube", "archivo", null],
+                              "enum": [
+                                "youtube",
+                                "archivo",
+                                null
+                              ],
                               "nullable": true
                             },
                             "videoEmbedUrl": {
@@ -21859,7 +23562,11 @@
                             },
                             "state": {
                               "type": "string",
-                              "enum": ["pendiente", "en_curso", "terminado"]
+                              "enum": [
+                                "pendiente",
+                                "en_curso",
+                                "terminado"
+                              ]
                             },
                             "steps": {
                               "type": "object",
@@ -21879,7 +23586,12 @@
                                   "maximum": 9007199254740991
                                 }
                               },
-                              "required": ["video", "presentation", "challenge", "activities"],
+                              "required": [
+                                "video",
+                                "presentation",
+                                "challenge",
+                                "activities"
+                              ],
                               "additionalProperties": false
                             },
                             "bestScore": {
@@ -21957,7 +23669,10 @@
                                         "maximum": 9007199254740991
                                       }
                                     },
-                                    "required": ["done", "total"],
+                                    "required": [
+                                      "done",
+                                      "total"
+                                    ],
                                     "additionalProperties": false,
                                     "nullable": true
                                   }
@@ -21994,17 +23709,32 @@
                         }
                       }
                     },
-                    "required": ["id", "title", "subtitle", "modules"],
+                    "required": [
+                      "id",
+                      "title",
+                      "subtitle",
+                      "modules"
+                    ],
                     "additionalProperties": false
                   }
                 }
               },
-              "required": ["id", "name", "areaId", "areaName", "totals", "sections"],
+              "required": [
+                "id",
+                "name",
+                "areaId",
+                "areaName",
+                "totals",
+                "sections"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["schoolYear", "plans"],
+        "required": [
+          "schoolYear",
+          "plans"
+        ],
         "additionalProperties": false
       },
       "TeacherModuleDto": {
@@ -22032,7 +23762,10 @@
                 "type": "string"
               }
             },
-            "required": ["id", "title"],
+            "required": [
+              "id",
+              "title"
+            ],
             "additionalProperties": false
           },
           "number": {
@@ -22052,7 +23785,11 @@
           },
           "videoSource": {
             "type": "string",
-            "enum": ["youtube", "archivo", null],
+            "enum": [
+              "youtube",
+              "archivo",
+              null
+            ],
             "nullable": true
           },
           "videoEmbedUrl": {
@@ -22080,7 +23817,12 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "contentType", "size"],
+            "required": [
+              "id",
+              "name",
+              "contentType",
+              "size"
+            ],
             "additionalProperties": false,
             "nullable": true
           },
@@ -22113,7 +23855,12 @@
                 "maximum": 9007199254740991
               }
             },
-            "required": ["id", "name", "contentType", "size"],
+            "required": [
+              "id",
+              "name",
+              "contentType",
+              "size"
+            ],
             "additionalProperties": false,
             "nullable": true
           },
@@ -22136,7 +23883,11 @@
                   "nullable": true
                 }
               },
-              "required": ["id", "title", "keyIdeas"],
+              "required": [
+                "id",
+                "title",
+                "keyIdeas"
+              ],
               "additionalProperties": false
             }
           },
@@ -22160,12 +23911,20 @@
                 "nullable": true
               }
             },
-            "required": ["questionCount", "approvalThreshold", "secondsPerQuestion"],
+            "required": [
+              "questionCount",
+              "approvalThreshold",
+              "secondsPerQuestion"
+            ],
             "additionalProperties": false
           },
           "state": {
             "type": "string",
-            "enum": ["pendiente", "en_curso", "terminado"]
+            "enum": [
+              "pendiente",
+              "en_curso",
+              "terminado"
+            ]
           },
           "progress": {
             "type": "object",
@@ -22278,12 +24037,20 @@
                           }
                         }
                       },
-                      "required": ["completedAt", "bestScore", "bestPoints", "attempts", "stamps"],
+                      "required": [
+                        "completedAt",
+                        "bestScore",
+                        "bestPoints",
+                        "attempts",
+                        "stamps"
+                      ],
                       "additionalProperties": false
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["ruleta_pasaporte"]
+                      "enum": [
+                        "ruleta_pasaporte"
+                      ]
                     },
                     "config": {
                       "type": "object",
@@ -22327,7 +24094,10 @@
                                     "type": "string"
                                   }
                                 },
-                                "required": ["texto", "url"],
+                                "required": [
+                                  "texto",
+                                  "url"
+                                ],
                                 "additionalProperties": false
                               },
                               "pregunta": {
@@ -22343,7 +24113,10 @@
                                     }
                                   }
                                 },
-                                "required": ["enunciado", "opciones"],
+                                "required": [
+                                  "enunciado",
+                                  "opciones"
+                                ],
                                 "additionalProperties": false
                               }
                             },
@@ -22360,7 +24133,10 @@
                           }
                         }
                       },
-                      "required": ["insignia", "tarjetas"],
+                      "required": [
+                        "insignia",
+                        "tarjetas"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -22426,12 +24202,20 @@
                           }
                         }
                       },
-                      "required": ["completedAt", "bestScore", "bestPoints", "attempts", "stamps"],
+                      "required": [
+                        "completedAt",
+                        "bestScore",
+                        "bestPoints",
+                        "attempts",
+                        "stamps"
+                      ],
                       "additionalProperties": false
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["conecta"]
+                      "enum": [
+                        "conecta"
+                      ]
                     },
                     "config": {
                       "type": "object",
@@ -22528,12 +24312,20 @@
                           }
                         }
                       },
-                      "required": ["completedAt", "bestScore", "bestPoints", "attempts", "stamps"],
+                      "required": [
+                        "completedAt",
+                        "bestScore",
+                        "bestPoints",
+                        "attempts",
+                        "stamps"
+                      ],
                       "additionalProperties": false
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["verdad_o_mito"]
+                      "enum": [
+                        "verdad_o_mito"
+                      ]
                     },
                     "config": {
                       "type": "object",
@@ -22630,12 +24422,20 @@
                           }
                         }
                       },
-                      "required": ["completedAt", "bestScore", "bestPoints", "attempts", "stamps"],
+                      "required": [
+                        "completedAt",
+                        "bestScore",
+                        "bestPoints",
+                        "attempts",
+                        "stamps"
+                      ],
                       "additionalProperties": false
                     },
                     "type": {
                       "type": "string",
-                      "enum": ["simulador"]
+                      "enum": [
+                        "simulador"
+                      ]
                     },
                     "config": {
                       "type": "object",
@@ -22694,7 +24494,10 @@
             "nullable": true
           }
         },
-        "required": ["viewedAt", "completedAt"],
+        "required": [
+          "viewedAt",
+          "completedAt"
+        ],
         "additionalProperties": false
       },
       "ChallengeStepDto_Output": {
@@ -22720,7 +24523,11 @@
               },
               "type": {
                 "type": "string",
-                "enum": ["opcion", "vf", "orden"]
+                "enum": [
+                  "opcion",
+                  "vf",
+                  "orden"
+                ]
               },
               "prompt": {
                 "type": "string"
@@ -22744,16 +24551,28 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "text"],
+                  "required": [
+                    "id",
+                    "text"
+                  ],
                   "additionalProperties": false
                 }
               }
             },
-            "required": ["id", "type", "prompt", "seconds"],
+            "required": [
+              "id",
+              "type",
+              "prompt",
+              "seconds"
+            ],
             "additionalProperties": false
           }
         },
-        "required": ["total", "position", "question"],
+        "required": [
+          "total",
+          "position",
+          "question"
+        ],
         "additionalProperties": false
       },
       "ChallengeAnswerBodyDto": {
@@ -22775,7 +24594,9 @@
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                   }
                 },
-                "required": ["optionId"],
+                "required": [
+                  "optionId"
+                ],
                 "additionalProperties": false
               },
               {
@@ -22785,7 +24606,9 @@
                     "type": "boolean"
                   }
                 },
-                "required": ["value"],
+                "required": [
+                  "value"
+                ],
                 "additionalProperties": false
               },
               {
@@ -22802,14 +24625,19 @@
                     }
                   }
                 },
-                "required": ["optionIds"],
+                "required": [
+                  "optionIds"
+                ],
                 "additionalProperties": false
               }
             ],
             "nullable": true
           }
         },
-        "required": ["questionId", "answer"],
+        "required": [
+          "questionId",
+          "answer"
+        ],
         "additionalProperties": false
       },
       "ChallengeAnswerResultDto": {
@@ -22832,7 +24660,9 @@
                     "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
                   }
                 },
-                "required": ["optionId"],
+                "required": [
+                  "optionId"
+                ],
                 "additionalProperties": false
               },
               {
@@ -22842,7 +24672,9 @@
                     "type": "boolean"
                   }
                 },
-                "required": ["value"],
+                "required": [
+                  "value"
+                ],
                 "additionalProperties": false
               },
               {
@@ -22859,7 +24691,9 @@
                     }
                   }
                 },
-                "required": ["optionIds"],
+                "required": [
+                  "optionIds"
+                ],
                 "additionalProperties": false
               }
             ]
@@ -22924,7 +24758,14 @@
                 "nullable": true
               }
             },
-            "required": ["score", "points", "passed", "bestScore", "bestPoints", "completedAt"],
+            "required": [
+              "score",
+              "points",
+              "passed",
+              "bestScore",
+              "bestPoints",
+              "completedAt"
+            ],
             "additionalProperties": false
           }
         },
@@ -22955,7 +24796,10 @@
             "maximum": 3
           }
         },
-        "required": ["cardKey", "optionIndex"],
+        "required": [
+          "cardKey",
+          "optionIndex"
+        ],
         "additionalProperties": false
       },
       "WheelStampResultDto": {
@@ -22982,7 +24826,12 @@
             "nullable": true
           }
         },
-        "required": ["correct", "correctIndex", "stamps", "completedAt"],
+        "required": [
+          "correct",
+          "correctIndex",
+          "stamps",
+          "completedAt"
+        ],
         "additionalProperties": false
       },
       "SimulatorUseBodyDto": {
@@ -23005,7 +24854,10 @@
             "nullable": true
           }
         },
-        "required": ["attempts", "completedAt"],
+        "required": [
+          "attempts",
+          "completedAt"
+        ],
         "additionalProperties": false
       },
       "ActivityGameStepDto": {
@@ -23015,7 +24867,9 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["conecta"]
+                "enum": [
+                  "conecta"
+                ]
               },
               "finished": {
                 "type": "boolean"
@@ -23053,7 +24907,10 @@
                           "type": "string"
                         }
                       },
-                      "required": ["token", "concepto"],
+                      "required": [
+                        "token",
+                        "concepto"
+                      ],
                       "additionalProperties": false
                     }
                   },
@@ -23069,12 +24926,21 @@
                           "type": "string"
                         }
                       },
-                      "required": ["token", "dato"],
+                      "required": [
+                        "token",
+                        "dato"
+                      ],
                       "additionalProperties": false
                     }
                   }
                 },
-                "required": ["round", "totalRounds", "seconds", "concepts", "facts"],
+                "required": [
+                  "round",
+                  "totalRounds",
+                  "seconds",
+                  "concepts",
+                  "facts"
+                ],
                 "additionalProperties": false
               },
               "result": {
@@ -23110,11 +24976,21 @@
                     "nullable": true
                   }
                 },
-                "required": ["score", "points", "passed", "bestScore", "bestPoints", "completedAt"],
+                "required": [
+                  "score",
+                  "points",
+                  "passed",
+                  "bestScore",
+                  "bestPoints",
+                  "completedAt"
+                ],
                 "additionalProperties": false
               }
             },
-            "required": ["type", "finished"],
+            "required": [
+              "type",
+              "finished"
+            ],
             "additionalProperties": false
           },
           {
@@ -23122,7 +24998,9 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["verdad_o_mito"]
+                "enum": [
+                  "verdad_o_mito"
+                ]
               },
               "finished": {
                 "type": "boolean"
@@ -23154,7 +25032,11 @@
                     "maximum": 9007199254740991
                   }
                 },
-                "required": ["position", "text", "seconds"],
+                "required": [
+                  "position",
+                  "text",
+                  "seconds"
+                ],
                 "additionalProperties": false
               },
               "result": {
@@ -23190,11 +25072,23 @@
                     "nullable": true
                   }
                 },
-                "required": ["score", "points", "passed", "bestScore", "bestPoints", "completedAt"],
+                "required": [
+                  "score",
+                  "points",
+                  "passed",
+                  "bestScore",
+                  "bestPoints",
+                  "completedAt"
+                ],
                 "additionalProperties": false
               }
             },
-            "required": ["type", "finished", "total", "lives"],
+            "required": [
+              "type",
+              "finished",
+              "total",
+              "lives"
+            ],
             "additionalProperties": false
           }
         ]
@@ -23206,7 +25100,9 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["conecta"]
+                "enum": [
+                  "conecta"
+                ]
               },
               "correct": {
                 "type": "boolean"
@@ -23273,7 +25169,14 @@
                     "nullable": true
                   }
                 },
-                "required": ["score", "points", "passed", "bestScore", "bestPoints", "completedAt"],
+                "required": [
+                  "score",
+                  "points",
+                  "passed",
+                  "bestScore",
+                  "bestPoints",
+                  "completedAt"
+                ],
                 "additionalProperties": false
               }
             },
@@ -23295,7 +25198,9 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": ["verdad_o_mito"]
+                "enum": [
+                  "verdad_o_mito"
+                ]
               },
               "correct": {
                 "type": "boolean"
@@ -23370,7 +25275,14 @@
                     "nullable": true
                   }
                 },
-                "required": ["score", "points", "passed", "bestScore", "bestPoints", "completedAt"],
+                "required": [
+                  "score",
+                  "points",
+                  "passed",
+                  "bestScore",
+                  "bestPoints",
+                  "completedAt"
+                ],
                 "additionalProperties": false
               }
             },
@@ -23418,12 +25330,20 @@
                   "nullable": true
                 }
               },
-              "required": ["id", "category", "question", "answer", "source"],
+              "required": [
+                "id",
+                "category",
+                "question",
+                "answer",
+                "source"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["items"],
+        "required": [
+          "items"
+        ],
         "additionalProperties": false
       },
       "AssistantQueryDto": {
@@ -23435,7 +25355,9 @@
             "maxLength": 200
           }
         },
-        "required": ["question"],
+        "required": [
+          "question"
+        ],
         "additionalProperties": false
       },
       "AssistantAnswerDto_Output": {
@@ -23445,7 +25367,9 @@
             "properties": {
               "status": {
                 "type": "string",
-                "enum": ["answered"]
+                "enum": [
+                  "answered"
+                ]
               },
               "faq": {
                 "type": "object",
@@ -23469,7 +25393,13 @@
                     "nullable": true
                   }
                 },
-                "required": ["id", "category", "question", "answer", "source"],
+                "required": [
+                  "id",
+                  "category",
+                  "question",
+                  "answer",
+                  "source"
+                ],
                 "additionalProperties": false
               },
               "related": {
@@ -23489,12 +25419,20 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "category", "question"],
+                  "required": [
+                    "id",
+                    "category",
+                    "question"
+                  ],
                   "additionalProperties": false
                 }
               }
             },
-            "required": ["status", "faq", "related"],
+            "required": [
+              "status",
+              "faq",
+              "related"
+            ],
             "additionalProperties": false
           },
           {
@@ -23502,7 +25440,9 @@
             "properties": {
               "status": {
                 "type": "string",
-                "enum": ["unanswered"]
+                "enum": [
+                  "unanswered"
+                ]
               },
               "suggestions": {
                 "type": "array",
@@ -23521,12 +25461,19 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "category", "question"],
+                  "required": [
+                    "id",
+                    "category",
+                    "question"
+                  ],
                   "additionalProperties": false
                 }
               }
             },
-            "required": ["status", "suggestions"],
+            "required": [
+              "status",
+              "suggestions"
+            ],
             "additionalProperties": false
           }
         ]
@@ -23616,7 +25563,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "FaqAdminDto": {
         "type": "object",
@@ -23718,7 +25671,11 @@
             "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
           }
         },
-        "required": ["category", "question", "answer"],
+        "required": [
+          "category",
+          "question",
+          "answer"
+        ],
         "additionalProperties": false
       },
       "UpdateFaqDto": {
@@ -23793,7 +25750,11 @@
                 },
                 "status": {
                   "type": "string",
-                  "enum": ["pendiente", "atendida", "descartada"]
+                  "enum": [
+                    "pendiente",
+                    "atendida",
+                    "descartada"
+                  ]
                 },
                 "faqId": {
                   "type": "string",
@@ -23829,7 +25790,10 @@
                             "type": "string"
                           }
                         },
-                        "required": ["id", "name"]
+                        "required": [
+                          "id",
+                          "name"
+                        ]
                       },
                       "askedAt": {
                         "type": "string",
@@ -23837,7 +25801,11 @@
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                       }
                     },
-                    "required": ["id", "user", "askedAt"]
+                    "required": [
+                      "id",
+                      "user",
+                      "askedAt"
+                    ]
                   }
                 }
               },
@@ -23875,7 +25843,13 @@
             "maximum": 9007199254740991
           }
         },
-        "required": ["items", "page", "pageSize", "totalItems", "totalPages"]
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
       },
       "UnansweredQuestionDto": {
         "type": "object",
@@ -23906,7 +25880,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["pendiente", "atendida", "descartada"]
+            "enum": [
+              "pendiente",
+              "atendida",
+              "descartada"
+            ]
           },
           "faqId": {
             "type": "string",
@@ -23942,7 +25920,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["id", "name"]
+                  "required": [
+                    "id",
+                    "name"
+                  ]
                 },
                 "askedAt": {
                   "type": "string",
@@ -23950,7 +25931,11 @@
                   "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                 }
               },
-              "required": ["id", "user", "askedAt"]
+              "required": [
+                "id",
+                "user",
+                "askedAt"
+              ]
             }
           }
         },
@@ -24007,7 +25992,10 @@
                   "type": "string"
                 }
               },
-              "required": ["field", "reason"],
+              "required": [
+                "field",
+                "reason"
+              ],
               "additionalProperties": false
             }
           },
@@ -24015,7 +26003,12 @@
             "type": "string"
           }
         },
-        "required": ["statusCode", "code", "message", "requestId"],
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "requestId"
+        ],
         "additionalProperties": false
       }
     }

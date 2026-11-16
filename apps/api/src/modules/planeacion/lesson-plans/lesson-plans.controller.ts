@@ -10,6 +10,7 @@ import {
   CreateLessonPlanDto,
   LessonPlanDto,
   LessonPlanListQueryDto,
+  LessonPlanOptionsDto,
   LessonPlanPageDto,
   UpdateLessonPlanDto,
   VoidLessonPlanDto,
@@ -31,6 +32,14 @@ export class LessonPlansController {
   @ZodResponse({ status: 200, type: LessonPlanPageDto })
   list(@CurrentUser() user: RequestUser, @Query() query: LessonPlanListQueryDto) {
     return this.lessonPlans.list(user, query);
+  }
+
+  /** Declarada antes de `:id`, que de lo contrario la tomaría como un id. */
+  @Get('options')
+  @RequireRole(UserRole.Teacher)
+  @ZodResponse({ status: 200, type: LessonPlanOptionsDto })
+  options(@CurrentUser() user: RequestUser) {
+    return this.lessonPlans.options(user);
   }
 
   @Get(':id')

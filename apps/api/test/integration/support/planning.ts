@@ -108,13 +108,22 @@ export async function setupPlanning(app: INestApplication): Promise<Planning> {
   };
 }
 
+/**
+ * Cuerpo de creación para un grado y un área (`areaId` pasa a `areaIds`: la API no admite el
+ * campo anterior). Las áreas adicionales se añaden con `areaIds`.
+ */
+export function planBody(body: Record<string, unknown>): Record<string, unknown> {
+  const { areaId, ...rest } = body;
+  return areaId === undefined ? rest : { areaIds: [areaId], ...rest };
+}
+
 /** Crea una planeación por la API y devuelve su cuerpo; falla la prueba si no responde 201. */
 export async function createPlan(
   app: INestApplication,
   cookies: Cookies,
   body: Record<string, unknown>,
 ): Promise<LessonPlanBody> {
-  const res = await asUser(app, 'post', '/lesson-plans', cookies, 'access').send(body);
+  const res = await asUser(app, 'post', '/lesson-plans', cookies, 'access').send(planBody(body));
   if (res.status !== 201) {
     throw new Error(`Se esperaba 201 y se recibió ${res.status}: ${JSON.stringify(res.body)}`);
   }

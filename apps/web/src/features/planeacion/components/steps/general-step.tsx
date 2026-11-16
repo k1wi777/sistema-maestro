@@ -1,15 +1,23 @@
-import { crossCuttingProjectFor } from '@gns/shared';
+import { crossCuttingProjectFor, lessonPlanAreasLabel } from '@gns/shared';
 
 import { Card, Select, TextInput } from '@/shared/ui';
 
 import type { CatalogPeriod } from '../../api/catalogs';
-import { FIELD_MAX_LENGTH, dateRangeError } from '../../model/form-state';
+import {
+  FIELD_MAX_LENGTH,
+  areaIdsToValue,
+  dateRangeError,
+  valueToAreaIds,
+} from '../../model/form-state';
+import { AreaChecklist, SAVED_AREA_TYPE, type AreaChoice } from '../area-checklist';
 import styles from './steps.module.css';
 import type { StepProps } from './step-types';
 
 interface GeneralStepProps extends StepProps {
   /** Periodos del año vigente; `null` si no se pudieron cargar (el periodo queda fijo). */
   periods: CatalogPeriod[] | null;
+  /** Áreas que el docente puede marcar en el grado de la planeación; `null` si no se pudieron cargar. */
+  areaOptions: AreaChoice[] | null;
 }
 
 export function GeneralStep({
@@ -20,11 +28,20 @@ export function GeneralStep({
   onChange,
   number,
   periods,
+  areaOptions,
 }: GeneralStepProps) {
   const periodNumber =
     periods?.find((period) => period.id === draft.periodId)?.number ?? plan.period.number;
   const project = crossCuttingProjectFor(plan.level.name, periodNumber);
   const rangeError = dateRangeError(draft);
+  // Las áreas ya guardadas se ofrecen siempre, aunque hoy no estén entre las del grado.
+  const offered = areaOptions ?? [];
+  const choices: AreaChoice[] = [
+    ...offered,
+    ...plan.areas
+      .filter((area) => !offered.some((option) => option.id === area.id))
+      .map((area) => ({ id: area.id, name: area.name, type: SAVED_AREA_TYPE })),
+  ];
   const periodOptions = (periods ?? [{ id: plan.period.id, number: plan.period.number }]).map(
     (period) => ({ value: period.id, label: `Periodo ${period.number}` }),
   );
@@ -44,10 +61,12 @@ export function GeneralStep({
           <dt>Grado</dt>
           <dd>{plan.grade.name}</dd>
         </div>
-        <div className={styles.fact}>
-          <dt>Área</dt>
-          <dd>{plan.area.name}</dd>
-        </div>
+        {readOnly ? (
+          <div className={styles.fact}>
+            <dt>Dimensiones o asignaturas</dt>
+            <dd>{lessonPlanAreasLabel(plan.areas)}</dd>
+          </div>
+        ) : null}
         <div className={styles.fact}>
           <dt>Proyecto transversal</dt>
           <dd>{project ?? 'Sin proyecto en este periodo'}</dd>
@@ -63,6 +82,16 @@ export function GeneralStep({
           onChange={(event) => onChange('periodId', event.target.value)}
         />
         <div />
+        {readOnly ? null : (
+          <div className={styles.full}>
+            <AreaChecklist
+              areas={choices}
+              selected={valueToAreaIds(draft.areaIds)}
+              error={errors.areaIds}
+              onChange={(areaIds) => onChange('areaIds', areaIdsToValue(areaIds))}
+            />
+          </div>
+        )}
         <TextInput
           label="Desde"
           type="date"

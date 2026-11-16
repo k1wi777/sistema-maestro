@@ -662,7 +662,7 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
       const activity = await share(author, {
         title: 'Desde la planeación',
         steps: 'p',
-        areaId: plan.area.id,
+        areaId: plan.areas[0]?.id,
         gradeId: plan.grade.id,
         learningCorner: plan.learningCorner,
       });
@@ -670,7 +670,7 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
       expect(activity).toMatchObject({
         grade: { id: plan.grade.id },
         level: { id: plan.level.id },
-        area: { id: plan.area.id },
+        area: { id: plan.areas[0]?.id },
         learningCorner: 'Zona STEAM+H',
       });
     });

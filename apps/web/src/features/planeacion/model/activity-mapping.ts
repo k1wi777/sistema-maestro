@@ -9,6 +9,7 @@ import {
   SHARED_ACTIVITY_TITLE_MAX_LENGTH,
   SharedActivityType,
   levelAllowsCuriocity,
+  lessonPlanAreasLabel,
   type LessonPlan,
   type SharedActivity,
 } from '@gns/shared';
@@ -130,13 +131,14 @@ export function planToActivityDraft(plan: LessonPlan): PlanActivityDraft {
       ...EMPTY_ACTIVITY_FORM,
       title: fit(
         'title',
-        plan.topic?.trim() || `${plan.area.name} · ${plan.grade.name}`,
+        plan.topic?.trim() || `${lessonPlanAreasLabel(plan.areas)} · ${plan.grade.name}`,
         SHARED_ACTIVITY_TITLE_MAX_LENGTH,
       ),
       objective: fit('objective', plan.expectedPerformance, SHARED_ACTIVITY_TEXT_MAX_LENGTH),
       activityType: SharedActivityType.Activity,
       gradeId: plan.grade.id,
-      areaId: plan.area.id,
+      // Una actividad tiene una sola área: se propone la primera (alfabética) y el docente puede cambiarla.
+      areaId: plan.areas[0]?.id ?? '',
       learningCorner: fit('learningCorner', plan.learningCorner, SHARED_ACTIVITY_CORNER_MAX_LENGTH),
       materials: fit('materials', plan.resources, SHARED_ACTIVITY_TEXT_MAX_LENGTH),
       steps: fit('steps', steps, SHARED_ACTIVITY_TEXT_MAX_LENGTH),

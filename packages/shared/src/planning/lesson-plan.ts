@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateTimeSchema } from '../api/iso-date-time';
+import { AreaType } from '../constants/area';
 import { RecordStatus } from '../constants/record-status';
 import { CuriocityStage } from '../constants/planning';
 import { createListQuerySchema } from '../list-query/list-query';
@@ -55,6 +56,18 @@ const contentShape = {
   reasonableAdjustments: optionalText(LESSON_PLAN_TEXT_MAX_LENGTH),
 };
 
+/** Áreas de una planeación: al menos una, sin repetidas (tope = tamaño del catálogo). */
+const areaIdsSchema = z
+  .array(uuid, { error: 'debe ser una lista de áreas' })
+  .min(1, 'elige al menos una dimensión o asignatura')
+  .max(30, 'no puede tener más de 30 áreas')
+  .refine((ids) => new Set(ids).size === ids.length, 'no debe repetir áreas');
+
+/** Nombres de las áreas unidos por «, » (planeación, revisión e impresión lo comparten). */
+export function lessonPlanAreasLabel(areas: readonly { name: string }[]): string {
+  return areas.map((area) => area.name).join(', ');
+}
+
 const atLeastOneField = { error: 'debe incluir al menos un campo' };
 
 /** Planeación tal como la devuelve la API; nunca incluye datos de estudiantes. */
@@ -63,7 +76,8 @@ export const lessonPlanSchema = z.object({
   teacher: z.object({ id: z.uuid(), fullName: z.string() }),
   grade: z.object({ id: z.uuid(), name: z.string() }),
   level: z.object({ id: z.uuid(), name: z.string() }),
-  area: z.object({ id: z.uuid(), name: z.string() }),
+  /** Una o más dimensiones o asignaturas, en orden alfabético. */
+  areas: z.array(z.object({ id: z.uuid(), name: z.string() })).min(1),
   period: z.object({ id: z.uuid(), number: z.number().int(), schoolYear: z.string() }),
   dateFrom: z.string().nullable(),
   dateTo: z.string().nullable(),
@@ -86,20 +100,20 @@ export const lessonPlanSchema = z.object({
 });
 export type LessonPlan = z.output<typeof lessonPlanSchema>;
 
-/** Grado, área y periodo se eligen al crear; el proyecto transversal lo calcula el servidor. */
+/** Grado, áreas y periodo se eligen al crear; el proyecto transversal lo calcula el servidor. */
 export const createLessonPlanSchema = z
-  .object({ gradeId: uuid, areaId: uuid, periodId: uuid, ...contentShape })
+  .object({ gradeId: uuid, areaIds: areaIdsSchema, periodId: uuid, ...contentShape })
   .strict();
 export type CreateLessonPlanInput = z.output<typeof createLessonPlanSchema>;
 
-/** Grado y área no se editan: cambiarlos es anular y crear otra planeación. */
+/** El grado no se edita (cambiarlo es anular y crear otra planeación); las áreas sí. */
 export const updateLessonPlanSchema = z
-  .object({ periodId: uuid.optional(), ...contentShape })
+  .object({ periodId: uuid.optional(), areaIds: areaIdsSchema.optional(), ...contentShape })
   .strict()
   .refine((value) => Object.keys(value).length > 0, atLeastOneField);
 export type UpdateLessonPlanInput = z.output<typeof updateLessonPlanSchema>;
 
-/** Ajustes de coordinación: solo contenido (sin periodo). */
+/** Ajustes de coordinación: solo contenido (sin periodo ni áreas). */
 export const lessonPlanChangesSchema = z
   .object(contentShape)
   .strict()
@@ -115,6 +129,30 @@ export type ReturnLessonPlanInput = z.output<typeof returnLessonPlanSchema>;
 export const voidLessonPlanSchema = voidRecordSchema;
 export type VoidLessonPlanInput = VoidRecordInput;
 
+/**
+ * Opciones para crear una planeación: los grados con asignación activa del docente en el año
+ * vigente y, por grado, las áreas que puede marcar (las del nivel más las que tiene asignadas).
+ */
+export const lessonPlanOptionsSchema = z.object({
+  schoolYear: z.string(),
+  grades: z.array(
+    z.object({
+      grade: z.object({ id: z.uuid(), name: z.string(), sortOrder: z.number().int() }),
+      level: z.object({ id: z.uuid(), name: z.string() }),
+      areas: z.array(
+        z.object({
+          id: z.uuid(),
+          name: z.string(),
+          type: z.enum(Object.values(AreaType) as [AreaType, ...AreaType[]]),
+          /** El docente la tiene asignada en este grado. */
+          assigned: z.boolean(),
+        }),
+      ),
+    }),
+  ),
+});
+export type LessonPlanOptions = z.output<typeof lessonPlanOptionsSchema>;
+
 export const LESSON_PLAN_SORT_FIELDS = ['updatedAt', 'createdAt', 'submittedAt'] as const;
 export type LessonPlanSortField = (typeof LESSON_PLAN_SORT_FIELDS)[number];
 export const lessonPlanListQuerySchema = createListQuerySchema({
@@ -124,6 +162,7 @@ export const lessonPlanListQuerySchema = createListQuerySchema({
     status: statusSchema.optional(),
     periodId: uuid.optional(),
     gradeId: uuid.optional(),
+    /** Incluye toda planeación que tenga esa área entre las suyas. */
     areaId: uuid.optional(),
     teacherId: uuid.optional(),
   },

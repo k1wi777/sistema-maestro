@@ -1,6 +1,6 @@
 'use client';
 
-import { RecordStatus, type LessonPlan } from '@gns/shared';
+import { RecordStatus, lessonPlanAreasLabel, type LessonPlan } from '@gns/shared';
 import { useMemo } from 'react';
 
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
@@ -56,7 +56,7 @@ function planColumns(filters: PlanFilters): DataTableColumn<LessonPlan>[] {
       header: 'Asignatura y tema',
       render: (plan) => (
         <span className={styles.plan}>
-          <strong>{plan.area.name}</strong>
+          <strong>{lessonPlanAreasLabel(plan.areas)}</strong>
           <span>{plan.topic ?? 'Sin tema'}</span>
         </span>
       ),
@@ -86,7 +86,7 @@ function planColumns(filters: PlanFilters): DataTableColumn<LessonPlan>[] {
       header: 'Acción',
       render: (plan) => (
         <ButtonLink
-          context={`planeación de ${plan.teacher.fullName}, ${plan.grade.name} ${plan.area.name}`}
+          context={`planeación de ${plan.teacher.fullName}, ${plan.grade.name} ${lessonPlanAreasLabel(plan.areas)}`}
           href={`${PLAN_INBOX_PATH}/${plan.id}${query ? `?${query}` : ''}`}
           variant={plan.status === RecordStatus.Submitted ? 'primary' : 'outline'}
           size="sm"

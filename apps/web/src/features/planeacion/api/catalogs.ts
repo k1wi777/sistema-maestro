@@ -2,8 +2,8 @@ import { api, callApi, type ApiResult, type components } from '@/shared/api';
 
 type Schemas = components['schemas'];
 
-export type TeachingAssignments = Schemas['MyAssignmentsDto_Output'];
-export type AssignmentGrade = TeachingAssignments['grades'][number];
+export type LessonPlanOptions = Schemas['LessonPlanOptionsDto_Output'];
+export type LessonPlanOptionsGrade = LessonPlanOptions['grades'][number];
 export type CatalogLevel = Schemas['LevelPageDto']['items'][number];
 export type CatalogGrade = Schemas['GradePageDto']['items'][number];
 export type CatalogArea = Schemas['AreaPageDto']['items'][number];
@@ -11,9 +11,12 @@ export type CatalogPeriod = Schemas['AcademicPeriodPageDto']['items'][number];
 
 const ALL = '100';
 
-/** Grados y áreas de las asignaciones activas del docente en el año vigente (409 sin año vigente). */
-export function getMyAssignments(): Promise<ApiResult<TeachingAssignments>> {
-  return callApi(() => api.GET('/me/assignments'));
+/**
+ * Grados en los que el docente tiene asignación activa en el año vigente y, por grado, las áreas
+ * (dimensiones o asignaturas) que puede marcar al planear (409 sin año vigente).
+ */
+export function getLessonPlanOptions(): Promise<ApiResult<LessonPlanOptions>> {
+  return callApi(() => api.GET('/lesson-plans/options'));
 }
 
 export async function listPeriods(schoolYear: string): Promise<ApiResult<CatalogPeriod[]>> {

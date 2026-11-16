@@ -156,7 +156,7 @@ model Area {
   updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   teacherAssignments TeacherAssignment[]
-  lessonPlans        LessonPlan[]
+  lessonPlanAreas    LessonPlanArea[]
   sharedActivities   SharedActivity[]
   trainingPlans      TrainingPlan[]
 
@@ -226,7 +226,6 @@ model LessonPlan {
   id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   teacherId             String    @map("docente_id") @db.Uuid
   gradeId               String    @map("grado_id") @db.Uuid
-  areaId                String    @map("area_id") @db.Uuid
   periodId              String    @map("periodo_id") @db.Uuid
   dateFrom              DateTime? @map("fecha_desde") @db.Date
   dateTo                DateTime? @map("fecha_hasta") @db.Date
@@ -248,15 +247,30 @@ model LessonPlan {
 
   teacher         User                 @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   grade           Grade                @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  area            Area                 @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   period          AcademicPeriod       @relation(fields: [periodId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   linkedResources LessonPlanResource[]
+  areas           LessonPlanArea[]
 
   @@index([teacherId])
   @@index([gradeId])
-  @@index([areaId])
   @@index([periodId])
   @@map("planeacion")
+}
+
+// Áreas (dimensiones o asignaturas) de una planeación: una o más. La llave compuesta impide
+// repetidas; «al menos una» lo garantiza el servicio (un CHECK no mira otra tabla).
+model LessonPlanArea {
+  lessonPlanId String   @map("planeacion_id") @db.Uuid
+  areaId       String   @map("area_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  lessonPlan LessonPlan @relation(fields: [lessonPlanId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  area       Area       @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([lessonPlanId, areaId])
+  @@index([areaId])
+  @@map("planeacion_area")
 }
 
 model LessonPlanResource {

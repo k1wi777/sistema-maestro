@@ -5,6 +5,7 @@ import {
   ReviewAction,
   UserRole,
   type LessonPlan,
+  type LessonPlanOptions,
   type Page,
   type Review,
 } from '@gns/shared';
@@ -37,6 +38,8 @@ describe('punta a punta · planeación y revisión', () => {
   let teacher: DemoSession;
   let coordinator: DemoSession;
   let ids: AssignmentIds;
+  /** Segunda área de la planeación: del nivel de 4°, sin estar asignada a Sofía. */
+  let otherAreaId: string;
   let plan: LessonPlan;
   const errors: string[] = [];
 
@@ -45,6 +48,14 @@ describe('punta a punta · planeación y revisión', () => {
     teacher = await world.signInAs(TEACHER);
     coordinator = await world.signInAs(COORDINATOR);
     ids = await findAssignment(teacher, '4°', 'Matemáticas', 1);
+    const options = (await teacher.call('get', '/lesson-plans/options').expect(200))
+      .body as LessonPlanOptions;
+    const offered = options.grades.find((entry) => entry.grade.id === ids.gradeId)?.areas ?? [];
+    const spanish = offered.find((area) => area.name === 'Lengua Castellana');
+    if (!spanish || spanish.assigned) {
+      throw new Error('Se esperaba Lengua Castellana ofrecida y sin asignar en 4°');
+    }
+    otherAreaId = spanish.id;
   });
 
   afterAll(async () => {
@@ -60,10 +71,16 @@ describe('punta a punta · planeación y revisión', () => {
   it('el docente crea la planeación y la envía', async () => {
     const created = await teacher
       .call('post', '/lesson-plans')
-      .send({ ...ids, topic: TOPIC })
+      .send({
+        gradeId: ids.gradeId,
+        areaIds: [ids.areaId, otherAreaId],
+        periodId: ids.periodId,
+        topic: TOPIC,
+      })
       .expect(201);
     plan = created.body as LessonPlan;
     expect(plan.status).toBe(RecordStatus.Draft);
+    expect(plan.areas.map((area) => area.id).sort()).toEqual([ids.areaId, otherAreaId].sort());
 
     // Sin el contenido mínimo no se envía: el error no devuelve lo escrito por el docente.
     const rejected = await teacher.call('post', `/lesson-plans/${plan.id}/submit`).expect(400);
@@ -77,11 +94,12 @@ describe('punta a punta · planeación y revisión', () => {
     expect((submitted.body as LessonPlan).status).toBe(RecordStatus.Submitted);
   });
 
-  it('coordinación la encuentra en la bandeja por estado, grado, área, periodo y docente', async () => {
+  it('coordinación la encuentra en la bandeja por estado, grado, cada una de sus áreas, periodo y docente', async () => {
     const filters = [
       `status=${RecordStatus.Submitted}`,
       `gradeId=${ids.gradeId}`,
       `areaId=${ids.areaId}`,
+      `areaId=${otherAreaId}`,
       `periodId=${ids.periodId}`,
       `teacherId=${teacher.id}`,
     ];

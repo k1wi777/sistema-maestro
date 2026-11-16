@@ -1,4 +1,4 @@
-import { crossCuttingProjectFor, type LessonPlan } from '@gns/shared';
+import { crossCuttingProjectFor, lessonPlanAreasLabel, type LessonPlan } from '@gns/shared';
 
 import { formatDateRange, formatDateTime } from '@/shared/format/dates';
 import { BrandMark } from '@/shared/ui';
@@ -46,8 +46,8 @@ export function LessonPlanPrint({ plan }: { plan: LessonPlan }) {
           <dd>{plan.grade.name}</dd>
         </div>
         <div>
-          <dt>Área</dt>
-          <dd>{plan.area.name}</dd>
+          <dt>Dimensiones o asignaturas</dt>
+          <dd>{lessonPlanAreasLabel(plan.areas)}</dd>
         </div>
         <div>
           <dt>Periodo</dt>

@@ -13,13 +13,15 @@ export type LessonPlanContent = Partial<Record<LessonPlanAdjustableField, string
 export interface NewLessonPlan extends LessonPlanContent {
   teacherId: string;
   gradeId: string;
-  areaId: string;
+  areaIds: string[];
   periodId: string;
   crossCuttingProject: string | null;
 }
 
 export interface LessonPlanChanges extends LessonPlanContent {
   periodId?: string;
+  /** Si viene, reemplaza el conjunto de áreas en la misma transacción. */
+  areaIds?: string[];
   crossCuttingProject?: string | null;
   status?: RecordStatus;
   submittedAt?: Date | null;
@@ -30,7 +32,8 @@ export type LessonPlanRecord = Record<LessonPlanAdjustableField, string | null> 
   id: string;
   teacherId: string;
   gradeId: string;
-  areaId: string;
+  /** Ids de sus áreas, ordenados: el conjunto que se registra en la bitácora. */
+  areaIds: string[];
   periodId: string;
   crossCuttingProject: string | null;
   status: RecordStatus;
@@ -47,7 +50,7 @@ export interface DeliveredFilters {
   periodId?: string;
 }
 
-/** Planeaciones entregadas de un docente en un grado, área y periodo. */
+/** Planeaciones entregadas de un docente en un grado, área y periodo; una con varias áreas cuenta en cada una. */
 export interface DeliveredCount {
   teacherId: string;
   gradeId: string;

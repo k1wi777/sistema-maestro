@@ -5,6 +5,7 @@ import {
   RecordStatus,
   UserRole,
   type AcademicPeriod,
+  type Area,
   type LessonPlan,
   type MyAssignments,
   type SchoolYear,
@@ -12,11 +13,13 @@ import {
 import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import type { TeacherAssignmentsService } from '../../estructura/assignments/teacher-assignments.service';
+import type { AreasService } from '../../estructura/catalogs/area/areas.service';
 import type { AcademicPeriodsService } from '../../estructura/catalogs/academic-period/academic-periods.service';
 import type { SchoolYearsService } from '../../estructura/school-years/school-years.service';
 import type { NewReview, ReviewRepository } from '../review/review.repository';
 import { ReviewsService } from '../review/reviews.service';
 import type { LessonPlanRepository } from './lesson-plan.repository';
+import { LessonPlanOptionsService } from './lesson-plan-options.service';
 import { LessonPlansService } from './lesson-plans.service';
 
 const NOW = new Date('2026-11-09T00:00:00Z');
@@ -32,7 +35,7 @@ function plan(overrides: Partial<LessonPlan> = {}): LessonPlan {
     teacher: { id: 'owner', fullName: 'Docente Uno' },
     grade: { id: 'g-1', name: '7°' },
     level: { id: 'l-1', name: 'Bachillerato' },
-    area: { id: 'a-1', name: 'Física' },
+    areas: [{ id: 'a-1', name: 'Física' }],
     period: { id: 'p-1', number: 1, schoolYear: YEAR },
     dateFrom: '2026-09-21',
     dateTo: '2026-09-25',
@@ -99,6 +102,18 @@ function setup(options: Options = {}) {
           ],
   };
   const assignments = { listMine: jest.fn(() => Promise.resolve(mine)) };
+  // Catálogo: Física y Química son de bachillerato; «Dimensión ética», de preescolar; «Danza» no es de ningún nivel.
+  const catalog = [
+    ['a-1', 'Física', AreaType.Subject],
+    ['a-2', 'Química', AreaType.Subject],
+    ['a-3', 'Dimensión ética', AreaType.Dimension],
+    ['a-4', 'Danza', AreaType.Subject],
+  ].map(([id, name, type]) => ({ id, name, type, createdAt: NOW, updatedAt: NOW })) as Area[];
+  const areas = {
+    list: jest.fn(() =>
+      Promise.resolve({ items: catalog, page: 1, pageSize: 100, totalItems: 4, totalPages: 1 }),
+    ),
+  };
   const periods = {
     find: jest.fn(() =>
       Promise.resolve(
@@ -113,7 +128,10 @@ function setup(options: Options = {}) {
   };
   const service = new LessonPlansService(
     repository,
-    assignments as unknown as TeacherAssignmentsService,
+    new LessonPlanOptionsService(
+      assignments as unknown as TeacherAssignmentsService,
+      areas as unknown as AreasService,
+    ),
     periods as unknown as AcademicPeriodsService,
     schoolYears as unknown as SchoolYearsService,
     new ReviewsService(reviewRepository),
@@ -121,7 +139,7 @@ function setup(options: Options = {}) {
   return { service, repository, reviews, periods };
 }
 
-const createInput = { gradeId: 'g-1', areaId: 'a-1', periodId: UUID_PERIOD };
+const createInput = { gradeId: 'g-1', areaIds: ['a-1'], periodId: UUID_PERIOD };
 
 async function fieldsOf(promise: Promise<unknown>): Promise<string[]> {
   try {
@@ -157,7 +175,64 @@ describe('LessonPlansService.create', () => {
     );
   });
 
-  it('responde 403 sin asignación activa de ese grado y área, antes de validar el contenido', async () => {
+  it('guarda varias áreas del nivel aunque el docente solo tenga una asignada', async () => {
+    const { service, repository } = setup();
+
+    await service.create(owner, { ...createInput, areaIds: ['a-1', 'a-2'] });
+
+    expect(repository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ areaIds: ['a-1', 'a-2'] }),
+    );
+  });
+
+  it('responde 400 con areaIds.<i> si un área no está entre las ofrecidas del grado', async () => {
+    const { service, repository } = setup();
+
+    expect(
+      await fieldsOf(service.create(owner, { ...createInput, areaIds: ['a-1', 'a-3', 'a-4'] })),
+    ).toEqual(['areaIds.1', 'areaIds.2']);
+    expect(repository.create).not.toHaveBeenCalled();
+  });
+
+  it('ofrece también un área asignada que no es del nivel', async () => {
+    const { service } = setup({ levelName: 'Primaria' });
+
+    await expect(service.create(owner, createInput)).resolves.toBeDefined();
+    expect(await service.options(owner)).toMatchObject({
+      grades: [{ areas: [{ id: 'a-1', assigned: true }] }],
+    });
+  });
+
+  it('las opciones unen las áreas del nivel con las asignadas, por nombre y sin repetir', async () => {
+    const { service } = setup();
+
+    const { grades } = await service.options(owner);
+
+    expect(grades).toHaveLength(1);
+    expect(grades[0]?.areas.map((area) => [area.name, area.assigned])).toEqual([
+      ['Física', true],
+      ['Química', false],
+    ]);
+  });
+
+  it('un nivel desconocido solo ofrece las áreas asignadas', async () => {
+    const { service } = setup({ levelName: 'Nivel nuevo' });
+
+    const { grades } = await service.options(owner);
+
+    expect(grades[0]?.areas.map((area) => area.id)).toEqual(['a-1']);
+  });
+
+  it('responde 403 si el grado no tiene asignación del docente, aunque las áreas sean del nivel', async () => {
+    const { service, repository } = setup();
+
+    await expect(
+      service.create(owner, { ...createInput, gradeId: 'g-otro' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(repository.create).not.toHaveBeenCalled();
+  });
+
+  it('responde 403 sin asignación activa de ese grado, antes de validar el contenido', async () => {
     const { service, repository } = setup({ assigned: false });
 
     await expect(
@@ -317,6 +392,49 @@ describe('LessonPlansService.update', () => {
     expect(await fieldsOf(service.update(owner, 'plan-1', { periodId: UUID_PERIOD }))).toEqual([
       'periodId',
     ]);
+  });
+
+  it('conserva sin validar las áreas guardadas y valida solo las añadidas', async () => {
+    // «Danza» (a-4) ya estaba guardada aunque hoy no se ofrezca: se acepta; «a-3» es nueva y no se ofrece.
+    const stored = plan({
+      areas: [
+        { id: 'a-1', name: 'Física' },
+        { id: 'a-4', name: 'Danza' },
+      ],
+    });
+    const { service, repository } = setup({ stored });
+
+    await service.update(owner, 'plan-1', { areaIds: ['a-1', 'a-2', 'a-4'] });
+
+    expect(repository.updateIfStatus).toHaveBeenCalledWith('plan-1', expect.anything(), {
+      areaIds: ['a-1', 'a-2', 'a-4'],
+    });
+    expect(
+      await fieldsOf(
+        setup({ stored }).service.update(owner, 'plan-1', { areaIds: ['a-4', 'a-3'] }),
+      ),
+    ).toEqual(['areaIds.1']);
+  });
+
+  it('permite quitar áreas aunque el docente ya no tenga asignación en el grado', async () => {
+    const stored = plan({
+      areas: [
+        { id: 'a-1', name: 'Física' },
+        { id: 'a-2', name: 'Química' },
+      ],
+    });
+    const { service, repository } = setup({ stored, assigned: false });
+
+    await service.update(owner, 'plan-1', { areaIds: ['a-1'] });
+
+    expect(repository.updateIfStatus).toHaveBeenCalled();
+    expect(
+      await fieldsOf(
+        setup({ stored, assigned: false }).service.update(owner, 'plan-1', {
+          areaIds: ['a-1', 'a-3'],
+        }),
+      ),
+    ).toEqual(['areaIds.1']);
   });
 
   it('responde 409 si otra petición movió la planeación entre la lectura y el UPDATE', async () => {

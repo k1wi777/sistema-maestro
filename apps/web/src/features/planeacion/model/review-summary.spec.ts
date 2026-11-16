@@ -5,7 +5,7 @@ import { makeValues } from './test-fixtures';
 
 const context: SummaryContext = {
   gradeName: 'Transition',
-  areaName: 'English (CLIL)',
+  areaNames: 'English (CLIL)',
   periodNumber: 1,
   linkCount: 0,
   adjusted: new Set<LessonPlanAdjustableField>(),
