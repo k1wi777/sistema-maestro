@@ -52,13 +52,26 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await expect(page).toHaveURL(/\/docente\/formatos\/planeacion\/nueva$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Nueva planeación' })).toBeVisible();
 
-    await page.getByLabel('Grado y área').selectOption({ label: '4° · Matemáticas' });
-    await page.getByLabel('Periodo').selectOption({ label: 'Periodo 1' });
+    await page.getByRole('combobox', { name: 'Grado', exact: true }).selectOption({ label: '4°' });
+    // Su única área asignada en 4° viene marcada; se suma otra del nivel (Lengua Castellana).
+    await expect(page.getByRole('checkbox', { name: 'Matemáticas' })).toBeChecked();
+    await page.getByRole('checkbox', { name: 'Lengua Castellana' }).check();
+    await page
+      .getByRole('combobox', { name: 'Periodo', exact: true })
+      .selectOption({ label: 'Periodo 1' });
     await page.getByLabel('Proyecto o tema').fill(TOPIC);
     await page.getByRole('button', { name: 'Crear y continuar' }).click();
 
     await expect(page.getByRole('heading', { level: 1, name: new RegExp(TOPIC) })).toBeVisible();
     await expect(statusBadge(page, 'Borrador')).toBeVisible();
+    // Tras crear se abre el paso de desempeño: las áreas viven en «Datos generales».
+    await page
+      .getByRole('navigation', { name: 'Pasos de la planeación' })
+      .getByRole('button', { name: /Datos generales/ })
+      .click();
+    await expect(page.getByRole('checkbox', { name: 'Matemáticas' })).toBeChecked();
+    await expect(page.getByRole('checkbox', { name: 'Lengua Castellana' })).toBeChecked();
+    await page.getByRole('button', { name: /Siguiente: Desempeño esperado/ }).click();
     planUrl = new URL(page.url()).pathname;
 
     // Sin el Momento 2 el envío está bloqueado.
@@ -100,6 +113,16 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await page.goto('/docente/formatos/planeacion');
     const card = planCard(page);
     await expect(card).toContainText('Con observaciones');
+    // La planeación cuenta para cada una de sus áreas: aparece al filtrar por cualquiera.
+    await expect(card).toContainText('Lengua Castellana, Matemáticas');
+    for (const area of ['Lengua Castellana', 'Matemáticas']) {
+      await page.getByLabel('Dimensión o asignatura').selectOption({ label: area });
+      await expect(page).toHaveURL(/[?&]area=/);
+      await expect(planCard(page)).toBeVisible();
+    }
+    await page
+      .getByLabel('Dimensión o asignatura')
+      .selectOption({ label: 'Todas las dimensiones y asignaturas' });
     await card.getByRole('link', { name: /Continuar/ }).click();
 
     const feedback = page.getByRole('note').filter({ hasText: 'Observaciones de coordinación' });

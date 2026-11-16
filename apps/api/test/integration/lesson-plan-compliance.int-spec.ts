@@ -42,7 +42,7 @@ describe('cumplimiento de entregas (BE-56)', () => {
   const plan = (
     teacherId: string,
     gradeId: string,
-    areaId: string,
+    areaIds: string | string[],
     period: 1 | 2 | 3,
     status: RecordStatus,
   ) =>
@@ -50,10 +50,10 @@ describe('cumplimiento de entregas (BE-56)', () => {
       data: {
         teacherId,
         gradeId,
-        areaId,
         periodId: planning.periods[period],
         status,
         submittedAt: status === Draft || status === Voided ? null : new Date(),
+        areas: { create: [areaIds].flat().map((areaId) => ({ areaId })) },
       },
     });
 
@@ -171,5 +171,28 @@ describe('cumplimiento de entregas (BE-56)', () => {
     }
     await get(coordinator, '?periodId=x').expect(400);
     await get(coordinator, '?page=1').expect(400);
+  });
+
+  it('una planeación con dos áreas cuenta una sola vez en la asignación de cada una (#99)', async () => {
+    const teacherD = await createTestUser(app);
+    await planning.assign(teacherD.id, grade1, area1);
+    await planning.assign(teacherD.id, grade1, area2);
+    await plan(teacherD.id, grade1, [area1, area2], 1, Submitted);
+    // Una de dos áreas anulada o en borrador no cuenta en ninguna.
+    await plan(teacherD.id, grade1, [area1, area2], 2, Draft);
+
+    const entry = of(await compliance(coordinator, `?teacherId=${teacherD.id}`), teacherD.id);
+
+    expect(cell(entry?.items ?? [], area1, 1)).toMatchObject({
+      status: 'entregado',
+      deliveredCount: 1,
+    });
+    expect(cell(entry?.items ?? [], area2, 1)).toMatchObject({
+      status: 'entregado',
+      deliveredCount: 1,
+    });
+    expect(cell(entry?.items ?? [], area1, 2)).toMatchObject({ status: 'pendiente' });
+    expect(cell(entry?.items ?? [], area2, 2)).toMatchObject({ status: 'pendiente' });
+    expect(entry).toMatchObject({ deliveredCount: 2, pendingCount: 4 });
   });
 });

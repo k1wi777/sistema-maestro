@@ -1,6 +1,6 @@
 'use client';
 
-import type { LessonPlan, Review } from '@gns/shared';
+import { lessonPlanAreasLabel, type LessonPlan, type Review } from '@gns/shared';
 
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
@@ -84,7 +84,7 @@ function PlanReview({ plan, reviews, refresh, backQuery }: PlanReviewProps) {
       </div>
       <PageHeader
         context="Revisión de planeación"
-        title={`${plan.area.name} · ${plan.topic ?? 'Sin tema'}`}
+        title={`${lessonPlanAreasLabel(plan.areas)} · ${plan.topic ?? 'Sin tema'}`}
         description={[
           plan.teacher.fullName,
           plan.grade.name,

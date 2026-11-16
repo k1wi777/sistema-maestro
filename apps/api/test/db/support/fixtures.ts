@@ -100,15 +100,24 @@ export async function insertTeacherAssignment(client: Client, values: Values = {
   });
 }
 
-export async function insertLessonPlan(client: Client, values: Values = {}): Promise<Row> {
-  return insertRow(client, 'planeacion', {
+/** Inserta la planeación con una primera área (`areaId` o una nueva) en `planeacion_area`. */
+export async function insertLessonPlan(
+  client: Client,
+  values: Values = {},
+  areaId?: string,
+): Promise<Row> {
+  const plan = await insertRow(client, 'planeacion', {
     docente_id: await idOf(insertUser(client)),
     grado_id: await idOf(insertGrade(client)),
-    area_id: await idOf(insertArea(client)),
     periodo_id: await idOf(insertAcademicPeriod(client)),
     estado: 'borrador',
     ...values,
   });
+  await insertRow(client, 'planeacion_area', {
+    planeacion_id: plan.id,
+    area_id: areaId ?? (await idOf(insertArea(client))),
+  });
+  return plan;
 }
 
 export async function insertLessonPlanResource(client: Client, values: Values = {}): Promise<Row> {

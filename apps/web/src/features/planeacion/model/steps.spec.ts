@@ -85,6 +85,7 @@ describe('steps', () => {
 
   it('finds the step where a form field is written', () => {
     expect(stepOfFormField('periodId')).toBe('datos');
+    expect(stepOfFormField('areaIds')).toBe('datos');
     expect(stepOfFormField('topic')).toBe('datos');
     expect(stepOfFormField('developmentMoment')).toBe('momentos');
     expect(stepOfFormField('learningCorner')).toBe('momentos');

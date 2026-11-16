@@ -87,6 +87,19 @@ describe('plan to activity', () => {
   });
 });
 
+describe('planToActivityDraft with several areas', () => {
+  const areas = [
+    { id: '22222222-2222-4222-8222-222222222222', name: 'English (CLIL)' },
+    { id: '33333333-3333-4333-8333-333333333333', name: 'Pre-ciencias' },
+  ];
+
+  it('proposes the first area and names the title after all of them', () => {
+    const { values } = planToActivityDraft(makePlan({ topic: null, areas }));
+    expect(values.areaId).toBe(areas[0]?.id);
+    expect(values.title).toBe('English (CLIL), Pre-ciencias · Transition');
+  });
+});
+
 describe('appendToMoment', () => {
   const activity = { title: 'Ruleta de emociones', steps: '1. Girar.\n2. Nombrar.' };
 

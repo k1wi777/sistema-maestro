@@ -1,17 +1,17 @@
 import type { ApiResult } from '@/shared/api';
 
 import {
-  getMyAssignments,
+  getLessonPlanOptions,
   listPeriods,
-  type AssignmentGrade,
+  type LessonPlanOptionsGrade,
   type CatalogPeriod,
 } from '../api/catalogs';
 import { useRemote, type RemoteState } from '@/shared/data';
 
-/** Lo que el docente puede planear: sus asignaciones activas y los periodos del año vigente. */
+/** Lo que el docente puede planear: sus grados con las áreas que puede marcar y los periodos del año vigente. */
 export interface TeachingContext {
   schoolYear: string;
-  grades: AssignmentGrade[];
+  grades: LessonPlanOptionsGrade[];
   periods: CatalogPeriod[];
 }
 
@@ -19,7 +19,7 @@ export interface TeachingContext {
 export const NO_SCHOOL_YEAR_STATUS = 409;
 
 async function loadTeachingContext(): Promise<ApiResult<TeachingContext>> {
-  const assignments = await getMyAssignments();
+  const assignments = await getLessonPlanOptions();
   if (!assignments.ok) {
     return assignments;
   }
@@ -37,7 +37,7 @@ async function loadTeachingContext(): Promise<ApiResult<TeachingContext>> {
   };
 }
 
-/** Carga una vez las asignaciones del docente y los periodos del año vigente. */
+/** Carga una vez las opciones de planeación del docente y los periodos del año vigente. */
 export function useTeachingContext(): { state: RemoteState<TeachingContext>; reload: () => void } {
   return useRemote(loadTeachingContext, 'teaching-context');
 }

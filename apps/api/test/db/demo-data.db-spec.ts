@@ -113,6 +113,41 @@ describe('demo records (R19)', () => {
     expect(found.map((row) => row.estado).sort()).toEqual([...states].sort());
   });
 
+  it('gives every lesson plan at least one area, all of them assigned to its teacher in that grade (#99)', async () => {
+    const withoutArea = await count(
+      `SELECT count(*) FROM planeacion p WHERE p.docente_id IN ${DEMO_TEACHERS}
+       AND NOT EXISTS (SELECT 1 FROM planeacion_area pa WHERE pa.planeacion_id = p.id)`,
+      [DEMO_LIKE],
+    );
+    const unassigned = await count(
+      `SELECT count(*) FROM planeacion p JOIN planeacion_area pa ON pa.planeacion_id = p.id
+       WHERE p.docente_id IN ${DEMO_TEACHERS}
+       AND NOT EXISTS (
+         SELECT 1 FROM asignacion_docente d WHERE d.docente_id = p.docente_id
+         AND d.grado_id = p.grado_id AND d.area_id = pa.area_id AND d.estado = 'activa')`,
+      [DEMO_LIKE],
+    );
+
+    expect([withoutArea, unassigned]).toEqual([0, 0]);
+  });
+
+  it('has a delivered lesson plan with two areas and the rest with one (R16)', async () => {
+    const perPlan = await rows(
+      `SELECT p.tema, p.estado, count(*) AS areas FROM planeacion p
+       JOIN planeacion_area pa ON pa.planeacion_id = p.id
+       WHERE p.docente_id IN ${DEMO_TEACHERS} GROUP BY p.id, p.tema, p.estado`,
+      [DEMO_LIKE],
+    );
+    const several = perPlan.filter((row) => Number(row.areas) > 1);
+
+    expect(several).toHaveLength(1);
+    expect(several[0]).toMatchObject({
+      tema: 'Fracciones en la tienda escolar',
+      estado: RecordStatus.Reviewed,
+    });
+    expect(Number(several[0]?.areas)).toBe(2);
+  });
+
   it('sets the submission date on every submitted lesson plan and journal', async () => {
     for (const table of ['planeacion', 'diario_campo']) {
       const inconsistent = await count(
@@ -489,7 +524,8 @@ describe('demo shared activities and favorites (BE-5)', () => {
   it('has an activity that matches a demo lesson plan in grade, area and corner (FE-2)', async () => {
     const matches = await rows(
       `SELECT a.id FROM actividad_repositorio a
-       JOIN planeacion p ON p.grado_id = a.grado_id AND p.area_id = a.area_id AND p.rincon = a.rincon
+       JOIN planeacion p ON p.grado_id = a.grado_id AND p.rincon = a.rincon
+       JOIN planeacion_area pa ON pa.planeacion_id = p.id AND pa.area_id = a.area_id
        WHERE a.autor_id IN ${DEMO_TEACHERS} AND p.docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
     );

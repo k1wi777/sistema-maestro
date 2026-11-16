@@ -5,7 +5,53 @@ interface PedagogicalLevel {
   projects: readonly (string | null)[];
   /** Solo bachillerato trabaja con las etapas CurioCity. */
   curiocity: boolean;
+  /** Nombres de las dimensiones y asignaturas que se trabajan en el nivel (prototipo GNS). */
+  areaNames: readonly string[];
 }
+
+const DIMENSIONS = [
+  'Dimensión cognitiva',
+  'Dimensión comunicativa',
+  'Dimensión corporal y motora',
+  'Dimensión estética',
+  'Dimensión socioafectiva',
+  'Dimensión espiritual',
+  'Dimensión ética',
+  'English (CLIL)',
+  'Pre-ciencias',
+] as const;
+
+const BASE_SUBJECTS = [
+  'Lengua Castellana',
+  'Ciencias Naturales',
+  'Ciencias Sociales',
+  'Math',
+  'Science',
+  'English',
+  'Art',
+  'Música',
+  'Deportes',
+  'Social Studies',
+] as const;
+
+const PRESCHOOL_AREAS = [...DIMENSIONS, ...BASE_SUBJECTS.filter((name) => name !== 'English')];
+const PRIMARY_AREAS = [
+  ...BASE_SUBJECTS,
+  'Matemáticas',
+  'Tecnología e Informática',
+  'Educación Artística',
+  'Educación Física',
+  'Ética y Valores',
+  'Educación Religiosa',
+];
+const SECONDARY_AREAS = [
+  ...PRIMARY_AREAS,
+  'Física',
+  'Química',
+  'Filosofía',
+  'Ciencias Económicas y Políticas',
+  'Emprendimiento',
+];
 
 const NO_PROJECTS = Array<null>(ACADEMIC_PERIODS_PER_YEAR).fill(null);
 
@@ -15,15 +61,21 @@ const NO_PROJECTS = Array<null>(ACADEMIC_PERIODS_PER_YEAR).fill(null);
  * proyecto ni CurioCity: falla de forma segura en lugar de inventar un valor.
  */
 const LEVELS: Record<string, PedagogicalLevel> = {
-  'Preescolar bajo': { projects: NO_PROJECTS, curiocity: false },
+  'Preescolar bajo': { projects: NO_PROJECTS, curiocity: false, areaNames: PRESCHOOL_AREAS },
   'Preescolar alto (KTF)': {
     projects: ['Ciudad+', 'STEAM+H', 'Emprendimiento Inicial'],
     curiocity: false,
+    areaNames: PRESCHOOL_AREAS,
   },
-  Primaria: { projects: ['Ciudad+', 'STEAM+H', 'Emprendimiento Escolar'], curiocity: false },
+  Primaria: {
+    projects: ['Ciudad+', 'STEAM+H', 'Emprendimiento Escolar'],
+    curiocity: false,
+    areaNames: PRIMARY_AREAS,
+  },
   Bachillerato: {
     projects: ['STEAM+H', 'Ciudad+', 'Emprendimiento · Dragon Fire'],
     curiocity: true,
+    areaNames: SECONDARY_AREAS,
   },
 };
 
@@ -38,4 +90,12 @@ export function crossCuttingProjectFor(levelName: string, periodNumber: number):
 /** Indica si el nivel admite etapa CurioCity. */
 export function levelAllowsCuriocity(levelName: string): boolean {
   return levelOf(levelName)?.curiocity ?? false;
+}
+
+/**
+ * Nombres de las áreas (dimensiones y asignaturas) del nivel. Vacío si el nivel no se
+ * reconoce: falla de forma segura, igual que el proyecto transversal y CurioCity.
+ */
+export function areaNamesForLevel(levelName: string): readonly string[] {
+  return levelOf(levelName)?.areaNames ?? [];
 }

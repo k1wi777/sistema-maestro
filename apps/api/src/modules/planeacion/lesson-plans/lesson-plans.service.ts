@@ -26,6 +26,7 @@ import {
   type CreateLessonPlanInput,
   type LessonPlan,
   type LessonPlanFilters,
+  type LessonPlanOptions,
   type LessonPlanSortField,
   type ListQuery,
   type Page,
@@ -37,7 +38,7 @@ import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import { SchoolYearsService } from '../../estructura/school-years/school-years.service';
 import { AcademicPeriodsService } from '../../estructura/catalogs/academic-period/academic-periods.service';
-import { TeacherAssignmentsService } from '../../estructura/assignments/teacher-assignments.service';
+import { LessonPlanOptionsService } from './lesson-plan-options.service';
 import { ReviewsService } from '../review/reviews.service';
 import {
   LESSON_PLAN_REPOSITORY,
@@ -68,7 +69,7 @@ const contentOf = (source: LessonPlanContent): LessonPlanContent =>
 export class LessonPlansService {
   constructor(
     @Inject(LESSON_PLAN_REPOSITORY) private readonly repository: LessonPlanRepository,
-    private readonly assignments: TeacherAssignmentsService,
+    private readonly optionsService: LessonPlanOptionsService,
     private readonly periods: AcademicPeriodsService,
     private readonly schoolYears: SchoolYearsService,
     private readonly reviews: ReviewsService,
@@ -104,29 +105,31 @@ export class LessonPlansService {
 
   // ---------- Escritura del dueño ----------
 
+  /** Grados y áreas con los que el docente puede crear una planeación (casillas de la web). */
+  options(user: RequestUser): Promise<LessonPlanOptions> {
+    return this.optionsService.forTeacher(user.id);
+  }
+
   async create(user: RequestUser, input: CreateLessonPlanInput): Promise<LessonPlan> {
-    const mine = await this.assignments.listMine(user.id);
-    const assignment = mine.grades.find(
-      (entry) =>
-        entry.grade.id === input.gradeId && entry.areas.some((area) => area.id === input.areaId),
-    );
-    // La interfaz solo ofrece las asignaciones propias: otra combinación es un acceso no permitido.
-    if (!assignment) {
-      throw new ForbiddenException('No tienes una asignación activa en ese grado y área');
+    const options = await this.optionsService.forTeacher(user.id);
+    const entry = options.grades.find((candidate) => candidate.grade.id === input.gradeId);
+    // La interfaz solo ofrece los grados propios: otro grado es un acceso no permitido.
+    if (!entry) {
+      throw new ForbiddenException('No tienes una asignación activa en ese grado');
     }
 
-    const { gradeId, areaId, periodId, ...content } = input;
-    const errors: ApiFieldError[] = [];
+    const { gradeId, areaIds, periodId, ...content } = input;
+    const errors: ApiFieldError[] = areaErrors(areaIds, entry.areas);
     const period = await this.periods.find(periodId);
     if (!period) {
       errors.push({ field: 'periodId', reason: 'no existe' });
-    } else if (period.schoolYear !== mine.schoolYear) {
+    } else if (period.schoolYear !== options.schoolYear) {
       errors.push({
         field: 'periodId',
-        reason: `debe ser un periodo del año lectivo vigente (${mine.schoolYear})`,
+        reason: `debe ser un periodo del año lectivo vigente (${options.schoolYear})`,
       });
     }
-    errors.push(...contentErrors(contentOf(content), {}, assignment.level.name));
+    errors.push(...contentErrors(contentOf(content), {}, entry.level.name));
     if (errors.length > 0 || !period) {
       throw new RequestValidationException(errors);
     }
@@ -135,16 +138,27 @@ export class LessonPlansService {
       ...contentOf(content),
       teacherId: user.id,
       gradeId,
-      areaId,
+      areaIds,
       periodId,
-      crossCuttingProject: crossCuttingProjectFor(assignment.level.name, period.number),
+      crossCuttingProject: crossCuttingProjectFor(entry.level.name, period.number),
     });
   }
 
   async update(user: RequestUser, id: string, input: UpdateLessonPlanInput): Promise<LessonPlan> {
     const plan = await this.requireEditable(user, id);
-    const { periodId, ...content } = input;
+    const { periodId, areaIds, ...content } = input;
     const errors = contentErrors(contentOf(content), plan, plan.level.name);
+    if (areaIds) {
+      // Las áreas que la planeación ya tenía se conservan sin validar de nuevo; solo las añadidas.
+      const saved = new Set(plan.areas.map((area) => area.id));
+      const added = areaIds.filter((areaId) => !saved.has(areaId));
+      if (added.length > 0) {
+        const options = await this.optionsService.forTeacher(user.id);
+        const offered =
+          options.grades.find((entry) => entry.grade.id === plan.grade.id)?.areas ?? [];
+        errors.push(...areaErrors(areaIds, offered, saved));
+      }
+    }
 
     let project: { crossCuttingProject: string | null } | undefined;
     if (periodId !== undefined && periodId !== plan.period.id) {
@@ -168,6 +182,7 @@ export class LessonPlansService {
     const { from } = this.transition(RecordOperation.Edit, RecordActor.Owner);
     const updated = await this.repository.updateIfStatus(id, from, {
       ...contentOf(content),
+      ...(areaIds ? { areaIds } : {}),
       ...(project ? { periodId, ...project } : {}),
     });
     if (!updated) {
@@ -337,6 +352,20 @@ export class LessonPlansService {
       `La planeación cambió de estado (${STATUS_LABEL[plan.status]}) y no se pudo ${verb}`,
     );
   }
+}
+
+/** `areaIds.<i>` inválidos: no están entre las áreas ofrecidas del grado (ni entre las ya guardadas). */
+function areaErrors(
+  areaIds: readonly string[],
+  offered: readonly { id: string }[],
+  saved: ReadonlySet<string> = new Set(),
+): ApiFieldError[] {
+  const allowed = new Set(offered.map((area) => area.id));
+  return areaIds.flatMap((areaId, index) =>
+    allowed.has(areaId) || saved.has(areaId)
+      ? []
+      : [{ field: `areaIds.${index}`, reason: 'no está disponible para el grado' }],
+  );
 }
 
 const isReviewer = (user: RequestUser): boolean => roleSatisfies(user.role, UserRole.Coordinator);

@@ -6,6 +6,7 @@ import type { FormValues } from './form-state';
 export function makeValues(overrides: Partial<FormValues> = {}): FormValues {
   return {
     periodId: 'p1',
+    areaIds: '',
     dateFrom: '',
     dateTo: '',
     topic: '',
@@ -32,7 +33,7 @@ export function makePlan(overrides: Partial<LessonPlan> = {}): LessonPlan {
     teacher: { id: UUID_B, fullName: 'Laura Demo' },
     grade: { id: UUID_C, name: 'Transition' },
     level: { id: UUID_A, name: 'Preescolar alto (KTF)' },
-    area: { id: UUID_B, name: 'English (CLIL)' },
+    areas: [{ id: UUID_B, name: 'English (CLIL)' }],
     period: { id: UUID_C, number: 1, schoolYear: '2026' },
     dateFrom: '2026-11-02',
     dateTo: '2026-11-06',

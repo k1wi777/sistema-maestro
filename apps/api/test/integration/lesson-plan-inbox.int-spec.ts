@@ -53,7 +53,14 @@ describe('bandeja de coordinación: listado de planeaciones (BE-55)', () => {
     submittedAt: Date | null,
   ): Promise<string> {
     const created = await prisma.lessonPlan.create({
-      data: { teacherId, ...target, periodId, status, submittedAt },
+      data: {
+        teacherId,
+        gradeId: target.gradeId,
+        periodId,
+        status,
+        submittedAt,
+        areas: { create: [{ areaId: target.areaId }] },
+      },
     });
     return created.id;
   }
@@ -202,5 +209,29 @@ describe('bandeja de coordinación: listado de planeaciones (BE-55)', () => {
     const all = await list(sessionA, 'pageSize=100');
     expect(all.items.every((item) => item.teacher.id === teacherA.id)).toBe(true);
     expect(all.totalItems).toBe(5);
+  });
+
+  it('una planeación con varias áreas aparece al filtrar por cualquiera de ellas, una sola vez (#99)', async () => {
+    const teacherE = await createTestUser(app);
+    const created = await prisma.lessonPlan.create({
+      data: {
+        teacherId: teacherE.id,
+        gradeId: first.gradeId,
+        periodId: planning.periods[1],
+        status: Submitted,
+        submittedAt: new Date('2031-03-05T10:00:00Z'),
+        areas: { create: [{ areaId: first.areaId }, { areaId: second.areaId }] },
+      },
+    });
+    const mine = `teacherId=${teacherE.id}`;
+
+    for (const areaId of [first.areaId, second.areaId]) {
+      expect(idsOf(await list(coordinator, `${mine}&areaId=${areaId}`))).toEqual([created.id]);
+    }
+    const all = await list(coordinator, mine);
+    expect(all.totalItems).toBe(1);
+    expect(all.items[0]?.areas.map((area) => area.id).sort()).toEqual(
+      [first.areaId, second.areaId].sort(),
+    );
   });
 });

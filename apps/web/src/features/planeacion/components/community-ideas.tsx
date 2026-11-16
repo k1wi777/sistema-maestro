@@ -1,7 +1,7 @@
 import type { LessonPlan, SharedActivity } from '@gns/shared';
 import { useState } from 'react';
 
-import { ActionMenu, ButtonLink, Button, Notice, StatusBadge } from '@/shared/ui';
+import { ActionMenu, ButtonLink, Button, Notice, Select, StatusBadge } from '@/shared/ui';
 
 import { useSharedActivities } from '../hooks/use-shared-activities';
 import { ACTIVITY_TYPE_LABELS } from '../model/activity-types';
@@ -18,8 +18,8 @@ export interface IdeaUseResult {
 }
 
 interface CommunityIdeasProps {
-  /** Planeación guardada: de ella salen el grado, el área y el rincón de las ideas. */
-  plan: Pick<LessonPlan, 'grade' | 'area' | 'learningCorner'>;
+  /** Planeación guardada: de ella salen el grado, las áreas y el rincón de las ideas. */
+  plan: Pick<LessonPlan, 'grade' | 'areas' | 'learningCorner'>;
   /** Agrega la idea al final del momento elegido y dice cómo salió. */
   onUse: (field: MomentField, activity: SharedActivity) => IdeaUseResult;
 }
@@ -29,18 +29,21 @@ const MOMENT_ITEMS = MOMENTS.map((moment) => ({
   label: `${moment.number} · ${moment.short}`,
 }));
 
-/** «Ideas de la comunidad» del paso Momentos: actividades del grado, el área y el rincón de la planeación. */
+/** «Ideas de la comunidad» del paso Momentos: actividades del grado, de una de las áreas y del rincón de la planeación. */
 export function CommunityIdeas({ plan, onUse }: CommunityIdeasProps) {
   const corner = plan.learningCorner?.trim() || undefined;
   // El docente puede pedir ver las ideas del grado sin filtrar por rincón.
   const [ignoreCorner, setIgnoreCorner] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const withCorner = corner !== undefined && !ignoreCorner;
+  // Las ideas son de una sola área a la vez: la primera de la planeación hasta que el docente elija otra.
+  const [chosenAreaId, setChosenAreaId] = useState('');
+  const area = plan.areas.find((candidate) => candidate.id === chosenAreaId) ?? plan.areas[0];
 
   const list = useSharedActivities(
     {
       gradeId: plan.grade.id,
-      areaId: plan.area.id,
+      areaId: area?.id,
       learningCorner: withCorner ? corner : undefined,
     },
     IDEAS_PAGE_SIZE,
@@ -56,8 +59,17 @@ export function CommunityIdeas({ plan, onUse }: CommunityIdeasProps) {
         Ideas de la comunidad
       </h3>
       <p className={styles.scope}>
-        {[plan.grade.name, plan.area.name, withCorner ? corner : null].filter(Boolean).join(' · ')}
+        {[plan.grade.name, area?.name, withCorner ? corner : null].filter(Boolean).join(' · ')}
       </p>
+
+      {plan.areas.length > 1 ? (
+        <Select
+          label="Área de las ideas"
+          options={plan.areas.map((option) => ({ value: option.id, label: option.name }))}
+          value={area?.id ?? ''}
+          onChange={(event) => setChosenAreaId(event.target.value)}
+        />
+      ) : null}
 
       <p className={styles.live} role="status">
         {announcement}

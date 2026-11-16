@@ -61,6 +61,7 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'post', path: '/school-years', access: ADMIN },
   { method: 'put', path: '/school-years/:id/current', access: ADMIN },
   { method: 'get', path: '/lesson-plans', access: TEACHER },
+  { method: 'get', path: '/lesson-plans/options', access: TEACHER },
   { method: 'get', path: '/lesson-plans/:id', access: TEACHER },
   { method: 'post', path: '/lesson-plans', access: TEACHER },
   { method: 'patch', path: '/lesson-plans/:id', access: TEACHER },

@@ -36,9 +36,11 @@ import { dateRangeError, mapApiErrors, type FormErrors } from '../model/form-sta
 import { LoadError, Loading } from '@/shared/data';
 import styles from './new-lesson-plan.module.css';
 import { PLANNING_PATH, planPath } from '../model/paths';
+import { AreaChecklist } from './area-checklist';
 
 interface NewPlanValues {
-  assignment: string;
+  gradeId: string;
+  areaIds: string[];
   periodId: string;
   dateFrom: string;
   dateTo: string;
@@ -47,47 +49,39 @@ interface NewPlanValues {
 
 type NewPlanErrors = Partial<Record<keyof NewPlanValues, string>>;
 
-interface AssignmentEntry {
-  value: string;
-  label: string;
-  gradeId: string;
-  areaId: string;
-  levelId: string;
-  levelName: string;
-}
-
-function assignmentEntries(context: TeachingContext): AssignmentEntry[] {
-  return [...context.grades]
-    .sort((a, b) => a.grade.sortOrder - b.grade.sortOrder)
-    .flatMap((entry) =>
-      entry.areas.map((area) => ({
-        value: `${entry.grade.id}:${area.id}`,
-        label: `${entry.grade.name} · ${area.name}`,
-        gradeId: entry.grade.id,
-        areaId: area.id,
-        levelId: entry.level.id,
-        levelName: entry.level.name,
-      })),
-    );
-}
+type GradeEntry = TeachingContext['grades'][number];
 
 /**
- * Asignación que se preselecciona al partir de una actividad: la de su grado y área o, si la
- * actividad es de todo el nivel, la única asignación con ese nivel y área.
+ * Grado que se preselecciona al partir de una actividad: el suyo si el docente lo puede planear o,
+ * si es de todo el nivel, el único grado del docente en ese nivel.
  */
-function defaultAssignment(entries: AssignmentEntry[], activity: SharedActivity | null): string {
-  if (!activity?.area) {
+function defaultGrade(grades: GradeEntry[], activity: SharedActivity | null): string {
+  if (!activity) {
     return '';
   }
-  const areaId = activity.area.id;
-  const matches = activity.grade
-    ? entries.filter((entry) => entry.gradeId === activity.grade?.id && entry.areaId === areaId)
-    : entries.filter((entry) => entry.levelId === activity.level?.id && entry.areaId === areaId);
-  return matches.length === 1 ? (matches[0]?.value ?? '') : '';
+  if (activity.grade) {
+    return grades.find((entry) => entry.grade.id === activity.grade?.id)?.grade.id ?? '';
+  }
+  const inLevel = grades.filter((entry) => entry.level.id === activity.level?.id);
+  return inLevel.length === 1 ? (inLevel[0]?.grade.id ?? '') : '';
+}
+
+/** Áreas marcadas de entrada en un grado: la de la actividad si se ofrece o la única asignada. */
+function defaultAreas(entry: GradeEntry | undefined, activity: SharedActivity | null): string[] {
+  if (!entry) {
+    return [];
+  }
+  const activityArea = activity?.area?.id;
+  if (activityArea && entry.areas.some((area) => area.id === activityArea)) {
+    return [activityArea];
+  }
+  const assigned = entry.areas.filter((area) => area.assigned);
+  return assigned.length === 1 ? assigned.map((area) => area.id) : [];
 }
 
 function fieldErrorsOf(errors: FormErrors): NewPlanErrors {
   return {
+    areaIds: errors.areaIds,
     periodId: errors.periodId,
     dateFrom: errors.dateFrom,
     dateTo: errors.dateTo,
@@ -115,18 +109,21 @@ function NewLessonPlanForm({
   activity: SharedActivity | null;
 }) {
   const router = useRouter();
-  const entries = useMemo(() => assignmentEntries(context), [context]);
+  const grades = useMemo(
+    () => [...context.grades].sort((a, b) => a.grade.sortOrder - b.grade.sortOrder),
+    [context],
+  );
   const [overrides, setOverrides] = useState<Partial<NewPlanValues>>({});
   const [errors, setErrors] = useState<NewPlanErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const preselected = defaultAssignment(entries, activity);
-  const entry = (overrides.assignment ?? preselected) || undefined;
-  const selected = entries.find((candidate) => candidate.value === entry);
-  const mapped = activity ? activityToPlanContent(activity, selected?.levelName ?? '') : null;
+  const gradeId = overrides.gradeId ?? defaultGrade(grades, activity);
+  const selected = grades.find((candidate) => candidate.grade.id === gradeId);
+  const mapped = activity ? activityToPlanContent(activity, selected?.level.name ?? '') : null;
   const values: NewPlanValues = {
-    assignment: selected?.value ?? '',
+    gradeId: selected?.grade.id ?? '',
+    areaIds: overrides.areaIds ?? defaultAreas(selected, activity),
     periodId: overrides.periodId ?? '',
     dateFrom: overrides.dateFrom ?? '',
     dateTo: overrides.dateTo ?? '',
@@ -135,12 +132,22 @@ function NewLessonPlanForm({
 
   const period = context.periods.find((candidate) => candidate.id === values.periodId);
   const project =
-    selected && period ? crossCuttingProjectFor(selected.levelName, period.number) : null;
+    selected && period ? crossCuttingProjectFor(selected.level.name, period.number) : null;
   const periodOptions: SelectOption[] = context.periods.map((candidate) => ({
     value: candidate.id,
     label: `Periodo ${candidate.number}`,
   }));
   const rangeError = dateRangeError(values);
+
+  function changeGrade(nextGradeId: string) {
+    const next = grades.find((candidate) => candidate.grade.id === nextGradeId);
+    // Al cambiar de grado se conservan solo las marcas que el nuevo grado también ofrece.
+    const kept = values.areaIds.filter((id) => next?.areas.some((area) => area.id === id));
+    change({
+      gradeId: nextGradeId,
+      areaIds: kept.length > 0 ? kept : defaultAreas(next, activity),
+    });
+  }
 
   function change(patch: Partial<NewPlanValues>) {
     setOverrides((previous) => ({ ...previous, ...patch }));
@@ -156,7 +163,9 @@ function NewLessonPlanForm({
   async function handleSubmit() {
     const found: NewPlanErrors = {};
     if (!selected) {
-      found.assignment = 'Elige el grado y el área.';
+      found.gradeId = 'Elige el grado.';
+    } else if (values.areaIds.length === 0) {
+      found.areaIds = 'Elige al menos una dimensión o asignatura.';
     }
     if (!period) {
       found.periodId = 'Elige el periodo.';
@@ -166,8 +175,8 @@ function NewLessonPlanForm({
     }
     const parsed = createLessonPlanSchema.safeParse({
       ...mapped?.content,
-      gradeId: selected?.gradeId ?? '',
-      areaId: selected?.areaId ?? '',
+      gradeId: selected?.grade.id ?? '',
+      areaIds: values.areaIds,
       periodId: period?.id ?? '',
       dateFrom: values.dateFrom || null,
       dateTo: values.dateTo || null,
@@ -178,6 +187,7 @@ function NewLessonPlanForm({
       for (const issue of parsed.error.issues) {
         const field = String(issue.path[0]);
         if (
+          field === 'areaIds' ||
           field === 'periodId' ||
           field === 'dateFrom' ||
           field === 'dateTo' ||
@@ -241,13 +251,13 @@ function NewLessonPlanForm({
           }}
         >
           <Select
-            label="Grado y área"
+            label="Grado"
             required
-            placeholder="Selecciona el grado y el área"
-            options={entries.map(({ value, label }) => ({ value, label }))}
-            value={values.assignment}
-            error={errors.assignment}
-            onChange={(event) => change({ assignment: event.target.value })}
+            placeholder="Selecciona el grado"
+            options={grades.map((entry) => ({ value: entry.grade.id, label: entry.grade.name }))}
+            value={values.gradeId}
+            error={errors.gradeId}
+            onChange={(event) => changeGrade(event.target.value)}
           />
           <Select
             label="Periodo"
@@ -258,6 +268,16 @@ function NewLessonPlanForm({
             error={errors.periodId}
             onChange={(event) => change({ periodId: event.target.value })}
           />
+          {selected ? (
+            <div className={styles.full}>
+              <AreaChecklist
+                areas={selected.areas}
+                selected={values.areaIds}
+                error={errors.areaIds}
+                onChange={(areaIds) => change({ areaIds })}
+              />
+            </div>
+          ) : null}
           <TextInput
             label="Desde"
             type="date"
@@ -341,7 +361,7 @@ function NewLessonPlanBody({ activityId }: { activityId: string | null }) {
     );
   }
   const context = teaching.state.data;
-  if (context.grades.every((entry) => entry.areas.length === 0)) {
+  if (context.grades.length === 0) {
     return (
       <Notice tone="warning" title="Aún no tienes asignaciones activas">
         Coordinación debe asignarte grados y áreas para el año {context.schoolYear} antes de que
@@ -359,7 +379,7 @@ export function NewLessonPlan({ activityId }: { activityId: string | null }) {
       <PageHeader
         context="Planeación GNS"
         title="Nueva planeación"
-        description="Elige el grado, el área y el periodo. Después completarás la planeación paso a paso."
+        description="Elige el grado, las dimensiones o asignaturas y el periodo. Después completarás la planeación paso a paso."
         actions={
           <ButtonLink href={PLANNING_PATH} variant="outline" startIcon="volver">
             Mis planeaciones

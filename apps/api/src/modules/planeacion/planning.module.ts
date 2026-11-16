@@ -3,6 +3,7 @@ import { DatabaseModule } from '../../shared/database/database.module';
 import { StructureModule } from '../estructura/structure.module';
 import { LessonPlanComplianceController } from './compliance/lesson-plan-compliance.controller';
 import { LessonPlanComplianceService } from './compliance/lesson-plan-compliance.service';
+import { LessonPlanOptionsService } from './lesson-plans/lesson-plan-options.service';
 import { LessonPlanAuditSnapshot } from './lesson-plans/lesson-plan.audit-snapshot';
 import { LessonPlanReviewController } from './lesson-plans/lesson-plan-review.controller';
 import { LESSON_PLAN_REPOSITORY } from './lesson-plans/lesson-plan.repository';
@@ -45,6 +46,7 @@ import { SHARED_ACTIVITY_REPOSITORY } from './shared-activities/shared-activity.
   providers: [
     ReviewsService,
     { provide: REVIEW_REPOSITORY, useClass: PrismaReviewRepository },
+    LessonPlanOptionsService,
     LessonPlansService,
     LessonPlanAuditSnapshot,
     { provide: LESSON_PLAN_REPOSITORY, useClass: PrismaLessonPlanRepository },

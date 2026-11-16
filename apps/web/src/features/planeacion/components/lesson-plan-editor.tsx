@@ -1,6 +1,12 @@
 'use client';
 
-import { RecordStatus, type LessonPlan, type Review, type SharedActivity } from '@gns/shared';
+import {
+  RecordStatus,
+  lessonPlanAreasLabel,
+  type LessonPlan,
+  type Review,
+  type SharedActivity,
+} from '@gns/shared';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
@@ -126,12 +132,12 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
     () =>
       buildReviewSummary(draft, {
         gradeName: plan.grade.name,
-        areaName: plan.area.name,
+        areaNames: lessonPlanAreasLabel(plan.areas),
         periodNumber: plan.period.number,
         linkCount,
         adjusted,
       }),
-    [draft, plan.grade.name, plan.area.name, plan.period.number, linkCount, adjusted],
+    [draft, plan.grade.name, plan.areas, plan.period.number, linkCount, adjusted],
   );
 
   const stepStates = useMemo(
@@ -259,6 +265,11 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
       initial: { ...values, levelId: saved.level.id },
       notes: [
         'El D.U.A y los recursos digitales no se copian.',
+        ...(saved.areas.length > 1
+          ? [
+              `Esta planeación trabaja varias áreas (${lessonPlanAreasLabel(saved.areas)}): la actividad se publica con una sola; revisa la que se propone en «Dimensión o asignatura».`,
+            ]
+          : []),
         ...(clipped.length > 0
           ? ['Algunos textos superaban el máximo de una actividad y se recortaron: revísalos.']
           : []),
@@ -271,7 +282,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
   const info = STATUS_INFO[plan.status];
   const readOnly = !editable;
   const readOnlyMessage = readOnlyNotice(plan.status);
-  const title = `${plan.area.name} · ${plan.topic?.trim() || 'Sin tema'}`;
+  const title = `${lessonPlanAreasLabel(plan.areas)} · ${plan.topic?.trim() || 'Sin tema'}`;
   const badge: SaveBadge =
     editor.saveState === 'saving'
       ? 'saving'
@@ -307,6 +318,12 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
             {...stepProps}
             number={number}
             periods={teaching.state.status === 'ready' ? teaching.state.data.periods : null}
+            areaOptions={
+              teaching.state.status === 'ready'
+                ? (teaching.state.data.grades.find((entry) => entry.grade.id === plan.grade.id)
+                    ?.areas ?? [])
+                : null
+            }
           />
         );
       case 'desempeno':

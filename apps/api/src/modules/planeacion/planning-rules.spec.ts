@@ -1,6 +1,7 @@
 import {
   allowedFrom,
   approveLessonPlanSchema,
+  areaNamesForLevel,
   canTransition,
   createLessonPlanResourceSchema,
   createLessonPlanSchema,
@@ -8,6 +9,7 @@ import {
   diffFields,
   fromStoredChanges,
   LESSON_PLAN_ADJUSTABLE_FIELDS,
+  lessonPlanAreasLabel,
   levelAllowsCuriocity,
   RecordActor,
   RecordOperation,
@@ -80,6 +82,25 @@ describe('máquina de estados de registros', () => {
         expect(allowed).toBe(operation === RecordOperation.Void && actor === RecordActor.Reviewer);
       }
     }
+  });
+});
+
+describe('áreas por nivel y etiqueta', () => {
+  it('cada nivel trae su lista y uno desconocido, ninguna', () => {
+    const preschool = areaNamesForLevel('Preescolar bajo');
+    expect(preschool).toContain('Dimensión cognitiva');
+    expect(preschool).toContain('Lengua Castellana');
+    expect(preschool).not.toContain('English');
+    expect(areaNamesForLevel('Preescolar alto (KTF)')).toEqual(preschool);
+    expect(areaNamesForLevel('Primaria')).toContain('Matemáticas');
+    expect(areaNamesForLevel('Primaria')).not.toContain('Física');
+    expect(areaNamesForLevel('Bachillerato')).toContain('Física');
+    expect(areaNamesForLevel('Bachillerato')).toContain('Emprendimiento');
+    expect(areaNamesForLevel('Otro')).toEqual([]);
+  });
+
+  it('une los nombres con coma', () => {
+    expect(lessonPlanAreasLabel([{ name: 'Física' }, { name: 'Química' }])).toBe('Física, Química');
   });
 });
 
@@ -180,7 +201,7 @@ describe('diffFields', () => {
 });
 
 describe('esquemas de planeación', () => {
-  const base = { gradeId: UUID, areaId: UUID, periodId: UUID };
+  const base = { gradeId: UUID, areaIds: [UUID], periodId: UUID };
 
   it('crear recorta textos, guarda vacío como null y rechaza campos desconocidos', () => {
     expect(createLessonPlanSchema.parse({ ...base, topic: '  Tema  ', resources: '   ' })).toEqual({
@@ -208,7 +229,29 @@ describe('esquemas de planeación', () => {
     expect(parse({ closingMoment: 'x'.repeat(4001) })).toBe(false);
   });
 
-  it('editar exige algún campo, no admite grado ni área y null vacía', () => {
+  it('las áreas: al menos una, sin repetidas y con tope', () => {
+    const other = '4a2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1b3d';
+    const parse = (areaIds: unknown) =>
+      createLessonPlanSchema.safeParse({ ...base, areaIds }).success;
+
+    expect(parse([UUID, other])).toBe(true);
+    expect(parse([])).toBe(false);
+    expect(parse([UUID, UUID])).toBe(false);
+    expect(parse(['no-uuid'])).toBe(false);
+    expect(createLessonPlanSchema.safeParse({ gradeId: UUID, periodId: UUID }).success).toBe(false);
+    expect(updateLessonPlanSchema.safeParse({ areaIds: [UUID, other] }).success).toBe(true);
+    expect(updateLessonPlanSchema.safeParse({ areaIds: [] }).success).toBe(false);
+    expect(updateLessonPlanSchema.safeParse({ areaIds: [UUID, UUID] }).success).toBe(false);
+  });
+
+  it('coordinación no puede ajustar las áreas', () => {
+    expect(approveLessonPlanSchema.safeParse({ changes: { areaIds: [UUID] } }).success).toBe(false);
+    expect(
+      returnLessonPlanSchema.safeParse({ comment: 'x', changes: { areaIds: [UUID] } }).success,
+    ).toBe(false);
+  });
+
+  it('editar exige algún campo, no admite grado y null vacía', () => {
     expect(updateLessonPlanSchema.safeParse({}).success).toBe(false);
     expect(updateLessonPlanSchema.safeParse({ gradeId: UUID }).success).toBe(false);
     expect(updateLessonPlanSchema.parse({ topic: null, periodId: UUID })).toEqual({

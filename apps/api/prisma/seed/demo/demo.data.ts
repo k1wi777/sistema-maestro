@@ -87,7 +87,8 @@ export interface DemoLessonPlan {
   key: string;
   teacher: string;
   grade: string;
-  area: string;
+  /** Una o más áreas; todas asignadas al docente en el grado en los datos demo. */
+  areas: readonly string[];
   period: number;
   status: RecordStatus;
   submittedAt: string | null;
@@ -105,7 +106,7 @@ export interface DemoLessonPlan {
 
 type PlanInput = Pick<
   DemoLessonPlan,
-  'key' | 'teacher' | 'grade' | 'area' | 'status' | 'submittedAt' | 'topic'
+  'key' | 'teacher' | 'grade' | 'areas' | 'status' | 'submittedAt' | 'topic'
 > &
   Partial<
     Pick<
@@ -137,7 +138,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl1',
     teacher: VALERIA,
     grade: 'Red',
-    area: 'Dimensión cognitiva',
+    areas: ['Dimensión cognitiva'],
     status: RecordStatus.Draft,
     submittedAt: null,
     topic: 'Los colores primarios en el Sweet Home',
@@ -147,7 +148,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl2',
     teacher: VALERIA,
     grade: 'Red',
-    area: 'Dimensión comunicativa',
+    areas: ['Dimensión comunicativa'],
     status: RecordStatus.Submitted,
     submittedAt: '2026-10-02T15:10:00-05:00',
     topic: 'Cuentos con imágenes',
@@ -157,7 +158,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl3',
     teacher: JULIAN,
     grade: 'First Grade',
-    area: 'English (CLIL)',
+    areas: ['English (CLIL)'],
     status: RecordStatus.ChangesRequested,
     submittedAt: '2026-09-28T10:30:00-05:00',
     topic: 'Animals around us',
@@ -168,7 +169,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl4',
     teacher: SOFIA,
     grade: '3°',
-    area: 'Matemáticas',
+    areas: ['Matemáticas', 'Ciencias Naturales'],
     status: RecordStatus.Reviewed,
     submittedAt: '2026-09-18T09:00:00-05:00',
     topic: 'Fracciones en la tienda escolar',
@@ -193,7 +194,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl5',
     teacher: SOFIA,
     grade: '3°',
-    area: 'Ciencias Naturales',
+    areas: ['Ciencias Naturales'],
     status: RecordStatus.Voided,
     submittedAt: '2026-09-14T11:20:00-05:00',
     topic: 'El ciclo del agua',
@@ -204,7 +205,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl6',
     teacher: ANDRES,
     grade: '7°',
-    area: 'Física',
+    areas: ['Física'],
     status: RecordStatus.Reviewed,
     submittedAt: '2026-09-22T14:00:00-05:00',
     topic: 'Movimiento rectilíneo uniforme',
@@ -215,7 +216,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl7',
     teacher: DANIELA,
     grade: '10°',
-    area: 'Filosofía',
+    areas: ['Filosofía'],
     status: RecordStatus.Submitted,
     submittedAt: '2026-10-20T16:45:00-05:00',
     topic: 'El mito de la caverna',
@@ -227,7 +228,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl8',
     teacher: ANDRES,
     grade: '8°',
-    area: 'Química',
+    areas: ['Química'],
     status: RecordStatus.Draft,
     submittedAt: null,
     topic: 'Tabla periódica y propiedades',
@@ -238,7 +239,7 @@ export const DEMO_LESSON_PLANS: readonly DemoLessonPlan[] = [
     key: 'pl9',
     teacher: JULIAN,
     grade: 'Transition',
-    area: 'Pre-ciencias',
+    areas: ['Pre-ciencias'],
     status: RecordStatus.Reviewed,
     submittedAt: '2026-10-09T08:15:00-05:00',
     topic: 'Germinación de frijoles',

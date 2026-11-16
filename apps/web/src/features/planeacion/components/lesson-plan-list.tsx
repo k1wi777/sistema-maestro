@@ -1,6 +1,6 @@
 'use client';
 
-import { RecordStatus, type LessonPlan } from '@gns/shared';
+import { RecordStatus, lessonPlanAreasLabel, type LessonPlan } from '@gns/shared';
 import { useMemo } from 'react';
 
 import { formatDateRange, formatShortDate } from '@/shared/format/dates';
@@ -42,7 +42,7 @@ function PlanCard({ plan }: { plan: LessonPlan }) {
   return (
     <li className={styles.item}>
       <RecordCard
-        title={`${plan.area.name} · ${plan.topic ?? 'Sin tema'}`}
+        title={`${lessonPlanAreasLabel(plan.areas)} · ${plan.topic ?? 'Sin tema'}`}
         headingLevel={2}
         tone={info.tone}
         status={<StatusBadge tone={info.tone}>{info.label}</StatusBadge>}
@@ -53,7 +53,7 @@ function PlanCard({ plan }: { plan: LessonPlan }) {
         ].filter((entry): entry is string => Boolean(entry))}
         actions={
           <ButtonLink
-            context={`planeación de ${plan.area.name} · ${plan.topic ?? 'Sin tema'}`}
+            context={`planeación de ${lessonPlanAreasLabel(plan.areas)} · ${plan.topic ?? 'Sin tema'}`}
             href={planPath(plan.id)}
             variant="outline"
             size="sm"
@@ -80,8 +80,8 @@ export function LessonPlanList() {
 
   const status = statusFromUrl(params.get('estado'));
   const periodId = params.get('periodo') ?? undefined;
-  const assignment = params.get('asignacion') ?? undefined;
-  const [gradeId, areaId] = assignment?.split(':') ?? [];
+  const gradeId = params.get('grado') ?? undefined;
+  const areaId = params.get('area') ?? undefined;
 
   const list = useLessonPlanList({ teacherId, status, periodId, gradeId, areaId });
 
@@ -95,25 +95,32 @@ export function LessonPlanList() {
         : [],
     [teaching.state],
   );
-  const assignmentOptions = useMemo<SelectOption[]>(
+  const gradeOptions = useMemo<SelectOption[]>(
     () =>
       teaching.state.status === 'ready'
         ? [...teaching.state.data.grades]
             .sort((a, b) => a.grade.sortOrder - b.grade.sortOrder)
-            .flatMap((entry) =>
-              entry.areas.map((area) => ({
-                value: `${entry.grade.id}:${area.id}`,
-                label: `${entry.grade.name} · ${area.name}`,
-              })),
-            )
+            .map((entry) => ({ value: entry.grade.id, label: entry.grade.name }))
         : [],
     [teaching.state],
   );
+  // Una planeación puede tener áreas no asignadas al docente: se ofrecen todas las de sus grados.
+  const areaOptions = useMemo<SelectOption[]>(() => {
+    if (teaching.state.status !== 'ready') {
+      return [];
+    }
+    const byId = new Map(
+      teaching.state.data.grades.flatMap((entry) => entry.areas).map((area) => [area.id, area]),
+    );
+    return [...byId.values()]
+      .sort((a, b) => a.name.localeCompare(b.name, 'es'))
+      .map((area) => ({ value: area.id, label: area.name }));
+  }, [teaching.state]);
 
   if (!teacherId) {
     return null;
   }
-  const filtered = Boolean(status || periodId || assignment);
+  const filtered = Boolean(status || periodId || gradeId || areaId);
 
   return (
     <div className={styles.root}>
@@ -134,12 +141,20 @@ export function LessonPlanList() {
             onChange={(event) => update({ periodo: event.target.value })}
           />
           <Select
-            label="Grado y área"
-            placeholder="Todos los grados y áreas"
-            options={assignmentOptions}
-            value={assignment ?? ''}
-            disabled={assignmentOptions.length === 0}
-            onChange={(event) => update({ asignacion: event.target.value })}
+            label="Grado"
+            placeholder="Todos los grados"
+            options={gradeOptions}
+            value={gradeId ?? ''}
+            disabled={gradeOptions.length === 0}
+            onChange={(event) => update({ grado: event.target.value })}
+          />
+          <Select
+            label="Dimensión o asignatura"
+            placeholder="Todas las dimensiones y asignaturas"
+            options={areaOptions}
+            value={areaId ?? ''}
+            disabled={areaOptions.length === 0}
+            onChange={(event) => update({ area: event.target.value })}
           />
         </div>
       </div>

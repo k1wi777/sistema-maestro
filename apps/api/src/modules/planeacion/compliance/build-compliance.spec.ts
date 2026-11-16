@@ -80,6 +80,22 @@ describe('buildCompliance', () => {
     expect(entry).toMatchObject({ deliveredCount: 1, pendingCount: 1 });
   });
 
+  it('una planeación de dos áreas cuenta como entregada en la asignación de cada una', () => {
+    // El repository devuelve una fila por área de la planeación: la misma planeación aparece en ambas.
+    const entry = buildCompliance(
+      [period(1)],
+      [assignment('a', ['g1', 1], 'mat'), assignment('a', ['g1', 1], 'cien')],
+      [delivered('a', 'g1', 'mat', 'p-1'), delivered('a', 'g1', 'cien', 'p-1')],
+    );
+
+    expect(
+      first(entry).items.map((item) => [item.area.id, item.status, item.deliveredCount]),
+    ).toEqual([
+      ['cien', 'entregado', 1],
+      ['mat', 'entregado', 1],
+    ]);
+  });
+
   it('ignora entregas sin asignación activa (retirada, otro grado u otro docente)', () => {
     const teachers = buildCompliance(
       periods,

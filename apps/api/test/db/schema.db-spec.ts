@@ -1,6 +1,8 @@
 import { expectSqlError, useTestDatabase } from './support/database';
 import {
   insertAuditLog,
+  insertArea,
+  insertLessonPlan,
   insertObserverNote,
   insertReview,
   insertRow,
@@ -45,15 +47,15 @@ async function columnsNamed(columnName: string): Promise<ColumnInfo[]> {
 }
 
 describe('migrated schema', () => {
-  it('has the 34 domain tables plus the Prisma migrations table', async () => {
+  it('has the 35 domain tables plus the Prisma migrations table', async () => {
     const result = await db.client.query<{ table_name: string }>(
       `SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`,
     );
     const tables = result.rows.map((row) => row.table_name);
 
-    expect(tables).toHaveLength(35);
+    expect(tables).toHaveLength(36);
     expect(tables).toContain('_prisma_migrations');
-    expect(await domainTables()).toHaveLength(34);
+    expect(await domainTables()).toHaveLength(35);
     // Decisiones del modelo: un solo rol por usuario y sin tabla de estudiantes.
     expect(tables).not.toEqual(
       expect.arrayContaining([
@@ -168,6 +170,42 @@ describe('migrated schema', () => {
         'INSERT INTO consentimiento_datos (usuario_id, version_politica, aceptado_en) VALUES ($1, $2, $3)',
         Object.values(consent),
       );
+    });
+
+    it('lets a lesson plan have several areas but not the same area twice (planeacion_area)', async () => {
+      const first = await insertArea(db.client);
+      const second = await insertArea(db.client);
+      const plan = await insertLessonPlan(db.client, {}, String(first.id));
+      await insertRow(db.client, 'planeacion_area', {
+        planeacion_id: plan.id,
+        area_id: second.id,
+      });
+      const columns = await db.client.query(
+        `SELECT 1 FROM information_schema.columns
+         WHERE table_name = 'planeacion' AND column_name = 'area_id'`,
+      );
+
+      expect(columns.rowCount).toBe(0);
+      await expectSqlError(
+        db.client,
+        '23505',
+        'INSERT INTO planeacion_area (planeacion_id, area_id) VALUES ($1, $2)',
+        [plan.id, first.id],
+      );
+    });
+
+    it('lets the application role read and write planeacion_area', async () => {
+      const privileges = await db.client.query<{ privilege_type: string }>(
+        `SELECT privilege_type FROM information_schema.role_table_grants
+         WHERE grantee = 'app_gns' AND table_name = 'planeacion_area'`,
+      );
+
+      expect(privileges.rows.map((row) => row.privilege_type).sort()).toEqual([
+        'DELETE',
+        'INSERT',
+        'SELECT',
+        'UPDATE',
+      ]);
     });
 
     it('accepts audit log entries without a user', async () => {

@@ -3,6 +3,7 @@ import {
   createLessonPlanSchema,
   createPageSchema,
   lessonPlanListQuerySchema,
+  lessonPlanOptionsSchema,
   lessonPlanSchema,
   returnLessonPlanSchema,
   reviewSchema,
@@ -13,6 +14,7 @@ import { createZodDto } from '../../../../shared/http/zod-dto';
 import { z } from 'zod';
 
 export class LessonPlanDto extends createZodDto(lessonPlanSchema, { codec: true }) {}
+export class LessonPlanOptionsDto extends createZodDto(lessonPlanOptionsSchema) {}
 export class LessonPlanPageDto extends createZodDto(createPageSchema(lessonPlanSchema), {
   codec: true,
 }) {}

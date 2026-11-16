@@ -7,7 +7,7 @@ import {
   type LessonPlanFilters,
   type LessonPlanSortField,
 } from '@gns/shared';
-import type { Prisma } from '../../../generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
 import {
   PrismaReadRepository,
@@ -28,7 +28,7 @@ import type {
 const INCLUDE = {
   teacher: { select: { id: true, fullName: true } },
   grade: { include: { level: { select: { id: true, name: true } } } },
-  area: { select: { id: true, name: true } },
+  areas: { include: { area: { select: { id: true, name: true } } } },
   period: { select: { id: true, number: true, schoolYear: true } },
   linkedResources: {
     orderBy: [{ moment: { sort: 'asc', nulls: 'first' } }, { createdAt: 'asc' }, { id: 'asc' }],
@@ -71,7 +71,10 @@ export class PrismaLessonPlanRepository
   }
 
   async findRecordById(id: string): Promise<LessonPlanRecord | null> {
-    const row = await this.prisma.db.lessonPlan.findUnique({ where: { id } });
+    const row = await this.prisma.db.lessonPlan.findUnique({
+      where: { id },
+      include: { areas: { select: { areaId: true } } },
+    });
     if (!row) {
       return null;
     }
@@ -79,7 +82,7 @@ export class PrismaLessonPlanRepository
       id: row.id,
       teacherId: row.teacherId,
       gradeId: row.gradeId,
-      areaId: row.areaId,
+      areaIds: row.areas.map((entry) => entry.areaId).sort(),
       periodId: row.periodId,
       crossCuttingProject: row.crossCuttingProject,
       dateFrom: toDay(row.dateFrom),
@@ -102,16 +105,16 @@ export class PrismaLessonPlanRepository
   }
 
   async create(input: NewLessonPlan): Promise<LessonPlan> {
-    const { teacherId, gradeId, areaId, periodId, crossCuttingProject, ...content } = input;
+    const { teacherId, gradeId, areaIds, periodId, crossCuttingProject, ...content } = input;
     const row = await this.prisma.db.lessonPlan.create({
       data: {
         ...toContentData(content),
         teacherId,
         gradeId,
-        areaId,
         periodId,
         crossCuttingProject,
         status: RecordStatus.Draft,
+        areas: { create: areaIds.map((areaId) => ({ areaId })) },
       },
       include: INCLUDE,
     });
@@ -123,35 +126,61 @@ export class PrismaLessonPlanRepository
     from: readonly RecordStatus[],
     changes: LessonPlanChanges,
   ): Promise<boolean> {
-    const { periodId, crossCuttingProject, status, submittedAt, ...content } = changes;
+    const { periodId, areaIds, crossCuttingProject, status, submittedAt, ...content } = changes;
     const { count } = await this.prisma.db.lessonPlan.updateMany({
       where: { id, status: { in: [...from] } },
-      data: { ...toContentData(content), periodId, crossCuttingProject, status, submittedAt },
+      data: {
+        ...toContentData(content),
+        periodId,
+        crossCuttingProject,
+        status,
+        submittedAt,
+        // Un cambio solo de áreas no toca columnas de la fila: se fija la fecha a mano.
+        ...(areaIds ? { updatedAt: new Date() } : {}),
+      },
     });
-    return count === 1;
+    if (count !== 1) {
+      return false;
+    }
+    if (areaIds) {
+      // Misma transacción de la petición (`this.prisma.db`): quita las retiradas y añade las nuevas.
+      await this.prisma.db.lessonPlanArea.deleteMany({
+        where: { lessonPlanId: id, areaId: { notIn: areaIds } },
+      });
+      await this.prisma.db.lessonPlanArea.createMany({
+        data: areaIds.map((areaId) => ({ lessonPlanId: id, areaId })),
+        skipDuplicates: true,
+      });
+    }
+    return true;
   }
 
   async lock(id: string): Promise<void> {
     await this.prisma.db.$queryRaw`SELECT id FROM planeacion WHERE id = ${id}::uuid FOR UPDATE`;
   }
 
+  // `groupBy` no agrupa por campos de otra tabla: se une `planeacion_area` en SQL parametrizado,
+  // así una planeación con varias áreas cuenta una vez en cada una.
   async countDelivered(filters: DeliveredFilters): Promise<DeliveredCount[]> {
-    const groups = await this.prisma.db.lessonPlan.groupBy({
-      by: ['teacherId', 'gradeId', 'areaId', 'periodId'],
-      where: {
-        status: { in: [...filters.statuses] },
-        period: { schoolYear: filters.schoolYear },
-        teacherId: filters.teacherId,
-        periodId: filters.periodId,
-      },
-      _count: { _all: true },
-    });
-    return groups.map((group) => ({
-      teacherId: group.teacherId,
-      gradeId: group.gradeId,
-      areaId: group.areaId,
-      periodId: group.periodId,
-      count: group._count._all,
+    const rows = await this.prisma.db.$queryRaw<
+      { teacher_id: string; grade_id: string; area_id: string; period_id: string; total: bigint }[]
+    >(Prisma.sql`
+      SELECT p.docente_id AS teacher_id, p.grado_id AS grade_id, pa.area_id AS area_id,
+             p.periodo_id AS period_id, count(*) AS total
+      FROM planeacion p
+      JOIN planeacion_area pa ON pa.planeacion_id = p.id
+      JOIN periodo_academico per ON per.id = p.periodo_id
+      WHERE p.estado IN (${Prisma.join([...filters.statuses])})
+        AND per.anio_lectivo = ${filters.schoolYear}
+        ${filters.teacherId ? Prisma.sql`AND p.docente_id = ${filters.teacherId}::uuid` : Prisma.empty}
+        ${filters.periodId ? Prisma.sql`AND p.periodo_id = ${filters.periodId}::uuid` : Prisma.empty}
+      GROUP BY p.docente_id, p.grado_id, pa.area_id, p.periodo_id`);
+    return rows.map((row) => ({
+      teacherId: row.teacher_id,
+      gradeId: row.grade_id,
+      areaId: row.area_id,
+      periodId: row.period_id,
+      count: Number(row.total),
     }));
   }
 
@@ -171,7 +200,7 @@ export class PrismaLessonPlanRepository
       status: filters.status,
       periodId: filters.periodId,
       gradeId: filters.gradeId,
-      areaId: filters.areaId,
+      areas: filters.areaId ? { some: { areaId: filters.areaId } } : undefined,
     };
   }
 
@@ -189,7 +218,9 @@ export class PrismaLessonPlanRepository
       teacher: { id: row.teacher.id, fullName: row.teacher.fullName },
       grade: { id: row.grade.id, name: row.grade.name },
       level: { id: row.grade.level.id, name: row.grade.level.name },
-      area: { id: row.area.id, name: row.area.name },
+      areas: row.areas
+        .map((entry) => ({ id: entry.area.id, name: entry.area.name }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'es')),
       period: { id: row.period.id, number: row.period.number, schoolYear: row.period.schoolYear },
       dateFrom: toDay(row.dateFrom),
       dateTo: toDay(row.dateTo),

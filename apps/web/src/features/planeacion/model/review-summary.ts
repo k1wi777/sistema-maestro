@@ -12,7 +12,8 @@ import { ADJUSTABLE_FIELD_LABELS, MOMENTS, STEPS, type StepId } from './steps';
 
 export interface SummaryContext {
   gradeName: string;
-  areaName: string;
+  /** Áreas de la planeación unidas por coma (ver `lessonPlanAreasLabel`). */
+  areaNames: string;
   periodNumber: number;
   linkCount: number;
   adjusted: ReadonlySet<LessonPlanAdjustableField>;
@@ -59,7 +60,7 @@ export function buildReviewSummary(values: FormValues, context: SummaryContext):
   ].filter((part): part is string => part !== null);
   const general = [
     context.gradeName,
-    context.areaName,
+    context.areaNames,
     `Periodo ${context.periodNumber}`,
     formatDateRange(values.dateFrom || null, values.dateTo || null),
   ]

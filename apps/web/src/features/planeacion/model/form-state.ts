@@ -8,9 +8,14 @@ import {
 
 import type { UpdateLessonPlanBody } from '../api/lesson-plans';
 
-/** Campos que el docente edita en el asistente; todos viajan como texto (`''` = vacío). */
+/**
+ * Campos que el docente edita en el asistente; todos viajan como texto (`''` = vacío).
+ * `areaIds` es la lista de áreas como ids ordenados y unidos por coma (ver `areaIdsToValue`),
+ * de modo que compararla como texto equivale a compararla como conjunto.
+ */
 export const FORM_FIELDS = [
   'periodId',
+  'areaIds',
   'dateFrom',
   'dateTo',
   'topic',
@@ -35,9 +40,19 @@ export const FIELD_MAX_LENGTH = {
   text: LESSON_PLAN_TEXT_MAX_LENGTH,
 } as const;
 
+/** Lista de ids de área como valor de formulario: ordenada, para que el orden no cuente. */
+export function areaIdsToValue(areaIds: readonly string[]): string {
+  return [...areaIds].sort().join(',');
+}
+
+export function valueToAreaIds(value: string): string[] {
+  return value === '' ? [] : value.split(',');
+}
+
 export function toFormValues(plan: LessonPlan): FormValues {
   return {
     periodId: plan.period.id,
+    areaIds: areaIdsToValue(plan.areas.map((area) => area.id)),
     dateFrom: plan.dateFrom ?? '',
     dateTo: plan.dateTo ?? '',
     topic: plan.topic ?? '',
@@ -78,8 +93,12 @@ export type PatchResult =
   | { kind: 'invalid'; errors: FormErrors }
   | { kind: 'patch'; body: UpdateLessonPlanBody; fields: FormField[] };
 
-function isFormField(value: unknown): value is FormField {
-  return typeof value === 'string' && (FORM_FIELDS as readonly string[]).includes(value);
+/** Campo del formulario al que pertenece una ruta de error: `areaIds.1` es del campo `areaIds`. */
+function formFieldOf(path: unknown): FormField | null {
+  const name = typeof path === 'string' ? path.split('.')[0] : path;
+  return typeof name === 'string' && (FORM_FIELDS as readonly string[]).includes(name)
+    ? (name as FormField)
+    : null;
 }
 
 /**
@@ -97,16 +116,20 @@ export function buildPatch(saved: FormValues, draft: FormValues): PatchResult {
     errors.dateTo = rangeError;
   }
 
-  const raw: Record<string, string | null> = {};
+  const raw: Record<string, string | string[] | null> = {};
   for (const field of fields) {
     const value = normalizeValue(draft[field]);
-    raw[field] = value === '' && field !== 'periodId' ? null : value;
+    if (field === 'areaIds') {
+      raw[field] = valueToAreaIds(value);
+    } else {
+      raw[field] = value === '' && field !== 'periodId' ? null : value;
+    }
   }
   const parsed = updateLessonPlanSchema.safeParse(raw);
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
-      const field = issue.path[0];
-      if (isFormField(field) && !errors[field]) {
+      const field = formFieldOf(issue.path[0]);
+      if (field && !errors[field]) {
         errors[field] = issue.message;
       }
     }
@@ -128,8 +151,9 @@ export function mapApiErrors(errors: readonly { field: string; reason: string }[
   const fields: FormErrors = {};
   const other: string[] = [];
   for (const { field, reason } of errors ?? []) {
-    if (isFormField(field)) {
-      fields[field] ??= reason;
+    const formField = formFieldOf(field);
+    if (formField) {
+      fields[formField] ??= reason;
     } else {
       other.push(reason);
     }

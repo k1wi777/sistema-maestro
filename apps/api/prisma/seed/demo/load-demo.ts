@@ -272,7 +272,6 @@ export async function loadDemoData(
     const planId = await insert('planeacion', {
       docente_id: idOf(item.teacher),
       grado_id: required(references.grades, item.grade, 'el grado'),
-      area_id: required(references.areas, item.area, 'el área'),
       periodo_id: required(references.periods, String(item.period), 'el periodo'),
       fecha_desde: item.dateFrom,
       fecha_hasta: item.dateTo,
@@ -291,6 +290,14 @@ export async function loadDemoData(
       enviada_en: item.submittedAt,
     });
     ids.set(`plan:${item.key}`, planId);
+    for (const area of item.areas) {
+      // La tabla no tiene id propio (clave compuesta): se cuenta como las demás.
+      summary.planeacion_area = (summary.planeacion_area ?? 0) + 1;
+      await insertRow(client, 'planeacion_area', {
+        planeacion_id: planId,
+        area_id: required(references.areas, area, 'el área'),
+      });
+    }
     for (const resource of item.linkedResources) {
       await insert('recurso_planeacion', {
         planeacion_id: planId,
