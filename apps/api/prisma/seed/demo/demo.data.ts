@@ -449,6 +449,7 @@ export interface DemoObserverNote {
   status: RecordStatus;
   description: string;
   studentVersion: string | null;
+  pedagogicalStrategies: string | null;
   actions: string | null;
   familyInformed: boolean;
   followUp: string | null;
@@ -475,7 +476,9 @@ const note = (
   studentVersion: familyInformed
     ? 'Cuenta que quiere mejorar y que recibió apoyo de su grupo.'
     : null,
-  actions: 'Conversación individual y acuerdo de seguimiento en clase.',
+  pedagogicalStrategies: 'Diálogo individual y trabajo en pareja en clase.',
+  actions:
+    'Se comprometió a seguir el acuerdo del aula y se acordó revisar el avance con la familia.',
   familyInformed,
   followUp: familyInformed ? 'Revisar avances en dos semanas.' : null,
 });

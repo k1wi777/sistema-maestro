@@ -157,18 +157,25 @@ describe('revisión y anulación del observador (BE-64)', () => {
 
       const res = await giveBack(coordA, created.id, {
         comment: 'La reclasifiqué',
-        changes: { type: 'tipo_ii', followUp: 'Citar a la familia', familyInformed: true },
+        changes: {
+          type: 'tipo_ii',
+          followUp: 'Citar a la familia',
+          familyInformed: true,
+          pedagogicalStrategies: 'Cambio de puesto',
+        },
       }).expect(200);
 
       expect(res.body).toMatchObject({
         type: 'tipo_ii',
         followUp: 'Citar a la familia',
         familyInformed: true,
+        pedagogicalStrategies: 'Cambio de puesto',
         status: RecordStatus.ChangesRequested,
       });
       const rows = await reviewRows(app, created.id);
       expect(rows.map((row) => row.action)).toEqual(['ajuste', 'observaciones']);
       expect([...(rows[0]?.adjustedFields ?? [])].sort()).toEqual([
+        'estrategias_pedagogicas',
         'familia_informada',
         'seguimiento',
         'tipo',
@@ -176,6 +183,7 @@ describe('revisión y anulación del observador (BE-64)', () => {
       expect(rows[0]?.changes).toEqual({
         tipo: { antes: 'tipo_i', despues: 'tipo_ii' },
         seguimiento: { antes: null, despues: 'Citar a la familia' },
+        estrategias_pedagogicas: { antes: null, despues: 'Cambio de puesto' },
         familia_informada: { antes: false, despues: true },
       });
 

@@ -186,5 +186,16 @@ describe('migrated schema', () => {
       expect(column.rows[0]).toMatchObject({ data_type: 'jsonb', is_nullable: 'YES' });
       expect(review.cambios).toBeNull();
     });
+
+    it('stores the pedagogical strategies of an observer note as nullable text (estrategias_pedagogicas)', async () => {
+      const column = await db.client.query<ColumnInfo>(
+        `SELECT data_type, is_nullable FROM information_schema.columns
+         WHERE table_name = 'observador_anotacion' AND column_name = 'estrategias_pedagogicas'`,
+      );
+      const note = await insertObserverNote(db.client);
+
+      expect(column.rows[0]).toMatchObject({ data_type: 'text', is_nullable: 'YES' });
+      expect(note.estrategias_pedagogicas).toBeNull();
+    });
   });
 });

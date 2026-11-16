@@ -336,6 +336,7 @@ export async function loadDemoData(
         tipo: item.type,
         descripcion: item.description,
         version_estudiante: item.studentVersion,
+        estrategias_pedagogicas: item.pedagogicalStrategies,
         acciones: item.actions,
         familia_informada: item.familyInformed,
         seguimiento: item.followUp,

@@ -50,5 +50,5 @@ export const ADJUSTABLE_FIELD_LABELS: Record<LessonPlanAdjustableField, string> 
   socializationMoment: 'Momento 3 · Socialización',
   closingMoment: 'Momento 4 · Cierre',
   resources: 'Recursos y materiales',
-  reasonableAdjustments: 'Ajustes razonables',
+  reasonableAdjustments: 'D.U.A',
 };

@@ -55,7 +55,7 @@ export const STEPS: readonly StepDefinition[] = [
   },
   {
     id: 'recursos',
-    title: 'Recursos y ajustes razonables',
+    title: 'Recursos y D.U.A',
     contentFields: ['resources', 'reasonableAdjustments'],
     adjustableFields: ['resources', 'reasonableAdjustments'],
   },

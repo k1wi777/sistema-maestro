@@ -22,5 +22,12 @@ export const OBSERVER_NOTE_AUDIT = {
   type: AuditLogType.ObserverNote,
   entity: 'observador_anotacion',
   snapshot: ObserverNoteAuditSnapshot,
-  redact: ['studentFirstName', 'description', 'studentVersion', 'actions', 'followUp'],
+  redact: [
+    'studentFirstName',
+    'description',
+    'studentVersion',
+    'pedagogicalStrategies',
+    'actions',
+    'followUp',
+  ],
 };

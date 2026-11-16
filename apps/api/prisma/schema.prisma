@@ -384,21 +384,22 @@ model FieldJournalEntry {
 }
 
 model ObserverNote {
-  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  teacherId        String   @map("docente_id") @db.Uuid
-  gradeId          String   @map("grado_id") @db.Uuid
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  teacherId             String   @map("docente_id") @db.Uuid
+  gradeId               String   @map("grado_id") @db.Uuid
   // Privacidad: solo el nombre de pila del estudiante, sin datos sensibles.
-  studentFirstName String   @map("estudiante_nombre") @db.VarChar(40)
-  date             DateTime @map("fecha") @db.Date
-  type             String   @map("tipo") @db.VarChar(12)
-  description      String   @map("descripcion") @db.Text
-  studentVersion   String?  @map("version_estudiante") @db.Text
-  actions          String?  @map("acciones") @db.Text
-  familyInformed   Boolean  @default(false) @map("familia_informada")
-  followUp         String?  @map("seguimiento") @db.Text
-  status           String   @map("estado") @db.VarChar(14)
-  createdAt        DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
-  updatedAt        DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  studentFirstName      String   @map("estudiante_nombre") @db.VarChar(40)
+  date                  DateTime @map("fecha") @db.Date
+  type                  String   @map("tipo") @db.VarChar(12)
+  description           String   @map("descripcion") @db.Text
+  studentVersion        String?  @map("version_estudiante") @db.Text
+  pedagogicalStrategies String?  @map("estrategias_pedagogicas") @db.Text
+  actions               String?  @map("acciones") @db.Text
+  familyInformed        Boolean  @default(false) @map("familia_informada")
+  followUp              String?  @map("seguimiento") @db.Text
+  status                String   @map("estado") @db.VarChar(14)
+  createdAt             DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt             DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   teacher User  @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   grade   Grade @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)

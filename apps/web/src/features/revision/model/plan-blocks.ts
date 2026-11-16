@@ -59,7 +59,7 @@ export function planSections(levelName: string): PlanSection[] {
     { id: 'momentos', title: 'Momentos de la clase', blocks: MOMENTS.map((m) => field(m.field)) },
     {
       id: 'recursos',
-      title: 'Recursos y ajustes razonables',
+      title: 'Recursos y D.U.A',
       blocks: [field('resources'), field('reasonableAdjustments')],
     },
     {

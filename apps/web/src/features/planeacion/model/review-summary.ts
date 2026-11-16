@@ -70,7 +70,7 @@ export function buildReviewSummary(values: FormValues, context: SummaryContext):
   const developmentMissing = !filled(values.developmentMoment);
   const missingResources = [
     !filled(values.resources) ? 'recursos y materiales' : null,
-    !filled(values.reasonableAdjustments) ? 'ajustes razonables' : null,
+    !filled(values.reasonableAdjustments) ? 'D.U.A' : null,
   ].filter((part): part is string => part !== null);
 
   const items: StepSummaryItem[] = [
@@ -104,11 +104,11 @@ export function buildReviewSummary(values: FormValues, context: SummaryContext):
     },
     {
       id: 'recursos',
-      title: 'Recursos y ajustes razonables',
+      title: 'Recursos y D.U.A',
       complete: missingResources.length === 0,
       detail:
         missingResources.length === 0
-          ? `Recursos y ajustes razonables escritos.${note('recursos')}`
+          ? `Recursos y D.U.A escritos.${note('recursos')}`
           : `Falta: ${missingResources.join(' y ')} (opcional).${note('recursos')}`,
     },
     {

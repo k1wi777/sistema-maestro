@@ -40,6 +40,7 @@ export interface NoteBody {
   type: string;
   description: string;
   studentVersion: string | null;
+  pedagogicalStrategies: string | null;
   actions: string | null;
   familyInformed: boolean;
   followUp: string | null;

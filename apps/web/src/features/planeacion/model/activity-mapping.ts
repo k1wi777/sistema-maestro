@@ -43,7 +43,7 @@ export interface ActivityPlanContent {
 /**
  * Actividad → contenido de una planeación nueva. El rincón solo se copia si el nivel de la
  * planeación no es de CurioCity (bachillerato usa etapas, no rincones); la duración y el tipo se
- * descartan y los ajustes razonables nunca se tocan.
+ * descartan y el D.U.A nunca se toca.
  */
 export function activityToPlanContent(
   activity: SharedActivity,
@@ -102,7 +102,7 @@ const STEP_LABELS: Record<MomentField, string> = {
 };
 
 /**
- * Planeación → borrador de actividad para compartir. Nunca copia los ajustes razonables ni los
+ * Planeación → borrador de actividad para compartir. Nunca copia el D.U.A ni los
  * recursos digitales: solo lo que sirve a otros docentes. El paso a paso reúne los momentos
  * escritos con su nombre. El nivel lo deriva la API desde el grado.
  */

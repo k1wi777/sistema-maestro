@@ -584,6 +584,7 @@ describe('demo privacy (R23)', () => {
       'estudiantes',
       'estudiante_nombre',
       'version_estudiante',
+      'estrategias_pedagogicas',
       'seguimiento',
     ]);
     const entries = await rows(

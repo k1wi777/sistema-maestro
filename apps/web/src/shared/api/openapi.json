@@ -19199,6 +19199,7 @@
               "Kahoot",
               "ClassDojo",
               "Pinterest",
+              "YouTube",
               "Otra"
             ]
           },
@@ -20721,6 +20722,10 @@
                   "type": "string",
                   "nullable": true
                 },
+                "pedagogicalStrategies": {
+                  "type": "string",
+                  "nullable": true
+                },
                 "actions": {
                   "type": "string",
                   "nullable": true
@@ -20762,6 +20767,7 @@
                 "type",
                 "description",
                 "studentVersion",
+                "pedagogicalStrategies",
                 "actions",
                 "familyInformed",
                 "followUp",
@@ -20866,6 +20872,10 @@
             "type": "string",
             "nullable": true
           },
+          "pedagogicalStrategies": {
+            "type": "string",
+            "nullable": true
+          },
           "actions": {
             "type": "string",
             "nullable": true
@@ -20907,6 +20917,7 @@
           "type",
           "description",
           "studentVersion",
+          "pedagogicalStrategies",
           "actions",
           "familyInformed",
           "followUp",
@@ -20945,6 +20956,11 @@
           "studentVersion": {
             "type": "string",
             "maxLength": 800,
+            "nullable": true
+          },
+          "pedagogicalStrategies": {
+            "type": "string",
+            "maxLength": 1000,
             "nullable": true
           },
           "actions": {
@@ -21006,6 +21022,11 @@
           "studentVersion": {
             "type": "string",
             "maxLength": 800,
+            "nullable": true
+          },
+          "pedagogicalStrategies": {
+            "type": "string",
+            "maxLength": 1000,
             "nullable": true
           },
           "actions": {
@@ -21077,6 +21098,11 @@
                 "maxLength": 800,
                 "nullable": true
               },
+              "pedagogicalStrategies": {
+                "type": "string",
+                "maxLength": 1000,
+                "nullable": true
+              },
               "actions": {
                 "type": "string",
                 "maxLength": 1000,
@@ -21134,6 +21160,11 @@
               "studentVersion": {
                 "type": "string",
                 "maxLength": 800,
+                "nullable": true
+              },
+              "pedagogicalStrategies": {
+                "type": "string",
+                "maxLength": 1000,
                 "nullable": true
               },
               "actions": {

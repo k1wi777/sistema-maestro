@@ -285,7 +285,7 @@ export function ShareActivityDialog({ mode, onClose, onSaved }: ShareActivityDia
             label="Enlace al recurso (opcional)"
             type="url"
             inputMode="url"
-            placeholder="Canva, Liveworksheets, Kahoot, video…"
+            placeholder="Canva, Liveworksheets, Kahoot, YouTube…"
             value={values.link}
             error={errors.link}
             onChange={(event) => change({ link: event.target.value })}

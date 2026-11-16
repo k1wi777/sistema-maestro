@@ -7,7 +7,7 @@ describe('planSections', () => {
       'Datos generales',
       'Propósito',
       'Momentos de la clase',
-      'Recursos y ajustes razonables',
+      'Recursos y D.U.A',
       'Recursos digitales',
     ]);
     expect(sections[2]?.blocks.map((block) => block.label)).toEqual([

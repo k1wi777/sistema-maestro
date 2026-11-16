@@ -7,7 +7,7 @@ import type { StepProps } from './step-types';
 
 export function ResourcesStep({ draft, errors, readOnly, onChange, number }: StepProps) {
   return (
-    <Card title="Recursos y ajustes razonables" step={number}>
+    <Card title="Recursos y D.U.A" step={number}>
       <div className={styles.fields}>
         <TextArea
           label="Recursos y materiales"
@@ -18,7 +18,7 @@ export function ResourcesStep({ draft, errors, readOnly, onChange, number }: Ste
           onChange={(event) => onChange('resources', event.target.value)}
         />
         <TextArea
-          label="Ajustes razonables"
+          label="D.U.A"
           maxLength={FIELD_MAX_LENGTH.text}
           value={draft.reasonableAdjustments}
           readOnly={readOnly}

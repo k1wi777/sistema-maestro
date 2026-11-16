@@ -81,8 +81,9 @@ test.describe('Formatos: diario de campo y observador', () => {
     await page.getByLabel('Grado').selectOption({ label: '7° · Bachillerato' });
     await page.getByLabel('Estudiante (nombre de pila)').fill(FIRST_NAMES.note);
     await page.getByLabel('Tipo de anotación').selectOption({ label: 'Reconocimiento positivo' });
-    await page.getByLabel('Descripción de la situación').fill(`${FIRST_NAMES.note}: ${NOTE}`);
-    await page.getByLabel('Acciones pedagógicas y compromisos').fill(COMMITMENT);
+    await page.getByLabel('Comportamiento específico').fill(`${FIRST_NAMES.note}: ${NOTE}`);
+    await page.getByLabel('Estrategias pedagógicas').fill('Diálogo y trabajo en pareja en clase.');
+    await page.getByLabel('Resultados y compromisos').fill(COMMITMENT);
     await page.getByRole('button', { name: 'Guardar anotación' }).click();
     await expect(
       page.getByRole('heading', { level: 1, name: `Anotación de ${FIRST_NAMES.note}` }),
