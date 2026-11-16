@@ -47,6 +47,8 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await page.goto('/docente');
     await page.getByRole('link', { name: 'Planeación GNS' }).click();
     await page.getByRole('link', { name: 'Nueva planeación' }).click();
+    await expect(page).toHaveURL(/\/docente\/planeacion\/nueva$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Nueva planeación' })).toBeVisible();
 
     await page.getByLabel('Grado y área').selectOption({ label: '4° · Matemáticas' });
     await page.getByLabel('Periodo').selectOption({ label: 'Periodo 1' });

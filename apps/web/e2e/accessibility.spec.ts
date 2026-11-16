@@ -108,6 +108,9 @@ test.describe('Accesibilidad: vista docente', () => {
       .getByRole('link', { name: /Bienvenida institucional GNS/ })
       .first()
       .click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Bienvenida institucional GNS' }),
+    ).toBeVisible();
     await audit(page, 'docente · módulo');
 
     const game = page.getByRole('group', { name: 'Desafío GNS' });
