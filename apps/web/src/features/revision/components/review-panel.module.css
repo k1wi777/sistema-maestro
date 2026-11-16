@@ -1,0 +1,100 @@
+.panel {
+  position: sticky;
+  top: var(--space-5);
+  align-self: start;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.noticeText {
+  margin: 0 0 var(--space-2);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.observations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.link:hover {
+  border-color: var(--line-strong);
+}
+
+.excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.counter {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+.counter[data-over='true'] {
+  color: var(--red);
+  font-weight: var(--weight-semibold);
+}
+
+.decisions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.decisions > * {
+  width: 100%;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.historyTitle {
+  margin: 0;
+  color: var(--heading);
+  font-size: var(--text-base);
+}
+
+/* En pantallas angostas el panel va debajo del contenido y deja de ser pegajoso. */
+@media (max-width: 860px) {
+  .panel {
+    position: static;
+  }
+}
