@@ -61,6 +61,7 @@ export function ActivityCard({
         actions={
           <>
             <Button
+              context={`(actividad «${activity.title}»)`}
               variant="outline"
               size="sm"
               aria-expanded={open}
@@ -68,25 +69,32 @@ export function ActivityCard({
               onClick={() => setOpen((value) => !value)}
             >
               {open ? 'Ocultar' : 'Ver detalle'}
-              <span className="sr-only">{`: ${activity.title}`}</span>
             </Button>
             <ButtonLink
+              context={`(actividad «${activity.title}»)`}
               href={`/docente/planeacion/nueva?actividad=${activity.id}`}
               variant="secondary"
               size="sm"
             >
               Usar en mi planeación
-              <span className="sr-only">{`: ${activity.title}`}</span>
             </ButtonLink>
             {own ? (
               <>
-                <Button variant="outline" size="sm" onClick={() => onEdit(activity)}>
+                <Button
+                  context={`actividad «${activity.title}»`}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEdit(activity)}
+                >
                   Editar
-                  <span className="sr-only">{`: ${activity.title}`}</span>
                 </Button>
-                <Button variant="void" size="sm" onClick={() => onWithdraw(activity)}>
+                <Button
+                  context={`actividad «${activity.title}»`}
+                  variant="void"
+                  size="sm"
+                  onClick={() => onWithdraw(activity)}
+                >
                   Retirar
-                  <span className="sr-only">{`: ${activity.title}`}</span>
                 </Button>
               </>
             ) : null}

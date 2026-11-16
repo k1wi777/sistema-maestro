@@ -98,41 +98,49 @@ export function ModuleRow({
 
   function buttonFor(action: ModuleActionId) {
     const label = MODULE_ACTION_LABEL[action];
-    const hidden = <span className="sr-only">{`: ${name}`}</span>;
+    const context = `módulo «${name}»`;
     switch (action) {
       case 'edit':
         return (
-          <ButtonLink key={action} href={editHref} variant="outline" size="sm">
+          <ButtonLink key={action} context={context} href={editHref} variant="outline" size="sm">
             {label}
-            {hidden}
           </ButtonLink>
         );
       case 'tracking':
         return (
-          <ButtonLink key={action} href={trackingHref} variant="outline" size="sm">
+          <ButtonLink
+            key={action}
+            context={context}
+            href={trackingHref}
+            variant="outline"
+            size="sm"
+          >
             {label}
-            {hidden}
           </ButtonLink>
         );
       case 'publish':
         return (
-          <Button key={action} size="sm" disabled={busy} onClick={onPublish}>
+          <Button key={action} context={context} size="sm" disabled={busy} onClick={onPublish}>
             {busy ? 'Publicando…' : label}
-            {hidden}
           </Button>
         );
       case 'withdraw':
         return (
-          <Button key={action} variant="outline" size="sm" disabled={busy} onClick={onAskWithdraw}>
+          <Button
+            key={action}
+            context={context}
+            variant="outline"
+            size="sm"
+            disabled={busy}
+            onClick={onAskWithdraw}
+          >
             {label}
-            {hidden}
           </Button>
         );
       case 'restore':
         return (
-          <Button key={action} size="sm" disabled={busy} onClick={onRestore}>
+          <Button key={action} context={context} size="sm" disabled={busy} onClick={onRestore}>
             {busy ? 'Restaurando…' : label}
-            {hidden}
           </Button>
         );
     }

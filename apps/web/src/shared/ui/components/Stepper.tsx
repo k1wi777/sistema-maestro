@@ -41,6 +41,16 @@ const SAVE_TEXT: Record<SaveState, string> = {
   error: 'No se pudo guardar',
 };
 
+/**
+ * Nombre accesible del paso: «Paso N: título, pista, estado». Incluye el texto visible (número,
+ * título y pista) en el mismo orden, como pide WCAG 2.5.3, y añade el estado. Los espacios entre
+ * los `span` separan las palabras para quien calcula el texto visible (axe: «1Datos» no es «1 Datos»).
+ */
+function stepName(index: number, step: StepperStep, state: StepState): string {
+  const visible = [step.title, step.hint].filter(Boolean).join(', ');
+  return `Paso ${index + 1}: ${visible}, ${STATE_TEXT[state]}`;
+}
+
 /** Barra de pasos libres (se puede saltar a cualquiera) para formularios largos. */
 export function Stepper({
   label,
@@ -72,16 +82,16 @@ export function Stepper({
                 <button
                   type="button"
                   className={styles.button}
+                  aria-label={stepName(index, step, state)}
                   aria-current={isCurrent ? 'step' : undefined}
                   onClick={() => onStepChange(step.id)}
                 >
                   <span className={styles.numeral}>
                     {state === 'done' ? <Icon name="check" size={16} /> : index + 1}
-                  </span>
+                  </span>{' '}
                   <span className={styles.text}>
-                    <span className={styles.title}>{step.title}</span>
+                    <span className={styles.title}>{step.title}</span>{' '}
                     {step.hint ? <span className={styles.hint}>{step.hint}</span> : null}
-                    <span className="sr-only">{`, ${STATE_TEXT[state]}`}</span>
                   </span>
                 </button>
               </li>

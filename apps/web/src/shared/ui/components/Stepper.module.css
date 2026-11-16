@@ -93,7 +93,7 @@
   color: var(--on-solid);
   box-shadow:
     0 0 0 4px var(--bg),
-    0 6px 14px -6px rgb(16 24 40 / 0.45);
+    0 6px 14px -6px var(--shadow-step);
 }
 
 .adjusted .numeral {

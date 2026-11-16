@@ -24,9 +24,13 @@ export function ReviewStep({ summary, readOnly, number, onGoToStep, onSubmit }: 
                 <b>{item.title}</b>
                 <span className={styles.detail}>{item.detail}</span>
               </div>
-              <button type="button" className={styles.view} onClick={() => onGoToStep(item.id)}>
+              <button
+                type="button"
+                className={styles.view}
+                aria-label={`Ver el paso «${item.title}»`}
+                onClick={() => onGoToStep(item.id)}
+              >
                 Ver
-                <span className="sr-only">{`: ${item.title}`}</span>
               </button>
             </li>
           ))}

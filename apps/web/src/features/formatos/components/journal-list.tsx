@@ -32,13 +32,13 @@ function JournalCard({ journal }: { journal: FieldJournalSummary }) {
       ]}
       actions={
         <ButtonLink
+          context={`diario de campo de ${title}`}
           href={`/docente/formatos/diario/${journal.id}`}
           variant="outline"
           size="sm"
           className={styles.stretched}
         >
           Abrir
-          <span className="sr-only">{`: ${title}`}</span>
         </ButtonLink>
       }
     />

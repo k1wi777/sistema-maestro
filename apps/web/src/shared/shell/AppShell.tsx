@@ -74,7 +74,7 @@ export function AppShell({ view, children }: AppShellProps) {
             className={styles.toggle}
             aria-expanded={open}
             aria-controls={panelId}
-            aria-label="Cuenta y opciones"
+            aria-label={`${initialsOf(state.user.fullName)}, cuenta y opciones`}
             onClick={() => setOpenAt(open ? null : pathname)}
           >
             <span aria-hidden="true">{initialsOf(state.user.fullName)}</span>

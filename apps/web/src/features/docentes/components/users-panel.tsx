@@ -137,13 +137,21 @@ export function UsersPanel({ onChanged }: { onChanged: () => void }) {
       header: 'Acciones',
       render: (user) => (
         <span className={styles.actions}>
-          <Button variant="outline" size="sm" onClick={() => setEditing({ kind: 'form', user })}>
+          <Button
+            context={`usuario ${user.fullName}`}
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing({ kind: 'form', user })}
+          >
             Editar
-            <span className="sr-only">{`: ${user.fullName}`}</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setEditing({ kind: 'status', user })}>
+          <Button
+            context={`usuario ${user.fullName}`}
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing({ kind: 'status', user })}
+          >
             {user.status === UserStatus.Active ? 'Desactivar' : 'Activar'}
-            <span className="sr-only">{`: ${user.fullName}`}</span>
           </Button>
         </span>
       ),

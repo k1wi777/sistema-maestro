@@ -192,8 +192,9 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
   }
 
   const title = `Anotación de ${note.studentFirstName}`;
+  // En solo lectura el estado ya lo dice la insignia del encabezado: la barra no lo repite.
   const saveText = !editable
-    ? info.label
+    ? null
     : editor.savedAt
       ? `Guardado · ${formatTime(editor.savedAt)}`
       : 'Guarda la anotación para conservar los cambios';
@@ -247,9 +248,11 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
           <ActionBar
             className={styles.actionBar}
             status={
-              <span aria-live="polite" className={styles.saveStatus}>
-                {saveText}
-              </span>
+              saveText ? (
+                <span aria-live="polite" className={styles.saveStatus}>
+                  {saveText}
+                </span>
+              ) : undefined
             }
           >
             {canVoid(note.status) ? (

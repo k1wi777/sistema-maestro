@@ -34,6 +34,8 @@ test.describe('Formación: Desafío GNS y certificado', () => {
     await expect(page.getByRole('heading', { level: 1, name: MODULE_TITLE })).toBeVisible();
 
     await playChallengeToTheEnd(page, MODULE_NUMBER);
+    // El panel final reemplaza a la pregunta: el foco queda en su acción, no en el cuerpo (R10).
+    await expect(page.getByRole('button', { name: 'Intentar de nuevo' })).toBeFocused();
 
     await expect(page.getByRole('heading', { name: '¡Aprobaste el Desafío GNS!' })).toBeVisible();
     await expect(page.getByText('¡Terminaste este módulo!')).toBeVisible();

@@ -266,13 +266,13 @@ export function DigitalStep({ plan, readOnly, number, onAdd, onRemove }: Digital
                     <span className={styles.moment}>{momentLabel(resource.moment)}</span>
                     {readOnly ? null : (
                       <Button
+                        context={`recurso «${label}»`}
                         variant="void"
                         size="sm"
                         disabled={busy}
                         onClick={() => void handleRemove(resource.id)}
                       >
                         Quitar
-                        <span className="sr-only">{`: ${label}`}</span>
                       </Button>
                     )}
                   </li>

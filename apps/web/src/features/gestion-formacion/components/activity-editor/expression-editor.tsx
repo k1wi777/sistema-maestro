@@ -176,13 +176,13 @@ export function ExpressionEditor({
               <div className={styles.summaryRow}>
                 <p className={styles.label}>{`Término ${index + 1}`}</p>
                 <Button
+                  context={`${index + 1} de ${name}`}
                   variant="outline"
                   size="sm"
                   disabled={disabled || !canRemoveTerm(node)}
                   onClick={() => onChange(removeTerm(node, index))}
                 >
                   Quitar término
-                  <span className="sr-only">{` ${index + 1} de ${name}`}</span>
                 </Button>
               </div>
               {child(index, `término ${index + 1}`)}
@@ -190,6 +190,7 @@ export function ExpressionEditor({
           ))}
           <div className={styles.actions}>
             <Button
+              context={`a ${name}`}
               variant="outline"
               size="sm"
               startIcon="mas"
@@ -197,7 +198,6 @@ export function ExpressionEditor({
               onClick={() => onChange(addTerm(node))}
             >
               Agregar término
-              <span className="sr-only">{` a ${name}`}</span>
             </Button>
           </div>
         </>
@@ -230,13 +230,13 @@ export function ExpressionEditor({
                   }
                 />
                 <Button
+                  context={`${index + 1} de ${name}`}
                   variant="outline"
                   size="sm"
                   disabled={disabled || !canRemoveTerm(node)}
                   onClick={() => onChange(removeTerm(node, index))}
                 >
                   Quitar tramo
-                  <span className="sr-only">{` ${index + 1} de ${name}`}</span>
                 </Button>
               </div>
               {child(index, `valor del tramo ${index + 1}`)}
@@ -248,6 +248,7 @@ export function ExpressionEditor({
           </div>
           <div className={styles.actions}>
             <Button
+              context={`a ${name}`}
               variant="outline"
               size="sm"
               startIcon="mas"
@@ -255,7 +256,6 @@ export function ExpressionEditor({
               onClick={() => onChange(addTerm(node))}
             >
               Agregar tramo
-              <span className="sr-only">{` a ${name}`}</span>
             </Button>
           </div>
         </>

@@ -62,15 +62,16 @@ export function ReviewBlock({ block, plan, review }: ReviewBlockProps) {
         {canDecide && !editing ? (
           <div className={styles.actions}>
             <Button
+              context={`el bloque «${block.label}»`}
               variant="outline"
               size="sm"
               startIcon="lapiz"
               onClick={() => review.edit(block.key)}
             >
               Ajustar
-              <span className="sr-only">{`: ${block.label}`}</span>
             </Button>
             <Button
+              context={`el bloque «${block.label}»`}
               variant="outline"
               size="sm"
               startIcon="comentario"
@@ -78,7 +79,6 @@ export function ReviewBlock({ block, plan, review }: ReviewBlockProps) {
               onClick={() => setObserving((open) => !open)}
             >
               Observar
-              <span className="sr-only">{`: ${block.label}`}</span>
             </Button>
           </div>
         ) : null}
@@ -100,9 +100,13 @@ export function ReviewBlock({ block, plan, review }: ReviewBlockProps) {
               <span className={styles.previousLabel}>Texto anterior</span>
               <p className={styles.previousValue}>{original}</p>
               {canDecide ? (
-                <Button variant="outline" size="sm" onClick={() => review.removeAdjustment(block)}>
+                <Button
+                  context={`del bloque «${block.label}»`}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => review.removeAdjustment(block)}
+                >
                   Quitar ajuste
-                  <span className="sr-only">{`: ${block.label}`}</span>
                 </Button>
               ) : null}
             </div>
@@ -150,9 +154,13 @@ export function ReviewBlock({ block, plan, review }: ReviewBlockProps) {
         <Observation title="Tu observación">
           <p className={styles.noteText}>{observation}</p>
           {canDecide ? (
-            <Button variant="outline" size="sm" onClick={() => setObserving(true)}>
+            <Button
+              context={`del bloque «${block.label}»`}
+              variant="outline"
+              size="sm"
+              onClick={() => setObserving(true)}
+            >
               Editar observación
-              <span className="sr-only">{`: ${block.label}`}</span>
             </Button>
           ) : null}
         </Observation>

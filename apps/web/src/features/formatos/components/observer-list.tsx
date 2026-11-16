@@ -27,6 +27,7 @@ function NoteCard({ note }: { note: ObserverNote }) {
       meta={[`${note.grade.name} · ${formatDayWithYear(note.date)}`, type.label]}
       actions={
         <ButtonLink
+          context={`anotación de ${note.studentFirstName}`}
           href={`/docente/formatos/observador/${note.id}`}
           variant="outline"
           size="sm"
@@ -35,7 +36,6 @@ function NoteCard({ note }: { note: ObserverNote }) {
           {note.status === RecordStatus.Draft || note.status === RecordStatus.ChangesRequested
             ? 'Continuar'
             : 'Ver'}
-          <span className="sr-only">{`: anotación de ${note.studentFirstName}`}</span>
         </ButtonLink>
       }
     >

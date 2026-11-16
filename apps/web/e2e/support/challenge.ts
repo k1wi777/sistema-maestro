@@ -16,12 +16,15 @@ export async function playChallengeToTheEnd(page: Page, moduleNumber: string): P
   await game.getByRole('button', { name: 'Jugar' }).click();
 
   for (let position = 1; position <= questions.length; position += 1) {
-    await expect(game.getByText(`${position} / ${questions.length}`)).toBeVisible();
+    // La pregunta en pantalla es un grupo con su enunciado como nombre y el avance «Pregunta N de M».
+    await expect(
+      game.getByText(`Pregunta ${position} de ${questions.length}`, { exact: true }),
+    ).toBeAttached();
     let current: (typeof questions)[number] | undefined;
     await expect
       .poll(async () => {
         for (const question of questions) {
-          if (await game.getByText(question.prompt, { exact: true }).isVisible()) {
+          if (await game.getByRole('group', { name: question.prompt, exact: true }).isVisible()) {
             current = question;
             return true;
           }

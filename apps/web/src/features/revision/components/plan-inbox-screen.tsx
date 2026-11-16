@@ -87,12 +87,12 @@ function planColumns(filters: PlanFilters): DataTableColumn<LessonPlan>[] {
       header: 'Acción',
       render: (plan) => (
         <ButtonLink
+          context={`planeación de ${plan.teacher.fullName}, ${plan.grade.name} ${plan.area.name}`}
           href={`${REVIEW_PATH}/${plan.id}${query ? `?${query}` : ''}`}
           variant={plan.status === RecordStatus.Submitted ? 'primary' : 'outline'}
           size="sm"
         >
           {plan.status === RecordStatus.Submitted ? 'Revisar' : 'Abrir'}
-          <span className="sr-only">{`: ${plan.area.name} de ${plan.teacher.fullName}`}</span>
         </ButtonLink>
       ),
     },

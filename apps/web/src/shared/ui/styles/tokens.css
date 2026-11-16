@@ -55,7 +55,7 @@
   --game-blue-bottom: #1d4fb8;
   --game-yellow-top: #f7c52b;
   --game-yellow-bottom: #e9ae00;
-  --game-green-top: #2a9160;
+  --game-green-top: #258657;
   --game-green-bottom: #1f7a4d;
   --game-ok-top: #1e7a4c;
   --game-ok-bottom: #17643e;
@@ -64,6 +64,7 @@
   --game-truth-top: #24804f;
   --game-truth-bottom: #1b6a41;
   --game-seal: #1e7a4c;
+  --shadow-step: rgb(16 24 40 / 0.45);
   --game-seal-halo: rgb(95 192 142 / 0.45);
   --game-black-18: rgb(0 0 0 / 0.18);
   --game-black-2: rgb(0 0 0 / 0.2);

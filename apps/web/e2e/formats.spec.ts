@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { statusBadge } from './support/status';
 import { ACTORS, runMarker } from './support/actors';
 import { openAs, type ActorPage } from './support/browser';
 
@@ -36,7 +37,7 @@ test.describe('Formatos: diario de campo y observador', () => {
       .getByRole('dialog', { name: 'Enviar a coordinación' })
       .getByRole('button', { name: 'Enviar a coordinación' })
       .click();
-    await expect(page.getByText('Enviada · pendiente de revisión').first()).toBeVisible();
+    await expect(statusBadge(page, 'Enviada · pendiente de revisión')).toBeVisible();
   }
 
   test('el docente registra y envía la hoja del diario de campo', async () => {
@@ -104,7 +105,7 @@ test.describe('Formatos: diario de campo y observador', () => {
     await expect(page.getByText(POSITIVE)).toBeVisible();
     await expect(page.getByText(IMPROVE)).toBeVisible();
     await page.getByRole('button', { name: 'Marcar revisada' }).click();
-    await expect(page.getByText('Revisada', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(page, 'Revisada')).toBeVisible();
     await expect(page.getByRole('region', { name: 'Historial de revisión' })).toContainText(
       ACTORS.formatsCoordinator.name,
     );
@@ -120,16 +121,16 @@ test.describe('Formatos: diario de campo y observador', () => {
 
     await expect(page.getByText(NOTE)).toBeVisible();
     await page.getByRole('button', { name: 'Marcar revisada' }).click();
-    await expect(page.getByText('Revisada', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(page, 'Revisada')).toBeVisible();
   });
 
   test('el docente ve ambos registros revisados', async () => {
     const { page } = teacher;
     await page.goto(journalPath);
-    await expect(page.getByText('Revisada', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(page, 'Revisada')).toBeVisible();
     await expect(page.getByText(ACTORS.formatsCoordinator.name).first()).toBeVisible();
 
     await page.goto(notePath);
-    await expect(page.getByText('Revisada', { exact: true }).first()).toBeVisible();
+    await expect(statusBadge(page, 'Revisada')).toBeVisible();
   });
 });

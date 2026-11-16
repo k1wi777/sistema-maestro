@@ -197,13 +197,13 @@ function Body({
                         </span>
                       ) : (
                         <Button
+                          context={`la asignación de ${area.name} en ${grade.name}`}
                           variant="outline"
                           size="sm"
                           disabled={busy}
                           onClick={() => setConfirming(area.assignmentId)}
                         >
                           Retirar
-                          <span className="sr-only">{`: ${area.name} de ${grade.name}`}</span>
                         </Button>
                       )}
                     </li>
