@@ -32,6 +32,7 @@ describe('observer note form', () => {
         type: 'tipo_ii',
         description: 'Empujó a un compañero en la fila.',
         studentVersion: null,
+        pedagogicalStrategies: null,
         actions: null,
         familyInformed: false,
         followUp: null,
@@ -84,6 +85,26 @@ describe('observer note form', () => {
     const note = makeNote({ actions: 'Diálogo.' });
     const values = { ...valuesFromNote(note), actions: ' ', gradeId: 'otro' };
     expect(buildNoteChanges(values, note)).toEqual({ ok: true, data: { actions: null } });
+  });
+
+  it('changes and empties the pedagogical strategies with a partial patch', () => {
+    const note = makeNote({ pedagogicalStrategies: 'Diálogo.' });
+    const changed = { ...valuesFromNote(note), pedagogicalStrategies: 'Trabajo en pareja.' };
+    expect(buildNoteChanges(changed, note)).toEqual({
+      ok: true,
+      data: { pedagogicalStrategies: 'Trabajo en pareja.' },
+    });
+    const emptied = { ...valuesFromNote(note), pedagogicalStrategies: ' ' };
+    expect(buildNoteChanges(emptied, note)).toEqual({
+      ok: true,
+      data: { pedagogicalStrategies: null },
+    });
+  });
+
+  it('shows the strategies error next to the block when it is too long', () => {
+    const result = buildCreateNote({ ...filled(), pedagogicalStrategies: 'a'.repeat(1001) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.pedagogicalStrategies).toBeDefined();
   });
 
   it('rejects an invalid first name on edit without echoing it', () => {

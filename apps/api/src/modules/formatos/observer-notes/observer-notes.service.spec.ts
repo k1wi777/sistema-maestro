@@ -39,6 +39,7 @@ function setup(status: RecordStatus = RecordStatus.Draft) {
     type: ObserverNoteType.TypeI,
     description: 'Texto original',
     studentVersion: null,
+    pedagogicalStrategies: null,
     actions: null,
     familyInformed: false,
     followUp: null,

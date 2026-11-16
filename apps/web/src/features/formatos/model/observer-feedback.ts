@@ -5,9 +5,10 @@ const COLUMN_LABELS: Record<string, string> = {
   estudiante_nombre: 'Estudiante',
   fecha: 'Fecha',
   tipo: 'Tipo de anotación',
-  descripcion: 'Descripción de la situación',
+  descripcion: 'Comportamiento específico',
   version_estudiante: 'Descargos o versión del estudiante',
-  acciones: 'Acciones pedagógicas y compromisos',
+  estrategias_pedagogicas: 'Estrategias pedagógicas',
+  acciones: 'Resultados y compromisos',
   familia_informada: 'Se informó a la familia',
   seguimiento: 'Seguimiento',
 };

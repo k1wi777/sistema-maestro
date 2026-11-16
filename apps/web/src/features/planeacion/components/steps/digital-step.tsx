@@ -49,6 +49,11 @@ const TOOL_LINKS: readonly ToolLink[] = [
     description: 'Ideas visuales para rincones y actividades.',
     href: 'https://www.pinterest.com/',
   },
+  {
+    name: 'YouTube',
+    description: 'Videos y canciones para presentar o reforzar un tema.',
+    href: 'https://www.youtube.com/',
+  },
 ];
 
 const TOOL_OPTIONS = Object.values(DigitalTool).map((tool) => ({ value: tool, label: tool }));

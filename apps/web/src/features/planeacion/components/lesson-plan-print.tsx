@@ -81,7 +81,7 @@ export function LessonPlanPrint({ plan }: { plan: LessonPlan }) {
         />
       ))}
       <Section title="Recursos y materiales" text={plan.resources} />
-      <Section title="Ajustes razonables" text={plan.reasonableAdjustments} />
+      <Section title="D.U.A" text={plan.reasonableAdjustments} />
 
       <section className={styles.section}>
         <h2 className={styles.heading}>Recursos digitales</h2>

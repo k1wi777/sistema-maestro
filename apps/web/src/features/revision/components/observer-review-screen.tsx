@@ -91,13 +91,16 @@ function NoteReview({
               <Fact label="Fecha">{formatDayWithYear(note.date)}</Fact>
               <Fact label="Tipo de anotación">{type.label}</Fact>
               <Fact label="Se informó a la familia">{note.familyInformed ? 'Sí' : 'No'}</Fact>
-              <Fact label="Descripción de la situación" wide>
+              <Fact label="Comportamiento específico" wide>
                 {note.description}
               </Fact>
               <Fact label="Descargos o versión del estudiante" wide>
                 {note.studentVersion}
               </Fact>
-              <Fact label="Acciones pedagógicas y compromisos" wide>
+              <Fact label="Estrategias pedagógicas" wide>
+                {note.pedagogicalStrategies}
+              </Fact>
+              <Fact label="Resultados y compromisos" wide>
                 {note.actions}
               </Fact>
               <Fact label="Seguimiento" wide>

@@ -62,6 +62,7 @@ describe('observador del estudiante (BE-63)', () => {
     it('crea en borrador con el docente de la sesión sobre un grado sin asignación y lo deja en la bitácora', async () => {
       const created = await note({
         studentVersion: 'Dice que fue sin querer',
+        pedagogicalStrategies: 'Diálogo y trabajo en pareja',
         actions: 'Hablar con la familia',
         familyInformed: true,
         followUp: 'Revisar en una semana',
@@ -74,6 +75,7 @@ describe('observador del estudiante (BE-63)', () => {
         studentFirstName: 'Sofía',
         type: 'positiva',
         familyInformed: true,
+        pedagogicalStrategies: 'Diálogo y trabajo en pareja',
         followUp: 'Revisar en una semana',
       });
       const rows = await auditRows(app, created.id);
@@ -133,6 +135,10 @@ describe('observador del estudiante (BE-63)', () => {
       await post(teacher, '/observer-notes')
         .send({ ...base, description: 'x'.repeat(1501) })
         .expect(400);
+      const tooLong = await post(teacher, '/observer-notes')
+        .send({ ...base, pedagogicalStrategies: 'x'.repeat(1001) })
+        .expect(400);
+      expect(fieldsOf(tooLong.body)).toEqual(['pedagogicalStrategies']);
       await post(teacher, '/observer-notes')
         .send({ ...base, status: 'revisada' })
         .expect(400);

@@ -244,7 +244,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
     return { ok: true, message: `Agregada al Momento ${number}.` };
   }
 
-  /** Guarda lo pendiente y abre el formulario de compartir precargado (nunca con los ajustes razonables). */
+  /** Guarda lo pendiente y abre el formulario de compartir precargado (nunca con el D.U.A). */
   async function handleShare() {
     const outcome = await editor.save();
     if (!outcome.ok) {
@@ -257,7 +257,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
       kind: 'create',
       initial: { ...values, levelId: saved.level.id },
       notes: [
-        'Los ajustes razonables y los recursos digitales no se copian.',
+        'El D.U.A y los recursos digitales no se copian.',
         ...(clipped.length > 0
           ? ['Algunos textos superaban el máximo de una actividad y se recortaron: revísalos.']
           : []),

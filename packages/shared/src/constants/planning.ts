@@ -14,6 +14,7 @@ export const DigitalTool = {
   Kahoot: 'Kahoot',
   ClassDojo: 'ClassDojo',
   Pinterest: 'Pinterest',
+  YouTube: 'YouTube',
   Other: 'Otra',
 } as const;
 export type DigitalTool = (typeof DigitalTool)[keyof typeof DigitalTool];

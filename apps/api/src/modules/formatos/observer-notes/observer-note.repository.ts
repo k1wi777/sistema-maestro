@@ -20,6 +20,7 @@ export interface ObserverNoteContent {
   type?: ObserverNoteType;
   description?: string;
   studentVersion?: string | null;
+  pedagogicalStrategies?: string | null;
   actions?: string | null;
   familyInformed?: boolean;
   followUp?: string | null;
@@ -48,6 +49,7 @@ export type ObserverNoteRecord = {
   type: string;
   description: string;
   studentVersion: string | null;
+  pedagogicalStrategies: string | null;
   actions: string | null;
   familyInformed: boolean;
   followUp: string | null;

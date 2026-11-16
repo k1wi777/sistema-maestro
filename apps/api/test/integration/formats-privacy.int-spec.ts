@@ -190,11 +190,17 @@ describe('privacidad del diario y el observador (BE-6)', () => {
       expect(JSON.stringify(review)).toContain(marker('ajuste'));
     });
 
-    it('el observador: nombre, descripción, versión, acciones y seguimiento quedan como [oculto]', async () => {
+    it('el observador: nombre, descripción, versión, estrategias, acciones y seguimiento quedan como [oculto]', async () => {
       const { gradeId } = await freshGrade(planning, []);
-      const secrets = ['desc', 'version', 'acciones', 'seguimiento', 'editada', 'ajuste'].map(
-        marker,
-      );
+      const secrets = [
+        'desc',
+        'version',
+        'acciones',
+        'seguimiento',
+        'editada',
+        'ajuste',
+        'estrategias',
+      ].map(marker);
       const created = await createNote(app, teacher, {
         gradeId,
         studentFirstName: STUDENT_A,
@@ -202,6 +208,7 @@ describe('privacidad del diario y el observador (BE-6)', () => {
         studentVersion: secrets[1],
         actions: secrets[2],
         followUp: secrets[3],
+        pedagogicalStrategies: secrets[6],
       });
       await patch(teacher, `/observer-notes/${created.id}`)
         .send({ description: secrets[4], studentFirstName: STUDENT_B, type: 'tipo_ii' })
@@ -224,6 +231,7 @@ describe('privacidad del diario y el observador (BE-6)', () => {
         studentFirstName: '[oculto]',
         description: '[oculto]',
         studentVersion: '[oculto]',
+        pedagogicalStrategies: '[oculto]',
         actions: '[oculto]',
         followUp: '[oculto]',
         type: 'positiva',

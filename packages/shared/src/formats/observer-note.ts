@@ -7,6 +7,7 @@ import { createApproveReviewSchema, createReturnReviewSchema } from '../review/r
 import { studentFirstNameSchema } from './student-first-name';
 
 export const OBSERVER_DESCRIPTION_MAX_LENGTH = 1500;
+export const OBSERVER_STRATEGIES_MAX_LENGTH = 1000;
 export const OBSERVER_ACTIONS_MAX_LENGTH = 1000;
 export const OBSERVER_LONG_TEXT_MAX_LENGTH = 800;
 
@@ -26,6 +27,7 @@ export const OBSERVER_NOTE_ADJUSTABLE_FIELDS = {
   type: 'tipo',
   description: 'descripcion',
   studentVersion: 'version_estudiante',
+  pedagogicalStrategies: 'estrategias_pedagogicas',
   actions: 'acciones',
   familyInformed: 'familia_informada',
   followUp: 'seguimiento',
@@ -67,6 +69,7 @@ const contentShape = {
   type: typeSchema.optional(),
   description: descriptionSchema.optional(),
   studentVersion: optionalText(OBSERVER_LONG_TEXT_MAX_LENGTH),
+  pedagogicalStrategies: optionalText(OBSERVER_STRATEGIES_MAX_LENGTH),
   actions: optionalText(OBSERVER_ACTIONS_MAX_LENGTH),
   familyInformed: booleanSchema.optional(),
   followUp: optionalText(OBSERVER_LONG_TEXT_MAX_LENGTH),
@@ -84,6 +87,7 @@ export const observerNoteSchema = z.object({
   type: typeSchema,
   description: z.string(),
   studentVersion: z.string().nullable(),
+  pedagogicalStrategies: z.string().nullable(),
   actions: z.string().nullable(),
   familyInformed: z.boolean(),
   followUp: z.string().nullable(),

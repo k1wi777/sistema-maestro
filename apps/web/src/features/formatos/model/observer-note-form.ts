@@ -22,6 +22,7 @@ export interface NoteFormValues {
   type: ObserverNoteType | '';
   description: string;
   studentVersion: string;
+  pedagogicalStrategies: string;
   actions: string;
   familyInformed: boolean;
   followUp: string;
@@ -37,6 +38,7 @@ export const NOTE_FIELDS: readonly NoteField[] = [
   'type',
   'description',
   'studentVersion',
+  'pedagogicalStrategies',
   'actions',
   'familyInformed',
   'followUp',
@@ -50,6 +52,7 @@ export function emptyNoteValues(date: string): NoteFormValues {
     type: '',
     description: '',
     studentVersion: '',
+    pedagogicalStrategies: '',
     actions: '',
     familyInformed: false,
     followUp: '',
@@ -64,6 +67,7 @@ export function valuesFromNote(note: ObserverNote): NoteFormValues {
     type: note.type,
     description: note.description,
     studentVersion: note.studentVersion ?? '',
+    pedagogicalStrategies: note.pedagogicalStrategies ?? '',
     actions: note.actions ?? '',
     familyInformed: note.familyInformed,
     followUp: note.followUp ?? '',
@@ -93,6 +97,7 @@ export function buildCreateNote(values: NoteFormValues): NoteBuildResult<CreateO
     type: values.type === '' ? undefined : values.type,
     description: values.description,
     studentVersion: values.studentVersion,
+    pedagogicalStrategies: values.pedagogicalStrategies,
     actions: values.actions,
     familyInformed: values.familyInformed,
     followUp: values.followUp,
@@ -128,6 +133,9 @@ export function buildNoteChanges(
   if (values.description.trim() !== before.description) patch.description = values.description;
   if (values.studentVersion.trim() !== before.studentVersion) {
     patch.studentVersion = values.studentVersion;
+  }
+  if (values.pedagogicalStrategies.trim() !== before.pedagogicalStrategies) {
+    patch.pedagogicalStrategies = values.pedagogicalStrategies;
   }
   if (values.actions.trim() !== before.actions) patch.actions = values.actions;
   if (values.familyInformed !== before.familyInformed) {

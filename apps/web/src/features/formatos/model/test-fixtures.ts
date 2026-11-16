@@ -50,6 +50,7 @@ export function makeNote(overrides: Partial<ObserverNote> = {}): ObserverNote {
     type: 'tipo_ii',
     description: 'Empujó a un compañero en la fila.',
     studentVersion: null,
+    pedagogicalStrategies: null,
     actions: null,
     familyInformed: false,
     followUp: null,
