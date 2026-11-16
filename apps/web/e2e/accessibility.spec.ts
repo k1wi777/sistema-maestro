@@ -75,21 +75,29 @@ test.describe('Accesibilidad: vista docente', () => {
     await teacher.context.close();
   });
 
-  test('planeación: lista, planeación en solo lectura y nueva', async () => {
+  test('formatos: hub de tarjetas y PIAR «pronto» sin enlace', async () => {
     const { page } = teacher;
-    await visit(page, '/docente/planeacion', 'docente · planeaciones');
-    await openFirst(page, page.getByRole('link', { name: /^Ver\b/ }), 'docente · planeación');
-    await visit(page, '/docente/planeacion/nueva', 'docente · nueva planeación');
+    await visit(page, '/docente/formatos', 'docente · formatos (hub)');
+    await expect(page.getByRole('heading', { level: 2, name: 'PIAR · Inclusión' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /PIAR/ })).toHaveCount(0);
   });
 
-  test('formatos: ambas pestañas, un diario y una anotación', async () => {
+  test('planeación: lista, planeación en solo lectura y nueva', async () => {
     const { page } = teacher;
-    await visit(page, '/docente/formatos', 'docente · formatos (diario)');
-    await openFirst(page, page.getByRole('link', { name: OPEN_LINK }), 'docente · diario');
+    await visit(page, '/docente/formatos/planeacion', 'docente · planeaciones');
+    await openFirst(page, page.getByRole('link', { name: /^Ver\b/ }), 'docente · planeación');
+    await visit(page, '/docente/formatos/planeacion/nueva', 'docente · nueva planeación');
+  });
 
-    await page.goto('/docente/formatos');
-    await page.getByRole('tab', { name: 'Observador del estudiante' }).click();
-    await audit(page, 'docente · formatos (observador)');
+  test('diario de campo: lista y una hoja', async () => {
+    const { page } = teacher;
+    await visit(page, '/docente/formatos/diario', 'docente · diario de campo (lista)');
+    await openFirst(page, page.getByRole('link', { name: OPEN_LINK }), 'docente · diario');
+  });
+
+  test('observador: lista y una anotación', async () => {
+    const { page } = teacher;
+    await visit(page, '/docente/formatos/observador', 'docente · observador (lista)');
     await openFirst(page, page.getByRole('link', { name: OPEN_LINK }), 'docente · anotación');
   });
 
@@ -136,9 +144,15 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await coordinator.context.close();
   });
 
+  test('formatos: hub de tarjetas con pendientes', async () => {
+    const { page } = coordinator;
+    await visit(page, '/coordinacion/formatos', 'coordinación · formatos (hub)');
+    await expect(page.getByRole('link', { name: /^Planeaciones\b.*pendiente/ })).toBeVisible();
+  });
+
   test('planeaciones: bandeja, una planeación y el diálogo de devolución', async () => {
     const { page } = coordinator;
-    await visit(page, '/coordinacion/planeaciones', 'coordinación · planeaciones');
+    await visit(page, '/coordinacion/formatos/planeaciones', 'coordinación · planeaciones');
     await openFirst(
       page,
       page.getByRole('link', { name: /^Revisar\b/ }),
@@ -156,14 +170,12 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await expect(dialog).toBeHidden();
   });
 
-  test('formatos: ambas pestañas y un diario', async () => {
+  test('diarios de campo y observadores: bandejas y un diario', async () => {
     const { page } = coordinator;
-    await visit(page, '/coordinacion/formatos', 'coordinación · formatos (diario)');
+    await visit(page, '/coordinacion/formatos/diario', 'coordinación · diarios de campo');
     await openFirst(page, page.getByRole('link', { name: /^Revisar\b/ }), 'coordinación · diario');
 
-    await page.goto('/coordinacion/formatos');
-    await page.getByRole('tab', { name: 'Observador del estudiante' }).click();
-    await audit(page, 'coordinación · formatos (observador)');
+    await visit(page, '/coordinacion/formatos/observador', 'coordinación · observadores');
   });
 
   test('vista previa de un módulo con video de YouTube incrustado', async () => {

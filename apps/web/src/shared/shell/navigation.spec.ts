@@ -16,6 +16,10 @@ describe('isActiveSection', () => {
     ['/docente/formatos', '/docente/formacion', false],
     ['/coordinacion/docentes', '/coordinacion/docente', false],
     ['/docente', '/docente/formacion', false],
+    ['/docente/formatos/planeacion/abc', '/docente/formatos', true],
+    ['/docente/formatos/diario', '/docente/formatos', true],
+    ['/coordinacion/formatos/planeaciones/abc', '/coordinacion/formatos', true],
+    ['/coordinacion/formatos', '/coordinacion/formatos/planeaciones', false],
   ])('%s frente a %s', (pathname, href, expected) => {
     expect(isActiveSection(pathname, href)).toBe(expected);
   });
@@ -27,10 +31,8 @@ describe('menú de las vistas', () => {
   it('declara las secciones del tablero', () => {
     expect(hrefs).toEqual([
       '/docente/formacion',
-      '/docente/planeacion',
       '/docente/formatos',
       '/docente/asistente',
-      '/coordinacion/planeaciones',
       '/coordinacion/formatos',
       '/coordinacion/bitacora',
       '/coordinacion/docentes',
@@ -44,15 +46,19 @@ describe('menú de las vistas', () => {
     expect(existsSync(pageFile(href))).toBe(true);
   });
 
-  it('PIAR está marcado «pronto» y sin enlace', () => {
-    const piar = VIEWS['/docente'].groups[0]?.sections.find((s) => s.label.startsWith('PIAR'));
-    expect(piar).toMatchObject({ soon: true });
-    expect(piar?.href).toBeUndefined();
+  it('PIAR, Planeación GNS y Planeaciones ya no están en el menú: viven dentro de Formatos', () => {
+    const labels = Object.values(VIEWS).flatMap((view) =>
+      view.groups.flatMap((group) => group.sections.map((section) => section.label)),
+    );
+    expect(labels).not.toContain('PIAR · Inclusión');
+    expect(labels).not.toContain('Planeación GNS');
+    expect(labels).not.toContain('Planeaciones');
+    expect(labels).toContain('Formatos');
   });
 
   it('cada vista empieza en su primera sección', () => {
     expect(firstSectionHref(VIEWS['/docente'])).toBe('/docente/formacion');
-    expect(firstSectionHref(VIEWS['/coordinacion'])).toBe('/coordinacion/planeaciones');
+    expect(firstSectionHref(VIEWS['/coordinacion'])).toBe('/coordinacion/formatos');
   });
 
   it('busca la vista de una sección y falla con una ruta desconocida', () => {

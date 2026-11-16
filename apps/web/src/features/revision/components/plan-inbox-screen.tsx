@@ -31,12 +31,11 @@ import {
   planFiltersToQuery,
   type PlanFilters,
 } from '../model/plan-filters';
+import { FORMATS_HUB_PATH, PLAN_INBOX_PATH } from '../model/paths';
 import { shortStatusLabel } from '../model/status-label';
 import { CompliancePanel } from './compliance-panel';
 import { InboxIndicators } from './inbox-indicators';
 import styles from './plan-inbox-screen.module.css';
-
-const REVIEW_PATH = '/coordinacion/planeaciones';
 
 /** «P1» a la vista; los lectores de pantalla oyen «Periodo 1». */
 function PeriodCell({ number }: { number: number }) {
@@ -88,7 +87,7 @@ function planColumns(filters: PlanFilters): DataTableColumn<LessonPlan>[] {
       render: (plan) => (
         <ButtonLink
           context={`planeación de ${plan.teacher.fullName}, ${plan.grade.name} ${plan.area.name}`}
-          href={`${REVIEW_PATH}/${plan.id}${query ? `?${query}` : ''}`}
+          href={`${PLAN_INBOX_PATH}/${plan.id}${query ? `?${query}` : ''}`}
           variant={plan.status === RecordStatus.Submitted ? 'primary' : 'outline'}
           size="sm"
         >
@@ -153,6 +152,11 @@ export function PlanInboxScreen() {
         context="Coordinación académica"
         title="Planeaciones"
         description="Revisa, ajusta, aprueba o devuelve las planeaciones de los docentes."
+        actions={
+          <ButtonLink href={FORMATS_HUB_PATH} variant="outline" startIcon="volver">
+            Formatos
+          </ButtonLink>
+        }
       />
       <div className={styles.root}>
         {noPending ? (

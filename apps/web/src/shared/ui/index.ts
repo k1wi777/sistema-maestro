@@ -14,6 +14,7 @@ export { Card, type CardProps } from './components/Card';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { DataTable, type DataTableColumn, type DataTableProps } from './components/DataTable';
 export { Dialog, type DialogProps } from './components/Dialog';
+export { FormatCard, type FormatCardProps } from './components/FormatCard';
 export { Field, type FieldControlProps, type FieldProps } from './components/Field';
 export { IconPicker, type IconPickerProps } from './components/IconPicker';
 export { Notice, type NoticeProps, type NoticeTone } from './components/Notice';

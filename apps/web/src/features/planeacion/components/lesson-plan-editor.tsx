@@ -55,6 +55,7 @@ import { ResourcesStep } from './steps/resources-step';
 import { ReviewStep } from './steps/review-step';
 import { SubmitDialog } from './submit-dialog';
 import { STATUS_INFO, VoidRecordDialog, canVoid, printWithTitle } from '@/shared/records';
+import { PLANNING_PATH } from '../model/paths';
 
 const CONFLICT_MESSAGE =
   'La planeación cambió de estado en el servidor, así que se recargó con su estado actual.';
@@ -81,7 +82,7 @@ function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) 
     return (
       <Notice tone="warning" title="No encontramos esta planeación">
         Puede que se haya anulado o que no sea tuya.{' '}
-        <ButtonLink href="/docente/planeacion" variant="outline" size="sm">
+        <ButtonLink href={PLANNING_PATH} variant="outline" size="sm">
           Ir a Mis planeaciones
         </ButtonLink>
       </Notice>
@@ -395,7 +396,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
     <PageContainer>
       <div className={styles.screen}>
         <div className={styles.back}>
-          <ButtonLink href="/docente/planeacion" variant="outline" size="sm" startIcon="volver">
+          <ButtonLink href={PLANNING_PATH} variant="outline" size="sm" startIcon="volver">
             Mis planeaciones
           </ButtonLink>
         </div>
@@ -577,7 +578,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
   );
 }
 
-/** Editor por pasos de una planeación (`/docente/planeacion/[id]`). */
+/** Editor por pasos de una planeación (`/docente/formatos/planeacion/[id]`). */
 export function LessonPlanEditor({ id }: { id: string }) {
   const remote = useLessonPlan(id);
   const [notice, setNotice] = useState<string | null>(null);

@@ -44,6 +44,9 @@ test.describe('Formatos: diario de campo y observador', () => {
     const { page } = teacher;
     await page.goto('/docente');
     await page.getByRole('link', { name: 'Formatos' }).first().click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Formatos' })).toBeVisible();
+    await page.getByRole('link', { name: /^Diario de campo \(F-PA-05\)/ }).click();
+    await expect(page).toHaveURL(/\/docente\/formatos\/diario$/);
     await page.getByRole('button', { name: 'Nueva hoja de diario' }).click();
     const dialog = page.getByRole('dialog', { name: 'Nueva hoja de diario' });
     await dialog.getByLabel('Grado').selectOption({ label: '7°' });
@@ -75,7 +78,8 @@ test.describe('Formatos: diario de campo y observador', () => {
   test('el docente registra y envía una anotación del observador', async () => {
     const { page } = teacher;
     await page.goto('/docente/formatos');
-    await page.getByRole('tab', { name: 'Observador del estudiante' }).click();
+    await page.getByRole('link', { name: /^Observador del estudiante/ }).click();
+    await expect(page).toHaveURL(/\/docente\/formatos\/observador$/);
     await page.getByRole('link', { name: 'Nueva anotación' }).click();
 
     await page.getByLabel('Grado').selectOption({ label: '7° · Bachillerato' });
@@ -97,6 +101,10 @@ test.describe('Formatos: diario de campo y observador', () => {
     const { page } = coordinator;
     await page.goto('/coordinacion');
     await page.getByRole('link', { name: 'Formatos' }).first().click();
+    // El hub muestra los pendientes de cada formato; la hoja enviada cuenta en los diarios.
+    await expect(page.getByRole('link', { name: /^Diarios de campo\b.*pendiente/ })).toBeVisible();
+    await page.getByRole('link', { name: /^Diarios de campo\b/ }).click();
+    await expect(page).toHaveURL(/\/coordinacion\/formatos\/diario$/);
     const row = page.getByRole('row').filter({ hasText: 'Andrés Peñaverde' }).filter({
       hasText: 'Periodo 2',
     });
@@ -115,7 +123,8 @@ test.describe('Formatos: diario de campo y observador', () => {
   test('coordinación revisa y aprueba la anotación del observador', async () => {
     const { page } = coordinator;
     await page.goto('/coordinacion/formatos');
-    await page.getByRole('tab', { name: /Observador del estudiante/ }).click();
+    await page.getByRole('link', { name: /^Observadores\b/ }).click();
+    await expect(page).toHaveURL(/\/coordinacion\/formatos\/observador$/);
     const row = page.getByRole('row').filter({ hasText: FIRST_NAMES.note });
     await expect(row).toContainText('Pendiente de revisión');
     await row.getByRole('link', { name: /Revisar/ }).click();
@@ -133,5 +142,59 @@ test.describe('Formatos: diario de campo y observador', () => {
 
     await page.goto(notePath);
     await expect(statusBadge(page, 'Revisada')).toBeVisible();
+  });
+
+  test('las rutas antiguas redirigen a las nuevas conservando la consulta', async () => {
+    const cases: [ActorPage, string, RegExp][] = [
+      [
+        teacher,
+        '/docente/formatos?pestana=observador&estado=borrador',
+        /\/docente\/formatos\/observador\?.*estado=borrador/,
+      ],
+      [
+        teacher,
+        '/docente/formatos?estado=enviada',
+        /\/docente\/formatos\/diario\?.*estado=enviada/,
+      ],
+      [
+        teacher,
+        '/docente/planeacion?pestana=repositorio',
+        /\/docente\/formatos\/planeacion\?.*pestana=repositorio/,
+      ],
+      [
+        teacher,
+        '/docente/planeacion/nueva?actividad=abc',
+        /\/docente\/formatos\/planeacion\/nueva\?.*actividad=abc/,
+      ],
+      [
+        teacher,
+        '/docente/planeacion/abc?paso=desempeno',
+        /\/docente\/formatos\/planeacion\/abc\?.*paso=desempeno/,
+      ],
+      [
+        coordinator,
+        '/coordinacion/formatos?tipo=observador&estado=enviada',
+        /\/coordinacion\/formatos\/observador\?.*estado=enviada/,
+      ],
+      [
+        coordinator,
+        '/coordinacion/formatos?tipo=diario',
+        /\/coordinacion\/formatos\/diario\?.*tipo=diario/,
+      ],
+      [
+        coordinator,
+        '/coordinacion/planeaciones?status=enviada',
+        /\/coordinacion\/formatos\/planeaciones\?.*status=enviada/,
+      ],
+      [
+        coordinator,
+        '/coordinacion/planeaciones/abc?status=enviada',
+        /\/coordinacion\/formatos\/planeaciones\/abc\?.*status=enviada/,
+      ],
+    ];
+    for (const [actor, from, expected] of cases) {
+      await actor.page.goto(from);
+      await expect(actor.page).toHaveURL(expected);
+    }
   });
 });

@@ -7,11 +7,13 @@ test.describe('Protección por rol', () => {
     const context = await browser.newContext({ storageState: ACTORS.signInTeacher.sessionFile });
     try {
       const page = await context.newPage();
-      await page.goto('/coordinacion/planeaciones');
-
-      await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-        'Esta sección no está disponible para tu rol',
-      );
+      // La ruta nueva y la antigua (que se redirige a la nueva) dan el mismo aviso de rol.
+      for (const path of ['/coordinacion/formatos/planeaciones', '/coordinacion/planeaciones']) {
+        await page.goto(path);
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+          'Esta sección no está disponible para tu rol',
+        );
+      }
       await expect(page.getByText('No tienes acceso a esta sección')).toBeVisible();
       // Ni el encabezado, ni la bandeja, ni el menú de coordinación.
       await expect(page.getByRole('heading', { name: 'Planeaciones' })).toHaveCount(0);

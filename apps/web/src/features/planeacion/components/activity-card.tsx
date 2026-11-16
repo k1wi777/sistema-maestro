@@ -5,6 +5,7 @@ import { Button, ButtonLink, Icon, RecordCard, StatusBadge } from '@/shared/ui';
 
 import { ACTIVITY_TYPE_LABELS } from '../model/activity-types';
 import styles from './activity-card.module.css';
+import { newPlanPath } from '../model/paths';
 
 interface ActivityCardProps {
   activity: SharedActivity;
@@ -72,7 +73,7 @@ export function ActivityCard({
             </Button>
             <ButtonLink
               context={`(actividad «${activity.title}»)`}
-              href={`/docente/planeacion/nueva?actividad=${activity.id}`}
+              href={newPlanPath(activity.id)}
               variant="secondary"
               size="sm"
             >

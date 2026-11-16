@@ -10,6 +10,7 @@ import { ButtonLink, RecordCard, StatusBadge } from '@/shared/ui';
 
 import { listObserverNotes } from '../api/observer-notes';
 import { OBSERVER_TYPE_INFO } from '../model/labels';
+import { NEW_OBSERVER_NOTE_PATH, OBSERVER_LIST_PATH } from '../model/paths';
 import { RecordListView, statusFromUrl } from './record-list-view';
 import styles from './formats-list.module.css';
 
@@ -28,7 +29,7 @@ function NoteCard({ note }: { note: ObserverNote }) {
       actions={
         <ButtonLink
           context={`anotación de ${note.studentFirstName}`}
-          href={`/docente/formatos/observador/${note.id}`}
+          href={`${OBSERVER_LIST_PATH}/${note.id}`}
           variant="outline"
           size="sm"
           className={styles.stretched}
@@ -69,7 +70,7 @@ export function ObserverList() {
       onStatusChange={(value) => update({ estado: value })}
       intro="Registra reconocimientos, avances y situaciones académicas o de convivencia de tus estudiantes. Coordinación las revisa y deja sus observaciones."
       action={
-        <ButtonLink href="/docente/formatos/observador/nueva" startIcon="mas">
+        <ButtonLink href={NEW_OBSERVER_NOTE_PATH} startIcon="mas">
           Nueva anotación
         </ButtonLink>
       }

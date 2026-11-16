@@ -10,6 +10,7 @@ import { useSession } from '@/shared/session';
 import { Button, ButtonLink, RecordCard, StatusBadge } from '@/shared/ui';
 
 import { listFieldJournals } from '../api/field-journals';
+import { JOURNAL_LIST_PATH } from '../model/paths';
 import { NewJournalDialog } from './new-journal-dialog';
 import { RecordListView, statusFromUrl } from './record-list-view';
 import styles from './formats-list.module.css';
@@ -33,7 +34,7 @@ function JournalCard({ journal }: { journal: FieldJournalSummary }) {
       actions={
         <ButtonLink
           context={`diario de campo de ${title}`}
-          href={`/docente/formatos/diario/${journal.id}`}
+          href={`${JOURNAL_LIST_PATH}/${journal.id}`}
           variant="outline"
           size="sm"
           className={styles.stretched}

@@ -35,6 +35,7 @@ import { activityLinkResource, activityToPlanContent } from '../model/activity-m
 import { dateRangeError, mapApiErrors, type FormErrors } from '../model/form-state';
 import { LoadError, Loading } from '@/shared/data';
 import styles from './new-lesson-plan.module.css';
+import { PLANNING_PATH, planPath } from '../model/paths';
 
 interface NewPlanValues {
   assignment: string;
@@ -211,12 +212,12 @@ function NewLessonPlanForm({
       if (!added.ok) {
         // La planeación ya existe: se abre el editor y se avisa para que agregue el enlace a mano.
         router.replace(
-          `/docente/planeacion/${planId}?paso=digitales&aviso=enlace&enlace=${encodeURIComponent(link.url)}`,
+          `${planPath(planId)}?paso=digitales&aviso=enlace&enlace=${encodeURIComponent(link.url)}`,
         );
         return;
       }
     }
-    router.replace(`/docente/planeacion/${planId}?paso=desempeno`);
+    router.replace(`${planPath(planId)}?paso=desempeno`);
   }
 
   return (
@@ -301,7 +302,7 @@ function NewLessonPlanForm({
           Object.keys(errors).length > 0 ? 'Revisa los campos marcados.' : 'Aún no se ha creado'
         }
       >
-        <ButtonLink href="/docente/planeacion" variant="outline">
+        <ButtonLink href={PLANNING_PATH} variant="outline">
           Cancelar
         </ButtonLink>
         <Button endIcon="siguiente" disabled={saving} onClick={() => void handleSubmit()}>
@@ -351,7 +352,7 @@ function NewLessonPlanBody({ activityId }: { activityId: string | null }) {
   return <NewLessonPlanForm context={context} activity={activity.state.data} />;
 }
 
-/** `/docente/planeacion/nueva`: datos generales para crear el borrador (con `?actividad=<id>` precargado). */
+/** `/docente/formatos/planeacion/nueva`: datos generales para crear el borrador (con `?actividad=<id>` precargado). */
 export function NewLessonPlan({ activityId }: { activityId: string | null }) {
   return (
     <PageContainer>
@@ -360,7 +361,7 @@ export function NewLessonPlan({ activityId }: { activityId: string | null }) {
         title="Nueva planeación"
         description="Elige el grado, el área y el periodo. Después completarás la planeación paso a paso."
         actions={
-          <ButtonLink href="/docente/planeacion" variant="outline" startIcon="volver">
+          <ButtonLink href={PLANNING_PATH} variant="outline" startIcon="volver">
             Mis planeaciones
           </ButtonLink>
         }
