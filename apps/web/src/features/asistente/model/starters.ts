@@ -8,14 +8,14 @@ function categoryRank(category: string): number {
   return index === -1 ? FAQ_CATEGORIES.length : index;
 }
 
-export interface FaqGroup {
+export interface FaqGroup<T extends FaqView = FaqView> {
   category: string;
-  faqs: FaqView[];
+  faqs: T[];
 }
 
 /** Preguntas agrupadas por categoría, en el orden de `FAQ_CATEGORIES`, para «Ver todas las preguntas». */
-export function groupByCategory(faqs: readonly FaqView[]): FaqGroup[] {
-  const groups = new Map<string, FaqView[]>();
+export function groupByCategory<T extends FaqView>(faqs: readonly T[]): FaqGroup<T>[] {
+  const groups = new Map<string, T[]>();
   for (const faq of faqs) {
     groups.set(faq.category, [...(groups.get(faq.category) ?? []), faq]);
   }
