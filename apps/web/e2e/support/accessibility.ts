@@ -60,9 +60,21 @@ export async function expectAccessible(
   schemes: readonly ('light' | 'dark')[] = ['light', 'dark'],
 ): Promise<void> {
   for (const scheme of schemes) {
-    await page.emulateMedia({ colorScheme: scheme });
-    // Deja que la pantalla pinte con el tema antes de medir contraste.
-    await page.evaluate('new Promise((done) => requestAnimationFrame(() => done(null)))');
+    // Se mide sin transiciones: al cambiar de tema, axe calcularía el contraste con colores
+    // intermedios (texto ya en el tema nuevo y fondo aún animándose), sobre todo en la CI.
+    // `base.css` reduce las transiciones con `prefers-reduced-motion`.
+    await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
+    await page.evaluate(`new Promise((done) => {
+      requestAnimationFrame(() =>
+        requestAnimationFrame(async () => {
+          const pending = document
+            .getAnimations()
+            .filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime ?? 0));
+          await Promise.allSettled(pending.map((animation) => animation.finished));
+          done(null);
+        }),
+      );
+    })`);
     const where = `${label} (${scheme})`;
 
     const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
@@ -87,7 +99,7 @@ export async function expectAccessible(
     }
     expect(failing.map(describe).join('\n'), `Infracciones de accesibilidad en ${where}`).toBe('');
   }
-  await page.emulateMedia({ colorScheme: null });
+  await page.emulateMedia({ colorScheme: null, reducedMotion: null });
 }
 
 /** La página no se desplaza en horizontal (R4). */
