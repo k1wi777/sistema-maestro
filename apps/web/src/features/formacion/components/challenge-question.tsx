@@ -5,10 +5,11 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/shared/ui';
 
+import { gameFrame as styles } from '@/shared/training-games';
+
 import { useCountdown } from '../hooks/use-countdown';
 import type { ChallengeState } from '../model/challenge';
 import { challengeTiles, isSameAnswer, orderedTexts } from '../model/challenge-tiles';
-import styles from './challenge.module.css';
 
 export interface QuestionHandlers {
   choose: (answer: NonNullable<ChallengeState['chosen']>) => void;

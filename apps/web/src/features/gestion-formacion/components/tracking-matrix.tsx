@@ -9,8 +9,8 @@ import { matrixRows, moduleColumnLabel, type MatrixRow } from '../model/tracking
 import styles from './tracking-screen.module.css';
 
 /**
- * Matriz docente × módulo. Las cabeceras son «M3»; la leyenda de abajo da el título completo de
- * cada una (la tabla de diseño solo admite texto en la cabecera).
+ * Matriz docente × módulo. Las cabeceras se ven como «M3» y su nombre accesible es «Módulo 3 ·
+ * título completo»; la leyenda de abajo da el título completo a todos.
  */
 export function TrackingMatrix({ tracking, query }: { tracking: PlanTracking; query: string }) {
   const rows = matrixRows(tracking, query);
@@ -19,6 +19,7 @@ export function TrackingMatrix({ tracking, query }: { tracking: PlanTracking; qu
     ...tracking.modules.map((module, index) => ({
       key: module.id,
       header: moduleColumnLabel(module, index),
+      headerLabel: `Módulo ${module.number ?? index + 1} · ${module.title}`,
       render: (row: MatrixRow) => {
         const info = TRACKING_STATE_INFO[row.states[index] ?? 'sin_iniciar'];
         return <StatusBadge tone={info.tone}>{info.label}</StatusBadge>;

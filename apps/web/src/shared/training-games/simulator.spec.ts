@@ -1,4 +1,4 @@
-import { simulatorConfigSchema } from '@gns/shared';
+import { simulatorConfigSchema, type SimulatorConfig } from '@gns/shared';
 
 import {
   evaluateWith,
@@ -10,7 +10,49 @@ import {
   sharedKey,
   valuesForConfig,
 } from './simulator';
-import { SIMULATOR_CONFIG } from './test-fixtures-activities';
+
+const SIMULATOR_CONFIG: SimulatorConfig = {
+  entradas: [
+    {
+      clave: 'salario',
+      etiqueta: 'Salario mensual',
+      solo_en_pantalla: true,
+      tipo: 'moneda',
+      min: 0,
+      paso: 1000,
+    },
+    {
+      clave: 'anios',
+      etiqueta: 'Años',
+      solo_en_pantalla: false,
+      tipo: 'numero',
+      min: 1,
+      max: 30,
+      paso: 1,
+      inicial: 5,
+    },
+  ],
+  constantes: [{ clave: 'factor', valor: 12 }],
+  calculos: [
+    {
+      clave: 'anual',
+      expresion: { op: 'multiplica', args: [{ ref: 'salario' }, { ref: 'factor' }] },
+    },
+    { clave: 'cuota', expresion: { op: 'divide', args: [{ ref: 'anual' }, { ref: 'anios' }] } },
+    {
+      clave: 'alto',
+      expresion: { op: 'compara', comparacion: 'mayor', args: [{ ref: 'anual' }, 1000000] },
+    },
+  ],
+  resultados: [
+    { clave: 'anual', etiqueta: 'Total al año', formato: 'moneda' },
+    { clave: 'cuota', etiqueta: 'Cuota', formato: 'numero' },
+    { clave: 'alto', etiqueta: 'Es alto', formato: 'si_no' },
+  ],
+  notas: [{ texto: 'Es una cifra alta.', cuando: 'alto' }, { texto: 'Siempre visible.' }],
+  icono: '🐷',
+  destacado: { clave: 'anual', subtitulo: 'al año' },
+};
 
 const config = simulatorConfigSchema.parse(SIMULATOR_CONFIG);
 const [salary, years] = config.entradas;

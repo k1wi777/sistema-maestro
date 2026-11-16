@@ -3,8 +3,9 @@ import { useEffect, useRef } from 'react';
 
 import { Icon } from '@/shared/ui';
 
+import { gameFrame as styles } from '@/shared/training-games';
+
 import type { BestAttempt } from '../model/challenge';
-import styles from './challenge.module.css';
 
 export function BestLine({ best }: { best: BestAttempt | null }) {
   return best ? (
