@@ -91,6 +91,7 @@ Todos se ejecutan desde la raíz del repositorio.
 - `pnpm api:contract` — Tras cambiar la API: la compila, exporta el contrato OpenAPI a `apps/web/src/shared/api/openapi.json` (se versiona) y regenera los tipos del frontend.
 - `ADMIN_INITIAL_PASSWORD` y `DEMO_USERS_PASSWORD` (opcionales, en `apps/api/.env`, solo desarrollo local; la API no arranca con ellas en producción) — `pnpm --filter @gns/api admin:init-password` toma la primera sin preguntarla y `pnpm --filter @gns/api db:demo:load` asigna la segunda a todos los usuarios demo; sin ellas, el comportamiento es el de siempre.
 - `pnpm test` — Tests; hoy ejecuta las pruebas unitarias (Jest). La integración con PostgreSQL real (Testcontainers) llega en BE-27.
+- `pnpm test:e2e:web` — Pruebas de navegador (Playwright) de los tres procesos sobre la web y la API compiladas con datos demo y contenedores efímeros. Requiere Docker, `pnpm build`, los puertos 3000 y 3001 libres y Chromium (`pnpm --filter @gns/web exec playwright install chromium`, una vez).
 - `docker compose up -d` — Levantar PostgreSQL 16 y MinIO en local.
 
 ---

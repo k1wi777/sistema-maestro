@@ -58,6 +58,8 @@ export default defineConfig(
       '**/coverage/',
       '**/.next/',
       'apps/web/src/shared/api/generated/',
+      'apps/web/test-results/',
+      'apps/web/playwright-report/',
       '.rei/',
       '.claude/',
     ],
@@ -67,7 +69,9 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        // La configuración de Playwright no pertenece a ningún tsconfig (el de la web solo incluye `src`,
+        // y el de `e2e` no puede ser el más cercano a ella).
+        projectService: { allowDefaultProject: ['apps/web/playwright.config.ts'] },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -127,6 +131,17 @@ export default defineConfig(
   {
     files: ['apps/web/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended],
+  },
+  // Suite de navegador (Playwright): no es código de páginas, así que no le aplican las reglas de
+  // Next.js ni de React. Es el único sitio de la web que importa código de apps/api (el entorno
+  // efímero y los datos demo de BE-92).
+  {
+    files: ['apps/web/e2e/**/*.ts', 'apps/web/playwright.config.ts'],
+    rules: {
+      '@next/next/no-html-link-for-pages': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+    },
   },
   // lucide-react queda detrás de <Icon>: un único punto de control del estilo.
   {

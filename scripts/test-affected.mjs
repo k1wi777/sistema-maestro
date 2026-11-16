@@ -4,7 +4,7 @@
 // Usage: node scripts/test-affected.mjs [--base <ref>] [--plan]
 //   --base <ref>  base to compare against (default: TEST_BASE or origin/main)
 //   --plan        print the decision as JSON and do not run anything
-// With GITHUB_OUTPUT defined, writes `mode`, `db` and `e2e` for the CI.
+// With GITHUB_OUTPUT defined, writes `mode`, `db`, `e2e` and `e2e_web` for the CI.
 // Fail-safe: any doubt or error resolves to mode "all", never to "none".
 import console from 'node:console';
 import process from 'node:process';
@@ -55,6 +55,8 @@ const rules = [
   ],
   // The end-to-end tests are classified before `related`: `--findRelatedTests` must not run on them.
   ['e2e', (f) => f.startsWith('apps/api/test/e2e/')],
+  // The browser tests (Playwright) are classified before `none`, which covers the rest of apps/web.
+  ['e2e-web', (f) => f.startsWith('apps/web/e2e/') || f === 'apps/web/playwright.config.ts'],
   ['db', (f) => f.startsWith('apps/api/prisma/seed/') || f.startsWith('apps/api/test/db/')],
   [
     'related',
@@ -97,6 +99,7 @@ function decide() {
       mode: 'all',
       db: true,
       e2e: true,
+      e2eWeb: true,
       base,
       files: [],
       reason: `git failed or base not found (${base}): ${String(e.message).split('\n')[0]}`,
@@ -107,6 +110,7 @@ function decide() {
       mode: 'all',
       db: true,
       e2e: true,
+      e2eWeb: true,
       base,
       files: changed,
       reason: `more than ${MAX_FILES} changed files`,
@@ -116,14 +120,24 @@ function decide() {
   let db = false;
   // End-to-end tests run (in an epic PR) only when they or the seed data change.
   let e2e = false;
+  // Browser tests (V6) run when the web, the API code or seed data they exercise, or they themselves change.
+  let e2eWeb = false;
   for (const f of changed) {
     if (f.startsWith('apps/api/test/e2e/') || f.startsWith('apps/api/prisma/seed/')) e2e = true;
+    if (
+      (f.startsWith('apps/web/') && !f.endsWith('.md')) ||
+      f.startsWith('apps/api/src/') ||
+      f.startsWith('apps/api/prisma/seed/') ||
+      f.startsWith('apps/api/test/e2e/support/')
+    )
+      e2eWeb = true;
     const hit = rules.find(([, test]) => test(f));
     if (!hit)
       return {
         mode: 'all',
         db: true,
         e2e: true,
+        e2eWeb: true,
         base,
         files: changed,
         reason: `unknown file: ${f}`,
@@ -134,6 +148,7 @@ function decide() {
         mode: 'all',
         db: true,
         e2e: true,
+        e2eWeb: true,
         base,
         files: changed,
         reason: `core file changed: ${f}`,
@@ -145,6 +160,7 @@ function decide() {
           return {
             mode: 'all',
             db: true,
+            e2eWeb: true,
             base,
             files: changed,
             reason: `source file deleted: ${f}`,
@@ -155,11 +171,12 @@ function decide() {
     // The drift test reads the contract copy with fs (it does not import it), so it is selected by name.
     if (cat === 'contract') related.push(CONTRACT_DRIFT_TEST);
   }
-  if (related.length === 0 && !db && !e2e) {
+  if (related.length === 0 && !db && !e2e && !e2eWeb) {
     return {
       mode: 'none',
       db: false,
       e2e: false,
+      e2eWeb: false,
       base,
       files: changed,
       reason: 'no changed file affects tests',
@@ -169,6 +186,7 @@ function decide() {
     mode: 'affected',
     db,
     e2e,
+    e2eWeb,
     base,
     files: changed,
     related,
@@ -176,6 +194,7 @@ function decide() {
       'related tests',
       ...(db ? ['database tests (V8)'] : []),
       ...(e2e ? ['end-to-end tests (V5)'] : []),
+      ...(e2eWeb ? ['browser tests (V6)'] : []),
     ].join(' + '),
   };
 }
@@ -188,6 +207,7 @@ try {
     mode: 'all',
     db: true,
     e2e: true,
+    e2eWeb: true,
     base,
     files: [],
     reason: `unexpected error: ${e.message}`,
@@ -195,12 +215,15 @@ try {
 }
 
 if (process.env.GITHUB_OUTPUT) {
-  appendFileSync(process.env.GITHUB_OUTPUT, `mode=${plan.mode}\ndb=${plan.db}\ne2e=${plan.e2e}\n`);
+  appendFileSync(
+    process.env.GITHUB_OUTPUT,
+    `mode=${plan.mode}\ndb=${plan.db}\ne2e=${plan.e2e}\ne2e_web=${plan.e2eWeb}\n`,
+  );
 }
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(
     process.env.GITHUB_STEP_SUMMARY,
-    `### Test selection\n\n- mode: \`${plan.mode}\`\n- database tests: \`${plan.db}\`\n- end-to-end tests: \`${plan.e2e}\`\n- base: \`${plan.base}\`\n- reason: ${plan.reason}\n- changed files: ${plan.files.length}\n`,
+    `### Test selection\n\n- mode: \`${plan.mode}\`\n- database tests: \`${plan.db}\`\n- end-to-end tests: \`${plan.e2e}\`\n- browser tests: \`${plan.e2eWeb}\`\n- base: \`${plan.base}\`\n- reason: ${plan.reason}\n- changed files: ${plan.files.length}\n`,
   );
 }
 
@@ -220,6 +243,11 @@ if (plan.db) {
 if (plan.e2e) {
   console.error(
     '[test-affected] V5 (pnpm test:e2e) is required and is not run by this script: it starts its own containers.',
+  );
+}
+if (plan.e2eWeb) {
+  console.error(
+    '[test-affected] V6 (pnpm test:e2e:web) is required and is not run by this script: it needs `pnpm build`, a browser and Docker.',
   );
 }
 
@@ -252,7 +280,7 @@ if (plan.mode === 'all') {
 // affected
 if (plan.related.length === 0) {
   console.error(
-    '[test-affected] no related unit/integration tests; only database (V8) or end-to-end (V5) tests apply.',
+    '[test-affected] no related unit/integration tests; only database (V8) or end-to-end (V5, V6) tests apply.',
   );
   process.exit(0);
 }
