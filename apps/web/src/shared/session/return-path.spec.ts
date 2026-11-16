@@ -3,7 +3,7 @@ import { consentPath, loginPath, safeReturnPath } from './return-path';
 describe('safeReturnPath', () => {
   it.each([
     ['/docente', 'docente', '/docente'],
-    ['/docente/planeacion?x=1', 'docente', '/docente/planeacion?x=1'],
+    ['/docente/formatos/planeacion?x=1', 'docente', '/docente/formatos/planeacion?x=1'],
     ['/coordinacion', 'coordinador', '/coordinacion'],
     ['/docente', 'coordinador', '/docente'],
     ['/docente', 'administrador', '/docente'],
@@ -45,7 +45,9 @@ describe('safeReturnPath', () => {
 
 describe('consentPath', () => {
   it('lleva la ruta actual como retorno', () => {
-    expect(consentPath('/docente/planeacion')).toBe('/ingreso?volver=%2Fdocente%2Fplaneacion');
+    expect(consentPath('/docente/formatos/planeacion')).toBe(
+      '/ingreso?volver=%2Fdocente%2Fformatos%2Fplaneacion',
+    );
   });
 });
 

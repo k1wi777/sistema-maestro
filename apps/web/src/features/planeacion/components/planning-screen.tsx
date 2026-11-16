@@ -3,9 +3,11 @@
 import { ButtonLink, PageContainer, PageHeader, Tabs } from '@/shared/ui';
 
 import { useQueryParams } from '@/shared/data';
+import { newPlanPath } from '../model/paths';
 import { LessonPlanList } from './lesson-plan-list';
 import { RepositoryPanel } from './repository-panel';
 
+const FORMATS_HUB_PATH = '/docente/formatos';
 const PLANS_TAB = 'mis-planeaciones';
 const REPOSITORY_TAB = 'repositorio';
 
@@ -17,13 +19,18 @@ export function PlanningScreen() {
   return (
     <PageContainer>
       <PageHeader
-        context="Modelo pedagógico GNS"
+        context="Formatos"
         title="Planeación GNS"
         description="Diseña tus clases con los momentos del modelo GNS e inspírate en las actividades que comparte la comunidad docente."
         actions={
-          <ButtonLink href="/docente/planeacion/nueva" startIcon="mas">
-            Nueva planeación
-          </ButtonLink>
+          <>
+            <ButtonLink href={FORMATS_HUB_PATH} variant="outline" startIcon="volver">
+              Formatos
+            </ButtonLink>
+            <ButtonLink href={newPlanPath()} startIcon="mas">
+              Nueva planeación
+            </ButtonLink>
+          </>
         }
       />
       <Tabs

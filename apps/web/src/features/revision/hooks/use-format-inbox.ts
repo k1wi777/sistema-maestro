@@ -6,6 +6,7 @@ import type { ApiResult } from '@/shared/api';
 import { usePagedList, useRemote, type PagedList, type Remote } from '@/shared/data';
 
 import { listJournals } from '../api/field-journals';
+import { listPlans } from '../api/lesson-plans';
 import { listNotes } from '../api/observer-notes';
 
 const PAGE_SIZE = 20;
@@ -27,25 +28,37 @@ export function useNoteInbox(status: RecordStatus | undefined): PagedList<Observ
 }
 
 export interface PendingCounts {
+  plans: number;
   journals: number;
   notes: number;
 }
 
 async function loadPending(): Promise<ApiResult<PendingCounts>> {
-  const [journals, notes] = await Promise.all([
+  const [plans, journals, notes] = await Promise.all([
+    listPlans({ status: RecordStatus.Submitted, page: 1, pageSize: 1 }),
     listJournals({ status: RecordStatus.Submitted, page: 1, pageSize: 1 }),
     listNotes({ status: RecordStatus.Submitted, page: 1, pageSize: 1 }),
   ]);
+  if (!plans.ok) {
+    return plans;
+  }
   if (!journals.ok) {
     return journals;
   }
   if (!notes.ok) {
     return notes;
   }
-  return { ok: true, data: { journals: journals.data.totalItems, notes: notes.data.totalItems } };
+  return {
+    ok: true,
+    data: {
+      plans: plans.data.totalItems,
+      journals: journals.data.totalItems,
+      notes: notes.data.totalItems,
+    },
+  };
 }
 
-/** Pendientes de revisión (enviados) de cada pestaña. */
+/** Pendientes de revisión (enviados) de cada formato. */
 export function usePendingCounts(): Remote<PendingCounts> {
   return useRemote(loadPending, 'format-pending');
 }

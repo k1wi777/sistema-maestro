@@ -10,10 +10,11 @@ import { OBSERVER_TYPE_INFO, STATUS_INFO } from '@/shared/records';
 import { ButtonLink, Card, Notice, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
 
 import { NOTE_FORMAT, useFormatReview, useFormatReviewData } from '../hooks/use-format-review';
+import { OBSERVER_INBOX_PATH } from '../model/paths';
 import { FormatReviewPanel } from './format-review-panel';
 import styles from './format-review.module.css';
 
-const BACK_HREF = '/coordinacion/formatos?tipo=observador';
+const BACK_HREF = OBSERVER_INBOX_PATH;
 
 function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
   if (error.statusCode === 404) {
@@ -21,7 +22,7 @@ function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) 
       <Notice tone="warning" title="No encontramos esta anotación">
         Puede que ya no exista o que el enlace esté incompleto.{' '}
         <ButtonLink href={BACK_HREF} variant="outline" size="sm">
-          Volver a Formatos
+          Volver a Observadores
         </ButtonLink>
       </Notice>
     );
@@ -57,7 +58,7 @@ function NoteReview({
     <PageContainer>
       <div className={styles.back}>
         <ButtonLink href={BACK_HREF} variant="outline" size="sm" startIcon="volver">
-          Formatos
+          Observadores
         </ButtonLink>
       </div>
       <PageHeader
@@ -116,6 +117,7 @@ function NoteReview({
           noun="anotación"
           voidTitle="Anular anotación"
           backHref={BACK_HREF}
+          backLabel="Observadores"
         />
       </div>
     </PageContainer>

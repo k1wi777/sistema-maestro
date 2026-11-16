@@ -11,6 +11,7 @@ import {
   Checkbox,
   DataTable,
   Dialog,
+  FormatCard,
   Icon,
   Notice,
   Observation,
@@ -322,6 +323,33 @@ export function Showcase() {
             <StatusBadge tone="success">Éxito</StatusBadge>
             <StatusBadge tone="warning">Advertencia</StatusBadge>
             <StatusBadge tone="danger">Peligro</StatusBadge>
+          </div>
+        </Card>
+
+        <Card title="Tarjetas de formato">
+          <div className={styles.grid}>
+            <FormatCard
+              headingLevel={3}
+              title="Planeación GNS"
+              description="Planea tus clases con el modelo GNS y envíalas a revisión."
+              icon="plan"
+              href="/muestra"
+            />
+            <FormatCard
+              headingLevel={3}
+              title="Diarios de campo"
+              description="Revisa las hojas del diario de campo (F-PA-05)."
+              icon="formatos"
+              href="/muestra"
+              badge={<StatusBadge tone="warning">3 pendientes</StatusBadge>}
+            />
+            <FormatCard
+              headingLevel={3}
+              title="PIAR · Inclusión"
+              description="Llegará en una etapa posterior."
+              icon="piar"
+              soon
+            />
           </div>
         </Card>
 

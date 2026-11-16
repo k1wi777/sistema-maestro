@@ -18,8 +18,10 @@ interface FormatReviewPanelProps {
   noun: 'hoja' | 'anotación';
   /** Texto de los diálogos de anulación. */
   voidTitle: string;
-  /** Vuelve a la bandeja de Formatos conservando la pestaña. */
+  /** Vuelve a la bandeja del formato (diarios de campo u observadores). */
   backHref: string;
+  /** Nombre de esa bandeja, para el texto del enlace de vuelta. */
+  backLabel: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function FormatReviewPanel({
   noun,
   voidTitle,
   backHref,
+  backLabel,
 }: FormatReviewPanelProps) {
   const [returning, setReturning] = useState(false);
   const [voiding, setVoiding] = useState(false);
@@ -53,7 +56,7 @@ export function FormatReviewPanel({
               ) : null}
               {notice.tone === 'success' ? (
                 <ButtonLink href={backHref} variant="outline" size="sm" startIcon="volver">
-                  Volver a Formatos
+                  Volver a {backLabel}
                 </ButtonLink>
               ) : null}
             </Notice>

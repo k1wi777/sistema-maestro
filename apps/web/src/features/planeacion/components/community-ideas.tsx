@@ -8,6 +8,7 @@ import { ACTIVITY_TYPE_LABELS } from '../model/activity-types';
 import { MOMENTS, type MomentField } from '../model/steps';
 import { LoadError, Loading } from '@/shared/data';
 import styles from './community-ideas.module.css';
+import { REPOSITORY_PATH } from '../model/paths';
 
 const IDEAS_PAGE_SIZE = 5;
 
@@ -107,12 +108,7 @@ export function CommunityIdeas({ plan, onUse }: CommunityIdeasProps) {
       ) : null}
 
       <div className={styles.more}>
-        <ButtonLink
-          href="/docente/planeacion?pestana=repositorio"
-          variant="outline"
-          size="sm"
-          endIcon="flecha"
-        >
+        <ButtonLink href={REPOSITORY_PATH} variant="outline" size="sm" endIcon="flecha">
           Ver todo el repositorio
         </ButtonLink>
       </div>

@@ -11,11 +11,10 @@ import { ButtonLink, Card, Notice, PageContainer, PageHeader, StatusBadge } from
 import { usePlanReview, usePlanReviewData } from '../hooks/use-plan-review';
 import { planSections } from '../model/plan-blocks';
 import { planFiltersFromParams, planFiltersToQuery } from '../model/plan-filters';
+import { PLAN_INBOX_PATH } from '../model/paths';
 import { ReviewBlock } from './review-block';
 import { ReviewPanel } from './review-panel';
 import styles from './plan-review-screen.module.css';
-
-const BACK_PATH = '/coordinacion/planeaciones';
 
 function NotFound({
   error,
@@ -73,7 +72,7 @@ function PlanReview({ plan, reviews, refresh, backQuery }: PlanReviewProps) {
   const review = usePlanReview({ plan, reviews, refresh, backQuery });
   const info = STATUS_INFO[plan.status];
   const dates = formatDateRange(plan.dateFrom, plan.dateTo);
-  const backHref = backQuery ? `${BACK_PATH}?${backQuery}` : BACK_PATH;
+  const backHref = backQuery ? `${PLAN_INBOX_PATH}?${backQuery}` : PLAN_INBOX_PATH;
   const { resubmission } = review;
 
   return (
@@ -136,11 +135,11 @@ function PlanReview({ plan, reviews, refresh, backQuery }: PlanReviewProps) {
   );
 }
 
-/** Revisión de una planeación (`/coordinacion/planeaciones/[id]`): el contenido se lee primero. */
+/** Revisión de una planeación (`/coordinacion/formatos/planeaciones/[id]`): el contenido se lee primero. */
 export function PlanReviewScreen({ id }: { id: string }) {
   const { params } = useQueryParams();
   const backQuery = planFiltersToQuery(planFiltersFromParams(params));
-  const backHref = backQuery ? `${BACK_PATH}?${backQuery}` : BACK_PATH;
+  const backHref = backQuery ? `${PLAN_INBOX_PATH}?${backQuery}` : PLAN_INBOX_PATH;
   const remote = usePlanReviewData(id);
 
   if (remote.state.status === 'loading') {

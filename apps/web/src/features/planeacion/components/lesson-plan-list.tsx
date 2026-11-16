@@ -23,6 +23,7 @@ import { useTeachingContext } from '../hooks/use-teaching-context';
 import { STATUS_INFO, STATUS_ORDER, isEditable } from '@/shared/records';
 import { LoadError, Loading } from '@/shared/data';
 import styles from './lesson-plan-list.module.css';
+import { planPath } from '../model/paths';
 
 const ALL = 'todas';
 
@@ -53,7 +54,7 @@ function PlanCard({ plan }: { plan: LessonPlan }) {
         actions={
           <ButtonLink
             context={`planeación de ${plan.area.name} · ${plan.topic ?? 'Sin tema'}`}
-            href={`/docente/planeacion/${plan.id}`}
+            href={planPath(plan.id)}
             variant="outline"
             size="sm"
             className={styles.stretched}

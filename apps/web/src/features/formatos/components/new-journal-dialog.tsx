@@ -13,6 +13,7 @@ import {
   useJournalTargets,
   type JournalTargets,
 } from '../hooks/use-format-catalogs';
+import { JOURNAL_LIST_PATH } from '../model/paths';
 
 interface Failure {
   fields: { gradeId?: string; periodId?: string };
@@ -53,7 +54,7 @@ function NewJournalForm({ targets, onClose }: { targets: JournalTargets; onClose
       });
       return;
     }
-    router.push(`/docente/formatos/diario/${result.data.id}`);
+    router.push(`${JOURNAL_LIST_PATH}/${result.data.id}`);
   }
 
   return (

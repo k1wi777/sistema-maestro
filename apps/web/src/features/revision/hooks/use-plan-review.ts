@@ -46,6 +46,7 @@ import {
   type BlockKey,
   type PlanBlock,
 } from '../model/plan-blocks';
+import { PLAN_INBOX_PATH } from '../model/paths';
 import { nextPendingPlan } from '../model/queue';
 import {
   commentExcess,
@@ -152,7 +153,6 @@ export interface ReviewNotice {
 
 export type Busy = 'approve' | 'return' | 'void' | null;
 
-const BACK_PATH = '/coordinacion/planeaciones';
 const QUEUE_SIZE = 20;
 
 interface UsePlanReviewOptions {
@@ -402,9 +402,9 @@ export function usePlanReview({ plan, reviews, refresh, backQuery }: UsePlanRevi
       const next = queue.ok ? nextPendingPlan(queue.data.items, plan.id, user.id) : null;
       const suffix = backQuery ? `?${backQuery}` : '';
       if (next) {
-        router.push(`${BACK_PATH}/${next.id}${suffix}`);
+        router.push(`${PLAN_INBOX_PATH}/${next.id}${suffix}`);
       } else {
-        router.push(`${BACK_PATH}?status=${RecordStatus.Submitted}&aviso=sin-pendientes`);
+        router.push(`${PLAN_INBOX_PATH}?status=${RecordStatus.Submitted}&aviso=sin-pendientes`);
       }
     });
   }, [backQuery, buildBody, canDecide, clearDraft, fail, plan.id, router, run, user]);

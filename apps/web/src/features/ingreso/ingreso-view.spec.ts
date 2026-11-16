@@ -48,9 +48,11 @@ describe('ingresoView', () => {
   });
 
   it('un retorno seguro tiene prioridad', () => {
-    expect(ingresoView(auth('coordinador', 'accepted'), '/docente/planeacion', rules)).toEqual({
+    expect(
+      ingresoView(auth('coordinador', 'accepted'), '/docente/formatos/planeacion', rules),
+    ).toEqual({
       kind: 'navigate',
-      to: '/docente/planeacion',
+      to: '/docente/formatos/planeacion',
     });
   });
 

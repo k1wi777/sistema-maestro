@@ -45,22 +45,10 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
               'Tu ruta de formación docente: inducción, módulos, Desafío GNS y certificados.',
           },
           {
-            href: '/docente/planeacion',
-            label: 'Planeación GNS',
-            icon: 'plan',
-            description: 'Planea tus clases con el modelo pedagógico GNS y envíalas a revisión.',
-          },
-          {
             href: '/docente/formatos',
             label: 'Formatos',
             icon: 'formatos',
-            description: 'Diario de campo (F-PA-05) y observador del estudiante.',
-          },
-          {
-            label: 'PIAR · Inclusión',
-            icon: 'piar',
-            description: 'Esta sección llegará en una etapa posterior.',
-            soon: true,
+            description: 'Planeación GNS, diario de campo, observador y PIAR.',
           },
           {
             href: '/docente/asistente',
@@ -82,16 +70,10 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
         title: 'Seguimiento',
         sections: [
           {
-            href: '/coordinacion/planeaciones',
-            label: 'Planeaciones',
-            icon: 'plan',
-            description: 'Revisa, ajusta, aprueba o devuelve las planeaciones de los docentes.',
-          },
-          {
             href: '/coordinacion/formatos',
             label: 'Formatos',
             icon: 'formatos',
-            description: 'Consulta y revisa los diarios de campo y los observadores.',
+            description: 'Revisa planeaciones, diarios de campo y observadores.',
           },
           {
             href: '/coordinacion/bitacora',

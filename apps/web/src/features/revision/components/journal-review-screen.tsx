@@ -9,10 +9,11 @@ import { JOURNAL_EVENT_INFO, STATUS_INFO } from '@/shared/records';
 import { ButtonLink, Card, Notice, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
 
 import { JOURNAL_FORMAT, useFormatReview, useFormatReviewData } from '../hooks/use-format-review';
+import { JOURNAL_INBOX_PATH } from '../model/paths';
 import { FormatReviewPanel } from './format-review-panel';
 import styles from './format-review.module.css';
 
-const BACK_HREF = '/coordinacion/formatos?tipo=diario';
+const BACK_HREF = JOURNAL_INBOX_PATH;
 
 function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
   if (error.statusCode === 404) {
@@ -20,7 +21,7 @@ function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) 
       <Notice tone="warning" title="No encontramos esta hoja">
         Puede que ya no exista o que el enlace esté incompleto.{' '}
         <ButtonLink href={BACK_HREF} variant="outline" size="sm">
-          Volver a Formatos
+          Volver a Diarios de campo
         </ButtonLink>
       </Notice>
     );
@@ -45,7 +46,7 @@ function JournalReview({
     <PageContainer>
       <div className={styles.back}>
         <ButtonLink href={BACK_HREF} variant="outline" size="sm" startIcon="volver">
-          Formatos
+          Diarios de campo
         </ButtonLink>
       </div>
       <PageHeader
@@ -126,6 +127,7 @@ function JournalReview({
           noun="hoja"
           voidTitle="Anular hoja"
           backHref={BACK_HREF}
+          backLabel="Diarios de campo"
         />
       </div>
     </PageContainer>

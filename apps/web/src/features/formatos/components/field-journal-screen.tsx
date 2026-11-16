@@ -25,6 +25,7 @@ import { useFieldJournal, useJournalEditor } from '../hooks/use-field-journal';
 import { journalFeedback, journalReviewLine } from '../model/journal-feedback';
 import { journalPrintTitle } from '../model/journal-print';
 import { readOnlyNotice } from '../model/read-only-notice';
+import { JOURNAL_LIST_PATH } from '../model/paths';
 import { JournalEntryCard } from './journal-entry-card';
 import { JournalEntryForm } from './journal-entry-form';
 import { JournalHeader } from './journal-header';
@@ -42,8 +43,8 @@ function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) 
     return (
       <Notice tone="warning" title="No encontramos esta hoja">
         Puede que no sea tuya o que ya no exista.{' '}
-        <ButtonLink href="/docente/formatos" variant="outline" size="sm">
-          Ir a Formatos
+        <ButtonLink href={JOURNAL_LIST_PATH} variant="outline" size="sm">
+          Ir a Mis diarios
         </ButtonLink>
       </Notice>
     );
@@ -156,7 +157,7 @@ function JournalScreen({ initial, initialReviews, notice, onConflict }: JournalS
     <PageContainer>
       <div className={styles.screen}>
         <div className={styles.back}>
-          <ButtonLink href="/docente/formatos" variant="outline" size="sm" startIcon="volver">
+          <ButtonLink href={JOURNAL_LIST_PATH} variant="outline" size="sm" startIcon="volver">
             Mis diarios
           </ButtonLink>
         </div>

@@ -45,9 +45,11 @@ test.describe('Planeación: del borrador a la aprobación', () => {
   test('el docente crea la planeación, la completa y la envía', async () => {
     const { page } = teacher;
     await page.goto('/docente');
-    await page.getByRole('link', { name: 'Planeación GNS' }).click();
+    await page.getByRole('link', { name: 'Formatos' }).first().click();
+    await page.getByRole('link', { name: /^Planeación GNS/ }).click();
+    await expect(page).toHaveURL(/\/docente\/formatos\/planeacion$/);
     await page.getByRole('link', { name: 'Nueva planeación' }).click();
-    await expect(page).toHaveURL(/\/docente\/planeacion\/nueva$/);
+    await expect(page).toHaveURL(/\/docente\/formatos\/planeacion\/nueva$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Nueva planeación' })).toBeVisible();
 
     await page.getByLabel('Grado y área').selectOption({ label: '4° · Matemáticas' });
@@ -72,7 +74,9 @@ test.describe('Planeación: del borrador a la aprobación', () => {
   test('coordinación la encuentra en la bandeja y la devuelve con observaciones', async () => {
     const { page } = coordinator;
     await page.goto('/coordinacion');
-    await page.getByRole('link', { name: 'Planeaciones' }).first().click();
+    await page.getByRole('link', { name: 'Formatos' }).first().click();
+    await page.getByRole('link', { name: /^Planeaciones\b/ }).click();
+    await expect(page).toHaveURL(/\/coordinacion\/formatos\/planeaciones$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Planeaciones' })).toBeVisible();
 
     const row = inboxRow(page);
@@ -93,7 +97,7 @@ test.describe('Planeación: del borrador a la aprobación', () => {
 
   test('el docente ve las observaciones, corrige y reenvía', async () => {
     const { page } = teacher;
-    await page.goto('/docente/planeacion');
+    await page.goto('/docente/formatos/planeacion');
     const card = planCard(page);
     await expect(card).toContainText('Con observaciones');
     await card.getByRole('link', { name: /Continuar/ }).click();
@@ -114,7 +118,7 @@ test.describe('Planeación: del borrador a la aprobación', () => {
 
   test('coordinación la aprueba y ambos ven el estado final', async () => {
     const { page } = coordinator;
-    await page.goto('/coordinacion/planeaciones');
+    await page.goto('/coordinacion/formatos/planeaciones');
     await inboxRow(page)
       .getByRole('link', { name: /Revisar/ })
       .click();
@@ -124,10 +128,10 @@ test.describe('Planeación: del borrador a la aprobación', () => {
 
     // Aprobar lleva a la siguiente pendiente: el estado final se comprueba en la bandeja.
     await page.waitForURL((url) => url.pathname !== reviewPath);
-    await page.goto('/coordinacion/planeaciones');
+    await page.goto('/coordinacion/formatos/planeaciones');
     await expect(inboxRow(page)).toContainText('Revisada');
 
-    await teacher.page.goto('/docente/planeacion');
+    await teacher.page.goto('/docente/formatos/planeacion');
     await expect(planCard(teacher.page)).toContainText('Revisada');
     await teacher.page.goto(planUrl);
     await expect(statusBadge(teacher.page, 'Revisada')).toBeVisible();

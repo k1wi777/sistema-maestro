@@ -22,9 +22,10 @@ test('ingreso con aviso de datos: sin aceptarlo no se ve ninguna sección proteg
   await expectAccessible(page, 'ingreso · aviso de datos');
 
   // Con sesión pero sin aceptar, una ruta protegida devuelve al aviso y no pinta su contenido.
+  // La ruta antigua se redirige a la nueva y el aviso de datos conserva esa ruta en `volver`.
   await page.goto('/docente/planeacion');
   await expect(notice).toBeVisible();
-  await expect(page).toHaveURL(/\/ingreso\?volver=/);
+  await expect(page).toHaveURL(/\/ingreso\?volver=%2Fdocente%2Fformatos%2Fplaneacion$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Planeación GNS' })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Panel Docente' })).toHaveCount(0);
 
@@ -40,7 +41,7 @@ test('ingreso con aviso de datos: sin aceptarlo no se ve ninguna sección proteg
 
   await acceptDataNotice(page);
   // `volver` lleva a la planeación que se había pedido.
-  await expect(page).toHaveURL(/\/docente\/planeacion$/);
+  await expect(page).toHaveURL(/\/docente\/formatos\/planeacion$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Planeación GNS' })).toBeVisible();
   await expect(page.getByRole('complementary')).toContainText(actor.name);
 

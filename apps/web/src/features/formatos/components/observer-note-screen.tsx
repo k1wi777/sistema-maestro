@@ -36,11 +36,12 @@ import {
   type NoteFormValues,
 } from '../model/observer-note-form';
 import { readOnlyNotice } from '../model/read-only-notice';
+import { OBSERVER_LIST_PATH } from '../model/paths';
 import { ObserverNoteFields, ObserverNoteReadOnly, ObserverNotices } from './observer-note-form';
 import { SubmitRecordDialog } from './submit-record-dialog';
 import styles from './record-screen.module.css';
 
-const BACK_HREF = '/docente/formatos?pestana=observador';
+const BACK_HREF = OBSERVER_LIST_PATH;
 const CONFLICT_MESSAGE =
   'La anotación cambió de estado en el servidor, así que se recargó con su estado actual.';
 
@@ -382,7 +383,7 @@ function NewNoteForm({ gradeOptions }: { gradeOptions: SelectOption[] }) {
       );
       return;
     }
-    router.replace(`/docente/formatos/observador/${result.data.id}`);
+    router.replace(`${OBSERVER_LIST_PATH}/${result.data.id}`);
   }
 
   return (
