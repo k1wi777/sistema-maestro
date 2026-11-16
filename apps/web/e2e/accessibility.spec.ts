@@ -166,6 +166,30 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await audit(page, 'coordinación · formatos (observador)');
   });
 
+  test('vista previa de un módulo con video de YouTube incrustado', async () => {
+    const { page } = coordinator;
+    // Sin red externa: el reproductor de YouTube se sustituye por una página local mínima.
+    await page.route('https://www.youtube-nocookie.com/**', (route) =>
+      route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Video</title>' }),
+    );
+    await page.goto('/coordinacion/planes');
+    await expect(
+      page.getByRole('link', { name: /Antecedente histórico GNS/ }).first(),
+    ).toBeVisible();
+    await page
+      .getByRole('link', { name: /^Editar.*Antecedente histórico GNS/ })
+      .first()
+      .click();
+    await page.getByRole('button', { name: /Vista previa/ }).click();
+
+    const frame = page.locator('iframe[src^="https://www.youtube-nocookie.com/embed/"]');
+    await expect(frame).toHaveCount(1);
+    await expect(frame).toHaveAttribute('title', /\S/);
+    expect(await frame.getAttribute('src')).not.toContain('autoplay');
+    await expect(page.getByRole('link', { name: /^Ver en YouTube/ })).toBeVisible();
+    await audit(page, 'coordinación · vista previa con video');
+  });
+
   test('docentes, planes, módulo, avance, bitácora y asistente', async () => {
     const { page } = coordinator;
     await visit(page, '/coordinacion/docentes', 'coordinación · docentes');

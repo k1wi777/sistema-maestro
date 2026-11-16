@@ -160,7 +160,10 @@ export const PRIVACY_POLICY: LegalDocument = {
           'cookies de sesión (gns_access y gns_refresh), que el navegador no puede leer desde la página y que sirven para mantener tu sesión iniciada;',
           'la preferencia de tema claro u oscuro (gns-theme), guardada en tu navegador.',
         ),
-        paragraph('No se usan cookies de publicidad ni de seguimiento.'),
+        paragraph('La plataforma no usa cookies de publicidad ni de seguimiento propias.'),
+        paragraph(
+          'Algunos módulos de formación incluyen videos de YouTube en modo de privacidad mejorada (youtube-nocookie.com). YouTube (Google) no guarda cookies hasta que reproduces el video; al reproducirlo, puede almacenar datos en tu navegador según su propia política de privacidad. Si lo prefieres, usa el enlace «Ver en YouTube».',
+        ),
       ],
     },
     {

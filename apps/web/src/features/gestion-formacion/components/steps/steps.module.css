@@ -419,15 +419,6 @@
   font-weight: var(--weight-semibold);
 }
 
-.frame {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  background: var(--tint);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
 .video {
   display: block;
   width: 100%;

@@ -5,7 +5,7 @@ import { useRef, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading, useRemote } from '@/shared/data';
-import { ButtonLink } from '@/shared/ui';
+import { ButtonLink, YouTubeEmbed, youTubeEmbedSrc } from '@/shared/ui';
 
 import { getModuleFileUrl } from '../api/route';
 import { MarkControls } from './mark-controls';
@@ -105,7 +105,7 @@ function FileVideo({
   );
 }
 
-/** Sección «Video»: YouTube se abre en otra pestaña; un archivo se reproduce dentro de la plataforma. */
+/** Sección «Video»: YouTube (incrustado) y los archivos se reproducen dentro de la plataforma. */
 export function VideoSection({
   module,
   onMark,
@@ -118,21 +118,38 @@ export function VideoSection({
   if (module.videoSource === VideoSource.File) {
     return <FileVideo module={module} viewed={viewed} onMark={onMark} />;
   }
+  const embedSrc = youTubeEmbedSrc(module.videoEmbedUrl, module.videoUrl);
   return (
     <>
-      <p className={styles.text}>
-        {module.videoTitle ? <strong>{module.videoTitle}. </strong> : null}
-        Se abre en YouTube, en otra pestaña. Cuando lo termines, vuelve aquí y márcalo como visto.
-      </p>
+      {embedSrc ? (
+        <>
+          {module.videoTitle ? (
+            <p className={styles.text}>
+              <strong>{module.videoTitle}</strong>
+            </p>
+          ) : null}
+          <YouTubeEmbed
+            src={embedSrc}
+            title={module.videoTitle ?? `Video del módulo ${module.title}`}
+          />
+          <p className={styles.text}>Cuando lo termines, márcalo como visto.</p>
+        </>
+      ) : (
+        <p className={styles.text}>
+          {module.videoTitle ? <strong>{module.videoTitle}. </strong> : null}
+          Se abre en YouTube, en otra pestaña. Cuando lo termines, vuelve aquí y márcalo como visto.
+        </p>
+      )}
       {module.videoUrl ? (
         <div className={styles.actions}>
           <ButtonLink
             href={module.videoUrl}
             target="_blank"
             rel="noopener noreferrer"
+            variant={embedSrc ? 'outline' : 'primary'}
             endIcon="externo"
           >
-            Ver el video en YouTube
+            {embedSrc ? 'Ver en YouTube' : 'Ver el video en YouTube'}
           </ButtonLink>
         </div>
       ) : null}
