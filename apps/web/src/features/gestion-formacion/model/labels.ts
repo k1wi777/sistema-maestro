@@ -46,3 +46,26 @@ export const TRACKING_STATE_INFO: Record<TrackingModuleState, { label: string; t
 export function moduleTitleWithNumber(module: { number: string | null; title: string }): string {
   return module.number === null ? module.title : `${module.number} · ${module.title}`;
 }
+
+/** Los cuatro tipos al agregar una actividad: nombre completo y descripción de una línea. */
+export const ACTIVITY_TYPE_CHOICE: Record<
+  TrainingActivityType,
+  { label: string; description: string }
+> = {
+  [TrainingActivityType.WheelPassport]: {
+    label: 'Ruleta y pasaporte',
+    description: 'Una ruleta de tarjetas; cada pregunta acertada da un sello.',
+  },
+  [TrainingActivityType.Match]: {
+    label: 'Conecta',
+    description: 'Unir conceptos con sus datos contra el tiempo.',
+  },
+  [TrainingActivityType.TrueOrMyth]: {
+    label: '¿Verdad o mito?',
+    description: 'Afirmaciones que se juzgan con vidas y racha.',
+  },
+  [TrainingActivityType.Simulator]: {
+    label: 'Simulador',
+    description: 'Entradas y resultados calculados al momento, sin guardar datos.',
+  },
+};

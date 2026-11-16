@@ -15,6 +15,7 @@ export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { DataTable, type DataTableColumn, type DataTableProps } from './components/DataTable';
 export { Dialog, type DialogProps } from './components/Dialog';
 export { Field, type FieldControlProps, type FieldProps } from './components/Field';
+export { IconPicker, type IconPickerProps } from './components/IconPicker';
 export { Notice, type NoticeProps, type NoticeTone } from './components/Notice';
 export { Observation, type ObservationProps } from './components/Observation';
 export { PageContainer, type PageContainerProps } from './components/PageContainer';
@@ -38,6 +39,14 @@ export {
 export { Tabs, type TabItem, type TabsProps } from './components/Tabs';
 export { TextArea, type TextAreaProps } from './components/TextArea';
 export { TextInput, type TextInputProps } from './components/TextInput';
+export {
+  emojiIcon,
+  GENERIC_ICON,
+  hasIconEquivalent,
+  iconEmoji,
+  PICKABLE_ICONS,
+  type PickableIcon,
+} from './icons/emoji-icons';
 export { Icon, type IconFill, type IconProps } from './icons/Icon';
 export { isOpenStrokeIcon } from './icons/registry';
 export type { FillableIconName, IconName, OpenStrokeIconName } from './icons/registry';

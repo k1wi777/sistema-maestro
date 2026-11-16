@@ -2,10 +2,13 @@
 
 import { PPTX_CONTENT_TYPE, VideoSource, type ModuleFilePurpose } from '@gns/shared';
 
+import { useState } from 'react';
+
 import { LoadError, Loading, useRemote } from '@/shared/data';
-import { ButtonLink, Card, Notice, StatusBadge } from '@/shared/ui';
+import { ButtonLink, Card, Notice, Select, StatusBadge } from '@/shared/ui';
 
 import { fileUrl } from '../../api/files';
+import { ActivityPreview } from '../activity-editor/activity-preview';
 import { activeActivities, moduleContents } from '../../model/editor-steps';
 import { ACTIVITY_TYPE_LABEL, moduleTitleWithNumber } from '../../model/labels';
 import { keyIdeaLines } from '../../model/slide-form';
@@ -103,6 +106,8 @@ export function PreviewStep({ editor, number }: StepProps) {
   const activities = activeActivities(detail);
   const section = tree.sections.find((item) => item.id === detail.sectionId);
   const hasAnything = Object.values(contents).some(Boolean);
+  const [previewId, setPreviewId] = useState('');
+  const previewed = activities.find((activity) => activity.id === previewId) ?? activities[0];
 
   return (
     <Card title="Vista previa" step={number}>
@@ -232,6 +237,27 @@ export function PreviewStep({ editor, number }: StepProps) {
               </li>
             ))}
           </ul>
+          {previewed ? (
+            <>
+              <Select
+                label="Actividad a previsualizar"
+                value={previewed.id}
+                options={activities.map((activity, index) => ({
+                  value: activity.id,
+                  label: `${index + 1} · ${activity.title}`,
+                }))}
+                onChange={(event) => setPreviewId(event.target.value)}
+              />
+              <ActivityPreview
+                key={previewed.id}
+                activity={{
+                  type: previewed.type,
+                  title: previewed.title,
+                  config: previewed.config,
+                }}
+              />
+            </>
+          ) : null}
         </section>
       ) : null}
     </Card>

@@ -320,6 +320,66 @@
   justify-content: flex-end;
 }
 
+/* Formulario de la actividad abierta, bajo su fila y a todo el ancho. */
+.activityEditor {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.typeChoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.typeChoice {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 2.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  color: var(--fg);
+  cursor: pointer;
+  text-align: left;
+}
+
+.typeChoice:hover:not(:disabled) {
+  border-color: var(--blue);
+  background: var(--on-surface-hover);
+}
+
+.typeChoice:focus-visible {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+.typeChoice:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.typeChoiceName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--heading);
+  font-weight: var(--weight-semibold);
+}
+
+.typeChoiceHint {
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 /* ---------- Vista previa ---------- */
 .previewHead {
   margin: var(--space-5) 0;

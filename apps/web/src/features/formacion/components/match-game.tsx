@@ -5,12 +5,12 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { Icon } from '@/shared/ui';
 
+import { gameFrame as challenge, MatchColumns } from '@/shared/training-games';
+
 import { useCountdown } from '../hooks/use-countdown';
 import { useMatchGame } from '../hooks/use-match-game';
 import { bestOf } from '../model/best-attempt';
-import { emojiIcon } from '../model/emoji-icons';
 import { advanceDelayMs, matchAnnouncement, type MatchState } from '../model/match';
-import challenge from './challenge.module.css';
 import { GameBusy, GameError, GameFinal, GameLobby, GameLost } from './game-panels';
 import styles from './match-game.module.css';
 
@@ -135,56 +135,17 @@ function MatchBoard({
           {state.notice === 'hit' ? ' ¡Pareja conectada!' : ''}
         </span>
       </p>
-      <div className={styles.columns}>
-        <ul className={styles.column} aria-label="Conceptos">
-          {round.concepts.map((item) => {
-            const connected = state.connectedConcepts.includes(item.token);
-            const selected = state.concept === item.token;
-            return (
-              <li key={item.token}>
-                <button
-                  type="button"
-                  className={`${styles.concept} ${selected ? styles.selected : ''} ${
-                    connected ? styles.connected : ''
-                  }`}
-                  disabled={connected}
-                  aria-disabled={!connected && !interactive ? true : undefined}
-                  aria-pressed={connected ? undefined : selected}
-                  onClick={() => handlers.selectConcept(item.token)}
-                >
-                  <Icon name={connected ? 'check' : emojiIcon(item.emoji)} size={18} />
-                  <span>{item.concepto}</span>
-                  {connected ? <span className="sr-only"> (conectado)</span> : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        <ul className={styles.column} aria-label="Datos">
-          {round.facts.map((item) => {
-            const connected = state.connectedFacts.includes(item.token);
-            const selected = state.fact === item.token;
-            return (
-              <li key={item.token}>
-                <button
-                  type="button"
-                  className={`${styles.fact} ${selected ? styles.selected : ''} ${
-                    connected ? styles.connected : ''
-                  }`}
-                  disabled={connected}
-                  aria-disabled={!connected && !interactive ? true : undefined}
-                  aria-pressed={connected ? undefined : selected}
-                  onClick={() => handlers.selectFact(item.token)}
-                >
-                  {connected ? <Icon name="check" size={18} /> : null}
-                  <span>{item.dato}</span>
-                  {connected ? <span className="sr-only"> (conectado)</span> : null}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+      <MatchColumns
+        concepts={round.concepts}
+        facts={round.facts}
+        connectedConcepts={state.connectedConcepts}
+        connectedFacts={state.connectedFacts}
+        selectedConcept={state.concept}
+        selectedFact={state.fact}
+        interactive={interactive}
+        onSelectConcept={handlers.selectConcept}
+        onSelectFact={handlers.selectFact}
+      />
       {state.phase === 'roundOver' ? (
         <RoundOver state={state} round={round} onAdvance={handlers.advance} />
       ) : null}

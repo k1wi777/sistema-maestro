@@ -3,12 +3,13 @@
 import type { TeacherModule } from '@gns/shared';
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 
+import { gameFrame as styles } from '@/shared/training-games';
+
 import { useChallenge } from '../hooks/use-challenge';
 import type { BestAttempt, ChallengeState } from '../model/challenge';
 import { challengeKeyAction } from '../model/challenge-keys';
 import { challengeTiles } from '../model/challenge-tiles';
 import { ChallengeQuestion } from './challenge-question';
-import styles from './challenge.module.css';
 import { GameBusy, GameError, GameFinal, GameLobby, GameLost } from './game-panels';
 
 const bestOf = (module: TeacherModule): BestAttempt | null =>

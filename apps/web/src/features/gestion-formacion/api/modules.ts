@@ -7,10 +7,12 @@ import {
   type Activity,
   type ChallengeQuestion,
   type ChallengeQuestionInput,
+  type CreateActivityInput,
   type CreateSlideInput,
   type Slide,
   type TrainingModule,
   type TrainingModuleDetail,
+  type UpdateActivityInput,
   type UpdateSlideInput,
   type UpdateTrainingModuleInput,
 } from '@gns/shared';
@@ -114,7 +116,32 @@ export async function removeQuestion(
   return result.ok ? { ok: true, data: undefined } : result;
 }
 
-// ---------- Actividades: solo gestión de las existentes (crearlas es de la parte 2) ----------
+// ---------- Actividades ----------
+
+export async function createActivity(
+  moduleId: string,
+  body: CreateActivityInput,
+): Promise<ApiResult<Activity>> {
+  const result = await callApi(() =>
+    api.POST('/training-modules/{id}/activities', { params: { path: { id: moduleId } }, body }),
+  );
+  return parseResult(result, activitySchema);
+}
+
+/** La API reemplaza la configuración entera y reinicia las partidas en curso de los docentes. */
+export async function updateActivity(
+  moduleId: string,
+  activityId: string,
+  body: UpdateActivityInput,
+): Promise<ApiResult<Activity>> {
+  const result = await callApi(() =>
+    api.PATCH('/training-modules/{id}/activities/{activityId}', {
+      params: { path: { id: moduleId, activityId } },
+      body,
+    }),
+  );
+  return parseResult(result, activitySchema);
+}
 
 export async function updateActivityRequired(
   moduleId: string,

@@ -4,7 +4,7 @@ import { TrainingActivityStatus, type Activity } from '@gns/shared';
 import { useMemo, useState } from 'react';
 
 import type { ApiResult } from '@/shared/api';
-import { Button, Card, Checkbox, Notice, StatusBadge } from '@/shared/ui';
+import { Button, Card, Checkbox, Icon, Notice, StatusBadge } from '@/shared/ui';
 
 import {
   restoreActivity,
@@ -12,7 +12,14 @@ import {
   updateActivityRequired,
   withdrawActivity,
 } from '../../api/modules';
-import { ACTIVITY_STATUS_LABEL, ACTIVITY_TYPE_LABEL } from '../../model/labels';
+import { useActivityEditor } from '../../hooks/use-activity-editor';
+import { ACTIVITY_TYPES } from '../../model/activity-form';
+import {
+  ACTIVITY_STATUS_LABEL,
+  ACTIVITY_TYPE_CHOICE,
+  ACTIVITY_TYPE_LABEL,
+} from '../../model/labels';
+import { ActivityEditor } from '../activity-editor/activity-editor';
 import { ModuleActionDialog } from '../module-action-dialog';
 import styles from './steps.module.css';
 import type { StepProps } from './step-types';
@@ -22,11 +29,15 @@ function replaceActivity(activities: Activity[], saved: Activity): Activity[] {
 }
 
 /**
- * Paso «Actividades»: gestiona las que ya existen (obligatoria u opcional, orden, quitar del módulo
- * y restaurar). El progreso de los docentes se conserva al quitar una actividad.
+ * Paso «Actividades»: crea y edita los cuatro tipos y gestiona las existentes (obligatoria u
+ * opcional, orden, quitar del módulo y restaurar). Una sola actividad abierta a la vez; abrir otra,
+ * agregar o cambiar de paso guarda primero la abierta. El progreso de los docentes se conserva al
+ * quitar una actividad.
  */
 export function ActivitiesStep({ editor, number }: StepProps) {
   const { detail, track, updateDetail } = editor;
+  const activityEditor = useActivityEditor(editor);
+  const openId = activityEditor.session?.activityId ?? null;
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [withdrawing, setWithdrawing] = useState<Activity | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -112,10 +123,6 @@ export function ActivitiesStep({ editor, number }: StepProps) {
         certificado. Quitar una actividad no borra el progreso de los docentes: si la restauras, lo
         recuperan.
       </p>
-      <Notice tone="info">
-        Crear y configurar actividades nuevas (ruleta y pasaporte, Conecta, ¿Verdad o mito? y
-        simulador) llegará en una próxima actualización. Aquí puedes gestionar las que ya existen.
-      </Notice>
       {failure ? (
         <div className={styles.spaced}>
           <Notice tone="error" title="No se pudo completar la acción">
@@ -131,7 +138,7 @@ export function ActivitiesStep({ editor, number }: StepProps) {
         <ol className={`${styles.items} ${styles.spaced}`}>
           {activities.map((activity, index) => {
             const out = activity.status === TrainingActivityStatus.OutOfPlan;
-            const busy = pendingId === activity.id || editor.busy;
+            const busy = pendingId === activity.id || editor.busy || activityEditor.saving;
             return (
               <li
                 key={activity.id}
@@ -153,6 +160,17 @@ export function ActivitiesStep({ editor, number }: StepProps) {
                   />
                 </div>
                 <div className={styles.activityActions}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    startIcon="lapiz"
+                    aria-expanded={openId === activity.id}
+                    disabled={busy}
+                    onClick={() => void activityEditor.openExisting(activity)}
+                  >
+                    Editar
+                    <span className="sr-only">{`: ${activity.title}`}</span>
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -190,11 +208,41 @@ export function ActivitiesStep({ editor, number }: StepProps) {
                     </Button>
                   )}
                 </div>
+                {openId === activity.id ? (
+                  <div className={styles.activityEditor}>
+                    <ActivityEditor editor={activityEditor} />
+                  </div>
+                ) : null}
               </li>
             );
           })}
         </ol>
       )}
+
+      <h3 className={styles.sectionTitle}>Agregar actividad</h3>
+      <ul className={styles.typeChoices}>
+        {ACTIVITY_TYPES.map((type) => (
+          <li key={type}>
+            <button
+              type="button"
+              className={styles.typeChoice}
+              disabled={activityEditor.saving || editor.busy}
+              onClick={() => void activityEditor.openNew(type)}
+            >
+              <span className={styles.typeChoiceName}>
+                <Icon name="mas" size={16} />
+                {ACTIVITY_TYPE_CHOICE[type].label}
+              </span>
+              <span className={styles.typeChoiceHint}>
+                {ACTIVITY_TYPE_CHOICE[type].description}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      {activityEditor.session && activityEditor.session.activityId === null ? (
+        <ActivityEditor editor={activityEditor} />
+      ) : null}
 
       {withdrawing ? (
         <ModuleActionDialog
