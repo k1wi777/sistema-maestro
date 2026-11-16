@@ -6,6 +6,8 @@ import styles from './DataTable.module.css';
 export interface DataTableColumn<Row> {
   key: string;
   header: string;
+  /** Nombre accesible completo: si existe, `header` se pinta como texto corto oculto a lectores. */
+  headerLabel?: string;
   render: (row: Row) => ReactNode;
   /** Alinea a la derecha y usa números tabulares. */
   numeric?: boolean;
@@ -44,7 +46,14 @@ export function DataTable<Row>({
             <tr>
               {columns.map((column) => (
                 <th key={column.key} scope="col" className={cx(column.numeric && styles.numeric)}>
-                  {column.header}
+                  {column.headerLabel ? (
+                    <>
+                      <span aria-hidden="true">{column.header}</span>
+                      <span className="sr-only">{column.headerLabel}</span>
+                    </>
+                  ) : (
+                    column.header
+                  )}
                 </th>
               ))}
             </tr>

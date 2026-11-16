@@ -2,14 +2,10 @@
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
+import type { WheelCardRef } from '@/shared/training-games';
+
 import { stampWheelCard } from '../api/activities';
-import {
-  initialWheelState,
-  pickCard,
-  spinRotation,
-  wheelReducer,
-  type WheelCardRef,
-} from '../model/wheel';
+import { initialWheelState, pickCard, spinRotation, wheelReducer } from '../model/wheel';
 
 interface UseWheelStampOptions {
   activityId: string;

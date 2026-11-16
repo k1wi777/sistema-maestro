@@ -5,6 +5,8 @@ import { useEffect, useRef, type KeyboardEvent } from 'react';
 
 import { Icon } from '@/shared/ui';
 
+import { gameFrame as challenge, StatementCard } from '@/shared/training-games';
+
 import { useCountdown } from '../hooks/use-countdown';
 import { useTrueOrMythGame } from '../hooks/use-true-or-myth-game';
 import { bestOf } from '../model/best-attempt';
@@ -14,7 +16,6 @@ import {
   type Statement,
   type TrueOrMythState,
 } from '../model/true-or-myth';
-import challenge from './challenge.module.css';
 import { GameBusy, GameError, GameFinal, GameLobby, GameLost } from './game-panels';
 import styles from './true-or-myth-game.module.css';
 
@@ -122,40 +123,14 @@ function StatementView({
       <div className={challenge.timeBar} aria-hidden="true">
         <span style={{ width: `${percent}%` }} />
       </div>
-      <div
-        className={`${styles.card} ${graded ? (graded.correct ? styles.cardOk : styles.cardBad) : ''}`}
-      >
-        <span className={styles.kind}>¿Verdad o mito?</span>
-        <p>{statement.text}</p>
-        <span
-          className={styles.seconds}
-          role="timer"
-          aria-label={`Quedan ${Math.ceil(remaining)} segundos`}
-        >
-          <span aria-hidden="true">{`${Math.ceil(remaining)} s`}</span>
-        </span>
-      </div>
-      <div className={styles.choices}>
-        <button
-          ref={mythRef}
-          type="button"
-          className={`${styles.choice} ${styles.myth}`}
-          disabled={!open}
-          onClick={() => handlers.choose(false)}
-        >
-          <Icon name="x" size={22} />
-          Mito
-        </button>
-        <button
-          type="button"
-          className={`${styles.choice} ${styles.truth}`}
-          disabled={!open}
-          onClick={() => handlers.choose(true)}
-        >
-          <Icon name="check" size={22} />
-          Verdad
-        </button>
-      </div>
+      <StatementCard
+        text={statement.text}
+        remaining={remaining}
+        graded={graded ? (graded.correct ? 'ok' : 'bad') : null}
+        open={open}
+        mythRef={mythRef}
+        onChoose={handlers.choose}
+      />
       {open ? (
         <p className={styles.keys}>También puedes usar las flechas: ← mito · verdad →</p>
       ) : null}
