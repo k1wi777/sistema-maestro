@@ -29,7 +29,7 @@ export function AssistantLauncher() {
       <button
         type="button"
         className={styles.launcher}
-        aria-label="Abrir el Asistente GNS"
+        aria-label="¿Dudas? Abrir el Asistente GNS"
         onClick={() => setOpen(true)}
       >
         <Icon name="chat" size={20} />

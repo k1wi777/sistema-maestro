@@ -9,3 +9,7 @@ docs/prototipo/
 apps/web/src/shared/api/openapi.json
 # Tipos generados por openapi-typescript (pnpm --filter @gns/web api:types).
 apps/web/src/shared/api/generated/
+# Salidas de Playwright (informes, trazas y sesiones guardadas).
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/e2e/.auth/

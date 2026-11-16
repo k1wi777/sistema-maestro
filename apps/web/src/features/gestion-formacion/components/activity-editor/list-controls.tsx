@@ -24,6 +24,7 @@ export function ListControls({
   return (
     <div className={styles.controls}>
       <Button
+        context={`${name}`}
         variant="outline"
         size="sm"
         startIcon="arriba"
@@ -31,9 +32,9 @@ export function ListControls({
         onClick={() => onMove(-1)}
       >
         Subir
-        <span className="sr-only">{` ${name}`}</span>
       </Button>
       <Button
+        context={`${name}`}
         variant="outline"
         size="sm"
         startIcon="abajo"
@@ -41,11 +42,15 @@ export function ListControls({
         onClick={() => onMove(1)}
       >
         Bajar
-        <span className="sr-only">{` ${name}`}</span>
       </Button>
-      <Button variant="outline" size="sm" disabled={disabled || !canRemove} onClick={onRemove}>
+      <Button
+        context={`${name}`}
+        variant="outline"
+        size="sm"
+        disabled={disabled || !canRemove}
+        onClick={onRemove}
+      >
         Quitar
-        <span className="sr-only">{` ${name}`}</span>
       </Button>
     </div>
   );

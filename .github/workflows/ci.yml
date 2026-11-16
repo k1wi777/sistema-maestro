@@ -23,6 +23,7 @@ jobs:
       mode: ${{ steps.plan.outputs.mode }}
       db: ${{ steps.plan.outputs.db }}
       e2e: ${{ steps.plan.outputs.e2e }}
+      e2e_web: ${{ steps.plan.outputs.e2e_web }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -44,6 +45,7 @@ jobs:
             echo "mode=all" >> "$GITHUB_OUTPUT"
             echo "db=true" >> "$GITHUB_OUTPUT"
             echo "e2e=true" >> "$GITHUB_OUTPUT"
+            echo "e2e_web=true" >> "$GITHUB_OUTPUT"
             echo "### Test selection: mode all (PR to main or push)" >> "$GITHUB_STEP_SUMMARY"
           fi
 
@@ -159,3 +161,48 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:e2e
+
+  # Browser end-to-end tests (Playwright) of the three processes, over the compiled web and API
+  # and the demo data, against PostgreSQL and MinIO that Testcontainers starts in the runner. It
+  # runs apart from `e2e` (API) so the slower one does not delay the other. Same policy as `e2e`:
+  # always on PRs to main and pushes; on a PR to an epic only when the web, the API code or seed
+  # data, or the suite itself change. Fail-safe: a failed `changes` job runs it too.
+  e2e-web:
+    name: Browser end-to-end tests
+    needs: changes
+    if: ${{ !cancelled() && ((needs.changes.outputs.mode != 'affected' && needs.changes.outputs.mode != 'none') || needs.changes.outputs.e2e_web == 'true') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      # The suite tests what is delivered: the compiled API and web (the API address is embedded
+      # in the web build).
+      - run: pnpm --filter @gns/api build
+      - run: pnpm --filter @gns/web build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000
+      - run: pnpm --filter @gns/web exec playwright install --with-deps chromium
+      # Password of the test users: generated here, masked and never stored (not a repository secret).
+      - name: Test users password
+        run: |
+          password="$(openssl rand -hex 18)"
+          echo "::add-mask::$password"
+          echo "E2E_USERS_PASSWORD=$password" >> "$GITHUB_ENV"
+      - run: pnpm test:e2e:web
+      - name: Upload report and traces
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7

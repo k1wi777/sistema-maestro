@@ -105,6 +105,7 @@ export function QuestionEditor({ form, errors, disabled, onChange }: QuestionEdi
                 }
               />
               <Button
+                context={`opción ${index + 1}`}
                 variant="outline"
                 size="sm"
                 className={styles.optionRemove}
@@ -116,7 +117,6 @@ export function QuestionEditor({ form, errors, disabled, onChange }: QuestionEdi
                 }
               >
                 Quitar
-                <span className="sr-only">{` opción ${index + 1}`}</span>
               </Button>
             </div>
           ))}
@@ -195,6 +195,7 @@ export function QuestionEditor({ form, errors, disabled, onChange }: QuestionEdi
               />
               <div className={styles.stepActions}>
                 <Button
+                  context={`paso ${index + 1}`}
                   variant="outline"
                   size="sm"
                   startIcon="arriba"
@@ -202,9 +203,9 @@ export function QuestionEditor({ form, errors, disabled, onChange }: QuestionEdi
                   onClick={() => set({ steps: moveStep(form.steps, index, -1) })}
                 >
                   Subir
-                  <span className="sr-only">{` paso ${index + 1}`}</span>
                 </Button>
                 <Button
+                  context={`paso ${index + 1}`}
                   variant="outline"
                   size="sm"
                   startIcon="abajo"
@@ -212,9 +213,9 @@ export function QuestionEditor({ form, errors, disabled, onChange }: QuestionEdi
                   onClick={() => set({ steps: moveStep(form.steps, index, 1) })}
                 >
                   Bajar
-                  <span className="sr-only">{` paso ${index + 1}`}</span>
                 </Button>
                 <Button
+                  context={`paso ${index + 1}`}
                   variant="outline"
                   size="sm"
                   disabled={disabled || form.steps.length <= QUESTION_ORDER_STEPS_LIMITS.min}
@@ -223,7 +224,6 @@ export function QuestionEditor({ form, errors, disabled, onChange }: QuestionEdi
                   }
                 >
                   Quitar
-                  <span className="sr-only">{` paso ${index + 1}`}</span>
                 </Button>
               </div>
             </div>

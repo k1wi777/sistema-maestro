@@ -91,13 +91,21 @@ export function TeachersScreen() {
       header: 'Acciones',
       render: (teacher) => (
         <span className={styles.actions}>
-          <Button variant="outline" size="sm" onClick={() => setOpenId(teacher.id)}>
+          <Button
+            context={`de ${teacher.name}`}
+            variant="outline"
+            size="sm"
+            onClick={() => setOpenId(teacher.id)}
+          >
             Asignaciones
-            <span className="sr-only">{`: ${teacher.name}`}</span>
           </Button>
-          <ButtonLink variant="outline" size="sm" href={`${ACTIVITY_PATH}?userId=${teacher.id}`}>
+          <ButtonLink
+            context={`de ${teacher.name}`}
+            variant="outline"
+            size="sm"
+            href={`${ACTIVITY_PATH}?userId=${teacher.id}`}
+          >
             Actividad
-            <span className="sr-only">{`: ${teacher.name}`}</span>
           </ButtonLink>
         </span>
       ),

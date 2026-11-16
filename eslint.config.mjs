@@ -4,6 +4,7 @@ import prettier from 'eslint-config-prettier';
 import reactHooks from 'eslint-plugin-react-hooks';
 import { defineConfig } from 'eslint/config';
 import { readdirSync } from 'node:fs';
+import { dirname, resolve, sep } from 'node:path';
 import tseslint from 'typescript-eslint';
 
 // Frontend feature first: una feature solo conoce `@/shared` y `@gns/shared`.
@@ -29,6 +30,49 @@ const zodDtoRestriction = {
     },
   ],
 };
+
+// El frontend nunca importa código de la API: lo común va a @gns/shared. La regla resuelve los
+// especificadores relativos contra la carpeta del archivo (un patrón fijo chocaría con las carpetas
+// `api/` de cada feature) y también bloquea el nombre del paquete.
+const apiRoot = resolve(import.meta.dirname, 'apps', 'api');
+const API_IMPORT_MESSAGE =
+  'El frontend no puede importar código de la API (apps/api): lo común va a @gns/shared.';
+
+const noApiImport = {
+  meta: { type: 'problem', schema: [], messages: { forbidden: API_IMPORT_MESSAGE } },
+  create(context) {
+    const fileDir = dirname(context.filename);
+    const check = (node, specifier) => {
+      if (typeof specifier !== 'string') return;
+      let forbidden = specifier === '@gns/api' || specifier.startsWith('@gns/api/');
+      if (!forbidden && specifier.startsWith('.')) {
+        const target = resolve(fileDir, specifier);
+        forbidden = target === apiRoot || target.startsWith(apiRoot + sep);
+      }
+      if (forbidden) context.report({ node, messageId: 'forbidden' });
+    };
+    const literal = (node) => (node && node.type === 'Literal' ? node.value : undefined);
+    return {
+      ImportDeclaration: (node) => check(node.source, node.source.value),
+      ExportAllDeclaration: (node) => check(node.source, node.source.value),
+      ExportNamedDeclaration: (node) => {
+        if (node.source) check(node.source, node.source.value);
+      },
+      ImportExpression: (node) => check(node.source, literal(node.source)),
+      TSImportEqualsDeclaration: (node) => {
+        const ref = node.moduleReference;
+        if (ref.type === 'TSExternalModuleReference') check(ref, literal(ref.expression));
+      },
+      CallExpression: (node) => {
+        if (node.callee.type === 'Identifier' && node.callee.name === 'require') {
+          check(node, literal(node.arguments[0]));
+        }
+      },
+    };
+  },
+};
+
+const gnsPlugin = { rules: { 'no-api-import': noApiImport } };
 
 const importRule = (options) => ({
   'no-restricted-imports': ['error', options],
@@ -58,6 +102,8 @@ export default defineConfig(
       '**/coverage/',
       '**/.next/',
       'apps/web/src/shared/api/generated/',
+      'apps/web/test-results/',
+      'apps/web/playwright-report/',
       '.rei/',
       '.claude/',
     ],
@@ -67,7 +113,9 @@ export default defineConfig(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        // La configuración de Playwright no pertenece a ningún tsconfig (el de la web solo incluye `src`,
+        // y el de `e2e` no puede ser el más cercano a ella).
+        projectService: { allowDefaultProject: ['apps/web/playwright.config.ts'] },
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -127,6 +175,23 @@ export default defineConfig(
   {
     files: ['apps/web/**/*.{ts,tsx}'],
     extends: [reactHooks.configs.flat.recommended],
+  },
+  // Suite de navegador (Playwright): no es código de páginas, así que no le aplican las reglas de
+  // Next.js ni de React. Es el único sitio de la web que importa código de apps/api (el entorno
+  // efímero y los datos demo de BE-92).
+  {
+    files: ['apps/web/e2e/**/*.ts', 'apps/web/playwright.config.ts'],
+    rules: {
+      '@next/next/no-html-link-for-pages': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+    },
+  },
+  // El frontend no importa la API (la suite de navegador, en e2e, queda fuera a propósito).
+  {
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    plugins: { gns: gnsPlugin },
+    rules: { 'gns/no-api-import': 'error' },
   },
   // lucide-react queda detrás de <Icon>: un único punto de control del estilo.
   {

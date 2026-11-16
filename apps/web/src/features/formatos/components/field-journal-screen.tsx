@@ -145,8 +145,9 @@ function JournalScreen({ initial, initialReviews, notice, onConflict }: JournalS
     setRemoveError(outcome.message);
   }
 
+  // En solo lectura el estado ya lo dice la insignia del encabezado: la barra no lo repite.
   const saveText = !editable
-    ? info.label
+    ? null
     : editor.savedAt
       ? `Guardado · ${formatTime(editor.savedAt)}`
       : 'Cada registro se guarda al agregarlo';
@@ -242,9 +243,11 @@ function JournalScreen({ initial, initialReviews, notice, onConflict }: JournalS
         <ActionBar
           className={styles.actionBar}
           status={
-            <span aria-live="polite" className={styles.saveStatus}>
-              {saveText}
-            </span>
+            saveText ? (
+              <span aria-live="polite" className={styles.saveStatus}>
+                {saveText}
+              </span>
+            ) : undefined
           }
         >
           {canVoid(sheet.status) ? (

@@ -52,13 +52,13 @@ function PlanCard({ plan }: { plan: LessonPlan }) {
         ].filter((entry): entry is string => Boolean(entry))}
         actions={
           <ButtonLink
+            context={`planeación de ${plan.area.name} · ${plan.topic ?? 'Sin tema'}`}
             href={`/docente/planeacion/${plan.id}`}
             variant="outline"
             size="sm"
             className={styles.stretched}
           >
             {isEditable(plan.status) ? 'Continuar' : 'Ver'}
-            <span className="sr-only">{`: ${plan.area.name} · ${plan.topic ?? 'Sin tema'}`}</span>
           </ButtonLink>
         }
       >

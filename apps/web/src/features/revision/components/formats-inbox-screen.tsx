@@ -71,12 +71,12 @@ const JOURNAL_COLUMNS: DataTableColumn<FieldJournalSummary>[] = [
     header: 'Acción',
     render: (journal) => (
       <ButtonLink
+        context={`diario de ${journal.teacher.fullName}, ${journal.grade.name}`}
         href={`/coordinacion/formatos/diario/${journal.id}`}
         variant={journal.status === RecordStatus.Submitted ? 'primary' : 'outline'}
         size="sm"
       >
         {journal.status === RecordStatus.Submitted ? 'Revisar' : 'Abrir'}
-        <span className="sr-only">{`: diario de ${journal.teacher.fullName}, ${journal.grade.name}`}</span>
       </ButtonLink>
     ),
   },
@@ -105,12 +105,12 @@ const NOTE_COLUMNS: DataTableColumn<ObserverNote>[] = [
     header: 'Acción',
     render: (note) => (
       <ButtonLink
+        context={`anotación de ${note.studentFirstName}`}
         href={`/coordinacion/formatos/observador/${note.id}`}
         variant={note.status === RecordStatus.Submitted ? 'primary' : 'outline'}
         size="sm"
       >
         {note.status === RecordStatus.Submitted ? 'Revisar' : 'Abrir'}
-        <span className="sr-only">{`: anotación de ${note.studentFirstName}`}</span>
       </ButtonLink>
     ),
   },
