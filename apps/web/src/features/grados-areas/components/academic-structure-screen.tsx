@@ -132,9 +132,9 @@ function GradesPanel({
         );
         return (
           <section key={level.id} aria-labelledby={`level-${level.id}`}>
-            <h3 id={`level-${level.id}`} className={styles.subheading}>
+            <h2 id={`level-${level.id}`} className={styles.subheading}>
               {level.name}
-            </h3>
+            </h2>
             {index >= FOLDED_FROM_INDEX ? (
               <details>
                 <summary>{`Ver ${level.grades.length} grados`}</summary>

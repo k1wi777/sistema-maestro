@@ -61,7 +61,7 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
     await dialog.getByRole('textbox', { name: /Nombre del grado/ }).fill(NEW_GRADE);
     await dialog.getByRole('button', { name: 'Guardar grado' }).click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('heading', { level: 3, name: LEVEL })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: LEVEL })).toBeVisible();
     await expect(page.getByText('Sin grupos').first()).toBeVisible();
 
     await page.getByRole('button', { name: `Agregar grupo a ${NEW_GRADE}`, exact: true }).click();
