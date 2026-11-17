@@ -5,32 +5,6 @@ import { PrismaService } from '../../../src/shared/database/prisma.service';
 import type { Planning } from './planning';
 import { asUser, type Cookies } from './session';
 
-/** Cuerpo JSON de una entrada: las fechas llegan como texto ISO. */
-export interface EntryBody {
-  id: string;
-  date: string;
-  lesson: string | null;
-  eventType: string;
-  students: string[];
-  description: string;
-  actions: string | null;
-  reflection: string | null;
-}
-
-/** Cuerpo JSON de la hoja con sus entradas. */
-export interface JournalBody {
-  id: string;
-  teacher: { id: string; fullName: string };
-  grade: { id: string; name: string };
-  period: { id: string; number: number; schoolYear: string };
-  status: RecordStatus;
-  submittedAt: string | null;
-  entryCount: number;
-  entries: EntryBody[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface NoteBody {
   id: string;
   teacher: { id: string; fullName: string };
@@ -49,14 +23,6 @@ export interface NoteBody {
 
 /** Revisión como la sirve la API (la fecha viaja como texto). */
 export type ReviewBody = Omit<Review, 'date'> & { date: string };
-
-/** Entrada mínima válida. */
-export const ENTRY_CONTENT = {
-  date: '2031-03-10',
-  lesson: 'Matemáticas',
-  eventType: 'grupo',
-  description: 'Trabajo en equipo durante la clase.',
-};
 
 /** Anotación mínima válida (el grado se completa en cada prueba). */
 export const NOTE_CONTENT = {
@@ -79,26 +45,6 @@ function expectCreated<T>(res: { status: number; body: unknown }): T {
   return res.body as T;
 }
 
-export const createJournal = (
-  app: INestApplication,
-  cookies: Cookies,
-  body: Record<string, unknown>,
-): Promise<JournalBody> =>
-  call(app, cookies, 'post', '/field-journals')
-    .send(body)
-    .then((res) => expectCreated<JournalBody>(res));
-
-/** Agrega una entrada por la API y devuelve la hoja; falla la prueba si no responde 201. */
-export const addEntry = (
-  app: INestApplication,
-  cookies: Cookies,
-  journalId: string,
-  body: Record<string, unknown> = {},
-): Promise<JournalBody> =>
-  call(app, cookies, 'post', `/field-journals/${journalId}/entries`)
-    .send({ ...ENTRY_CONTENT, ...body })
-    .then((res) => expectCreated<JournalBody>(res));
-
 export const createNote = (
   app: INestApplication,
   cookies: Cookies,
@@ -110,7 +56,7 @@ export const createNote = (
 
 /**
  * Crea un grado (y un área) propios y asigna a los docentes indicados, para que cada prueba
- * tenga su combinación docente + grado + periodo sin choques con otras.
+ * tenga su combinación docente + grado sin choques con otras.
  */
 export async function freshGrade(
   planning: Planning,
@@ -121,23 +67,6 @@ export async function freshGrade(
     await planning.assign(id, target.gradeId, target.areaId);
   }
   return target;
-}
-
-/** Hoja del docente con una entrada y ya enviada (lista para revisar). */
-export async function submittedJournal(
-  app: INestApplication,
-  planning: Planning,
-  teacher: { id: string },
-  cookies: Cookies,
-  entries: Record<string, unknown>[] = [{}],
-): Promise<JournalBody> {
-  const { gradeId } = await freshGrade(planning, [teacher.id]);
-  const journal = await createJournal(app, cookies, { gradeId, periodId: planning.periods[1] });
-  for (const entry of entries) {
-    await addEntry(app, cookies, journal.id, entry);
-  }
-  await call(app, cookies, 'post', `/field-journals/${journal.id}/submit`).expect(200);
-  return journal;
 }
 
 /** Anotación del docente ya enviada. */
@@ -151,17 +80,6 @@ export async function submittedNote(
   const note = await createNote(app, cookies, { gradeId, ...body });
   await call(app, cookies, 'post', `/observer-notes/${note.id}/submit`).expect(200);
   return note;
-}
-
-/** Deja el registro en el estado indicado escribiendo directamente en la base. */
-export async function forceJournalStatus(
-  app: INestApplication,
-  journalId: string,
-  status: RecordStatus,
-): Promise<void> {
-  await app
-    .get(PrismaService)
-    .fieldJournal.update({ where: { id: journalId }, data: { status, submittedAt: new Date() } });
 }
 
 export async function forceNoteStatus(

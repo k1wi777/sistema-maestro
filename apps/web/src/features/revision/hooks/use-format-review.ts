@@ -3,12 +3,9 @@
 import {
   ApiErrorCode,
   RecordStatus,
-  approveFieldJournalSchema,
   approveObserverNoteSchema,
-  returnFieldJournalSchema,
   returnObserverNoteSchema,
   REVIEW_COMMENT_MAX_LENGTH,
-  type FieldJournal,
   type ObserverNote,
   type Review,
 } from '@gns/shared';
@@ -18,13 +15,6 @@ import { NETWORK_ERROR_CODE, type ApiError, type ApiResult } from '@/shared/api'
 import { useRemote, type Remote } from '@/shared/data';
 import { useSession } from '@/shared/session';
 
-import {
-  approveJournal,
-  getJournal,
-  listJournalReviews,
-  returnJournal,
-  voidJournal,
-} from '../api/field-journals';
 import { approveNote, getNote, listNoteReviews, returnNote, voidNote } from '../api/observer-notes';
 import { buildHistory } from '../model/history';
 import {
@@ -35,7 +25,7 @@ import {
 } from '../model/messages';
 import type { ReviewNotice } from './use-plan-review';
 
-/** Registro revisable por coordinación: lo que comparten diario y anotación. */
+/** Registro revisable por coordinación: lo que comparten las anotaciones del observador. */
 interface ReviewableRecord {
   id: string;
   status: RecordStatus;
@@ -62,18 +52,6 @@ interface FormatApi<T extends ReviewableRecord> {
   returnSchema: CommentParser;
   submittedAt: (record: T) => Date | null;
 }
-
-export const JOURNAL_FORMAT: FormatApi<FieldJournal> = {
-  noun: 'hoja',
-  get: getJournal,
-  reviews: listJournalReviews,
-  approve: approveJournal,
-  returnRecord: returnJournal,
-  voidRecord: voidJournal,
-  approveSchema: approveFieldJournalSchema,
-  returnSchema: returnFieldJournalSchema,
-  submittedAt: (record) => record.submittedAt,
-};
 
 export const NOTE_FORMAT: FormatApi<ObserverNote> = {
   noun: 'anotación',

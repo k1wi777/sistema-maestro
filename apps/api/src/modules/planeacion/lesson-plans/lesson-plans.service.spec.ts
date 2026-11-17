@@ -87,7 +87,7 @@ function setup(options: Options = {}) {
   const reviewRepository = {
     insert: jest.fn((review: NewReview) => {
       reviews.push(review);
-      return Promise.resolve();
+      return Promise.resolve('review-id');
     }),
     findByRecord: jest.fn(() => Promise.resolve([])),
   } satisfies ReviewRepository;

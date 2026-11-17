@@ -338,25 +338,68 @@ export async function loadDemoData(
     }
   }
 
+  const groupIdOf = async (grade: string, name: string): Promise<string> => {
+    const found = await client.query<{ id: string }>(
+      `SELECT id FROM grupo WHERE grado_id = $1 AND nombre = $2`,
+      [required(references.grades, grade, 'el grado'), name],
+    );
+    const groupId = found.rows[0]?.id;
+    if (!groupId) {
+      throw new Error(`Los datos demo necesitan el grupo «${name}», que no existe`);
+    }
+    return groupId;
+  };
   for (const item of DEMO_JOURNALS) {
+    const day = `${item.date}T08:00:00-05:00`;
     const journalId = await insert('diario_campo', {
-      docente_id: idOf(item.teacher),
-      grado_id: required(references.grades, item.grade, 'el grado'),
-      periodo_id: required(references.periods, String(item.period), 'el periodo'),
+      grupo_id: await groupIdOf(item.grade, item.group),
+      fecha: item.date,
+      anio_lectivo: DEMO_SCHOOL_YEAR,
       estado: item.status,
-      enviada_en: item.submittedAt,
+      creado_por: idOf(item.createdBy),
+      enviado_en: item.submittedAt,
+      anulado_en: item.voidedAt ?? null,
+      anulado_por: item.voidedBy ? idOf(item.voidedBy) : null,
+      creado_en: day,
+      actualizado_en: item.submittedAt ?? item.voidedAt ?? day,
     });
     ids.set(`journal:${item.key}`, journalId);
-    for (const entry of item.entries) {
-      await insert('diario_entrada', {
+    for (const note of item.annotations) {
+      const annotationId = await insert('diario_anotacion', {
         diario_id: journalId,
-        fecha: entry.date,
-        clase: entry.lesson,
-        tipo_evento: entry.eventType,
-        estudiantes: entry.students,
-        descripcion: entry.description,
-        acciones: entry.actions,
-        reflexion: entry.reflection,
+        docente_id: idOf(note.teacher),
+        area_id: required(references.areas, note.area, 'el área'),
+        tipo_evento: note.eventType,
+        estudiantes: note.students,
+        descripcion: note.description,
+        acciones: note.actions,
+        reflexion: note.reflection,
+        estado: note.status,
+        lista_en: note.readyAt,
+        enviada: note.sent,
+        creado_en: day,
+        actualizado_en: note.readyAt ?? day,
+      });
+      if (note.key) {
+        ids.set(`annotation:${item.key}:${note.key}`, annotationId);
+      }
+    }
+    for (const submission of item.submissions) {
+      await insert('diario_envio', {
+        diario_id: journalId,
+        director_id: idOf(submission.director),
+        enviado_en: submission.at,
+        reenvio: submission.resubmission,
+        aportes_listos: submission.ready,
+        docentes_esperados: submission.expected,
+        faltantes: JSON.stringify(
+          submission.missing.map((entry) => ({
+            docenteId: idOf(entry.teacher),
+            estado: entry.status,
+          })),
+        ),
+        creado_en: submission.at,
+        actualizado_en: submission.at,
       });
     }
   }
@@ -395,6 +438,19 @@ export async function loadDemoData(
         fecha: item.date,
       }),
     );
+  }
+
+  for (const item of DEMO_JOURNALS) {
+    for (const note of item.annotations) {
+      if (!note.key || !note.observation || !item.observationReview) {
+        continue;
+      }
+      await insert('diario_observacion', {
+        revision_id: idOf(`review:${item.observationReview}`),
+        anotacion_id: idOf(`annotation:${item.key}:${note.key}`),
+        texto: note.observation,
+      });
+    }
   }
 
   await loadTraining(references, ids, insert);

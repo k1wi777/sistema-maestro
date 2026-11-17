@@ -58,15 +58,16 @@ describe('immutable audit log', () => {
       expect(result.rows[0]?.allowed).toBe(true);
     });
 
-    it('can read and write the other 32 tables (archivo, certificado and the unanswered-question tables never allow DELETE)', async () => {
+    it('can read and write the other 34 tables (archivo, certificado and the unanswered-question tables never allow DELETE; the archived journals are read-only)', async () => {
       const result = await db.client.query<{ table_name: string }>(
         `SELECT table_name FROM information_schema.tables
          WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
            AND table_name NOT IN ('bitacora', '_prisma_migrations', 'archivo', 'certificado',
-                                'pregunta_sin_respuesta', 'ocurrencia_pregunta_sin_respuesta')`,
+                                'pregunta_sin_respuesta', 'ocurrencia_pregunta_sin_respuesta',
+                                'diario_campo_historico', 'diario_entrada_historico')`,
       );
 
-      expect(result.rows).toHaveLength(32);
+      expect(result.rows).toHaveLength(34);
       for (const { table_name: table } of result.rows) {
         for (const privilege of ['SELECT', 'INSERT', 'UPDATE', 'DELETE']) {
           expect([table, privilege, await hasPrivilege(table, privilege)]).toEqual([

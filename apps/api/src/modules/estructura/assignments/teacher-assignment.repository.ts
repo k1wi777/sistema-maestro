@@ -5,6 +5,7 @@ import type {
   TeacherAssignmentStatus,
 } from '@gns/shared';
 import type { ReadRepository } from '../../../shared/repository/repository';
+import type { GroupRoster, MyGroup } from './group-roster';
 
 /** Docente del alcance de un plan: solo id y nombre (nunca correo ni otros datos). */
 export interface TeacherInScope {
@@ -61,6 +62,10 @@ export interface TeacherAssignmentRepository extends ReadRepository<
    * activos con asignación activa en esa área y año.
    */
   findActiveTeachers(areaId: string | null, schoolYear: string): Promise<TeacherInScope[]>;
+  /** Participantes, director(a) y coordinadora del grupo en el año; `null` si el grupo no existe. */
+  findGroupRoster(groupId: string, schoolYear: string): Promise<GroupRoster | null>;
+  /** Grupos donde el docente tiene asignaciones activas en el año, con sus áreas. */
+  findMyGroups(teacherId: string, schoolYear: string): Promise<MyGroup[]>;
   create(input: NewTeacherAssignment): Promise<TeacherAssignment>;
   update(id: string, changes: TeacherAssignmentChanges): Promise<TeacherAssignment>;
 }

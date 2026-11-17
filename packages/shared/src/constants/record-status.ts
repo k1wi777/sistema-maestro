@@ -1,7 +1,7 @@
 /**
- * Estado común de los registros pedagógicos (`planeacion.estado`,
- * `diario_campo.estado` y `observador_anotacion.estado`). Todos siguen el mismo
- * flujo de revisión y se anulan en lugar de borrarse.
+ * Estado común de los registros pedagógicos (`planeacion.estado` y
+ * `observador_anotacion.estado`). Siguen el mismo flujo de revisión y se anulan en
+ * lugar de borrarse. El diario de campo tiene estados propios (`JournalStatus`).
  */
 export const RecordStatus = {
   Draft: 'borrador',

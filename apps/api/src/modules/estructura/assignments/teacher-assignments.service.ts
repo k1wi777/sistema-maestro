@@ -22,6 +22,7 @@ import { AreasService } from '../catalogs/area/areas.service';
 import { GradesService } from '../catalogs/grade/grades.service';
 import { GroupsService } from '../catalogs/group/groups.service';
 import { SchoolYearsService } from '../school-years/school-years.service';
+import type { GroupRoster, MyGroup } from './group-roster';
 import { groupAssignmentsByGrade } from './my-assignments';
 import {
   TEACHER_ASSIGNMENT_REPOSITORY,
@@ -131,6 +132,19 @@ export class TeacherAssignmentsService {
     const current = await this.schoolYears.requireCurrent();
     const assignments = await this.repository.findActiveByTeacher(teacherId, current.code);
     return groupAssignmentsByGrade(current.code, assignments);
+  }
+
+  /**
+   * Participantes, director(a) y coordinadora de un grupo en un año: única fuente de esas
+   * relaciones para el diario colaborativo. `null` si el grupo no existe.
+   */
+  groupRoster(groupId: string, schoolYear: string): Promise<GroupRoster | null> {
+    return this.repository.findGroupRoster(groupId, schoolYear);
+  }
+
+  /** Grupos del docente en el año (asignaciones activas) con las áreas que tiene en cada uno. */
+  myGroups(teacherId: string, schoolYear: string): Promise<MyGroup[]> {
+    return this.repository.findMyGroups(teacherId, schoolYear);
   }
 
   /** Asignaciones activas de todos los docentes del año, sin paginar (informes de coordinación). */

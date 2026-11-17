@@ -4,16 +4,7 @@ import type { INestApplication } from '@nestjs/common';
 import { UserRole } from '@gns/shared';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
-import {
-  addEntry,
-  call,
-  createJournal,
-  createNote,
-  ENTRY_CONTENT,
-  freshGrade,
-  NOTE_CONTENT,
-  type NoteBody,
-} from './support/formats';
+import { call, createNote, freshGrade, NOTE_CONTENT, type NoteBody } from './support/formats';
 import { auditRows, setupPlanning, type Planning } from './support/planning';
 import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
 import { createTestUser, signIn, type Cookies, type TestUser } from './support/session';
@@ -23,7 +14,6 @@ const run = randomUUID().slice(0, 8);
 const marker = (label: string) => `${label}-${run}`;
 const STUDENT_A = 'Zaphod';
 const STUDENT_B = 'Marvin';
-const STUDENT_C = 'Trillian';
 
 describe('privacidad del diario y el observador (BE-6)', () => {
   let app: INestApplication;
@@ -80,30 +70,6 @@ describe('privacidad del diario y el observador (BE-6)', () => {
   describe('campos no definidos (R17)', () => {
     const PERSONAL = ['documentId', 'phone', 'address', 'diagnosis', 'photo', 'lastName'];
 
-    it('el cuerpo del diario con un campo desconocido responde 400 y no guarda nada', async () => {
-      const { gradeId } = await freshGrade(planning, [teacherUser.id]);
-      const journal = await createJournal(app, teacher, { gradeId, periodId: planning.periods[1] });
-      const other2 = (await freshGrade(planning, [teacherUser.id])).gradeId;
-
-      for (const field of PERSONAL) {
-        const secret = marker(field);
-        const create = await post(teacher, '/field-journals')
-          .send({ gradeId: other2, periodId: planning.periods[1], [field]: secret })
-          .expect(400);
-        const entry = await post(teacher, `/field-journals/${journal.id}/entries`)
-          .send({ ...ENTRY_CONTENT, [field]: secret })
-          .expect(400);
-        expect(JSON.stringify([create.body, entry.body])).not.toContain(secret);
-      }
-      await patch(teacher, `/field-journals/${journal.id}/entries/${randomUUID()}`)
-        .send({ photo: 'x' })
-        .expect(400);
-      expect(
-        await prisma.fieldJournal.count({ where: { teacherId: teacherUser.id, gradeId: other2 } }),
-      ).toBe(0);
-      expect(await prisma.fieldJournalEntry.count({ where: { journalId: journal.id } })).toBe(0);
-    });
-
     it('el cuerpo del observador con un campo desconocido responde 400 y no guarda nada', async () => {
       const { gradeId } = await freshGrade(planning, []);
       for (const field of PERSONAL) {
@@ -140,56 +106,6 @@ describe('privacidad del diario y el observador (BE-6)', () => {
   });
 
   describe('bitácora sin datos de menores (R18, R22)', () => {
-    it('el diario: nombres, descripciones, acciones y reflexión quedan como [oculto]', async () => {
-      const { gradeId } = await freshGrade(planning, [teacherUser.id]);
-      const journal = await createJournal(app, teacher, { gradeId, periodId: planning.periods[1] });
-      const texts = [marker('desc'), marker('acciones'), marker('reflexion'), marker('nueva')];
-
-      const added = await addEntry(app, teacher, journal.id, {
-        students: [STUDENT_A, STUDENT_B],
-        description: texts[0],
-        actions: texts[1],
-        reflection: texts[2],
-        eventType: 'mejorar',
-      });
-      const entryId = added.entries[0]?.id ?? '';
-      await patch(teacher, `/field-journals/${journal.id}/entries/${entryId}`)
-        .send({ description: texts[3], students: [STUDENT_C] })
-        .expect(200);
-      await post(teacher, `/field-journals/${journal.id}/submit`).expect(200);
-      await post(coord, `/field-journals/${journal.id}/return`)
-        .send({
-          comment: 'Ajuste',
-          changes: { entries: [{ id: entryId, description: marker('ajuste'), lesson: 'Arte' }] },
-        })
-        .expect(200);
-      await post(teacher, `/field-journals/${journal.id}/void`)
-        .send({ reason: 'Hoja de prueba' })
-        .expect(200);
-
-      const text = await auditText(journal.id);
-      for (const secret of [...texts, STUDENT_A, STUDENT_B, STUDENT_C, marker('ajuste')]) {
-        expect(text).not.toContain(secret);
-      }
-      expect(text).toContain('[oculto]');
-      const rows = await auditRows(app, journal.id);
-      expect(rows.map((row) => row.action)).toEqual([
-        'Creó una hoja de diario de campo',
-        'Agregó un registro al diario de campo',
-        'Editó un registro del diario de campo',
-        'Envió el diario de campo',
-        'Dejó observaciones en un diario de campo',
-        'Anuló un diario de campo',
-      ]);
-      // Se ve qué cambió: la clase, el estado y que la descripción cambió (ambos lados ocultos).
-      expect(JSON.stringify(rows[4]?.dataAfter)).toContain('Arte');
-      expect(JSON.stringify(rows[2]?.dataBefore)).toContain('[oculto]');
-      expect(JSON.stringify(rows[2]?.dataAfter)).toContain('[oculto]');
-      // El contenido sí vive en el historial de revisión, visible solo a dueño y coordinación.
-      const review = await prisma.review.findMany({ where: { recordId: journal.id } });
-      expect(JSON.stringify(review)).toContain(marker('ajuste'));
-    });
-
     it('el observador: nombre, descripción, versión, estrategias, acciones y seguimiento quedan como [oculto]', async () => {
       const { gradeId } = await freshGrade(planning, []);
       const secrets = [
@@ -274,26 +190,6 @@ describe('privacidad del diario y el observador (BE-6)', () => {
         (await patch(teacher, `/observer-notes/${id}`).send({ description }).expect(409)).body,
       );
 
-      const journal = await createJournal(app, teacher, { gradeId, periodId: planning.periods[1] });
-      await addEntry(app, teacher, journal.id, { students: [STUDENT_A], description });
-      await post(teacher, `/field-journals/${journal.id}/submit`).expect(200);
-      bodies.push(
-        (
-          await post(teacher, `/field-journals/${journal.id}/entries`)
-            .send({ ...ENTRY_CONTENT, description, students: [STUDENT_A] })
-            .expect(409)
-        ).body,
-        (
-          await post(teacher, `/field-journals/${journal.id}/entries`)
-            .send({
-              ...ENTRY_CONTENT,
-              description,
-              students: ['Gonzalo Pérez Valderrama'],
-              extra: 1,
-            })
-            .expect(400)
-        ).body,
-      );
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       const everything = JSON.stringify([bodies, logLines]);

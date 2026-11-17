@@ -47,3 +47,8 @@ export function startOfBogotaDay(day: string): Date {
 export function startOfNextBogotaDay(day: string): Date {
   return new Date(startOfBogotaDay(day).getTime() + DAY_MS);
 }
+
+/** Hoy (`aaaa-mm-dd`) en la hora de Colombia. */
+export function todayInBogota(now: Date = new Date()): string {
+  return formatBogotaDateOnly(now);
+}

@@ -338,7 +338,7 @@ export function Showcase() {
             <FormatCard
               headingLevel={3}
               title="Diarios de campo"
-              description="Revisa las hojas del diario de campo (F-PA-05)."
+              description="Revisa el diario de cada grupo y día."
               icon="formatos"
               href="/muestra"
               badge={<StatusBadge tone="warning">3 pendientes</StatusBadge>}

@@ -8,7 +8,11 @@ import type { AuditedOptions } from './audited.decorator';
 
 const ID = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1b3c';
 
-function setup(redact: readonly string[] | undefined, states: (Record<string, unknown> | null)[]) {
+function setup(
+  redact: readonly string[] | undefined,
+  states: (Record<string, unknown> | null)[],
+  extra: { describe?: (snapshot: Record<string, unknown>) => string | null; detail?: string } = {},
+) {
   const record = jest.fn<Promise<void>, [Record<string, unknown>]>().mockResolvedValue(undefined);
   const load = jest.fn();
   for (const state of states) {
@@ -20,10 +24,11 @@ function setup(redact: readonly string[] | undefined, states: (Record<string, un
     entity: 'tabla',
     snapshot: class {},
     redact,
+    detail: extra.detail,
   } as AuditedOptions;
   const interceptor = new AuditInterceptor(
     { get: () => options } as unknown as Reflector,
-    { get: () => ({ load }) } as unknown as ModuleRef,
+    { get: () => ({ load, describe: extra.describe }) } as unknown as ModuleRef,
     { record } as unknown as AuditLogService,
     { run: <T>(fn: () => Promise<T>) => fn() },
   );
@@ -79,5 +84,30 @@ describe('AuditInterceptor con redact', () => {
     const { record, run } = setup(undefined, [null, { description: 'texto' }]);
     await run();
     expect(record.mock.calls[0]?.[0]).toMatchObject({ dataAfter: { description: 'texto' } });
+  });
+});
+
+describe('AuditInterceptor con describe', () => {
+  const describeState = (snapshot: Record<string, unknown>) => `Grupo · ${String(snapshot.n)}`;
+
+  it('usa el detalle calculado del estado posterior cuando no hay otro', async () => {
+    const { record, run } = setup(undefined, [null, { n: 3 }], { describe: describeState });
+    await run();
+    expect(record.mock.calls[0]?.[0]).toMatchObject({ detail: 'Grupo · 3' });
+  });
+
+  it('el detalle estático prevalece sobre el calculado', async () => {
+    const { record, run } = setup(undefined, [null, { n: 3 }], {
+      describe: describeState,
+      detail: 'Fijo',
+    });
+    await run();
+    expect(record.mock.calls[0]?.[0]).toMatchObject({ detail: 'Fijo' });
+  });
+
+  it('sin estado posterior no calcula nada', async () => {
+    const { record, run } = setup(undefined, [null, null], { describe: describeState });
+    await run();
+    expect(record.mock.calls[0]?.[0]).toMatchObject({ detail: null });
   });
 });

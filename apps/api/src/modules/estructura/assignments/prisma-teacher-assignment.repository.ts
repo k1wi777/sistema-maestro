@@ -15,6 +15,7 @@ import {
   PrismaReadRepository,
   type ModelDelegate,
 } from '../../../shared/repository/prisma-read.repository';
+import type { GroupRoster, MyGroup } from './group-roster';
 import type {
   NewTeacherAssignment,
   TeacherAssignmentChanges,
@@ -137,6 +138,96 @@ export class PrismaTeacherAssignmentRepository
       select: { id: true, fullName: true },
       orderBy: [{ fullName: 'asc' }, { id: 'asc' }],
     });
+  }
+
+  async findGroupRoster(groupId: string, schoolYear: string): Promise<GroupRoster | null> {
+    const group = await this.prisma.db.group.findUnique({
+      where: { id: groupId },
+      include: { grade: { include: { level: { select: { id: true, name: true } } } } },
+    });
+    if (!group) {
+      return null;
+    }
+    const rows = await this.prisma.db.teacherAssignment.findMany({
+      where: {
+        groupId,
+        schoolYear,
+        status: TeacherAssignmentStatus.Active,
+        teacher: { status: UserStatus.Active },
+      },
+      include: {
+        teacher: { select: { id: true, fullName: true } },
+        area: { select: { id: true, name: true } },
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+    });
+    const teachers = new Map<string, GroupRoster['teachers'][number]>();
+    let homeroom: GroupRoster['homeroom'] = null;
+    for (const row of rows) {
+      const entry = teachers.get(row.teacherId) ?? {
+        id: row.teacher.id,
+        fullName: row.teacher.fullName,
+        areas: [],
+      };
+      entry.areas.push({ id: row.area.id, name: row.area.name });
+      teachers.set(row.teacherId, entry);
+      if (row.isHomeroomTeacher) {
+        homeroom = { id: row.teacher.id, fullName: row.teacher.fullName };
+      }
+    }
+    const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'es');
+    return {
+      group: { id: group.id, name: group.name, active: group.active },
+      grade: {
+        id: group.grade.id,
+        name: group.grade.name,
+        active: group.grade.active,
+        coordinatorId: group.grade.coordinatorId,
+      },
+      level: group.grade.level,
+      homeroom,
+      teachers: [...teachers.values()]
+        .map((teacher) => ({ ...teacher, areas: teacher.areas.sort(byName) }))
+        .sort((a, b) => a.fullName.localeCompare(b.fullName, 'es')),
+    };
+  }
+
+  async findMyGroups(teacherId: string, schoolYear: string): Promise<MyGroup[]> {
+    const rows = await this.prisma.db.teacherAssignment.findMany({
+      where: { teacherId, schoolYear, status: TeacherAssignmentStatus.Active },
+      include: {
+        group: { include: { grade: { include: { level: { select: { id: true, name: true } } } } } },
+        area: { select: { id: true, name: true } },
+      },
+    });
+    const groups = new Map<string, MyGroup>();
+    for (const row of rows) {
+      const entry = groups.get(row.groupId) ?? {
+        group: { id: row.group.id, name: row.group.name, active: row.group.active },
+        grade: {
+          id: row.group.grade.id,
+          name: row.group.grade.name,
+          active: row.group.grade.active,
+          sortOrder: row.group.grade.sortOrder,
+        },
+        level: row.group.grade.level,
+        isHomeroomTeacher: false,
+        areas: [],
+      };
+      entry.isHomeroomTeacher ||= row.isHomeroomTeacher;
+      entry.areas.push({ id: row.area.id, name: row.area.name });
+      groups.set(row.groupId, entry);
+    }
+    return [...groups.values()]
+      .map((entry) => ({
+        ...entry,
+        areas: entry.areas.sort((a, b) => a.name.localeCompare(b.name, 'es')),
+      }))
+      .sort(
+        (a, b) =>
+          a.grade.sortOrder - b.grade.sortOrder ||
+          a.group.name.localeCompare(b.group.name, 'es', { numeric: true }),
+      );
   }
 
   async create(input: NewTeacherAssignment): Promise<TeacherAssignment> {

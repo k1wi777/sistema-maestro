@@ -79,6 +79,8 @@ function setup(options: Options = {}) {
     findActiveByTeacher: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveByYear: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveTeachers: jest.fn(() => Promise.resolve([{ id: 'teacher-1', fullName: 'Ana' }])),
+    findGroupRoster: jest.fn(() => Promise.resolve(null)),
+    findMyGroups: jest.fn(() => Promise.resolve([])),
     create: jest.fn(() => Promise.resolve(assignment())),
     update: jest.fn((_id: string, changes: object) =>
       Promise.resolve({ ...(options.stored ?? assignment()), ...changes }),
@@ -470,5 +472,16 @@ describe('TeacherAssignmentsService.teachersInScope', () => {
     expect(repository.findActiveTeachers).toHaveBeenCalledWith('ar-1', YEAR);
     await service.teachersInScope(null, YEAR);
     expect(repository.findActiveTeachers).toHaveBeenLastCalledWith(null, YEAR);
+  });
+});
+
+describe('TeacherAssignmentsService.groupRoster y myGroups', () => {
+  it('delegan en el repository con el año pedido', async () => {
+    const { service, repository } = setup();
+
+    await expect(service.groupRoster('gr-1', YEAR)).resolves.toBeNull();
+    expect(repository.findGroupRoster).toHaveBeenCalledWith('gr-1', YEAR);
+    await expect(service.myGroups('teacher-1', YEAR)).resolves.toEqual([]);
+    expect(repository.findMyGroups).toHaveBeenCalledWith('teacher-1', YEAR);
   });
 });

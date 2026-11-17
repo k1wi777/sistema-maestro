@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
 import { UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
@@ -9,16 +9,15 @@ import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   ApproveFieldJournalDto,
   FieldJournalDto,
-  FieldJournalReviewListDto,
   ReturnFieldJournalDto,
 } from './dto/field-journal.dto';
 import { FIELD_JOURNAL_AUDIT } from './field-journal.audit-snapshot';
 import { FieldJournalsService } from './field-journals.service';
 
 /**
- * Revisión de coordinación del diario: la revisión es genérica (`ReviewsService`); estas
- * rutas son propias del tipo de registro. Aprobar y devolver admiten ajustes de entradas
- * existentes (`changes.entries`), que se aplican en la misma operación.
+ * Revisión de coordinación del diario: la decisión es genérica (`ReviewsService`); estas rutas son
+ * propias del diario. La coordinadora revisa los diarios de sus grados y administración, cualquiera
+ * (el servicio comprueba el alcance). Coordinación nunca modifica el texto de las anotaciones.
  */
 @Controller('field-journals')
 @RequireRole(UserRole.Coordinator)
@@ -47,13 +46,5 @@ export class FieldJournalReviewController {
     @Body() body: ReturnFieldJournalDto,
   ) {
     return this.journals.returnJournal(user, id, body);
-  }
-
-  /** El dueño también ve su historial: el rol mínimo es docente y el servicio decide la visibilidad. */
-  @Get(':id/reviews')
-  @RequireRole(UserRole.Teacher)
-  @ZodResponse({ status: 200, type: FieldJournalReviewListDto })
-  history(@CurrentUser() user: RequestUser, @Param() { id }: IdParamDto) {
-    return this.journals.history(user, id);
   }
 }

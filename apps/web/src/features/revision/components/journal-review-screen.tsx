@@ -1,25 +1,51 @@
 'use client';
 
-import type { FieldJournal, Review } from '@gns/shared';
+import { JournalHistoryKind, type FieldJournal, type JournalAnnotation } from '@gns/shared';
 
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading } from '@/shared/data';
-import { formatDateTime, formatDayWithYear } from '@/shared/format/dates';
-import { JOURNAL_EVENT_INFO, STATUS_INFO } from '@/shared/records';
-import { ButtonLink, Card, Notice, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
+import { formatDateTime, formatTime, formatWeekdayDate } from '@/shared/format/dates';
+import { ANNOTATION_STATUS_INFO, JOURNAL_EVENT_INFO, JOURNAL_STATUS_INFO } from '@/shared/records';
+import {
+  Button,
+  ButtonLink,
+  Card,
+  Notice,
+  Observation,
+  PageContainer,
+  PageHeader,
+  StatusBadge,
+  TextArea,
+} from '@/shared/ui';
 
-import { JOURNAL_FORMAT, useFormatReview, useFormatReviewData } from '../hooks/use-format-review';
+import { useJournalReview, useJournalReviewData } from '../hooks/use-journal-review';
+import { observationCountLabel, queuePosition } from '../model/journal-review';
 import { JOURNAL_INBOX_PATH } from '../model/paths';
-import { FormatReviewPanel } from './format-review-panel';
 import styles from './format-review.module.css';
+import historyStyles from './review-history.module.css';
 
 const BACK_HREF = JOURNAL_INBOX_PATH;
 
+const HISTORY_TEXT: Record<string, (actor: string, detail: string | null) => string> = {
+  [JournalHistoryKind.Opened]: (actor) => `${actor} abrió el diario`,
+  [JournalHistoryKind.Ready]: (actor, detail) =>
+    `${actor} marcó su anotación como lista${detail ? ` (${detail})` : ''}`,
+  [JournalHistoryKind.Submitted]: (actor, detail) =>
+    `${actor} lo envió a coordinación${detail ? ` (${detail})` : ''}`,
+  [JournalHistoryKind.Resubmitted]: (actor, detail) =>
+    `${actor} lo reenvió a coordinación${detail ? ` (${detail})` : ''}`,
+  [JournalHistoryKind.Returned]: (actor, detail) =>
+    `${actor} lo devolvió con observaciones${detail ? ` (${detail})` : ''}`,
+  [JournalHistoryKind.Approved]: (actor) => `${actor} lo aprobó`,
+  [JournalHistoryKind.Voided]: (actor) => `${actor} lo anuló`,
+};
+
 function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
-  if (error.statusCode === 404) {
+  if (error.statusCode === 404 || error.statusCode === 403) {
     return (
-      <Notice tone="warning" title="No encontramos esta hoja">
-        Puede que ya no exista o que el enlace esté incompleto.{' '}
+      <Notice tone="warning" title="No encontramos este diario">
+        Puede que no sea de un grado que coordinas, que aún no se haya enviado o que el enlace esté
+        incompleto.{' '}
         <ButtonLink href={BACK_HREF} variant="outline" size="sm">
           Volver a Diarios de campo
         </ButtonLink>
@@ -29,18 +55,104 @@ function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) 
   return <LoadError error={error} onRetry={onRetry} />;
 }
 
-function JournalReview({
+function AnnotationSection({
+  annotation,
+  review,
+}: {
+  annotation: JournalAnnotation;
+  review: ReturnType<typeof useJournalReview>;
+}) {
+  const type = JOURNAL_EVENT_INFO[annotation.eventType];
+  const status = ANNOTATION_STATUS_INFO[annotation.status];
+  const observing = review.open.has(annotation.id);
+  const label = `${annotation.area.name} · ${annotation.teacher.fullName}`;
+  return (
+    <li className={styles.entry}>
+      <div className={styles.entryTop}>
+        <strong className={styles.entryDate}>
+          {annotation.readyAt ? `${label} · ${formatTime(annotation.readyAt)}` : label}
+        </strong>
+        <StatusBadge tone={type.tone}>{type.label}</StatusBadge>
+        <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+      </div>
+      {annotation.students.length > 0 ? (
+        <p className={styles.text}>
+          <strong>Estudiantes:</strong> {annotation.students.join(', ')}
+        </p>
+      ) : null}
+      <p className={styles.text}>
+        <strong>Descripción:</strong> {annotation.description}
+      </p>
+      {annotation.actions ? (
+        <p className={styles.text}>
+          <strong>Acciones:</strong> {annotation.actions}
+        </p>
+      ) : null}
+      {annotation.reflection ? (
+        <p className={styles.text}>
+          <strong>Reflexión:</strong> {annotation.reflection}
+        </p>
+      ) : null}
+      {annotation.observation ? (
+        <Observation
+          title={`Observación para ${annotation.teacher.fullName}`}
+          author={annotation.observation.reviewer.fullName}
+          date={formatDateTime(annotation.observation.date)}
+        >
+          {annotation.observation.text}
+        </Observation>
+      ) : null}
+      {review.canDecide ? (
+        <>
+          {observing ? (
+            <TextArea
+              label={`Tu observación para ${annotation.teacher.fullName}`}
+              rows={3}
+              value={review.observations[annotation.id] ?? ''}
+              onChange={(event) => review.observe(annotation.id, event.target.value)}
+            />
+          ) : null}
+          <div>
+            <Button
+              variant="outline"
+              size="sm"
+              startIcon="comentario"
+              context={`anotación de ${label}`}
+              onClick={() => review.toggle(annotation.id)}
+            >
+              {observing ? 'Quitar observación' : 'Observar'}
+            </Button>
+          </div>
+        </>
+      ) : null}
+    </li>
+  );
+}
+
+function JournalReviewView({
   journal,
-  reviews,
+  queue,
   refresh,
 }: {
   journal: FieldJournal;
-  reviews: Review[];
+  queue: string[];
   refresh: () => Promise<ApiError | null>;
 }) {
-  const review = useFormatReview({ format: JOURNAL_FORMAT, record: journal, reviews, refresh });
-  const info = STATUS_INFO[journal.status];
-  const title = `Diario de campo · ${journal.grade.name}`;
+  const review = useJournalReview({ journal, queue, refresh });
+  const info = JOURNAL_STATUS_INFO[journal.status];
+  const position = queuePosition(queue, journal.id);
+  const sent = journal.annotations.filter((annotation) => annotation.status !== 'borrador');
+  const reasonBlocked =
+    !journal.viewer.canReview && journal.status !== 'enviado'
+      ? `Este diario está ${info.label.toLowerCase()}: solo se revisan los enviados.`
+      : !journal.viewer.canReview
+        ? 'Participaste en este diario o lo enviaste: otra persona de coordinación debe revisarlo.'
+        : null;
+  const pending = journal.missing.map((entry) =>
+    entry.areas.length > 0
+      ? `${entry.teacher.fullName} (${entry.areas.join(', ')})`
+      : entry.teacher.fullName,
+  );
 
   return (
     <PageContainer>
@@ -50,97 +162,162 @@ function JournalReview({
         </ButtonLink>
       </div>
       <PageHeader
-        context="Diario de campo (F-PA-05)"
-        title={title}
-        description={`${journal.teacher.fullName} · Periodo ${journal.period.number} · ${journal.period.schoolYear}`}
-        actions={<StatusBadge tone={info.tone}>{info.label}</StatusBadge>}
+        context="Diarios de campo"
+        title={`${journal.group.name} · ${formatWeekdayDate(journal.date)}`}
+        description={[
+          journal.homeroomTeacher
+            ? `Director(a) de grupo: ${journal.homeroomTeacher.fullName}`
+            : null,
+          journal.submittedAt ? `Enviado el ${formatDateTime(journal.submittedAt)}` : null,
+          `${journal.readyCount} de ${journal.expectedCount} docentes aportaron`,
+        ]
+          .filter(Boolean)
+          .join(' · ')}
+        actions={
+          <div className={styles.entryTop}>
+            <StatusBadge tone={info.tone}>{info.shortLabel}</StatusBadge>
+            {position ? (
+              <span
+                className={styles.muted}
+              >{`${position.index} de ${position.total} pendientes`}</span>
+            ) : null}
+          </div>
+        }
       />
       <div className={styles.layout}>
         <div className={styles.content}>
           <Card title="Encabezado del formato">
             <dl className={styles.facts}>
               <div>
-                <dt>Año lectivo</dt>
-                <dd>{journal.period.schoolYear}</dd>
+                <dt>Código</dt>
+                <dd>F-PA-05 · Versión 2</dd>
               </div>
               <div>
-                <dt>Grado</dt>
-                <dd>{journal.grade.name}</dd>
+                <dt>Año lectivo y nivel</dt>
+                <dd>{`${journal.schoolYear} · ${journal.level.name}`}</dd>
               </div>
               <div>
-                <dt>Periodo</dt>
-                <dd>{`Periodo ${journal.period.number}`}</dd>
+                <dt>Grado, grupo y fecha</dt>
+                <dd>{`${journal.grade.name} · ${journal.group.name} · ${formatWeekdayDate(journal.date)}`}</dd>
               </div>
               <div>
-                <dt>Docente</dt>
-                <dd>{journal.teacher.fullName}</dd>
-              </div>
-              <div>
-                <dt>Enviada</dt>
-                <dd>{journal.submittedAt ? formatDateTime(journal.submittedAt) : '—'}</dd>
+                <dt>Director(a) de grupo</dt>
+                <dd>{journal.homeroomTeacher?.fullName ?? 'Sin director(a) asignado'}</dd>
               </div>
             </dl>
           </Card>
-          <Card title={`Registros (${journal.entries.length})`}>
-            {journal.entries.length === 0 ? (
-              <p className={styles.muted}>La hoja no tiene registros.</p>
+          {pending.length > 0 ? (
+            <Notice tone="warning" title="Sin aporte">
+              {pending.join(', ')}.
+            </Notice>
+          ) : null}
+          <Card title={`Anotaciones (${sent.length})`}>
+            {sent.length === 0 ? (
+              <p className={styles.muted}>El diario no tiene anotaciones enviadas.</p>
             ) : (
               <ul className={styles.entries}>
-                {journal.entries.map((entry) => {
-                  const type = JOURNAL_EVENT_INFO[entry.eventType];
-                  return (
-                    <li key={entry.id} className={styles.entry}>
-                      <div className={styles.entryTop}>
-                        <strong className={styles.entryDate}>
-                          {formatDayWithYear(entry.date)}
-                        </strong>
-                        {entry.lesson ? <span className={styles.muted}>{entry.lesson}</span> : null}
-                        <StatusBadge tone={type.tone}>{type.label}</StatusBadge>
-                      </div>
-                      <p className={styles.text}>{entry.description}</p>
-                      {entry.students.length > 0 ? (
-                        <p className={styles.text}>
-                          <strong>Estudiantes (nombre de pila):</strong> {entry.students.join(', ')}
-                        </p>
-                      ) : null}
-                      {entry.actions ? (
-                        <p className={styles.text}>
-                          <strong>Acciones:</strong> {entry.actions}
-                        </p>
-                      ) : null}
-                      {entry.reflection ? (
-                        <p className={styles.text}>
-                          <strong>Reflexión:</strong> {entry.reflection}
-                        </p>
-                      ) : null}
-                    </li>
-                  );
-                })}
+                {sent.map((annotation) => (
+                  <AnnotationSection key={annotation.id} annotation={annotation} review={review} />
+                ))}
               </ul>
             )}
           </Card>
         </div>
-        <FormatReviewPanel
-          review={review}
-          status={journal.status}
-          teacher={journal.teacher.fullName}
-          noun="hoja"
-          voidTitle="Anular hoja"
-          backHref={BACK_HREF}
-          backLabel="Diarios de campo"
-        />
+
+        <aside className={styles.panel} aria-label="Revisión de coordinación">
+          <Card title="Tu revisión">
+            <div className={styles.body}>
+              {review.notice ? (
+                <Notice tone={review.notice.tone}>
+                  <p className={styles.noticeText}>{review.notice.text}</p>
+                </Notice>
+              ) : null}
+              {reasonBlocked ? <Notice tone="info">{reasonBlocked}</Notice> : null}
+              {journal.signature ? (
+                <p className={styles.signature}>
+                  Revisado por:{' '}
+                  <strong>{`${journal.signature.reviewer.fullName}, ${formatDateTime(journal.signature.date)}`}</strong>
+                </p>
+              ) : null}
+              {journal.generalObservation ? (
+                <Observation
+                  title="Observación general"
+                  author={journal.generalObservation.reviewer.fullName}
+                  date={formatDateTime(journal.generalObservation.date)}
+                >
+                  {journal.generalObservation.text}
+                </Observation>
+              ) : null}
+              {review.canDecide ? (
+                <>
+                  <p className={styles.counter}>
+                    {review.observationCount === 0
+                      ? 'Aún no has observado ninguna anotación.'
+                      : observationCountLabel(review.observationCount)}
+                  </p>
+                  <TextArea
+                    label="Observación general"
+                    rows={4}
+                    value={review.general}
+                    help="Opcional al aprobar; úsala o escribe observaciones por anotación para devolver."
+                    onChange={(event) => review.setGeneral(event.target.value)}
+                  />
+                  <div className={styles.decisions}>
+                    <Button
+                      variant="secondary"
+                      disabled={review.busy !== null}
+                      onClick={() => void review.returnWithObservations()}
+                    >
+                      {review.busy === 'return' ? 'Devolviendo…' : 'Devolver con observaciones'}
+                    </Button>
+                    <Button
+                      startIcon="check"
+                      disabled={review.busy !== null}
+                      onClick={() => void review.approve()}
+                    >
+                      {review.busy === 'approve' ? 'Aprobando…' : 'Aprobar y pasar al siguiente'}
+                    </Button>
+                  </div>
+                </>
+              ) : null}
+              <section aria-labelledby="historial-diario" className={styles.history}>
+                <h3 id="historial-diario" className={styles.historyTitle}>
+                  Historial
+                </h3>
+                <ol className={historyStyles.list}>
+                  {[...journal.history].reverse().map((item, index) => (
+                    <li
+                      key={`${item.kind}-${item.at.toISOString()}-${index}`}
+                      className={historyStyles.item}
+                    >
+                      <time className={historyStyles.date} dateTime={item.at.toISOString()}>
+                        {formatDateTime(item.at)}
+                      </time>
+                      <p className={historyStyles.headline}>
+                        {(HISTORY_TEXT[item.kind] ?? (() => item.kind))(
+                          item.actor?.fullName ?? 'Alguien',
+                          item.detail,
+                        )}
+                      </p>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            </div>
+          </Card>
+        </aside>
       </div>
     </PageContainer>
   );
 }
 
-/** Revisión de una hoja del diario de campo (`/coordinacion/formatos/diario/[id]`). */
+/** Revisión de un diario de campo completo (`/coordinacion/formatos/diario/[id]`). */
 export function JournalReviewScreen({ id }: { id: string }) {
-  const remote = useFormatReviewData(JOURNAL_FORMAT, id, 'journal-review');
+  const remote = useJournalReviewData(id);
   if (remote.state.status === 'loading') {
     return (
       <PageContainer>
-        <Loading>Cargando la hoja…</Loading>
+        <Loading>Cargando el diario…</Loading>
       </PageContainer>
     );
   }
@@ -152,10 +329,10 @@ export function JournalReviewScreen({ id }: { id: string }) {
     );
   }
   return (
-    <JournalReview
+    <JournalReviewView
       key={id}
-      journal={remote.state.data.record}
-      reviews={remote.state.data.reviews}
+      journal={remote.state.data.journal}
+      queue={remote.state.data.queue}
       refresh={remote.refresh}
     />
   );

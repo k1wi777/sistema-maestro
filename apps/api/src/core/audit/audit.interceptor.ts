@@ -93,7 +93,9 @@ export class AuditInterceptor implements NestInterceptor {
         action: options.action,
         entity: options.entity,
         entityId: entityId ?? null,
-        detail: resolveAuditDetail(options, request.body),
+        detail:
+          resolveAuditDetail(options, request.body) ??
+          (after ? (source.describe?.(after) ?? null) : null),
         dataBefore: hide(changes.before),
         dataAfter: hide(changes.after),
       });

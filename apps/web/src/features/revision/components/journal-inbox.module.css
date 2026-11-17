@@ -1,0 +1,25 @@
+/* Cifras por estado y filtros de la bandeja de diarios de coordinación. */
+.figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.figure {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.figureValue {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}

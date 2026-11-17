@@ -158,22 +158,49 @@ export async function insertReview(client: Client, values: Values = {}): Promise
   });
 }
 
+/** Diario de un grupo en una fecha (año lectivo y creador propios si no se indican). */
 export async function insertFieldJournal(client: Client, values: Values = {}): Promise<Row> {
+  const schoolYear = typeof values.anio_lectivo === 'string' ? values.anio_lectivo : '2026-2027';
+  await ensureSchoolYear(client, schoolYear);
   return insertRow(client, 'diario_campo', {
+    grupo_id: await idOf(insertGroup(client)),
+    fecha: '2026-11-09',
+    estado: 'en_curso',
+    creado_por: await idOf(insertUser(client)),
+    ...values,
+    anio_lectivo: schoolYear,
+  });
+}
+
+/** Anotación con `lista_en` siempre presente: sirve para todos los estados del CHECK. */
+export async function insertFieldJournalAnnotation(
+  client: Client,
+  values: Values = {},
+): Promise<Row> {
+  return insertRow(client, 'diario_anotacion', {
+    diario_id: await idOf(insertFieldJournal(client)),
     docente_id: await idOf(insertUser(client)),
-    grado_id: await idOf(insertGrade(client)),
-    periodo_id: await idOf(insertAcademicPeriod(client)),
+    area_id: await idOf(insertArea(client)),
+    tipo_evento: 'grupo',
+    descripcion: 'Evento de prueba',
     estado: 'borrador',
+    lista_en: new Date(),
     ...values,
   });
 }
 
-export async function insertFieldJournalEntry(client: Client, values: Values = {}): Promise<Row> {
-  return insertRow(client, 'diario_entrada', {
+export async function insertFieldJournalSubmission(
+  client: Client,
+  values: Values = {},
+): Promise<Row> {
+  return insertRow(client, 'diario_envio', {
     diario_id: await idOf(insertFieldJournal(client)),
-    fecha: '2026-11-08',
-    tipo_evento: 'grupo',
-    descripcion: 'Evento de prueba',
+    director_id: await idOf(insertUser(client)),
+    enviado_en: new Date(),
+    reenvio: false,
+    aportes_listos: 1,
+    docentes_esperados: 2,
+    faltantes: JSON.stringify([]),
     ...values,
   });
 }

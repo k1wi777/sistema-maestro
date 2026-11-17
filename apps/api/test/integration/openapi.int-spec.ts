@@ -67,6 +67,9 @@ const BODYLESS = new Set([
   'put /school-years/{id}/current',
   'post /lesson-plans/{id}/submit',
   'post /field-journals/{id}/submit',
+  'post /field-journals/{id}/resubmit',
+  'post /field-journals/{id}/annotations/{annotationId}/ready',
+  'post /field-journals/{id}/annotations/{annotationId}/draft',
   'post /observer-notes/{id}/submit',
   'put /shared-activities/{id}/favorite',
   'post /training-modules/{id}/publish',
@@ -380,11 +383,7 @@ describe('documentación OpenAPI', () => {
     visit(document, '#');
     expect(arrayTypes).toEqual([]);
 
-    for (const path of [
-      '/lesson-plans/{id}/reviews',
-      '/field-journals/{id}/reviews',
-      '/observer-notes/{id}/reviews',
-    ]) {
+    for (const path of ['/lesson-plans/{id}/reviews', '/observer-notes/{id}/reviews']) {
       const schema = operations[path]?.get?.responses['200']?.content?.['application/json']
         ?.schema as JsonSchema | undefined;
       const resolved = schema ? resolveRef(schema, document.components?.schemas ?? {}) : undefined;

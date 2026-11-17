@@ -9,16 +9,20 @@ interface UsageRow {
 }
 
 // Filas que referencian cada elemento, una por referencia; se agrupan por id.
-const GROUP_REFS = Prisma.sql`SELECT grupo_id AS id FROM asignacion_docente`;
+const GROUP_REFS = Prisma.sql`
+  SELECT grupo_id AS id FROM asignacion_docente
+  UNION ALL SELECT grupo_id FROM diario_campo`;
 const GRADE_REFS = Prisma.sql`
   SELECT g.grado_id AS id FROM asignacion_docente ad JOIN grupo g ON g.id = ad.grupo_id
   UNION ALL SELECT grado_id FROM planeacion
-  UNION ALL SELECT grado_id FROM diario_campo
+  UNION ALL SELECT grado_id FROM diario_campo_historico
+  UNION ALL SELECT g.grado_id FROM diario_campo dc JOIN grupo g ON g.id = dc.grupo_id
   UNION ALL SELECT grado_id FROM observador_anotacion
   UNION ALL SELECT grado_id FROM actividad_repositorio WHERE grado_id IS NOT NULL`;
 const AREA_REFS = Prisma.sql`
   SELECT area_id AS id FROM asignacion_docente
   UNION ALL SELECT area_id FROM planeacion_area
+  UNION ALL SELECT area_id FROM diario_anotacion
   UNION ALL SELECT area_id FROM actividad_repositorio WHERE area_id IS NOT NULL
   UNION ALL SELECT area_id FROM plan_formacion WHERE area_id IS NOT NULL`;
 

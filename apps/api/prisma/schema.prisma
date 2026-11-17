@@ -45,7 +45,11 @@ model User {
   reviews                       Review[]
   sharedActivities              SharedActivity[]
   favoriteActivities            FavoriteActivity[]
-  fieldJournals                 FieldJournal[]
+  fieldJournalArchives          FieldJournalArchive[]
+  createdFieldJournals          FieldJournal[]                 @relation("FieldJournalCreatedBy")
+  voidedFieldJournals           FieldJournal[]                 @relation("FieldJournalVoidedBy")
+  fieldJournalAnnotations       FieldJournalAnnotation[]
+  fieldJournalSubmissions       FieldJournalSubmission[]
   observerNotes                 ObserverNote[]
   moduleProgress                ModuleProgress[]
   activityProgress              ActivityProgress[]
@@ -138,16 +142,16 @@ model Grade {
   sortOrder     Int      @map("orden") @db.SmallInt
   active        Boolean  @default(true) @map("activo")
   coordinatorId String?  @map("coordinador_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  level            EducationLevel   @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  coordinator      User?            @relation(fields: [coordinatorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  groups           Group[]
-  lessonPlans      LessonPlan[]
-  fieldJournals    FieldJournal[]
-  observerNotes    ObserverNote[]
-  sharedActivities SharedActivity[]
+  level                EducationLevel        @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  coordinator          User?                 @relation(fields: [coordinatorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groups               Group[]
+  lessonPlans          LessonPlan[]
+  fieldJournalArchives FieldJournalArchive[]
+  observerNotes        ObserverNote[]
+  sharedActivities     SharedActivity[]
 
   // «A lo sumo una coordinadora por grado» queda garantizado por construcción (columna en el grado).
   @@index([levelId])
@@ -167,6 +171,7 @@ model Group {
 
   grade              Grade               @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   teacherAssignments TeacherAssignment[]
+  fieldJournals      FieldJournal[]
 
   @@unique([gradeId, name])
   @@index([gradeId])
@@ -181,11 +186,12 @@ model Area {
   createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  teacherAssignments TeacherAssignment[]
-  lessonPlanAreas    LessonPlanArea[]
-  sharedActivities   SharedActivity[]
-  trainingPlans      TrainingPlan[]
-  areaLevels         AreaLevel[]
+  teacherAssignments      TeacherAssignment[]
+  lessonPlanAreas         LessonPlanArea[]
+  sharedActivities        SharedActivity[]
+  trainingPlans           TrainingPlan[]
+  areaLevels              AreaLevel[]
+  fieldJournalAnnotations FieldJournalAnnotation[]
 
   @@map("area")
 }
@@ -218,6 +224,7 @@ model SchoolYear {
 
   academicPeriods    AcademicPeriod[]
   teacherAssignments TeacherAssignment[]
+  fieldJournals      FieldJournal[]
 
   @@map("anio_lectivo")
 }
@@ -231,9 +238,9 @@ model AcademicPeriod {
   createdAt  DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt  DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  schoolYearRef SchoolYear     @relation(fields: [schoolYear], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  lessonPlans   LessonPlan[]
-  fieldJournals FieldJournal[]
+  schoolYearRef        SchoolYear            @relation(fields: [schoolYear], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  lessonPlans          LessonPlan[]
+  fieldJournalArchives FieldJournalArchive[]
 
   @@unique([schoolYear, number])
   @@map("periodo_academico")
@@ -349,7 +356,8 @@ model Review {
   createdAt      DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt      DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  reviewer User @relation(fields: [reviewerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewer     User                      @relation(fields: [reviewerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  observations FieldJournalObservation[]
 
   @@index([reviewerId])
   @@index([recordType, recordId])
@@ -399,7 +407,9 @@ model FavoriteActivity {
 
 // ---------- Formatos ----------
 
-model FieldJournal {
+// Diarios por docente y periodo anteriores a la épica #102 (diario colaborativo): solo lectura
+// para la aplicación (la migración revoca INSERT, UPDATE y DELETE) y sin API ni pantalla.
+model FieldJournalArchive {
   id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   teacherId   String    @map("docente_id") @db.Uuid
   gradeId     String    @map("grado_id") @db.Uuid
@@ -409,19 +419,19 @@ model FieldJournal {
   createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  teacher User                @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  grade   Grade               @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  period  AcademicPeriod      @relation(fields: [periodId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  entries FieldJournalEntry[]
+  teacher User                       @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  grade   Grade                      @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  period  AcademicPeriod             @relation(fields: [periodId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  entries FieldJournalArchiveEntry[]
 
   @@unique([teacherId, gradeId, periodId])
   @@index([teacherId])
   @@index([gradeId])
   @@index([periodId])
-  @@map("diario_campo")
+  @@map("diario_campo_historico")
 }
 
-model FieldJournalEntry {
+model FieldJournalArchiveEntry {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   journalId    String   @map("diario_id") @db.Uuid
   date         DateTime @map("fecha") @db.Date
@@ -435,10 +445,110 @@ model FieldJournalEntry {
   createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  journal FieldJournal @relation(fields: [journalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journal FieldJournalArchive @relation(fields: [journalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([journalId])
-  @@map("diario_entrada")
+  @@map("diario_entrada_historico")
+}
+
+// Diario de campo F-PA-05 de un grupo en una fecha (colaborativo: cada docente del grupo aporta
+// anotaciones y el director o la directora de grupo lo envía a coordinación).
+model FieldJournal {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupId     String    @map("grupo_id") @db.Uuid
+  date        DateTime  @map("fecha") @db.Date
+  // Año lectivo con que se creó: fija qué asignaciones cuentan como participantes.
+  schoolYear  String    @map("anio_lectivo") @db.VarChar(9)
+  status      String    @map("estado") @db.VarChar(14)
+  createdById String    @map("creado_por") @db.Uuid
+  submittedAt DateTime? @map("enviado_en") @db.Timestamptz(6)
+  voidedAt    DateTime? @map("anulado_en") @db.Timestamptz(6)
+  voidedById  String?   @map("anulado_por") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  group         Group                    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schoolYearRef SchoolYear               @relation(fields: [schoolYear], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  createdBy     User                     @relation("FieldJournalCreatedBy", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  voidedBy      User?                    @relation("FieldJournalVoidedBy", fields: [voidedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  annotations   FieldJournalAnnotation[]
+  submissions   FieldJournalSubmission[]
+
+  @@unique([groupId, date])
+  @@index([groupId])
+  @@index([date])
+  @@index([status])
+  @@map("diario_campo")
+}
+
+// Aporte de un docente al diario. `sent` indica que viajó en algún envío (false tras un envío
+// = «No enviada»).
+model FieldJournalAnnotation {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journalId    String    @map("diario_id") @db.Uuid
+  teacherId    String    @map("docente_id") @db.Uuid
+  areaId       String    @map("area_id") @db.Uuid
+  eventType    String    @map("tipo_evento") @db.VarChar(10)
+  // Privacidad: solo nombres de pila, sin otros datos de los estudiantes.
+  studentNames String?   @map("estudiantes") @db.VarChar(160)
+  description  String    @map("descripcion") @db.Text
+  actions      String?   @map("acciones") @db.Text
+  reflection   String?   @map("reflexion") @db.Text
+  status       String    @map("estado") @db.VarChar(10)
+  readyAt      DateTime? @map("lista_en") @db.Timestamptz(6)
+  sent         Boolean   @default(false) @map("enviada")
+  createdAt    DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  journal      FieldJournal              @relation(fields: [journalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teacher      User                      @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  area         Area                      @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  observations FieldJournalObservation[]
+
+  @@index([journalId])
+  @@index([teacherId])
+  @@index([areaId])
+  @@map("diario_anotacion")
+}
+
+// Un envío (o reenvío) del director de grupo, con el resumen de aportes de ese momento.
+model FieldJournalSubmission {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journalId     String   @map("diario_id") @db.Uuid
+  directorId    String   @map("director_id") @db.Uuid
+  submittedAt   DateTime @map("enviado_en") @db.Timestamptz(6)
+  resubmission  Boolean  @map("reenvio")
+  readyCount    Int      @map("aportes_listos") @db.SmallInt
+  expectedCount Int      @map("docentes_esperados") @db.SmallInt
+  // [{ docenteId, estado: 'borrador' | 'sin_aporte' }]; nunca textos.
+  missing       Json     @map("faltantes") @db.JsonB
+  createdAt     DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt     DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  journal  FieldJournal @relation(fields: [journalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  director User         @relation(fields: [directorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([journalId])
+  @@index([directorId])
+  @@map("diario_envio")
+}
+
+// Observación de coordinación sobre una anotación; cuelga de la decisión (`revision`). La
+// observación general es el comentario de esa decisión.
+model FieldJournalObservation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewId     String   @map("revision_id") @db.Uuid
+  annotationId String   @map("anotacion_id") @db.Uuid
+  text         String   @map("texto") @db.Text
+  createdAt    DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  review     Review                 @relation(fields: [reviewId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  annotation FieldJournalAnnotation @relation(fields: [annotationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([reviewId])
+  @@index([annotationId])
+  @@map("diario_observacion")
 }
 
 model ObserverNote {
