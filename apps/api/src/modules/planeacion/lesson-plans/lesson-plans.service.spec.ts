@@ -14,6 +14,7 @@ import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import type { TeacherAssignmentsService } from '../../estructura/assignments/teacher-assignments.service';
 import type { AreasService } from '../../estructura/catalogs/area/areas.service';
+import type { GradesService } from '../../estructura/catalogs/grade/grades.service';
 import type { AcademicPeriodsService } from '../../estructura/catalogs/academic-period/academic-periods.service';
 import type { SchoolYearsService } from '../../estructura/school-years/school-years.service';
 import type { NewReview, ReviewRepository } from '../review/review.repository';
@@ -64,6 +65,9 @@ interface Options {
   period?: Partial<AcademicPeriod> | null;
   assigned?: boolean;
   levelName?: string;
+  /** Id del nivel del grado; las áreas del catálogo se relacionan por él. */
+  levelId?: string;
+  gradeActive?: boolean;
 }
 
 function setup(options: Options = {}) {
@@ -95,20 +99,40 @@ function setup(options: Options = {}) {
         : [
             {
               grade: { id: 'g-1', name: '7°', sortOrder: 7 },
-              level: { id: 'l-1', name: options.levelName ?? 'Bachillerato' },
+              level: { id: options.levelId ?? 'l-1', name: options.levelName ?? 'Bachillerato' },
               isHomeroomTeacher: false,
-              areas: [{ assignmentId: 'as-1', id: 'a-1', name: 'Física', type: AreaType.Subject }],
+              groups: [{ id: 'gr-1', name: '7° 1', isHomeroomTeacher: false }],
+              areas: [{ id: 'a-1', name: 'Física', type: AreaType.Subject }],
             },
           ],
   };
   const assignments = { listMine: jest.fn(() => Promise.resolve(mine)) };
-  // Catálogo: Física y Química son de bachillerato; «Dimensión ética», de preescolar; «Danza» no es de ningún nivel.
-  const catalog = [
-    ['a-1', 'Física', AreaType.Subject],
-    ['a-2', 'Química', AreaType.Subject],
-    ['a-3', 'Dimensión ética', AreaType.Dimension],
-    ['a-4', 'Danza', AreaType.Subject],
-  ].map(([id, name, type]) => ({ id, name, type, createdAt: NOW, updatedAt: NOW })) as Area[];
+  // Catálogo: Física y Química son del nivel l-1; «Dimensión ética», del l-9; «Danza» no es de ningún nivel.
+  const catalog: Area[] = [
+    ['a-1', 'Física', AreaType.Subject, ['l-1']],
+    ['a-2', 'Química', AreaType.Subject, ['l-1']],
+    ['a-3', 'Dimensión ética', AreaType.Dimension, ['l-9']],
+    ['a-4', 'Danza', AreaType.Subject, []],
+  ].map(([id, name, type, levelIds]) => ({
+    id,
+    name,
+    type,
+    levelIds,
+    active: true,
+    createdAt: NOW,
+    updatedAt: NOW,
+  })) as Area[];
+  const grades = {
+    list: jest.fn(() =>
+      Promise.resolve({
+        items: options.gradeActive === false ? [] : [{ id: 'g-1' }],
+        page: 1,
+        pageSize: 100,
+        totalItems: 1,
+        totalPages: 1,
+      }),
+    ),
+  };
   const areas = {
     list: jest.fn(() =>
       Promise.resolve({ items: catalog, page: 1, pageSize: 100, totalItems: 4, totalPages: 1 }),
@@ -131,12 +155,13 @@ function setup(options: Options = {}) {
     new LessonPlanOptionsService(
       assignments as unknown as TeacherAssignmentsService,
       areas as unknown as AreasService,
+      grades as unknown as GradesService,
     ),
     periods as unknown as AcademicPeriodsService,
     schoolYears as unknown as SchoolYearsService,
     new ReviewsService(reviewRepository),
   );
-  return { service, repository, reviews, periods };
+  return { service, repository, reviews, periods, areas };
 }
 
 const createInput = { gradeId: 'g-1', areaIds: ['a-1'], periodId: UUID_PERIOD };
@@ -195,7 +220,7 @@ describe('LessonPlansService.create', () => {
   });
 
   it('ofrece también un área asignada que no es del nivel', async () => {
-    const { service } = setup({ levelName: 'Primaria' });
+    const { service } = setup({ levelName: 'Primaria', levelId: 'l-2' });
 
     await expect(service.create(owner, createInput)).resolves.toBeDefined();
     expect(await service.options(owner)).toMatchObject({
@@ -215,12 +240,19 @@ describe('LessonPlansService.create', () => {
     ]);
   });
 
-  it('un nivel desconocido solo ofrece las áreas asignadas', async () => {
-    const { service } = setup({ levelName: 'Nivel nuevo' });
+  it('un nivel sin áreas relacionadas solo ofrece las áreas asignadas', async () => {
+    const { service } = setup({ levelName: 'Nivel nuevo', levelId: 'l-nuevo' });
 
     const { grades } = await service.options(owner);
 
     expect(grades[0]?.areas.map((area) => area.id)).toEqual(['a-1']);
+  });
+
+  it('pide al catálogo solo las áreas activas y no ofrece los grados inactivos', async () => {
+    const { service, areas } = setup({ gradeActive: false });
+
+    expect((await service.options(owner)).grades).toEqual([]);
+    expect(areas.list).toHaveBeenCalledWith(expect.objectContaining({ filters: { active: true } }));
   });
 
   it('responde 403 si el grado no tiene asignación del docente, aunque las áreas sean del nivel', async () => {

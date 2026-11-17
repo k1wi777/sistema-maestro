@@ -12,10 +12,24 @@ const keyOf = (teacherId: string, gradeId: string, areaId: string, periodId: str
 
 const compare = (a: string, b: string): number => a.localeCompare(b, 'es');
 
+/** Una asignación por (docente, grado, área): la de menor id (varios grupos repetirían la celda). */
+function oneByTeacherGradeArea(assignments: readonly TeacherAssignment[]): TeacherAssignment[] {
+  const chosen = new Map<string, TeacherAssignment>();
+  for (const assignment of assignments) {
+    const key = `${assignment.teacher.id}|${assignment.grade.id}|${assignment.area.id}`;
+    const current = chosen.get(key);
+    if (!current || compare(assignment.id, current.id) < 0) {
+      chosen.set(key, assignment);
+    }
+  }
+  return [...chosen.values()];
+}
+
 /**
- * Matriz de cumplimiento: una celda por asignación activa y periodo. Las entregas de una
- * combinación sin asignación activa no generan celdas (asignación retirada o ajena). Docentes
- * por nombre; celdas por orden del grado, nombre del área y número de periodo.
+ * Matriz de cumplimiento: una celda por (docente, grado, área) con asignación activa y por
+ * periodo; si el docente tiene la misma área en varios grupos del grado cuenta una sola vez. Las
+ * entregas de una combinación sin asignación activa no generan celdas (asignación retirada o
+ * ajena). Docentes por nombre; celdas por orden del grado, nombre del área y número de periodo.
  */
 export function buildCompliance(
   periods: readonly AcademicPeriod[],
@@ -33,7 +47,7 @@ export function buildCompliance(
     string,
     { teacher: TeacherAssignment['teacher']; assignments: TeacherAssignment[] }
   >();
-  for (const assignment of assignments) {
+  for (const assignment of oneByTeacherGradeArea(assignments)) {
     const entry = byTeacher.get(assignment.teacher.id) ?? {
       teacher: assignment.teacher,
       assignments: [],

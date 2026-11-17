@@ -9,6 +9,7 @@ export const AuditLogType = {
   Assistant: 'asistente',
   DataConsent: 'datos',
   Coordination: 'coordinacion',
+  Structure: 'estructura',
 } as const;
 export type AuditLogType = (typeof AuditLogType)[keyof typeof AuditLogType];
 

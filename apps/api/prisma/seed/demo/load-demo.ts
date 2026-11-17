@@ -11,6 +11,8 @@ import { SCHOOL_YEAR } from '../initial/catalogs.data.ts';
 import { insertForId, insertRow, type Row } from '../sql.ts';
 import {
   DEMO_ASSIGNMENTS,
+  DEMO_COORDINATOR_GRADES,
+  DEMO_GROUPS,
   DEMO_AUDIT,
   DEMO_EMAIL_DOMAIN,
   DEMO_FAVORITES,
@@ -257,10 +259,37 @@ export async function loadDemoData(
     }
   }
 
+  // Grupos demo de los grados que los datos iniciales no traen (preescolar ya los tiene).
+  for (const group of DEMO_GROUPS) {
+    await insert('grupo', {
+      grado_id: required(references.grades, group.grade, 'el grado'),
+      nombre: group.name,
+    });
+  }
+  // Coordinadora de cada grado.
+  for (const entry of DEMO_COORDINATOR_GRADES) {
+    for (const grade of entry.grades) {
+      const updated = await client.query(`UPDATE grado SET coordinador_id = $1 WHERE id = $2`, [
+        idOf(entry.coordinator),
+        required(references.grades, grade, 'el grado'),
+      ]);
+      summary['grado (coordinadora)'] =
+        (summary['grado (coordinadora)'] ?? 0) + (updated.rowCount ?? 0);
+    }
+  }
+
   for (const item of DEMO_ASSIGNMENTS) {
+    const group = await client.query<{ id: string }>(
+      `SELECT id FROM grupo WHERE grado_id = $1 AND nombre = $2`,
+      [required(references.grades, item.grade, 'el grado'), item.group],
+    );
+    const groupId = group.rows[0]?.id;
+    if (!groupId) {
+      throw new Error(`Los datos demo necesitan el grupo «${item.group}», que no existe`);
+    }
     await insert('asignacion_docente', {
       docente_id: idOf(item.teacher),
-      grado_id: required(references.grades, item.grade, 'el grado'),
+      grupo_id: groupId,
       area_id: required(references.areas, item.area, 'el área'),
       anio_lectivo: DEMO_SCHOOL_YEAR,
       es_director_grupo: item.isHomeroomTeacher,

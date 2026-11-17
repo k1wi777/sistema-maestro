@@ -43,6 +43,8 @@ export const ACTORS = {
     'elena.ravassa.accessibility',
     true,
   ),
+  // Catálogo (`catalog.spec.ts`): sesión propia de Elena para no compartir el token de renovación.
+  catalogCoordinator: actor('elena.ravassa', 'Elena Ravassa', 'elena.ravassa.catalog', true),
   // Ingresa por la interfaz en `ingreso.spec.ts`, que guarda su sesión para `role-protection`.
   signInTeacher: actor('valeria.montenueva', 'Valeria Montenueva'),
 } as const;
@@ -56,6 +58,7 @@ export const SETUP_ACTORS: readonly Actor[] = [
   ACTORS.trainingTeacher,
   ACTORS.accessibilityTeacher,
   ACTORS.accessibilityCoordinator,
+  ACTORS.catalogCoordinator,
 ];
 
 /** Marcador único por ejecución para los textos que escriben los recorridos (R12). */

@@ -26,7 +26,7 @@ import { UsersPanel } from './users-panel';
 const ACTIVITY_PATH = '/coordinacion/bitacora';
 
 function GradesCell({ teacher }: { teacher: RosterTeacher }) {
-  if (teacher.grades.length === 0) {
+  if (teacher.groups.length === 0) {
     return (
       <span className={styles.muted}>
         {teacher.unassigned ? 'Sin asignar' : 'Sin asignaciones activas'}
@@ -36,13 +36,13 @@ function GradesCell({ teacher }: { teacher: RosterTeacher }) {
   }
   return (
     <ul className={styles.grades}>
-      {teacher.grades.map((grade) => (
-        <li key={grade.id}>
-          <strong>{grade.name}</strong>
-          {grade.isHomeroom ? <span className={styles.tag}>Director(a) de grupo</span> : null}
+      {teacher.groups.map((group) => (
+        <li key={group.id}>
+          <strong>{group.name}</strong>
+          {group.isHomeroom ? <span className={styles.tag}>Director(a) de este grupo</span> : null}
           <span
             className={styles.muted}
-          >{` · ${grade.areas.map((area) => area.name).join(', ')}`}</span>
+          >{` · ${group.areas.map((area) => area.name).join(', ')}`}</span>
         </li>
       ))}
     </ul>
@@ -74,7 +74,7 @@ export function TeachersScreen() {
       : []),
     {
       key: 'grades',
-      header: 'Grados y áreas',
+      header: 'Grupos y áreas',
       render: (teacher) => <GradesCell teacher={teacher} />,
     },
     {
@@ -117,7 +117,7 @@ export function TeachersScreen() {
       <PageHeader
         context="Coordinación académica"
         title="Docentes y asignaciones"
-        description="Grados, grupos y áreas de cada docente en el año lectivo vigente."
+        description="Grupos y áreas de cada docente en el año lectivo vigente."
       />
       <div className={styles.root}>
         {remote.state.status === 'loading' ? <Loading>Cargando los docentes…</Loading> : null}
@@ -169,6 +169,8 @@ export function TeachersScreen() {
       <AssignmentsDialog
         teacher={selected}
         grades={data?.grades ?? []}
+        groups={data?.groups ?? []}
+        levels={data?.levels ?? []}
         areas={data?.areas ?? []}
         noYear={data?.year === null}
         onChanged={remote.refresh}

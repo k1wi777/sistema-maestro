@@ -14,7 +14,7 @@ export interface TeacherInScope {
 
 export interface NewTeacherAssignment {
   teacherId: string;
-  gradeId: string;
+  groupId: string;
   areaId: string;
   schoolYear: string;
   isHomeroomTeacher: boolean;
@@ -32,18 +32,27 @@ export interface TeacherAssignmentRepository extends ReadRepository<
 > {
   findByNaturalKey(
     teacherId: string,
-    gradeId: string,
+    groupId: string,
     areaId: string,
     schoolYear: string,
   ): Promise<TeacherAssignment | null>;
-  /** Asignación activa de otro docente que dirige el grado en el año, si existe. */
-  findHomeroomOfAnotherTeacher(
-    gradeId: string,
+  /** Otra asignación activa (distinta de `exceptId`) que dirige el grupo en el año, si existe. */
+  findHomeroomInGroup(
+    groupId: string,
     schoolYear: string,
-    teacherId: string,
+    exceptId: string | null,
   ): Promise<TeacherAssignment | null>;
-  /** Bloquea la fila del grado hasta el fin de la transacción para serializar altas de director. */
-  lockGrade(gradeId: string): Promise<void>;
+  /** Bloquea la fila del grupo hasta el fin de la transacción para serializar altas de director. */
+  lockGroup(groupId: string): Promise<void>;
+  /**
+   * Marca la asignación activa más antigua del docente en el grupo y año (la dirección de grupo
+   * que se traslada al retirar la que la tenía). `false` si no tiene ninguna activa.
+   */
+  markOldestActiveAsHomeroom(
+    teacherId: string,
+    groupId: string,
+    schoolYear: string,
+  ): Promise<boolean>;
   findActiveByTeacher(teacherId: string, schoolYear: string): Promise<TeacherAssignment[]>;
   /** Asignaciones activas de todos los docentes en el año, sin paginar. */
   findActiveByYear(schoolYear: string): Promise<TeacherAssignment[]>;

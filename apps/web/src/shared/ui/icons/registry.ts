@@ -27,6 +27,7 @@ import {
   History,
   Info,
   Languages,
+  LayoutGrid,
   Layers,
   Lightbulb,
   LifeBuoy,
@@ -93,6 +94,7 @@ export const OPEN_STROKE_ICONS = {
   acuerdo: Handshake,
   cubiertos: Utensils,
   grafica: ChartNoAxesColumn,
+  grados: LayoutGrid,
   enviar: Send,
   puntos: Ellipsis,
 } satisfies Record<string, IconComponent>;

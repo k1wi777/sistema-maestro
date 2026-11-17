@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiNoContentResponse } from '@nestjs/swagger';
 import { AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../../core/audit/audited.decorator';
@@ -14,7 +15,7 @@ import {
   UpdateAreaDto,
 } from './dto/area.dto';
 
-const AUDIT = { type: AuditLogType.Coordination, entity: 'area', snapshot: AreaAuditSnapshot };
+const AUDIT = { type: AuditLogType.Structure, entity: 'area', snapshot: AreaAuditSnapshot };
 
 @Controller('areas')
 export class AreasController {
@@ -28,7 +29,7 @@ export class AreasController {
   }
 
   @Post()
-  @RequireRole(UserRole.Administrator)
+  @RequireRole(UserRole.Coordinator)
   @Audited({ ...AUDIT, action: 'Crear área' })
   @ZodResponse({ status: 201, type: AreaDto })
   create(@Body() body: CreateAreaDto) {
@@ -36,10 +37,19 @@ export class AreasController {
   }
 
   @Patch(':id')
-  @RequireRole(UserRole.Administrator)
+  @RequireRole(UserRole.Coordinator)
   @Audited({ ...AUDIT, action: 'Editar área' })
   @ZodResponse({ status: 200, type: AreaDto })
   update(@Param() { id }: IdParamDto, @Body() body: UpdateAreaDto) {
     return this.areas.update(id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiNoContentResponse({ description: 'Borrado' })
+  @RequireRole(UserRole.Coordinator)
+  @Audited({ ...AUDIT, action: 'Borrar área' })
+  remove(@Param() { id }: IdParamDto) {
+    return this.areas.remove(id);
   }
 }

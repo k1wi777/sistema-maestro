@@ -427,10 +427,13 @@ export function NewObserverNoteScreen() {
   } else if (catalog.state.status === 'error') {
     body = <LoadError error={catalog.state.error} onRetry={catalog.reload} />;
   } else {
-    const gradeOptions = catalog.state.data.grades.map((grade) => ({
-      value: grade.id,
-      label: grade.levelName ? `${grade.name} · ${grade.levelName}` : grade.name,
-    }));
+    // Un grado desactivado ya no admite anotaciones nuevas (la API también lo rechaza).
+    const gradeOptions = catalog.state.data.grades
+      .filter((grade) => grade.active)
+      .map((grade) => ({
+        value: grade.id,
+        label: grade.levelName ? `${grade.name} · ${grade.levelName}` : grade.name,
+      }));
     body = <NewNoteForm gradeOptions={gradeOptions} />;
   }
   return (

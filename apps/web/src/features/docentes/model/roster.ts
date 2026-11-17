@@ -14,11 +14,13 @@ export interface RosterArea {
   type: AreaType;
 }
 
-export interface RosterGrade {
+export interface RosterGroup {
   id: string;
   name: string;
+  gradeName: string;
+  /** Orden del grado, para ordenar los grupos. */
   sortOrder: number;
-  /** Alguna asignación activa del grado marca la dirección de grupo. */
+  /** Alguna asignación activa del grupo marca la dirección de grupo. */
   isHomeroom: boolean;
   areas: RosterArea[];
 }
@@ -29,8 +31,8 @@ export interface RosterTeacher {
   status: UserStatus;
   /** Solo se conoce cuando administración aporta la lista de usuarios. */
   role: UserRole | null;
-  /** Grados con asignaciones activas. */
-  grades: RosterGrade[];
+  /** Grupos con asignaciones activas. */
+  groups: RosterGroup[];
   /** Todas las asignaciones del año (activas y retiradas): el diálogo las necesita para reactivar. */
   assignments: TeacherAssignment[];
   withdrawnCount: number;
@@ -51,35 +53,40 @@ export function normalizeText(text: string): string {
     .trim();
 }
 
-function gradesOf(assignments: TeacherAssignment[]): RosterGrade[] {
-  const grades = new Map<string, RosterGrade>();
+/** Orden natural: «Kinder 2» antes de «Kinder 10». */
+const byGroupName = (a: { name: string }, b: { name: string }) =>
+  a.name.localeCompare(b.name, 'es', { numeric: true });
+
+function groupsOf(assignments: TeacherAssignment[]): RosterGroup[] {
+  const groups = new Map<string, RosterGroup>();
   for (const assignment of assignments) {
     if (assignment.status !== TeacherAssignmentStatus.Active) {
       continue;
     }
-    const grade = grades.get(assignment.grade.id) ?? {
-      id: assignment.grade.id,
-      name: assignment.grade.name,
+    const group = groups.get(assignment.group.id) ?? {
+      id: assignment.group.id,
+      name: assignment.group.name,
+      gradeName: assignment.grade.name,
       sortOrder: assignment.grade.sortOrder,
       isHomeroom: false,
       areas: [],
     };
-    grade.isHomeroom ||= assignment.isHomeroomTeacher;
-    grade.areas.push({
+    group.isHomeroom ||= assignment.isHomeroomTeacher;
+    group.areas.push({
       assignmentId: assignment.id,
       areaId: assignment.area.id,
       name: assignment.area.name,
       type: assignment.area.type,
     });
-    grades.set(grade.id, grade);
+    groups.set(group.id, group);
   }
-  return [...grades.values()]
-    .map((grade) => ({ ...grade, areas: grade.areas.sort(byName) }))
-    .sort((a, b) => a.sortOrder - b.sortOrder || byName(a, b));
+  return [...groups.values()]
+    .map((group) => ({ ...group, areas: group.areas.sort(byName) }))
+    .sort((a, b) => a.sortOrder - b.sortOrder || byGroupName(a, b));
 }
 
 /**
- * Docentes del año con sus asignaciones agrupadas por grado. Un docente con todas las asignaciones
+ * Docentes del año con sus asignaciones agrupadas por grupo. Un docente con todas las asignaciones
  * retiradas sigue en la lista (tiene filas del año). `people` (solo llega en administración) aporta
  * el rol y suma como «sin asignar» a quienes no tienen ninguna asignación.
  */
@@ -103,7 +110,7 @@ export function buildRoster(
       name: person?.fullName ?? first.teacher.fullName,
       status: person?.status ?? first.teacher.status,
       role: person?.role ?? null,
-      grades: gradesOf(own),
+      groups: groupsOf(own),
       assignments: own,
       withdrawnCount: own.filter((item) => item.status === TeacherAssignmentStatus.Withdrawn)
         .length,
@@ -117,7 +124,7 @@ export function buildRoster(
         name: person.fullName,
         status: person.status,
         role: person.role,
-        grades: [],
+        groups: [],
         assignments: [],
         withdrawnCount: 0,
         unassigned: true,

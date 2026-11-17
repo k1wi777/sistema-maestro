@@ -9,7 +9,15 @@ import type { Client } from 'pg';
 import { insertForId, insertRow } from '../sql.ts';
 import type { AdminConfig } from './admin-config.ts';
 import { BENEFITS_ACTIVITIES, BENEFITS_MODULE_NUMBER } from './benefits.data.ts';
-import { ACADEMIC_PERIOD_NUMBERS, AREAS, GRADES, LEVELS, SCHOOL_YEAR } from './catalogs.data.ts';
+import {
+  ACADEMIC_PERIOD_NUMBERS,
+  AREA_LEVELS,
+  AREAS,
+  GRADES,
+  GROUPS,
+  LEVELS,
+  SCHOOL_YEAR,
+} from './catalogs.data.ts';
 import { FAQ_ENTRIES } from './faq.data.ts';
 import { GENERAL_PLAN_NAME, INDUCTION_MODULES, TRAINING_SECTIONS } from './induction.data.ts';
 
@@ -85,6 +93,29 @@ async function seedCatalogs(client: Client, counter: SeedCounter): Promise<void>
   for (const area of AREAS) {
     const row = await insertRow(client, 'area', { nombre: area.name, tipo: area.type }, '(nombre)');
     counter.record('area', row !== null);
+  }
+  // Relación área–nivel y grupos de preescolar: idempotentes por su llave natural, así que
+  // conviven con lo que la migración ya creó en una base existente.
+  for (const link of AREA_LEVELS) {
+    const row = await insertRow(
+      client,
+      'area_nivel',
+      {
+        area_id: await idByName(client, 'area', link.areaName),
+        nivel_id: await idByName(client, 'nivel', link.levelName),
+      },
+      '(area_id, nivel_id)',
+    );
+    counter.record('area_nivel', row !== null);
+  }
+  for (const group of GROUPS) {
+    const row = await insertRow(
+      client,
+      'grupo',
+      { grado_id: await idByName(client, 'grado', group.gradeName), nombre: group.name },
+      '(grado_id, nombre)',
+    );
+    counter.record('grupo', row !== null);
   }
   for (const number of ACADEMIC_PERIOD_NUMBERS) {
     const row = await insertRow(

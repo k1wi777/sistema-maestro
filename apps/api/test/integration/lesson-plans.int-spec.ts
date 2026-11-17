@@ -192,6 +192,13 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
         skipDuplicates: true,
       });
       chemistryId = (await prisma.area.findUniqueOrThrow({ where: { name: 'Química' } })).id;
+      const secondaryLevel = await prisma.educationLevel.findUniqueOrThrow({
+        where: { name: 'Bachillerato' },
+      });
+      await prisma.areaLevel.createMany({
+        data: [{ areaId: chemistryId, levelId: secondaryLevel.id }],
+        skipDuplicates: true,
+      });
       unofferedId = (
         await prisma.area.create({
           data: { name: `Fuera del nivel ${Date.now()}`, type: 'asignatura' },

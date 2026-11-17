@@ -1,7 +1,6 @@
 import {
   allowedFrom,
   approveLessonPlanSchema,
-  areaNamesForLevel,
   canTransition,
   createLessonPlanResourceSchema,
   createLessonPlanSchema,
@@ -85,20 +84,9 @@ describe('máquina de estados de registros', () => {
   });
 });
 
-describe('áreas por nivel y etiqueta', () => {
-  it('cada nivel trae su lista y uno desconocido, ninguna', () => {
-    const preschool = areaNamesForLevel('Preescolar bajo');
-    expect(preschool).toContain('Dimensión cognitiva');
-    expect(preschool).toContain('Lengua Castellana');
-    expect(preschool).not.toContain('English');
-    expect(areaNamesForLevel('Preescolar alto (KTF)')).toEqual(preschool);
-    expect(areaNamesForLevel('Primaria')).toContain('Matemáticas');
-    expect(areaNamesForLevel('Primaria')).not.toContain('Física');
-    expect(areaNamesForLevel('Bachillerato')).toContain('Física');
-    expect(areaNamesForLevel('Bachillerato')).toContain('Emprendimiento');
-    expect(areaNamesForLevel('Otro')).toEqual([]);
-  });
-
+// Las áreas de cada nivel ya no son una regla de código: salen de la relación área–nivel de la
+// base y se prueban en las opciones de planeación (lesson-plans.service.spec).
+describe('etiqueta de áreas', () => {
   it('une los nombres con coma', () => {
     expect(lessonPlanAreasLabel([{ name: 'Física' }, { name: 'Química' }])).toBe('Física, Química');
   });

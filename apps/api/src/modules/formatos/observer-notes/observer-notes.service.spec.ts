@@ -62,7 +62,7 @@ function setup(status: RecordStatus = RecordStatus.Draft) {
     }),
     findByRecord: jest.fn(() => Promise.resolve([])),
   };
-  const grades = { find: jest.fn(() => Promise.resolve({ id: GRADE })) };
+  const grades = { find: jest.fn(() => Promise.resolve({ id: GRADE, active: true })) };
   const periods = {
     find: jest.fn(() =>
       Promise.resolve({ id: PERIOD, startDate: '2031-02-01', endDate: '2031-04-30' }),
@@ -100,6 +100,15 @@ describe('ObserverNotesService · crear y editar', () => {
     const { service, repository } = setup();
     await service.create(owner, input);
     expect(repository.create).toHaveBeenCalledWith({ ...input, teacherId: OWNER });
+  });
+
+  it('400 con el campo gradeId si el grado está inactivo: ya no admite registros nuevos', async () => {
+    const { service, grades, repository } = setup();
+    grades.find.mockResolvedValueOnce({ id: GRADE, active: false });
+    await expect(service.create(owner, input)).rejects.toMatchObject({
+      fieldErrors: [{ field: 'gradeId', reason: 'el grado está inactivo' }],
+    });
+    expect(repository.create).not.toHaveBeenCalled();
   });
 
   it('400 con el campo gradeId si el grado no existe', async () => {

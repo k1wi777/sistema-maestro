@@ -205,6 +205,22 @@ test.describe('Accesibilidad: vista de coordinación', () => {
   test('docentes, planes, módulo, avance, bitácora y asistente', async () => {
     const { page } = coordinator;
     await visit(page, '/coordinacion/docentes', 'coordinación · docentes');
+    await page
+      .getByRole('button', { name: /^Asignaciones de / })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await audit(page, 'coordinación · diálogo de asignaciones');
+    await page.getByRole('button', { name: 'Cerrar' }).click();
+    await visit(page, '/coordinacion/grados-y-areas', 'coordinación · grados y grupos');
+    await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo grado' })).toBeVisible();
+    await audit(page, 'coordinación · diálogo de nuevo grado');
+    await page.getByRole('button', { name: 'Cancelar' }).click();
+    await page.getByRole('tab', { name: 'Áreas' }).click();
+    await audit(page, 'coordinación · áreas');
+    await page.getByRole('tab', { name: 'Coordinadoras' }).click();
+    await audit(page, 'coordinación · coordinadoras');
     await visit(page, '/coordinacion/planes', 'coordinación · planes');
     await openFirst(
       page,

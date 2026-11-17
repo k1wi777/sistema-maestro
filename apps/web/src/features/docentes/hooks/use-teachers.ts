@@ -10,9 +10,13 @@ import {
   getCurrentSchoolYear,
   listAreas,
   listGrades,
+  listGroups,
+  listLevels,
   listYearAssignments,
   type CatalogArea,
   type CatalogGrade,
+  type CatalogGroup,
+  type CatalogLevel,
 } from '../api/assignments';
 import { listAssignableUsers } from '../api/users';
 import { buildRoster, type RosterTeacher } from '../model/roster';
@@ -24,15 +28,20 @@ export interface TeachersData {
   /** Docentes y coordinadores de `/users`: solo se piden si la sesión es de administración. */
   people: User[];
   grades: CatalogGrade[];
+  /** Grupos activos (con sus grados) a los que se puede asignar. */
+  groups: CatalogGroup[];
+  levels: CatalogLevel[];
   areas: CatalogArea[];
 }
 
 async function load(isAdmin: boolean): Promise<ApiResult<TeachersData>> {
-  const [year, people, grades, areas] = await Promise.all([
+  const [year, people, grades, areas, groups, levels] = await Promise.all([
     getCurrentSchoolYear(),
     isAdmin ? listAssignableUsers() : Promise.resolve<ApiResult<User[]>>({ ok: true, data: [] }),
     listGrades(),
     listAreas(),
+    listGroups(),
+    listLevels(),
   ]);
   if (!year.ok) {
     return year;
@@ -45,6 +54,12 @@ async function load(isAdmin: boolean): Promise<ApiResult<TeachersData>> {
   }
   if (!areas.ok) {
     return areas;
+  }
+  if (!groups.ok) {
+    return groups;
+  }
+  if (!levels.ok) {
+    return levels;
   }
   let assignments: TeacherAssignment[] = [];
   if (year.data) {
@@ -61,6 +76,8 @@ async function load(isAdmin: boolean): Promise<ApiResult<TeachersData>> {
       assignments,
       people: people.data,
       grades: [...grades.data].sort((a, b) => a.sortOrder - b.sortOrder),
+      groups: groups.data,
+      levels: levels.data,
       areas: [...areas.data].sort((a, b) => a.name.localeCompare(b.name, 'es')),
     },
   };

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   AreaType,
   AuditLogType,
@@ -29,6 +30,9 @@ import {
   insertFieldJournal,
   insertFieldJournalEntry,
   insertGrade,
+  insertGroup,
+  insertLevel,
+  insertRow,
   insertLessonPlan,
   insertLessonPlanResource,
   insertActivityProgress,
@@ -537,14 +541,124 @@ describe('check constraints', () => {
       await expectSqlError(
         db.client,
         FOREIGN_KEY_VIOLATION,
-        `INSERT INTO asignacion_docente (docente_id, grado_id, area_id, anio_lectivo)
+        `INSERT INTO asignacion_docente (docente_id, grupo_id, area_id, anio_lectivo)
          VALUES ($1, $2, $3, '1999-2000')`,
         [
           (await insertUser(db.client)).id,
-          (await insertGrade(db.client)).id,
+          (await insertGroup(db.client)).id,
           (await insertArea(db.client)).id,
         ],
       );
+    });
+  });
+
+  describe('asignacion_docente: un director de grupo por grupo y año (índice parcial)', () => {
+    async function assignment(groupId: unknown, values: Record<string, unknown>) {
+      return insertTeacherAssignment(db.client, {
+        grupo_id: groupId,
+        anio_lectivo: '2026-2027',
+        ...values,
+      });
+    }
+
+    it('rejects a second active homeroom in the same group and year', async () => {
+      const group = await insertGroup(db.client);
+      await assignment(group.id, { es_director_grupo: true });
+
+      await expectSqlError(
+        db.client,
+        UNIQUE_VIOLATION,
+        `INSERT INTO asignacion_docente (docente_id, grupo_id, area_id, anio_lectivo, es_director_grupo)
+         VALUES ($1, $2, $3, '2026-2027', true)`,
+        [(await insertUser(db.client)).id, group.id, (await insertArea(db.client)).id],
+      );
+    });
+
+    it('does not count withdrawn rows, other groups, other years or unmarked rows', async () => {
+      const group = await insertGroup(db.client);
+      await assignment(group.id, { es_director_grupo: true });
+
+      await assignment(group.id, { es_director_grupo: true, estado: 'retirada' });
+      await assignment(group.id, { es_director_grupo: false });
+      await assignment((await insertGroup(db.client)).id, { es_director_grupo: true });
+      await assignment(group.id, { es_director_grupo: true, anio_lectivo: '2027-2028' });
+    });
+  });
+
+  describe('grupo, grado y área: llaves foráneas y unicidad', () => {
+    it('rejects a group name repeated in the same grade but not in another one', async () => {
+      const group = await insertGroup(db.client, { nombre: 'Kinder 1' });
+
+      await expectSqlError(
+        db.client,
+        UNIQUE_VIOLATION,
+        `INSERT INTO grupo (grado_id, nombre) VALUES ($1, 'Kinder 1')`,
+        [group.grado_id],
+      );
+      await insertGroup(db.client, { nombre: 'Kinder 1' });
+    });
+
+    it('rejects deleting a grade with groups, a group or an area with assignments', async () => {
+      const assignment = await insertTeacherAssignment(db.client);
+      const group = await db.client.query<{ id: string; grado_id: string }>(
+        `SELECT id, grado_id FROM grupo WHERE id = $1`,
+        [assignment.grupo_id],
+      );
+      const { id, grado_id: gradeId } = group.rows[0] ?? { id: '', grado_id: '' };
+
+      await expectSqlError(db.client, FOREIGN_KEY_VIOLATION, `DELETE FROM grupo WHERE id = $1`, [
+        id,
+      ]);
+      await expectSqlError(db.client, FOREIGN_KEY_VIOLATION, `DELETE FROM grado WHERE id = $1`, [
+        gradeId,
+      ]);
+      await expectSqlError(db.client, FOREIGN_KEY_VIOLATION, `DELETE FROM area WHERE id = $1`, [
+        assignment.area_id,
+      ]);
+    });
+
+    it('rejects a coordinator that does not exist and deleting a coordinator with grades', async () => {
+      const coordinator = await insertUser(db.client, { rol: 'coordinador' });
+      const grade = await insertGrade(db.client, { coordinador_id: coordinator.id });
+
+      await expectSqlError(
+        db.client,
+        FOREIGN_KEY_VIOLATION,
+        `UPDATE grado SET coordinador_id = $1 WHERE id = $2`,
+        [randomUUID(), grade.id],
+      );
+      await expectSqlError(db.client, FOREIGN_KEY_VIOLATION, `DELETE FROM usuario WHERE id = $1`, [
+        coordinator.id,
+      ]);
+    });
+
+    it('relates an area with several levels but not twice with the same one (area_nivel)', async () => {
+      const area = await insertArea(db.client);
+      const level = await insertLevel(db.client);
+      await insertRow(db.client, 'area_nivel', { area_id: area.id, nivel_id: level.id });
+      await insertRow(db.client, 'area_nivel', {
+        area_id: area.id,
+        nivel_id: (await insertLevel(db.client)).id,
+      });
+
+      await expectSqlError(
+        db.client,
+        UNIQUE_VIOLATION,
+        `INSERT INTO area_nivel (area_id, nivel_id) VALUES ($1, $2)`,
+        [area.id, level.id],
+      );
+    });
+
+    it('starts active and lets the application role read and write the new tables', async () => {
+      const grade = await insertGrade(db.client);
+      const area = await insertArea(db.client);
+      const privileges = await db.client.query<{ table_name: string; privilege_type: string }>(
+        `SELECT table_name, privilege_type FROM information_schema.role_table_grants
+         WHERE grantee = 'app_gns' AND table_name IN ('grupo', 'area_nivel')`,
+      );
+
+      expect([grade.activo, area.activa]).toEqual([true, true]);
+      expect(privileges.rows).toHaveLength(8);
     });
   });
 

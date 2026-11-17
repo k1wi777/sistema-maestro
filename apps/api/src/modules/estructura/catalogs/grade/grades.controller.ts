@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiNoContentResponse } from '@nestjs/swagger';
 import { AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../../core/audit/audited.decorator';
@@ -14,7 +15,7 @@ import {
 import { GradeAuditSnapshot } from './grade.audit-snapshot';
 import { GradesService } from './grades.service';
 
-const AUDIT = { type: AuditLogType.Coordination, entity: 'grado', snapshot: GradeAuditSnapshot };
+const AUDIT = { type: AuditLogType.Structure, entity: 'grado', snapshot: GradeAuditSnapshot };
 
 @Controller('grades')
 export class GradesController {
@@ -28,18 +29,28 @@ export class GradesController {
   }
 
   @Post()
-  @RequireRole(UserRole.Administrator)
+  @RequireRole(UserRole.Coordinator)
   @Audited({ ...AUDIT, action: 'Crear grado' })
   @ZodResponse({ status: 201, type: GradeDto })
   create(@Body() body: CreateGradeDto) {
     return this.grades.create(body);
   }
 
+  // Activar o desactivar va aquí con `{ active }`: el antes y después de la bitácora muestra el cambio.
   @Patch(':id')
-  @RequireRole(UserRole.Administrator)
+  @RequireRole(UserRole.Coordinator)
   @Audited({ ...AUDIT, action: 'Editar grado' })
   @ZodResponse({ status: 200, type: GradeDto })
   update(@Param() { id }: IdParamDto, @Body() body: UpdateGradeDto) {
     return this.grades.update(id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @ApiNoContentResponse({ description: 'Borrado' })
+  @RequireRole(UserRole.Coordinator)
+  @Audited({ ...AUDIT, action: 'Borrar grado' })
+  remove(@Param() { id }: IdParamDto) {
+    return this.grades.remove(id);
   }
 }

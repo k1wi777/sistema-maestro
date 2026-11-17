@@ -36,6 +36,11 @@ export class SchoolYearsService {
     return this.repository.findByCode(code);
   }
 
+  /** Año vigente, o `null` si administración aún no marcó ninguno. */
+  findCurrent(): Promise<SchoolYear | null> {
+    return this.repository.findCurrent();
+  }
+
   /** Año vigente o 409: la ruta existe y lo que falta es un estado que administración debe fijar. */
   async requireCurrent(): Promise<SchoolYear> {
     const current = await this.repository.findCurrent();

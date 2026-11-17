@@ -54,6 +54,15 @@ export async function insertGrade(client: Client, values: Values = {}): Promise<
   });
 }
 
+/** Grupo de un grado (el grado se crea si no se indica). */
+export async function insertGroup(client: Client, values: Values = {}): Promise<Row> {
+  return insertRow(client, 'grupo', {
+    grado_id: await idOf(insertGrade(client)),
+    nombre: `Grupo ${uniqueSuffix()}`,
+    ...values,
+  });
+}
+
 export function insertArea(client: Client, values: Values = {}): Promise<Row> {
   return insertRow(client, 'area', {
     nombre: `Área ${uniqueSuffix()}`,
@@ -93,7 +102,7 @@ export async function insertTeacherAssignment(client: Client, values: Values = {
   await ensureSchoolYear(client, schoolYear);
   return insertRow(client, 'asignacion_docente', {
     docente_id: await idOf(insertUser(client)),
-    grado_id: await idOf(insertGrade(client)),
+    grupo_id: await idOf(insertGroup(client)),
     area_id: await idOf(insertArea(client)),
     ...values,
     anio_lectivo: schoolYear,
