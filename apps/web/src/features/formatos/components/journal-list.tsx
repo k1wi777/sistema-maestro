@@ -1,40 +1,89 @@
 'use client';
 
-import type { FieldJournalSummary } from '@gns/shared';
+import type { FieldJournalSummary, TodayJournals } from '@gns/shared';
 import { useState } from 'react';
 
-import { usePagedList, useQueryParams } from '@/shared/data';
-import { formatShortDate } from '@/shared/format/dates';
-import { STATUS_INFO } from '@/shared/records';
-import { useSession } from '@/shared/session';
-import { Button, ButtonLink, RecordCard, StatusBadge } from '@/shared/ui';
+import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { formatShortDate, formatWeekdayDate } from '@/shared/format/dates';
+import { JOURNAL_STATUS_INFO, JOURNAL_STATUS_ORDER, journalStatusFromUrl } from '@/shared/records';
+import {
+  Button,
+  ButtonLink,
+  Notice,
+  RecordCard,
+  SegmentedFilter,
+  Select,
+  StatusBadge,
+  type SegmentedOption,
+} from '@/shared/ui';
 
-import { listFieldJournals } from '../api/field-journals';
-import { JOURNAL_LIST_PATH } from '../model/paths';
-import { NewJournalDialog } from './new-journal-dialog';
-import { RecordListView, statusFromUrl } from './record-list-view';
+import { useJournalList, useTodayJournals } from '../hooks/use-field-journal';
+import { contributionSummary, myObservationsText } from '../model/journal-text';
+import { journalDayPath } from '../model/paths';
+import { AddAnnotationDialog } from './add-annotation-dialog';
 import styles from './formats-list.module.css';
 
-const PAGE_SIZE = 20;
+const ALL = 'todos';
 
-function JournalCard({ journal }: { journal: FieldJournalSummary }) {
-  const info = STATUS_INFO[journal.status];
-  const title = `${journal.grade.name} · Periodo ${journal.period.number}`;
+const STATUS_OPTIONS: SegmentedOption<string>[] = [
+  { value: ALL, label: 'Todos' },
+  ...JOURNAL_STATUS_ORDER.map((status) => ({
+    value: status,
+    label: JOURNAL_STATUS_INFO[status].filterLabel,
+  })),
+];
+
+type TodayGroup = TodayJournals['groups'][number];
+
+/** Tarjeta de «Hoy»: el diario de hoy de un grupo, o la invitación a agregar la primera anotación. */
+function TodayCard({ entry, date }: { entry: TodayGroup; date: string }) {
+  const journal = entry.journal;
+  const info = JOURNAL_STATUS_INFO[journal?.status ?? 'en_curso'];
+  const areas = entry.areas.map((area) => area.name).join(', ');
+  const progress = journal
+    ? `${contributionSummary(journal.readyCount, journal.expectedCount)}${entry.isHomeroomTeacher ? ' · Eres director(a) de grupo' : ''}`
+    : `${areas} · aún no has agregado tu anotación`;
   return (
     <RecordCard
-      title={journal.grade.name}
+      title={entry.group.name}
+      headingLevel={3}
+      tone={info.tone}
+      status={<StatusBadge tone={info.tone}>{journal ? info.label : 'Sin diario'}</StatusBadge>}
+      meta={[progress]}
+      actions={
+        <ButtonLink
+          context={entry.group.name}
+          href={journalDayPath(entry.group.id, date)}
+          variant={journal ? 'outline' : 'primary'}
+          size="sm"
+        >
+          {journal ? 'Abrir diario' : 'Agregar mi anotación'}
+        </ButtonLink>
+      }
+    />
+  );
+}
+
+function JournalCard({ journal }: { journal: FieldJournalSummary }) {
+  const info = JOURNAL_STATUS_INFO[journal.status];
+  const notice = myObservationsText(journal.myObservationCount);
+  const progress =
+    journal.status === 'enviado' && journal.submittedAt
+      ? `${journal.readyCount} de ${journal.expectedCount} aportes · enviado el ${formatShortDate(journal.submittedAt)}`
+      : journal.status === 'revisado' && journal.reviewer
+        ? `${journal.readyCount} de ${journal.expectedCount} aportes · revisado por ${journal.reviewer.fullName}`
+        : `${journal.readyCount} de ${journal.expectedCount} aportes`;
+  return (
+    <RecordCard
+      title={journal.group.name}
       headingLevel={2}
       tone={info.tone}
       status={<StatusBadge tone={info.tone}>{info.label}</StatusBadge>}
-      meta={[
-        `${journal.period.schoolYear} · Periodo ${journal.period.number}`,
-        journal.entryCount === 1 ? '1 registro' : `${journal.entryCount} registros`,
-        `Actualizada ${formatShortDate(journal.updatedAt)}`,
-      ]}
+      meta={[formatWeekdayDate(journal.date), progress, ...(notice ? [notice] : [])]}
       actions={
         <ButtonLink
-          context={`diario de campo de ${title}`}
-          href={`${JOURNAL_LIST_PATH}/${journal.id}`}
+          context={`diario de ${journal.group.name} del ${journal.date}`}
+          href={journalDayPath(journal.group.id, journal.date)}
           variant="outline"
           size="sm"
           className={styles.stretched}
@@ -46,46 +95,116 @@ function JournalCard({ journal }: { journal: FieldJournalSummary }) {
   );
 }
 
-/** «Diario de campo»: hojas del docente (una por grado y periodo) con filtro por estado. */
+/** «Diario de campo»: bloque «Hoy», filtros por estado y grupo y lista de diarios de sus grupos. */
 export function JournalList() {
-  const { state: session } = useSession();
-  const teacherId = session.status === 'authenticated' ? session.user.id : undefined;
   const { params, update } = useQueryParams();
-  const [creating, setCreating] = useState(false);
-  const status = statusFromUrl(params.get('estado'));
+  const [adding, setAdding] = useState(false);
+  const status = journalStatusFromUrl(params.get('estado'));
+  const groupParam = params.get('grupo') ?? undefined;
+  const today = useTodayJournals();
+  const todayData = today.state.status === 'ready' ? today.state.data : null;
+  const groups = todayData?.groups ?? [];
+  const groupId = groups.some((entry) => entry.group.id === groupParam) ? groupParam : undefined;
+  const list = useJournalList(status, groupId);
 
-  const list = usePagedList<FieldJournalSummary>(
-    (page) => listFieldJournals({ teacherId, status, page, pageSize: PAGE_SIZE }),
-    JSON.stringify([teacherId, status]),
-  );
-
-  if (!teacherId) {
-    return null;
-  }
   return (
-    <>
-      <RecordListView
-        list={list}
-        status={status}
-        onStatusChange={(value) => update({ estado: value })}
-        intro="Deja registro diario de los eventos relevantes ocurridos en el aula. Cada hoja corresponde a un grado y un periodo, como en el formato institucional."
-        action={
-          <Button startIcon="mas" onClick={() => setCreating(true)}>
-            Nueva hoja de diario
-          </Button>
-        }
-        filterLabel="Filtrar diarios por estado"
-        texts={{
-          loading: 'Cargando tus hojas de diario…',
-          loadError: 'No pudimos cargar tus hojas de diario',
-          emptyTitle: 'Aún no tienes hojas de diario',
-          emptyBody: 'Crea tu primera hoja con el botón «Nueva hoja de diario».',
-          count: (total) => (total === 1 ? '1 hoja' : `${total} hojas`),
-        }}
-        getKey={(journal) => journal.id}
-        renderItem={(journal) => <JournalCard journal={journal} />}
+    <div className={styles.root}>
+      <div className={styles.toolbar}>
+        <p className={styles.intro}>
+          Un diario por grupo y día: cada docente que da clase al grupo agrega su anotación y el
+          director(a) de grupo lo envía a coordinación.
+        </p>
+        <Button startIcon="mas" disabled={groups.length === 0} onClick={() => setAdding(true)}>
+          Agregar anotación
+        </Button>
+      </div>
+
+      {today.state.status === 'loading' ? <Loading>Cargando tus grupos…</Loading> : null}
+      {today.state.status === 'error' ? (
+        <LoadError
+          error={today.state.error}
+          title="No pudimos cargar tus grupos"
+          onRetry={today.reload}
+        />
+      ) : null}
+      {todayData ? (
+        groups.length === 0 ? (
+          <Notice tone="info" title="Sin grupos asignados">
+            Aún no tienes grupos asignados este año. Pídele a coordinación que te los asigne.
+          </Notice>
+        ) : (
+          <section aria-labelledby="journal-today">
+            <h2 id="journal-today" className={styles.intro}>
+              {`Hoy · ${formatWeekdayDate(todayData.date)}`}
+            </h2>
+            <ul className={styles.grid}>
+              {groups.map((entry) => (
+                <li key={entry.group.id} className={styles.item}>
+                  <TodayCard entry={entry} date={todayData.date} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      ) : null}
+
+      <SegmentedFilter
+        label="Filtrar diarios por estado"
+        options={STATUS_OPTIONS}
+        value={status ?? ALL}
+        onChange={(value) => update({ estado: value === ALL ? null : value })}
       />
-      {creating ? <NewJournalDialog onClose={() => setCreating(false)} /> : null}
-    </>
+      {groups.length > 1 ? (
+        <Select
+          label="Grupo"
+          inline
+          placeholder="Todos mis grupos"
+          options={groups.map((entry) => ({ value: entry.group.id, label: entry.group.name }))}
+          value={groupId ?? ''}
+          onChange={(event) => update({ grupo: event.target.value || null })}
+        />
+      ) : null}
+
+      {list.status === 'loading' ? <Loading>Cargando tus diarios…</Loading> : null}
+      {list.status === 'error' && list.error ? (
+        <LoadError error={list.error} title="No pudimos cargar tus diarios" onRetry={list.reload} />
+      ) : null}
+      {list.status === 'ready' && list.items.length === 0 ? (
+        <Notice tone="info" title={status || groupId ? 'Sin resultados' : 'Aún no hay diarios'}>
+          {status || groupId
+            ? 'Ningún diario cumple estos filtros. Cambia el estado o el grupo para ver más.'
+            : 'Cuando agregues tu primera anotación, el diario del grupo aparecerá aquí.'}
+        </Notice>
+      ) : null}
+      {list.status === 'ready' && list.items.length > 0 ? (
+        <>
+          <p className={styles.count} role="status">
+            {list.totalItems === 1 ? '1 diario' : `${list.totalItems} diarios`}
+          </p>
+          <ul className={styles.grid}>
+            {list.items.map((journal) => (
+              <li key={journal.id} className={styles.item}>
+                <JournalCard journal={journal} />
+              </li>
+            ))}
+          </ul>
+          {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
+          {list.hasMore ? (
+            <div className={styles.more}>
+              <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
+                {list.loadingMore ? 'Cargando…' : 'Cargar más'}
+              </Button>
+            </div>
+          ) : null}
+        </>
+      ) : null}
+
+      {adding ? (
+        <AddAnnotationDialog
+          groups={groups.map((entry) => entry.group)}
+          onClose={() => setAdding(false)}
+        />
+      ) : null}
+    </div>
   );
 }

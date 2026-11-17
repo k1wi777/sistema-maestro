@@ -3,7 +3,6 @@ import { DatabaseModule } from '../../shared/database/database.module';
 import { StructureModule } from '../estructura/structure.module';
 import { PlanningModule } from '../planeacion/planning.module';
 import { FieldJournalAuditSnapshot } from './field-journals/field-journal.audit-snapshot';
-import { FieldJournalEntriesController } from './field-journals/field-journal-entries.controller';
 import { FIELD_JOURNAL_REPOSITORY } from './field-journals/field-journal.repository';
 import { FieldJournalReviewController } from './field-journals/field-journal-review.controller';
 import { FieldJournalsController } from './field-journals/field-journals.controller';
@@ -25,7 +24,6 @@ import { PrismaObserverNoteRepository } from './observer-notes/prisma-observer-n
   imports: [DatabaseModule, StructureModule, PlanningModule],
   controllers: [
     FieldJournalsController,
-    FieldJournalEntriesController,
     FieldJournalReviewController,
     ObserverNotesController,
     ObserverNoteReviewController,

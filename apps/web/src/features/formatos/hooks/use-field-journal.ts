@@ -1,77 +1,91 @@
 'use client';
 
-import type { FieldJournal, Review } from '@gns/shared';
+import type {
+  FieldJournal,
+  FieldJournalDay,
+  FieldJournalSummary,
+  JournalStatus,
+  TodayJournals,
+} from '@gns/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ApiError, ApiResult } from '@/shared/api';
-import { useRemote, type Remote } from '@/shared/data';
-import { isEditable } from '@/shared/records';
+import { usePagedList, useRemote, type PagedList, type Remote } from '@/shared/data';
 
 import {
-  addJournalEntry,
-  getFieldJournal,
-  listFieldJournalReviews,
-  removeJournalEntry,
+  addAnnotation,
+  getJournalDay,
+  getTodayJournals,
+  listFieldJournals,
+  markAnnotationDraft,
+  markAnnotationReady,
+  resubmitFieldJournal,
   submitFieldJournal,
-  updateJournalEntry,
+  updateAnnotation,
   voidFieldJournal,
-  type CreateJournalEntryBody,
-  type UpdateJournalEntryBody,
+  type CreateAnnotationBody,
+  type UpdateAnnotationBody,
 } from '../api/field-journals';
-import { mapEntryApiErrors, type EntryField } from '../model/journal-entry-form';
+import { mapAnnotationApiErrors, type AnnotationField } from '../model/annotation-form';
 import type { FieldErrors } from '../model/messages';
 
-export interface JournalWithReviews {
-  journal: FieldJournal;
-  reviews: Review[];
+const PAGE_SIZE = 20;
+
+/** Bloque «Hoy»: el diario de hoy de cada grupo del docente. */
+export function useTodayJournals(): Remote<TodayJournals> {
+  return useRemote(getTodayJournals, 'journals-today');
 }
 
-async function loadJournal(id: string): Promise<ApiResult<JournalWithReviews>> {
-  const [journal, reviews] = await Promise.all([getFieldJournal(id), listFieldJournalReviews(id)]);
-  if (!journal.ok) {
-    return journal;
-  }
-  // Sin historial la hoja se usa igual: solo faltaría la sección de revisión.
-  return { ok: true, data: { journal: journal.data, reviews: reviews.ok ? reviews.data : [] } };
+/** Diarios de los grupos del docente, con filtros por estado y grupo y «Cargar más». */
+export function useJournalList(
+  status: JournalStatus | undefined,
+  groupId: string | undefined,
+): PagedList<FieldJournalSummary> {
+  return usePagedList<FieldJournalSummary>(
+    (page) => listFieldJournals({ scope: 'mine', status, groupId, page, pageSize: PAGE_SIZE }),
+    JSON.stringify(['mine', status, groupId]),
+  );
 }
 
-/** Una hoja del diario con su historial de revisión de coordinación. */
-export function useFieldJournal(id: string): Remote<JournalWithReviews> {
-  return useRemote(() => loadJournal(id), `field-journal:${id}`);
+/** El diario de un grupo y fecha (vacío si nadie ha anotado todavía). */
+export function useJournalDay(groupId: string, date: string): Remote<FieldJournalDay> {
+  return useRemote(() => getJournalDay(groupId, date), `journal-day:${groupId}:${date}`);
 }
 
-/** Respuesta 409: la hoja cambió de estado en el servidor (p. ej. coordinación la devolvió). */
+/** Respuesta 409: el diario cambió de estado en el servidor (p. ej. coordinación lo devolvió). */
 const CONFLICT_STATUS = 409;
 
 export type JournalOutcome =
-  { ok: true } | { ok: false; message: string; fields: FieldErrors<EntryField>['fields'] };
+  | {
+      ok: true;
+      /** Id de la anotación recién creada, si la operación fue un alta. */ createdId?: string;
+    }
+  | { ok: false; message: string; fields: FieldErrors<AnnotationField>['fields'] };
 
 interface UseJournalEditorOptions {
-  initial: FieldJournal;
-  /** Se llama ante un 409 para que la pantalla vuelva a pedir la hoja con su estado actual. */
+  initial: FieldJournalDay;
+  /** Se llama ante un 409 para que la pantalla vuelva a pedir el diario con su estado actual. */
   onConflict: () => void;
 }
 
 /**
- * Estado y acciones de una hoja abierta. Cada escritura de un registro devuelve la hoja completa y
- * sustituye la que se muestra, sin volver a pedirla; tras enviar o anular se recarga el historial.
+ * Estado y acciones del diario abierto. Cada escritura devuelve el diario completo y sustituye el
+ * que se muestra, sin volver a pedirlo.
  */
 export function useJournalEditor({ initial, onConflict }: UseJournalEditorOptions) {
-  const [journal, setJournal] = useState(initial);
-  const [reviews, setReviews] = useState<Review[] | null>(null);
+  const [journal, setJournal] = useState<FieldJournalDay>(initial);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const journalRef = useRef(journal);
   useEffect(() => {
     journalRef.current = journal;
   });
-  const editable = isEditable(journal.status);
 
   const failure = useCallback(
     (error: ApiError): JournalOutcome => {
       if (error.statusCode === CONFLICT_STATUS) {
         onConflict();
       }
-      const mapped = mapEntryApiErrors(error.statusCode === 400 ? error.errors : undefined);
+      const mapped = mapAnnotationApiErrors(error.statusCode === 400 ? error.errors : undefined);
       const hasFields = Object.keys(mapped.fields).length > 0;
       return {
         ok: false,
@@ -88,70 +102,62 @@ export function useJournalEditor({ initial, onConflict }: UseJournalEditorOption
     return { ok: true };
   }, []);
 
-  const addEntry = useCallback(
-    async (body: CreateJournalEntryBody): Promise<JournalOutcome> => {
-      const result = await addJournalEntry(journalRef.current.id, body);
+  const run = useCallback(
+    async (task: () => Promise<ApiResult<FieldJournal>>): Promise<JournalOutcome> => {
+      const result = await task();
       return result.ok ? accept(result.data) : failure(result.error);
     },
     [accept, failure],
   );
 
-  const updateEntry = useCallback(
-    async (entryId: string, body: UpdateJournalEntryBody): Promise<JournalOutcome> => {
-      const result = await updateJournalEntry(journalRef.current.id, entryId, body);
-      return result.ok ? accept(result.data) : failure(result.error);
-    },
-    [accept, failure],
-  );
-
-  const removeEntry = useCallback(
-    async (entryId: string): Promise<JournalOutcome> => {
-      const result = await removeJournalEntry(journalRef.current.id, entryId);
-      return result.ok ? accept(result.data) : failure(result.error);
-    },
-    [accept, failure],
-  );
-
-  const refreshReviews = useCallback(async () => {
-    const result = await listFieldJournalReviews(journalRef.current.id);
-    if (result.ok) {
-      setReviews(result.data);
-    }
-  }, []);
-
-  const submit = useCallback(async (): Promise<JournalOutcome> => {
-    const result = await submitFieldJournal(journalRef.current.id);
-    if (!result.ok) {
-      return failure(result.error);
-    }
-    setJournal(result.data);
-    await refreshReviews();
-    return { ok: true };
-  }, [failure, refreshReviews]);
-
-  const voidJournal = useCallback(
-    async (reason: string): Promise<JournalOutcome> => {
-      const result = await voidFieldJournal(journalRef.current.id, reason);
+  const create = useCallback(
+    async (body: CreateAnnotationBody): Promise<JournalOutcome> => {
+      const before = new Set(journalRef.current.annotations.map((annotation) => annotation.id));
+      const result = await addAnnotation(body);
       if (!result.ok) {
         return failure(result.error);
       }
-      setJournal(result.data);
-      await refreshReviews();
-      return { ok: true };
+      accept(result.data);
+      const created = result.data.annotations.find(
+        (annotation) => annotation.isMine && !before.has(annotation.id),
+      );
+      return { ok: true, createdId: created?.id };
     },
-    [failure, refreshReviews],
+    [accept, failure],
   );
 
-  return {
-    journal,
-    /** `null` hasta que una acción recarga el historial: mientras tanto manda el cargado con la hoja. */
-    reviews,
-    editable,
-    savedAt,
-    addEntry,
-    updateEntry,
-    removeEntry,
-    submit,
-    voidJournal,
-  };
+  const update = useCallback(
+    (annotationId: string, body: UpdateAnnotationBody) =>
+      run(() => updateAnnotation(journalRef.current.id ?? '', annotationId, body)),
+    [run],
+  );
+
+  const markReady = useCallback(
+    (annotationId: string) =>
+      run(() => markAnnotationReady(journalRef.current.id ?? '', annotationId)),
+    [run],
+  );
+
+  const markDraft = useCallback(
+    (annotationId: string) =>
+      run(() => markAnnotationDraft(journalRef.current.id ?? '', annotationId)),
+    [run],
+  );
+
+  const submit = useCallback(
+    (resubmit: boolean) =>
+      run(() =>
+        resubmit
+          ? resubmitFieldJournal(journalRef.current.id ?? '')
+          : submitFieldJournal(journalRef.current.id ?? ''),
+      ),
+    [run],
+  );
+
+  const voidJournal = useCallback(
+    (reason: string) => run(() => voidFieldJournal(journalRef.current.id ?? '', reason)),
+    [run],
+  );
+
+  return { journal, savedAt, create, update, markReady, markDraft, submit, voidJournal };
 }

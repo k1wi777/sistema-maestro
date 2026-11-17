@@ -42,9 +42,10 @@ export class ReviewsService {
 
   /**
    * Inserta la fila `ajuste` si hubo cambios y después la de la decisión, con la misma
-   * `fecha` (misma operación). La decisión es la que fija el estado del registro.
+   * `fecha` (misma operación). La decisión es la que fija el estado del registro; devuelve su id
+   * (el diario cuelga de ella sus observaciones).
    */
-  async record(input: RecordReviewInput): Promise<void> {
+  async record(input: RecordReviewInput): Promise<string> {
     const date = new Date();
     const base = {
       recordType: input.recordType,
@@ -61,7 +62,7 @@ export class ReviewsService {
         changes: [...input.changes],
       });
     }
-    await this.repository.insert({
+    return this.repository.insert({
       ...base,
       action: input.decision,
       comment: input.comment,

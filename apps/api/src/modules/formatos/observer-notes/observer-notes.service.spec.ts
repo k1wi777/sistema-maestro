@@ -58,7 +58,7 @@ function setup(status: RecordStatus = RecordStatus.Draft) {
   const reviewRepository = {
     insert: jest.fn((review: (typeof inserted)[number]) => {
       inserted.push(review);
-      return Promise.resolve();
+      return Promise.resolve('review-id');
     }),
     findByRecord: jest.fn(() => Promise.resolve([])),
   };

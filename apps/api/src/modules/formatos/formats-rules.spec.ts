@@ -1,18 +1,17 @@
 import {
   allowedFromAny,
-  approveFieldJournalSchema,
-  createFieldJournalEntrySchema,
+  approveJournalSchema,
+  createAnnotationSchema,
   createObserverNoteSchema,
   isStudentFirstName,
-  journalEntryChangeField,
   journalStudentsSchema,
   observerNoteListQuerySchema,
-  parseJournalEntryChangeField,
   RecordActor,
   RecordOperation,
   RecordStatus,
   studentFirstNameSchema,
-  updateFieldJournalEntrySchema,
+  returnJournalSchema,
+  updateAnnotationSchema,
   updateObserverNoteSchema,
   voidLessonPlanSchema,
   voidRecordSchema,
@@ -76,47 +75,59 @@ describe('lista de estudiantes de una entrada', () => {
 });
 
 describe('esquemas del diario', () => {
-  const entry = { date: '2031-03-10', lesson: 'Matemáticas', eventType: 'grupo', description: 'x' };
+  const annotation = {
+    groupId: UUID,
+    date: '2031-03-10',
+    areaId: UUID,
+    eventType: 'grupo',
+    description: 'x',
+  };
 
-  it('una entrada «a mejorar» exige acciones', () => {
-    const result = createFieldJournalEntrySchema.safeParse({ ...entry, eventType: 'mejorar' });
+  it('una anotación «a mejorar» exige acciones', () => {
+    const result = createAnnotationSchema.safeParse({ ...annotation, eventType: 'mejorar' });
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]?.path).toEqual(['actions']);
     expect(
-      createFieldJournalEntrySchema.safeParse({
-        ...entry,
+      createAnnotationSchema.safeParse({
+        ...annotation,
         eventType: 'mejorar',
         actions: 'Practicar',
       }).success,
     ).toBe(true);
   });
 
-  it('rechaza campos desconocidos y no admite entradas vacías', () => {
-    expect(createFieldJournalEntrySchema.safeParse({ ...entry, phone: '3000000000' }).success).toBe(
+  it('rechaza campos desconocidos, fechas inválidas y no admite ediciones vacías', () => {
+    expect(createAnnotationSchema.safeParse({ ...annotation, phone: '3000000000' }).success).toBe(
       false,
     );
-    expect(updateFieldJournalEntrySchema.safeParse({}).success).toBe(false);
+    expect(createAnnotationSchema.safeParse({ ...annotation, date: '10/03/2031' }).success).toBe(
+      false,
+    );
+    expect(
+      createAnnotationSchema.safeParse({ ...annotation, students: ['Sofía 123'] }).success,
+    ).toBe(false);
+    expect(updateAnnotationSchema.safeParse({}).success).toBe(false);
+    expect(updateAnnotationSchema.safeParse({ description: 'nuevo' }).success).toBe(true);
   });
 
-  it('los ajustes exigen entradas únicas y al menos un campo por entrada', () => {
-    const ok = { entries: [{ id: UUID, description: 'nuevo' }] };
-    expect(approveFieldJournalSchema.safeParse({ changes: ok }).success).toBe(true);
-    expect(
-      approveFieldJournalSchema.safeParse({ changes: { entries: [{ id: UUID }] } }).success,
-    ).toBe(false);
-    expect(
-      approveFieldJournalSchema.safeParse({
-        changes: { entries: [ok.entries[0], ok.entries[0]] },
-      }).success,
-    ).toBe(false);
-    expect(approveFieldJournalSchema.safeParse({ changes: { entries: [] } }).success).toBe(false);
+  it('aprobar admite solo el comentario y devolver exige alguna observación', () => {
+    expect(approveJournalSchema.safeParse({}).success).toBe(true);
+    expect(approveJournalSchema.parse({ comment: '  ' }).comment).toBeNull();
+    expect(approveJournalSchema.safeParse({ changes: {} }).success).toBe(false);
+    expect(returnJournalSchema.safeParse({}).success).toBe(false);
+    expect(returnJournalSchema.safeParse({ comment: 'Revisa la fecha' }).success).toBe(true);
+    const observation = { annotationId: UUID, text: 'Amplía la descripción' };
+    expect(returnJournalSchema.safeParse({ observations: [observation] }).success).toBe(true);
   });
 
-  it('la clave de ajuste de una entrada hace ida y vuelta', () => {
-    const field = journalEntryChangeField(UUID, 'descripcion');
-    expect(field).toBe(`entradas.${UUID}.descripcion`);
-    expect(parseJournalEntryChangeField(field)).toEqual({ entryId: UUID, column: 'descripcion' });
-    expect(parseJournalEntryChangeField('fecha_desde')).toBeNull();
+  it('devolver no repite anotaciones ni admite observaciones vacías', () => {
+    const observation = { annotationId: UUID, text: 'Amplía' };
+    expect(
+      returnJournalSchema.safeParse({ observations: [observation, observation] }).success,
+    ).toBe(false);
+    expect(
+      returnJournalSchema.safeParse({ observations: [{ annotationId: UUID, text: ' ' }] }).success,
+    ).toBe(false);
   });
 });
 

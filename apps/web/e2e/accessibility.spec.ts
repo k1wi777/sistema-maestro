@@ -89,10 +89,28 @@ test.describe('Accesibilidad: vista docente', () => {
     await visit(page, '/docente/formatos/planeacion/nueva', 'docente · nueva planeación');
   });
 
-  test('diario de campo: lista y una hoja', async () => {
+  test('diario de campo: lista, diario del día (aportante y director) y confirmación de envío', async () => {
     const { page } = teacher;
     await visit(page, '/docente/formatos/diario', 'docente · diario de campo (lista)');
-    await openFirst(page, page.getByRole('link', { name: OPEN_LINK }), 'docente · diario');
+    // Julián participa en Red 1 (aportante) y dirige Transition 1 (director): los diarios demo del
+    // 9 de nov están en curso. Solo se abre y se cancela el diálogo de envío.
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Abrir diario de Red 1 del 2026-11-09/ }),
+      'docente · diario del día (aportante)',
+    );
+    await page.goBack();
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Abrir diario de Transition 1 del 2026-11-09/ }),
+      'docente · diario del día (director)',
+    );
+    await page.getByRole('button', { name: 'Enviar a coordinación' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Enviar a coordinación' });
+    await expect(dialog).toBeVisible();
+    await expectAccessible(page, 'docente · confirmación de envío del diario');
+    await dialog.getByRole('button', { name: 'Seguir esperando' }).click();
+    await expect(dialog).toBeHidden();
   });
 
   test('observador: lista y una anotación', async () => {

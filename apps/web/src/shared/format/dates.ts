@@ -65,3 +65,19 @@ export function formatDayWithYear(date: string): string {
 export function todayInColombia(now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(now);
 }
+
+/** Fecha de calendario `AAAA-MM-DD` como «lunes 9 nov 2026». */
+export function formatWeekdayDate(date: string): string {
+  const weekday = new Intl.DateTimeFormat(LOCALE, { weekday: 'long', timeZone: 'UTC' }).format(
+    parseCalendarDate(date),
+  );
+  return `${weekday} ${formatDayWithYear(date)}`;
+}
+
+/** Fecha de calendario `AAAA-MM-DD` como «lun 9 nov» (listas y tablas). */
+export function formatShortWeekday(date: string): string {
+  const weekday = new Intl.DateTimeFormat(LOCALE, { weekday: 'short', timeZone: 'UTC' })
+    .format(parseCalendarDate(date))
+    .replace(/\./g, '');
+  return `${weekday} ${formatDay(date)}`;
+}

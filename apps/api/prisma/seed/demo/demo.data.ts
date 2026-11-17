@@ -1,7 +1,9 @@
 import {
   AUDIT_UNKNOWN_ROLE,
+  AnnotationStatus,
   AuditLogType,
   JournalEventType,
+  JournalStatus,
   ObserverNoteType,
   RecordStatus,
   ReviewAction,
@@ -71,15 +73,19 @@ export const DEMO_GROUPS: readonly { grade: string; name: string }[] = [
 ].map((grade) => ({ grade, name: `${grade} 1` }));
 
 /**
- * Coordinadora de cada grado en el demo: Elena, preescolar bajo; Tomás, preescolar alto
- * (Kinder y Transition). First Grade queda sin coordinadora, como en el tablero, para mostrar el aviso.
+ * Coordinadora de cada grado en el demo: Elena, preescolar bajo y primaria; Tomás, preescolar alto
+ * (Kinder y Transition) y bachillerato. First Grade queda sin coordinadora, como en el tablero,
+ * para mostrar el aviso y que solo administración revise sus diarios.
  */
 export const DEMO_COORDINATOR_GRADES: readonly {
   coordinator: string;
   grades: readonly string[];
 }[] = [
-  { coordinator: COORDINATOR_1, grades: ['Red', 'Blue', 'Purple', 'Green', 'Garden'] },
-  { coordinator: COORDINATOR_2, grades: ['Kinder', 'Transition'] },
+  {
+    coordinator: COORDINATOR_1,
+    grades: ['Red', 'Blue', 'Purple', 'Green', 'Garden', '3°', '4°', '5°'],
+  },
+  { coordinator: COORDINATOR_2, grades: ['Kinder', 'Transition', '7°', '8°', '10°', '11°'] },
 ];
 
 export interface DemoAssignment {
@@ -111,11 +117,14 @@ export const DEMO_ASSIGNMENTS: readonly DemoAssignment[] = [
   assignment(VALERIA, 'Red', 'Dimensión cognitiva', true),
   assignment(VALERIA, 'Red', 'Dimensión comunicativa'),
   assignment(VALERIA, 'Blue', 'Dimensión socioafectiva'),
-  assignment(JULIAN, 'First Grade', 'English (CLIL)'),
+  assignment(VALERIA, 'Transition', 'Dimensión cognitiva'),
+  assignment(JULIAN, 'Red', 'English (CLIL)'),
+  assignment(JULIAN, 'First Grade', 'English (CLIL)', true),
   assignment(JULIAN, 'Transition', 'Pre-ciencias', true),
   assignment(SOFIA, '3°', 'Matemáticas', true),
   assignment(SOFIA, '3°', 'Ciencias Naturales'),
   assignment(SOFIA, '4°', 'Matemáticas'),
+  assignment(SOFIA, '7°', 'Matemáticas'),
   assignment(ANDRES, '7°', 'Física', true),
   assignment(ANDRES, '8°', 'Química'),
   assignment(DANIELA, '10°', 'Filosofía', true),
@@ -299,185 +308,362 @@ export const planMoments = (topic: string) => ({
   closing: 'Reflexión final: qué aprendimos y cómo lo usaremos en la próxima sesión.',
 });
 
-// ---------- Diario de campo ----------
+// ---------- Diario de campo (por grupo y día) ----------
 
-export interface DemoJournalEntry {
-  date: string;
-  lesson: string;
+export interface DemoAnnotation {
+  /** Clave para colgar una observación de coordinación. */
+  key?: string;
+  teacher: string;
+  area: string;
   eventType: JournalEventType;
   students: string;
   description: string;
   actions: string;
   reflection: string;
+  status: AnnotationStatus;
+  /** Hora en que se marcó lista; nula en un borrador. */
+  readyAt: string | null;
+  /** Viajó en algún envío. */
+  sent: boolean;
+  /** Observación de coordinación sobre esta anotación (revisión `observationReview`). */
+  observation?: string;
+}
+
+export interface DemoJournalSubmission {
+  director: string;
+  at: string;
+  resubmission: boolean;
+  ready: number;
+  expected: number;
+  missing: readonly { teacher: string; status: 'borrador' | 'sin_aporte' }[];
 }
 
 export interface DemoJournal {
   key: string;
-  teacher: string;
   grade: string;
-  period: number;
-  status: RecordStatus;
+  group: string;
+  date: string;
+  status: JournalStatus;
+  createdBy: string;
   submittedAt: string | null;
-  entries: readonly DemoJournalEntry[];
+  voidedAt?: string;
+  voidedBy?: string;
+  annotations: readonly DemoAnnotation[];
+  submissions: readonly DemoJournalSubmission[];
+  /** Clave de la revisión (`DEMO_REVIEWS`) de la que cuelgan las observaciones. */
+  observationReview?: string;
 }
 
-const entry = (
-  date: string,
-  lesson: string,
+const annotation = (
+  teacher: string,
+  area: string,
   eventType: JournalEventType,
   students: string,
   description: string,
-): DemoJournalEntry => ({
-  date,
-  lesson,
+  status: AnnotationStatus,
+  readyAt: string | null,
+  extra: Pick<DemoAnnotation, 'key' | 'observation' | 'sent'> = { sent: false },
+): DemoAnnotation => ({
+  teacher,
+  area,
   eventType,
   students,
   description,
   actions: 'Se conversó con el grupo y se acordó una estrategia para la siguiente sesión.',
   reflection: 'Conviene sostener la rutina y observar cómo evoluciona en las próximas semanas.',
+  status,
+  readyAt,
+  ...extra,
 });
 
+const SENT = { sent: true } as const;
+
+// Fechas fijas del 13 de octubre al 9 de noviembre de 2026; ningún diario de 7° 1 es posterior al
+// 12 de noviembre (la prueba de navegador crea el de hoy en ese grupo).
 export const DEMO_JOURNALS: readonly DemoJournal[] = [
   {
+    // En curso: una anotación lista y otra en borrador.
     key: 'j1',
-    teacher: VALERIA,
     grade: 'Red',
-    period: 1,
-    status: RecordStatus.Draft,
+    group: 'Red 1',
+    date: '2026-11-09',
+    status: JournalStatus.InProgress,
+    createdBy: VALERIA,
     submittedAt: null,
-    entries: [
-      entry(
-        '2026-10-05',
-        'Rincón Sweet Home',
+    annotations: [
+      annotation(
+        VALERIA,
+        'Dimensión cognitiva',
         JournalEventType.Group,
         'Samuel, Alma',
         'El grupo organizó la cocina de juguete sin ayuda y se turnó los roles.',
+        AnnotationStatus.Ready,
+        '2026-11-09T10:05:00-05:00',
       ),
-      entry(
-        '2026-10-07',
-        'Lectura e imágenes',
+      annotation(
+        JULIAN,
+        'English (CLIL)',
         JournalEventType.Positive,
         'Alma',
-        'Alma narró el cuento completo mirando solo las imágenes.',
+        'Alma repitió con buena pronunciación los colores en inglés.',
+        AnnotationStatus.Draft,
+        null,
       ),
     ],
+    submissions: [],
   },
   {
+    // En curso con el director(a) sin aporte todavía: el envío pide confirmación.
     key: 'j2',
-    teacher: SOFIA,
-    grade: '3°',
-    period: 1,
-    status: RecordStatus.Submitted,
-    submittedAt: '2026-10-16T17:00:00-05:00',
-    entries: [
-      entry(
-        '2026-10-05',
-        'Matemáticas',
+    grade: 'Transition',
+    group: 'Transition 1',
+    date: '2026-11-09',
+    status: JournalStatus.InProgress,
+    createdBy: VALERIA,
+    submittedAt: null,
+    annotations: [
+      annotation(
+        VALERIA,
+        'Dimensión cognitiva',
         JournalEventType.Group,
-        'Emiliano, Valentina',
-        'La mayoría resolvió las fracciones con material concreto.',
-      ),
-      entry(
-        '2026-10-08',
-        'Matemáticas',
-        JournalEventType.Positive,
-        'Valentina',
-        'Explicó a sus compañeros cómo repartir una pizza en partes iguales.',
-      ),
-      entry(
-        '2026-10-12',
-        'Ciencias Naturales',
-        JournalEventType.ToImprove,
-        'Emiliano',
-        'Le cuesta terminar las actividades en el tiempo previsto.',
+        'Lucas, Emma',
+        'El grupo armó rompecabezas por equipos y se ayudó a encontrar las piezas.',
+        AnnotationStatus.Ready,
+        '2026-11-09T09:50:00-05:00',
       ),
     ],
+    submissions: [],
   },
   {
+    // Enviado: un docente sin aporte (se envió sin esperarlo).
     key: 'j3',
-    teacher: JULIAN,
-    grade: 'First Grade',
-    period: 1,
-    status: RecordStatus.ChangesRequested,
-    submittedAt: '2026-10-14T12:10:00-05:00',
-    entries: [
-      entry(
-        '2026-10-06',
-        'English (CLIL)',
-        JournalEventType.Group,
-        'Isabella, Dante',
-        'Cantaron la canción de los animales y repitieron el vocabulario.',
-      ),
-      entry(
-        '2026-10-09',
-        'English (CLIL)',
-        JournalEventType.ToImprove,
-        'Dante',
-        'Se distrae durante las rutinas de inicio.',
-      ),
-    ],
-  },
-  {
-    key: 'j4',
-    teacher: ANDRES,
     grade: '7°',
-    period: 1,
-    status: RecordStatus.Reviewed,
-    submittedAt: '2026-10-02T13:30:00-05:00',
-    entries: [
-      entry(
-        '2026-09-22',
-        'Física',
-        JournalEventType.Group,
-        'Thiago, Camila',
-        'El laboratorio de movimiento se desarrolló con buena participación.',
-      ),
-      entry(
-        '2026-09-24',
-        'Física',
-        JournalEventType.Positive,
-        'Camila',
-        'Propuso una forma más precisa de medir el tiempo.',
-      ),
-      entry(
-        '2026-09-29',
+    group: '7° 1',
+    date: '2026-11-04',
+    status: JournalStatus.Submitted,
+    createdBy: ANDRES,
+    submittedAt: '2026-11-04T16:30:00-05:00',
+    annotations: [
+      annotation(
+        ANDRES,
         'Física',
         JournalEventType.ToImprove,
-        'Thiago',
-        'Entrega tarde los informes de laboratorio.',
+        'Dante, Emilia',
+        'Dos estudiantes se distrajeron durante el laboratorio de movimiento.',
+        AnnotationStatus.Ready,
+        '2026-11-04T14:10:00-05:00',
+        SENT,
       ),
-      entry(
-        '2026-10-01',
-        'Física',
-        JournalEventType.Group,
-        'Camila, Thiago',
-        'Socializaron resultados y compararon sus gráficas.',
-      ),
+    ],
+    submissions: [
+      {
+        director: ANDRES,
+        at: '2026-11-04T16:30:00-05:00',
+        resubmission: false,
+        ready: 1,
+        expected: 2,
+        missing: [{ teacher: SOFIA, status: 'sin_aporte' }],
+      },
     ],
   },
   {
-    key: 'j5',
-    teacher: DANIELA,
-    grade: '10°',
-    period: 1,
-    status: RecordStatus.Voided,
-    submittedAt: '2026-09-30T15:00:00-05:00',
-    entries: [
-      entry(
-        '2026-09-28',
-        'Filosofía',
-        JournalEventType.Group,
-        'Gael, Renata',
-        'Registro anulado: se cargó por error en el grado equivocado.',
-      ),
-      entry(
-        '2026-09-29',
-        'Filosofía',
-        JournalEventType.Positive,
+    // Con observaciones: una anotación por corregir y una observación general.
+    key: 'j4',
+    grade: '3°',
+    group: '3° 1',
+    date: '2026-10-28',
+    status: JournalStatus.ChangesRequested,
+    createdBy: SOFIA,
+    submittedAt: '2026-10-29T15:00:00-05:00',
+    annotations: [
+      annotation(
+        SOFIA,
+        'Matemáticas',
+        JournalEventType.ToImprove,
         'Renata',
-        'Participación destacada en el debate sobre la caverna.',
+        'Renata tuvo dificultad con las tablas del seis durante el juego de la tienda.',
+        AnnotationStatus.Observed,
+        '2026-10-28T11:20:00-05:00',
+        {
+          key: 'a1',
+          sent: true,
+          observation: 'Detallar las acciones tomadas frente a la dificultad de Renata.',
+        },
+      ),
+      annotation(
+        SOFIA,
+        'Ciencias Naturales',
+        JournalEventType.Positive,
+        'Mateo',
+        'Mateo explicó con sus palabras el ciclo del agua a sus compañeros.',
+        AnnotationStatus.Ready,
+        '2026-10-28T13:45:00-05:00',
+        SENT,
       ),
     ],
+    submissions: [
+      {
+        director: SOFIA,
+        at: '2026-10-29T15:00:00-05:00',
+        resubmission: false,
+        ready: 1,
+        expected: 1,
+        missing: [],
+      },
+    ],
+    observationReview: 'r5',
+  },
+  {
+    // Revisado: el diario completo de Transition 1.
+    key: 'j5',
+    grade: 'Transition',
+    group: 'Transition 1',
+    date: '2026-10-20',
+    status: JournalStatus.Reviewed,
+    createdBy: VALERIA,
+    submittedAt: '2026-10-21T16:00:00-05:00',
+    annotations: [
+      annotation(
+        VALERIA,
+        'Dimensión cognitiva',
+        JournalEventType.Group,
+        'Lucas, Emma',
+        'El grupo clasificó las semillas por tamaño y color trabajando en parejas.',
+        AnnotationStatus.Ready,
+        '2026-10-20T09:30:00-05:00',
+        SENT,
+      ),
+      annotation(
+        JULIAN,
+        'Pre-ciencias',
+        JournalEventType.Positive,
+        'Emma',
+        'Emma propuso una hipótesis sobre por qué crecen más las plantas con luz.',
+        AnnotationStatus.Ready,
+        '2026-10-20T10:15:00-05:00',
+        SENT,
+      ),
+    ],
+    submissions: [
+      {
+        director: JULIAN,
+        at: '2026-10-21T16:00:00-05:00',
+        resubmission: false,
+        ready: 2,
+        expected: 2,
+        missing: [],
+      },
+    ],
+  },
+  {
+    // Anulado: abierto por error y anulado por el director(a) antes de enviarlo.
+    key: 'j6',
+    grade: 'Red',
+    group: 'Red 1',
+    date: '2026-10-14',
+    status: JournalStatus.Voided,
+    createdBy: VALERIA,
+    submittedAt: null,
+    voidedAt: '2026-10-14T15:00:00-05:00',
+    voidedBy: VALERIA,
+    annotations: [
+      annotation(
+        VALERIA,
+        'Dimensión comunicativa',
+        JournalEventType.Group,
+        'Samuel',
+        'Anotación abierta en la fecha equivocada.',
+        AnnotationStatus.Draft,
+        null,
+      ),
+    ],
+    submissions: [],
+  },
+  {
+    // Grado sin coordinadora: solo administración lo revisa.
+    key: 'j7',
+    grade: 'First Grade',
+    group: 'First Grade 1',
+    date: '2026-10-22',
+    status: JournalStatus.Submitted,
+    createdBy: JULIAN,
+    submittedAt: '2026-10-22T17:00:00-05:00',
+    annotations: [
+      annotation(
+        JULIAN,
+        'English (CLIL)',
+        JournalEventType.Group,
+        'Dante, Alma',
+        'El grupo completó la actividad de vocabulario de la granja con entusiasmo.',
+        AnnotationStatus.Ready,
+        '2026-10-22T11:40:00-05:00',
+        SENT,
+      ),
+    ],
+    submissions: [
+      {
+        director: JULIAN,
+        at: '2026-10-22T17:00:00-05:00',
+        resubmission: false,
+        ready: 1,
+        expected: 1,
+        missing: [],
+      },
+    ],
+  },
+  {
+    // Enviado en un grado de Elena: le da un diario pendiente de revisión.
+    key: 'j9',
+    grade: '3°',
+    group: '3° 1',
+    date: '2026-11-05',
+    status: JournalStatus.Submitted,
+    createdBy: SOFIA,
+    submittedAt: '2026-11-05T16:10:00-05:00',
+    annotations: [
+      annotation(
+        SOFIA,
+        'Matemáticas',
+        JournalEventType.Group,
+        'Renata, Mateo',
+        'El grupo resolvió problemas de fracciones con material concreto sin ayuda.',
+        AnnotationStatus.Ready,
+        '2026-11-05T10:20:00-05:00',
+        SENT,
+      ),
+    ],
+    submissions: [
+      {
+        director: SOFIA,
+        at: '2026-11-05T16:10:00-05:00',
+        resubmission: false,
+        ready: 1,
+        expected: 1,
+        missing: [],
+      },
+    ],
+  },
+  {
+    // Grupo con asignaciones y sin director(a): no se puede enviar.
+    key: 'j8',
+    grade: 'Blue',
+    group: 'Blue 1',
+    date: '2026-11-06',
+    status: JournalStatus.InProgress,
+    createdBy: VALERIA,
+    submittedAt: null,
+    annotations: [
+      annotation(
+        VALERIA,
+        'Dimensión socioafectiva',
+        JournalEventType.Positive,
+        'Alma, Samuel',
+        'Resolvieron solos un desacuerdo con el material y se pidieron disculpas.',
+        AnnotationStatus.Ready,
+        '2026-11-06T10:30:00-05:00',
+      ),
+    ],
+    submissions: [],
   },
 ];
 
@@ -681,19 +867,19 @@ export const DEMO_REVIEWS: readonly DemoReview[] = [
   review(
     'r5',
     ReviewRecordType.FieldJournal,
-    'j3',
+    'j4',
     COORDINATOR_1,
     ReviewAction.ChangesRequested,
-    '2026-10-15T09:30:00-05:00',
-    'Detallar las acciones tomadas frente a la distracción de Dante.',
+    '2026-11-02T09:30:00-05:00',
+    'Completar la anotación de Matemáticas antes de reenviar el diario.',
   ),
   review(
     'r6',
     ReviewRecordType.FieldJournal,
-    'j4',
+    'j5',
     COORDINATOR_2,
     ReviewAction.Approved,
-    '2026-10-03T10:15:00-05:00',
+    '2026-10-22T10:15:00-05:00',
     'Registro completo y con reflexiones útiles.',
   ),
   review(
@@ -1179,23 +1365,53 @@ export const DEMO_AUDIT: readonly DemoAuditEntry[] = [
     { detail: 'Duplicada por error' },
   ),
   audit(
-    '2026-10-02T13:30:00-05:00',
-    ANDRES,
+    '2026-10-20T08:10:00-05:00',
+    VALERIA,
     AuditLogType.FieldJournal,
-    'Envió el diario de campo',
-    { kind: 'journal', key: 'j4' },
+    'Agregó una anotación al diario de campo',
+    { kind: 'journal', key: 'j5' },
+    { detail: 'Transition 1 · 2026-10-20' },
   ),
   audit(
-    '2026-10-14T12:10:00-05:00',
+    '2026-10-21T16:00:00-05:00',
     JULIAN,
     AuditLogType.FieldJournal,
-    'Envió el diario de campo',
-    { kind: 'journal', key: 'j3' },
+    'Envió el diario de campo a coordinación',
+    { kind: 'journal', key: 'j5' },
+    { detail: 'Transition 1 · 2026-10-20 · 2 de 2 aportes' },
   ),
-  audit('2026-10-16T17:00:00-05:00', SOFIA, AuditLogType.FieldJournal, 'Envió el diario de campo', {
-    kind: 'journal',
-    key: 'j2',
-  }),
+  audit(
+    '2026-10-22T17:00:00-05:00',
+    JULIAN,
+    AuditLogType.FieldJournal,
+    'Envió el diario de campo a coordinación',
+    { kind: 'journal', key: 'j7' },
+    { detail: 'First Grade 1 · 2026-10-22 · 1 de 1 aportes' },
+  ),
+  audit(
+    '2026-10-29T15:00:00-05:00',
+    SOFIA,
+    AuditLogType.FieldJournal,
+    'Envió el diario de campo a coordinación',
+    { kind: 'journal', key: 'j4' },
+    { detail: '3° 1 · 2026-10-28 · 1 de 1 aportes' },
+  ),
+  audit(
+    '2026-11-04T16:30:00-05:00',
+    ANDRES,
+    AuditLogType.FieldJournal,
+    'Envió el diario de campo a coordinación',
+    { kind: 'journal', key: 'j3' },
+    { detail: '7° 1 · 2026-11-04 · 1 de 2 aportes' },
+  ),
+  audit(
+    '2026-11-09T10:05:00-05:00',
+    VALERIA,
+    AuditLogType.FieldJournal,
+    'Marcó lista una anotación del diario de campo',
+    { kind: 'journal', key: 'j1' },
+    { detail: 'Red 1 · 2026-11-09' },
+  ),
   audit(
     '2026-10-13T15:00:00-05:00',
     JULIAN,
@@ -1297,14 +1513,14 @@ export const DEMO_AUDIT: readonly DemoAuditEntry[] = [
     { kind: 'review', key: 'r4' },
   ),
   audit(
-    '2026-10-03T10:15:00-05:00',
+    '2026-10-22T10:15:00-05:00',
     COORDINATOR_2,
     AuditLogType.Coordination,
     'Aprobó un diario de campo',
     { kind: 'review', key: 'r6' },
   ),
   audit(
-    '2026-10-15T09:30:00-05:00',
+    '2026-11-02T09:30:00-05:00',
     COORDINATOR_1,
     AuditLogType.Coordination,
     'Dejó observaciones en un diario de campo',

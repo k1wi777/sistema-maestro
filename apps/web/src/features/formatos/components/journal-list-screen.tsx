@@ -10,7 +10,7 @@ export function JournalListScreen() {
       <PageHeader
         context="Formatos"
         title="Diario de campo (F-PA-05)"
-        description="Una hoja por grado y periodo: registra los eventos de tus clases, envíala a coordinación y consulta sus observaciones."
+        description="Registra los eventos de tus clases en el diario de cada grupo y día y consulta las observaciones de coordinación."
         actions={
           <ButtonLink href={FORMATS_HUB_PATH} variant="outline" startIcon="volver">
             Formatos

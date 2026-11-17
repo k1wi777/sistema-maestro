@@ -13,7 +13,8 @@ export interface NewReview {
 }
 
 export interface ReviewRepository {
-  insert(review: NewReview): Promise<void>;
+  /** Inserta la fila y devuelve su id. */
+  insert(review: NewReview): Promise<string>;
   /** Historial del registro con su revisor, sin ordenar el ajuste respecto a su decisión. */
   findByRecord(recordType: ReviewRecordType, recordId: string): Promise<Review[]>;
 }

@@ -13,6 +13,13 @@ export {
   type Moment,
   type MomentField,
 } from './lesson-plan-fields';
+export {
+  ANNOTATION_STATUS_INFO,
+  JOURNAL_STATUS_INFO,
+  JOURNAL_STATUS_ORDER,
+  journalStatusFromUrl,
+  type JournalStatusInfo,
+} from './journal-status';
 export { printWithTitle } from './print';
 export { latestDecision, type LatestDecision } from './review-feedback';
 export { STATUS_INFO, STATUS_ORDER, canVoid, isEditable, type StatusInfo } from './status';

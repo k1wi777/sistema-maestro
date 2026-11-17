@@ -14,8 +14,8 @@ import type { NewReview, ReviewRepository } from './review.repository';
 export class PrismaReviewRepository implements ReviewRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async insert(review: NewReview): Promise<void> {
-    await this.prisma.db.review.create({
+  async insert(review: NewReview): Promise<string> {
+    const row = await this.prisma.db.review.create({
       data: {
         recordType: review.recordType,
         recordId: review.recordId,
@@ -28,7 +28,9 @@ export class PrismaReviewRepository implements ReviewRepository {
           : undefined,
         date: review.date,
       },
+      select: { id: true },
     });
+    return row.id;
   }
 
   async findByRecord(recordType: ReviewRecordType, recordId: string): Promise<Review[]> {

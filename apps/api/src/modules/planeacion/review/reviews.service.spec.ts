@@ -16,7 +16,7 @@ function setup(stored: Review[] = []) {
   const repository = {
     insert: jest.fn((review: NewReview) => {
       inserted.push(review);
-      return Promise.resolve();
+      return Promise.resolve(`review-${inserted.length}`);
     }),
     findByRecord: jest.fn(() => Promise.resolve(stored)),
   } satisfies ReviewRepository;
@@ -36,16 +36,17 @@ function review(action: ReviewAction, at: string, id: string): Review {
 }
 
 describe('ReviewsService.record', () => {
-  it('inserta solo la decisión cuando no hay ajustes', async () => {
+  it('inserta solo la decisión cuando no hay ajustes y devuelve su id', async () => {
     const { service, inserted } = setup();
 
-    await service.record({
+    const id = await service.record({
       ...RECORD,
       decision: ReviewDecision.Approved,
       comment: 'Bien',
       changes: [],
     });
 
+    expect(id).toBe('review-1');
     expect(inserted).toEqual([
       expect.objectContaining({
         action: ReviewAction.Approved,

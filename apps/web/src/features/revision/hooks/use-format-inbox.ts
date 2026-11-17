@@ -1,22 +1,35 @@
 'use client';
 
-import { RecordStatus, type FieldJournalSummary, type ObserverNote } from '@gns/shared';
+import {
+  RecordStatus,
+  type FieldJournalFilters,
+  type FieldJournalSummary,
+  type JournalReviewScope,
+  type ObserverNote,
+} from '@gns/shared';
 
 import type { ApiResult } from '@/shared/api';
 import { usePagedList, useRemote, type PagedList, type Remote } from '@/shared/data';
 
-import { listJournals } from '../api/field-journals';
+import { getReviewScope, listJournals } from '../api/field-journals';
 import { listPlans } from '../api/lesson-plans';
 import { listNotes } from '../api/observer-notes';
 
 const PAGE_SIZE = 20;
 
-/** Diarios de campo de todos los docentes, con filtro por estado y «Cargar más». */
-export function useJournalInbox(status: RecordStatus | undefined): PagedList<FieldJournalSummary> {
+/** Diarios de los grados de la persona de coordinación, con filtros y «Cargar más». */
+export function useJournalInbox(
+  filters: Pick<FieldJournalFilters, 'status' | 'gradeId' | 'groupId' | 'from' | 'to'>,
+): PagedList<FieldJournalSummary> {
   return usePagedList<FieldJournalSummary>(
-    (page) => listJournals({ status, page, pageSize: PAGE_SIZE }),
-    `journals:${status ?? ''}`,
+    (page) => listJournals({ ...filters, page, pageSize: PAGE_SIZE }),
+    `journals:${JSON.stringify(filters)}`,
   );
+}
+
+/** Cifras por estado y grados y grupos del alcance de revisión. */
+export function useJournalScope(): Remote<JournalReviewScope> {
+  return useRemote(getReviewScope, 'journal-scope');
 }
 
 /** Anotaciones del observador; sin orden explícito la API pone primero las situaciones Tipo III y II. */
@@ -36,7 +49,7 @@ export interface PendingCounts {
 async function loadPending(): Promise<ApiResult<PendingCounts>> {
   const [plans, journals, notes] = await Promise.all([
     listPlans({ status: RecordStatus.Submitted, page: 1, pageSize: 1 }),
-    listJournals({ status: RecordStatus.Submitted, page: 1, pageSize: 1 }),
+    getReviewScope(),
     listNotes({ status: RecordStatus.Submitted, page: 1, pageSize: 1 }),
   ]);
   if (!plans.ok) {
@@ -52,7 +65,7 @@ async function loadPending(): Promise<ApiResult<PendingCounts>> {
     ok: true,
     data: {
       plans: plans.data.totalItems,
-      journals: journals.data.totalItems,
+      journals: journals.data.counts.submitted,
       notes: notes.data.totalItems,
     },
   };

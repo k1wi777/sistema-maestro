@@ -32,6 +32,14 @@ export const ACTORS = {
   planningTeacher: actor('sofia.marquesina', 'Sofía Marquesina'),
   planningCoordinator: actor('elena.ravassa', 'Elena Ravassa'),
   formatsTeacher: actor('andres.penaverde', 'Andrés Peñaverde'),
+  // Segunda sesión de Sofía (docente de 7° 1 en el diario colaborativo): otra sesión guardada para
+  // no compartir el token de renovación con `planningTeacher`.
+  journalParticipant: actor(
+    'sofia.marquesina',
+    'Sofía Marquesina',
+    'sofia.marquesina.journal',
+    true,
+  ),
   formatsCoordinator: actor('tomas.aldaverde', 'Tomás Aldaverde'),
   trainingTeacher: actor('daniela.fontalba', 'Daniela Fontalba'),
   // Revisión de accesibilidad (FE-42): Julián no lo usa ningún recorrido y la segunda sesión de
@@ -54,6 +62,7 @@ export const SETUP_ACTORS: readonly Actor[] = [
   ACTORS.planningTeacher,
   ACTORS.planningCoordinator,
   ACTORS.formatsTeacher,
+  ACTORS.journalParticipant,
   ACTORS.formatsCoordinator,
   ACTORS.trainingTeacher,
   ACTORS.accessibilityTeacher,

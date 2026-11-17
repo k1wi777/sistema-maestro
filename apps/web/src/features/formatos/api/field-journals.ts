@@ -1,28 +1,22 @@
 import {
+  fieldJournalDaySchema,
   fieldJournalPageSchema,
   fieldJournalSchema,
-  reviewSchema,
+  todayJournalsSchema,
   type FieldJournal,
+  type FieldJournalDay,
   type FieldJournalFilters,
   type FieldJournalSummary,
   type Page,
-  type Review,
+  type TodayJournals,
 } from '@gns/shared';
 
-import {
-  api,
-  callApi,
-  parseListResult,
-  parseResult,
-  type ApiResult,
-  type components,
-} from '@/shared/api';
+import { api, callApi, parseResult, type ApiResult, type components } from '@/shared/api';
 
 type Schemas = components['schemas'];
 
-export type CreateJournalBody = Schemas['CreateFieldJournalDto'];
-export type CreateJournalEntryBody = Schemas['CreateFieldJournalEntryDto'];
-export type UpdateJournalEntryBody = Schemas['UpdateFieldJournalEntryDto'];
+export type CreateAnnotationBody = Schemas['CreateAnnotationDto'];
+export type UpdateAnnotationBody = Schemas['UpdateAnnotationDto'];
 
 export interface JournalListParams extends FieldJournalFilters {
   page: number;
@@ -41,49 +35,63 @@ export async function listFieldJournals(
   return parseResult(result, fieldJournalPageSchema);
 }
 
-export async function getFieldJournal(id: string): Promise<ApiResult<FieldJournal>> {
-  const result = await callApi(() => api.GET('/field-journals/{id}', { params: { path: { id } } }));
-  return parseResult(result, fieldJournalSchema);
+/** Bloque «Hoy»: por cada grupo del docente, el diario de hoy si existe. */
+export async function getTodayJournals(): Promise<ApiResult<TodayJournals>> {
+  const result = await callApi(() => api.GET('/field-journals/today'));
+  return parseResult(result, todayJournalsSchema);
 }
 
-export async function createFieldJournal(
-  body: CreateJournalBody,
-): Promise<ApiResult<FieldJournal>> {
-  const result = await callApi(() => api.POST('/field-journals', { body }));
-  return parseResult(result, fieldJournalSchema);
-}
-
-/** Cada escritura de un registro devuelve la hoja completa. */
-export async function addJournalEntry(
-  id: string,
-  body: CreateJournalEntryBody,
-): Promise<ApiResult<FieldJournal>> {
+/** El diario de un grupo y fecha; `id` nulo si nadie ha agregado todavía la primera anotación. */
+export async function getJournalDay(
+  groupId: string,
+  date: string,
+): Promise<ApiResult<FieldJournalDay>> {
   const result = await callApi(() =>
-    api.POST('/field-journals/{id}/entries', { params: { path: { id } }, body }),
+    api.GET('/field-journals/day', { params: { query: { groupId, date } } }),
   );
+  return parseResult(result, fieldJournalDaySchema);
+}
+
+/** Cada escritura devuelve el diario completo. */
+export async function addAnnotation(body: CreateAnnotationBody): Promise<ApiResult<FieldJournal>> {
+  const result = await callApi(() => api.POST('/field-journals/annotations', { body }));
   return parseResult(result, fieldJournalSchema);
 }
 
-export async function updateJournalEntry(
+export async function updateAnnotation(
   id: string,
-  entryId: string,
-  body: UpdateJournalEntryBody,
+  annotationId: string,
+  body: UpdateAnnotationBody,
 ): Promise<ApiResult<FieldJournal>> {
   const result = await callApi(() =>
-    api.PATCH('/field-journals/{id}/entries/{entryId}', {
-      params: { path: { id, entryId } },
+    api.PATCH('/field-journals/{id}/annotations/{annotationId}', {
+      params: { path: { id, annotationId } },
       body,
     }),
   );
   return parseResult(result, fieldJournalSchema);
 }
 
-export async function removeJournalEntry(
+export async function markAnnotationReady(
   id: string,
-  entryId: string,
+  annotationId: string,
 ): Promise<ApiResult<FieldJournal>> {
   const result = await callApi(() =>
-    api.DELETE('/field-journals/{id}/entries/{entryId}', { params: { path: { id, entryId } } }),
+    api.POST('/field-journals/{id}/annotations/{annotationId}/ready', {
+      params: { path: { id, annotationId } },
+    }),
+  );
+  return parseResult(result, fieldJournalSchema);
+}
+
+export async function markAnnotationDraft(
+  id: string,
+  annotationId: string,
+): Promise<ApiResult<FieldJournal>> {
+  const result = await callApi(() =>
+    api.POST('/field-journals/{id}/annotations/{annotationId}/draft', {
+      params: { path: { id, annotationId } },
+    }),
   );
   return parseResult(result, fieldJournalSchema);
 }
@@ -91,6 +99,13 @@ export async function removeJournalEntry(
 export async function submitFieldJournal(id: string): Promise<ApiResult<FieldJournal>> {
   const result = await callApi(() =>
     api.POST('/field-journals/{id}/submit', { params: { path: { id } } }),
+  );
+  return parseResult(result, fieldJournalSchema);
+}
+
+export async function resubmitFieldJournal(id: string): Promise<ApiResult<FieldJournal>> {
+  const result = await callApi(() =>
+    api.POST('/field-journals/{id}/resubmit', { params: { path: { id } } }),
   );
   return parseResult(result, fieldJournalSchema);
 }
@@ -103,12 +118,4 @@ export async function voidFieldJournal(
     api.POST('/field-journals/{id}/void', { params: { path: { id } }, body: { reason } }),
   );
   return parseResult(result, fieldJournalSchema);
-}
-
-/** Historial de revisión: filas `ajuste` y decisión con la misma fecha. */
-export async function listFieldJournalReviews(id: string): Promise<ApiResult<Review[]>> {
-  const result = await callApi(() =>
-    api.GET('/field-journals/{id}/reviews', { params: { path: { id } } }),
-  );
-  return parseListResult(result, reviewSchema);
 }
