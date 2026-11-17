@@ -51,6 +51,66 @@ function describe(violation: Violation): string {
 }
 
 /**
+ * Espera a que terminen las animaciones que axe puede ver, sin depender de `animation.finished`:
+ * en un `<details>` cerrado el contenido está omitido (`content-visibility: hidden`) y Chromium
+ * nunca resuelve esa promesa, aunque el reloj de la transición ya haya avanzado. Se sondea el
+ * estado (`playState`) fotograma a fotograma, solo en animaciones de elementos renderizados. Si
+ * alguna está en pausa, o se supera el tiempo que le queda más un margen para que el navegador arranque las pendientes, falla
+ * con la pantalla, el elemento y la propiedad en lugar de agotar el tiempo de la prueba.
+ */
+async function waitForAnimations(page: Page, where: string): Promise<void> {
+  await page.evaluate(`new Promise((resolve, reject) => {
+    const where = ${JSON.stringify(where)};
+    // Techo (no una espera): el compositor puede tardar casi un segundo en arrancar las
+    // animaciones pendientes tras el cambio de tema; la espera acaba en cuanto todas terminan.
+    const START_MARGIN_MS = 5000;
+    let deadline = null;
+    const relevant = () =>
+      document.getAnimations().filter((animation) => {
+        const target = animation.effect?.target;
+        const end = animation.effect?.getComputedTiming().endTime ?? 0;
+        return target && Number.isFinite(end) && target.checkVisibility();
+      });
+    const describe = (animation) => {
+      const target = animation.effect.target;
+      const name = animation.transitionProperty ?? animation.animationName ?? (animation.id || 'sin nombre');
+      return target.tagName.toLowerCase() + '.' + String(target.className) + ' [' + name + '] ' + animation.playState + ' pend=' + animation.pending;
+    };
+    const fail = (reason, list) =>
+      reject(new Error('Animaciones ' + reason + ' en ' + where + ': ' + list.map(describe).join(', ')));
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const tick = () => {
+          try {
+          const list = relevant();
+          const paused = list.filter((animation) => animation.playState === 'paused');
+          if (paused.length > 0) return fail('en pausa (no terminarían)', paused);
+          const active = list.filter((animation) => animation.playState === 'running' || animation.pending);
+          if (active.length === 0) return resolve(null);
+          if (deadline === null) {
+            const remaining = Math.max(
+              ...active.map(
+                (animation) =>
+                  (animation.effect.getComputedTiming().endTime - (animation.currentTime ?? 0)) /
+                  Math.abs(animation.playbackRate || 1),
+              ),
+            );
+            deadline = performance.now() + Math.max(remaining, 0) + START_MARGIN_MS;
+          } else if (performance.now() > deadline) {
+            return fail('sin terminar', active);
+          }
+          requestAnimationFrame(tick);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        tick();
+      }),
+    );
+  })`);
+}
+
+/**
  * Pasa la pantalla actual por axe-core (WCAG 2.0/2.1/2.2 A y AA y buenas prácticas) en los temas
  * claro y oscuro. Falla ante infracciones graves, críticas o de estructura; informa el resto.
  */
@@ -64,18 +124,8 @@ export async function expectAccessible(
     // intermedios (texto ya en el tema nuevo y fondo aún animándose), sobre todo en la CI.
     // `base.css` reduce las transiciones con `prefers-reduced-motion`.
     await page.emulateMedia({ colorScheme: scheme, reducedMotion: 'reduce' });
-    await page.evaluate(`new Promise((done) => {
-      requestAnimationFrame(() =>
-        requestAnimationFrame(async () => {
-          const pending = document
-            .getAnimations()
-            .filter((animation) => Number.isFinite(animation.effect?.getComputedTiming().endTime ?? 0));
-          await Promise.allSettled(pending.map((animation) => animation.finished));
-          done(null);
-        }),
-      );
-    })`);
     const where = `${label} (${scheme})`;
+    await waitForAnimations(page, where);
 
     const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
     const violations = withoutExclusions(results.violations);
