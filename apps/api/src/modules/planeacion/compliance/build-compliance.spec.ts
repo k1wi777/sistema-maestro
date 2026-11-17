@@ -20,6 +20,7 @@ function assignment(
   grade: [string, number],
   area: string,
   id = `${teacher}-${grade[0]}-${area}`,
+  group = `${grade[0]}-1`,
 ): TeacherAssignment {
   return {
     id,
@@ -27,6 +28,7 @@ function assignment(
     status: TeacherAssignmentStatus.Active,
     isHomeroomTeacher: false,
     teacher: { id: teacher, fullName: `Docente ${teacher}`, status: UserStatus.Active },
+    group: { id: group, name: group },
     grade: { id: grade[0], name: grade[0], sortOrder: grade[1] },
     level: { id: 'l-1', name: 'Primaria' },
     area: { id: area, name: area, type: AreaType.Subject },
@@ -54,6 +56,23 @@ function first<T>(items: readonly T[]): T {
 }
 
 describe('buildCompliance', () => {
+  it('cuenta una sola vez la misma área en varios grupos del grado', () => {
+    const entry = first(
+      buildCompliance(
+        periods,
+        [
+          assignment('a', ['g1', 1], 'mat', 'b-2', 'g1-2'),
+          assignment('a', ['g1', 1], 'mat', 'a-1', 'g1-1'),
+        ],
+        [delivered('a', 'g1', 'mat', 'p-1')],
+      ),
+    );
+
+    expect(entry.items).toHaveLength(2);
+    expect(entry.deliveredCount).toBe(1);
+    expect(entry.pendingCount).toBe(1);
+  });
+
   it('crea una celda por asignación y periodo, pendiente sin entregas', () => {
     const entry = first(buildCompliance(periods, [assignment('a', ['g1', 1], 'mat')], []));
 

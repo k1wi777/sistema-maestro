@@ -25,6 +25,7 @@ export const teacherAssignmentSchema = z.object({
     fullName: z.string(),
     status: z.enum(Object.values(UserStatus) as [UserStatus, ...UserStatus[]]),
   }),
+  group: z.object({ id: z.uuid(), name: z.string() }),
   grade: z.object({ id: z.uuid(), name: z.string(), sortOrder: z.number().int() }),
   level: z.object({ id: z.uuid(), name: z.string() }),
   area: z.object({ id: z.uuid(), name: z.string(), type: areaTypeSchema }),
@@ -36,7 +37,7 @@ export type TeacherAssignment = z.output<typeof teacherAssignmentSchema>;
 export const createTeacherAssignmentSchema = z
   .object({
     teacherId: uuid,
-    gradeId: uuid,
+    groupId: uuid,
     areaId: uuid,
     isHomeroomTeacher: z.boolean({ error: 'debe ser verdadero o falso' }).default(false),
     schoolYear: schoolYearSchema.optional(),
@@ -44,7 +45,7 @@ export const createTeacherAssignmentSchema = z
   .strict();
 export type CreateTeacherAssignmentInput = z.output<typeof createTeacherAssignmentSchema>;
 
-/** Cambiar docente, grado, área o año es retirar y crear otra asignación. */
+/** Cambiar docente, grupo, área o año es retirar y crear otra asignación. */
 export const updateTeacherAssignmentSchema = z
   .object({ isHomeroomTeacher: z.boolean({ error: 'debe ser verdadero o falso' }) })
   .strict();
@@ -64,6 +65,7 @@ export const teacherAssignmentListQuerySchema = createListQuerySchema({
     schoolYear: schoolYearSchema.optional(),
     teacherId: uuid.optional(),
     gradeId: uuid.optional(),
+    groupId: uuid.optional(),
     areaId: uuid.optional(),
     status: statusSchema.optional(),
   },
@@ -72,11 +74,15 @@ export interface TeacherAssignmentFilters {
   schoolYear?: string;
   teacherId?: string;
   gradeId?: string;
+  groupId?: string;
   areaId?: string;
   status?: TeacherAssignmentStatus;
 }
 
-/** «Mis asignaciones»: año vigente y asignaciones activas agrupadas por grado. */
+/**
+ * «Mis asignaciones»: año vigente y asignaciones activas agrupadas por grado. Un área que el
+ * docente tiene en varios grupos del mismo grado aparece una sola vez.
+ */
 export const myAssignmentsSchema = z.object({
   schoolYear: z.string(),
   grades: z.array(
@@ -84,9 +90,9 @@ export const myAssignmentsSchema = z.object({
       grade: z.object({ id: z.uuid(), name: z.string(), sortOrder: z.number().int() }),
       level: z.object({ id: z.uuid(), name: z.string() }),
       isHomeroomTeacher: z.boolean(),
+      groups: z.array(z.object({ id: z.uuid(), name: z.string(), isHomeroomTeacher: z.boolean() })),
       areas: z.array(
         z.object({
-          assignmentId: z.uuid(),
           id: z.uuid(),
           name: z.string(),
           type: areaTypeSchema,

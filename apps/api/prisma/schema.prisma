@@ -40,6 +40,7 @@ model User {
   createdUsers                  User[]                         @relation("UserCreatedBy")
   dataConsents                  DataConsent[]
   teacherAssignments            TeacherAssignment[]
+  coordinatedGrades             Grade[]
   lessonPlans                   LessonPlan[]
   reviews                       Review[]
   sharedActivities              SharedActivity[]
@@ -124,34 +125,59 @@ model EducationLevel {
   updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   grades           Grade[]
+  areaLevels       AreaLevel[]
   sharedActivities SharedActivity[]
 
   @@map("nivel")
 }
 
 model Grade {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  levelId   String   @map("nivel_id") @db.Uuid
-  name      String   @unique @map("nombre") @db.VarChar(40)
-  sortOrder Int      @map("orden") @db.SmallInt
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  levelId       String   @map("nivel_id") @db.Uuid
+  name          String   @unique @map("nombre") @db.VarChar(40)
+  sortOrder     Int      @map("orden") @db.SmallInt
+  active        Boolean  @default(true) @map("activo")
+  coordinatorId String?  @map("coordinador_id") @db.Uuid
   createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
-  level              EducationLevel      @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  teacherAssignments TeacherAssignment[]
-  lessonPlans        LessonPlan[]
-  fieldJournals      FieldJournal[]
-  observerNotes      ObserverNote[]
-  sharedActivities   SharedActivity[]
+  level            EducationLevel   @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  coordinator      User?            @relation(fields: [coordinatorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groups           Group[]
+  lessonPlans      LessonPlan[]
+  fieldJournals    FieldJournal[]
+  observerNotes    ObserverNote[]
+  sharedActivities SharedActivity[]
 
+  // «A lo sumo una coordinadora por grado» queda garantizado por construcción (columna en el grado).
   @@index([levelId])
+  @@index([coordinatorId])
   @@map("grado")
+}
+
+// Grupo de un grado (p. ej. «Kinder 3»): catálogo estable sin año lectivo; lo anual (docentes y
+// director de grupo) vive en la asignación. El grado de un grupo no se edita.
+model Group {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gradeId   String   @map("grado_id") @db.Uuid
+  name      String   @map("nombre") @db.VarChar(40)
+  active    Boolean  @default(true) @map("activo")
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  grade              Grade               @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  teacherAssignments TeacherAssignment[]
+
+  @@unique([gradeId, name])
+  @@index([gradeId])
+  @@map("grupo")
 }
 
 model Area {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String   @unique @map("nombre") @db.VarChar(80)
   type      String   @map("tipo") @db.VarChar(12)
+  active    Boolean  @default(true) @map("activa")
   createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
@@ -159,8 +185,24 @@ model Area {
   lessonPlanAreas    LessonPlanArea[]
   sharedActivities   SharedActivity[]
   trainingPlans      TrainingPlan[]
+  areaLevels         AreaLevel[]
 
   @@map("area")
+}
+
+// Niveles a los que pertenece un área: define qué áreas se ofrecen al asignar y al planear.
+model AreaLevel {
+  areaId    String   @map("area_id") @db.Uuid
+  levelId   String   @map("nivel_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+
+  area  Area           @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  level EducationLevel @relation(fields: [levelId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([areaId, levelId])
+  @@index([levelId])
+  @@map("area_nivel")
 }
 
 // Año lectivo registrado por administración. isCurrent es true en el año vigente y NULL
@@ -200,7 +242,7 @@ model AcademicPeriod {
 model TeacherAssignment {
   id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   teacherId         String   @map("docente_id") @db.Uuid
-  gradeId           String   @map("grado_id") @db.Uuid
+  groupId           String   @map("grupo_id") @db.Uuid
   areaId            String   @map("area_id") @db.Uuid
   schoolYear        String   @map("anio_lectivo") @db.VarChar(9)
   isHomeroomTeacher Boolean  @default(false) @map("es_director_grupo")
@@ -210,12 +252,14 @@ model TeacherAssignment {
 
   schoolYearRef SchoolYear @relation(fields: [schoolYear], references: [code], onDelete: NoAction, onUpdate: NoAction)
   teacher       User       @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  grade         Grade      @relation(fields: [gradeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group         Group      @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   area          Area       @relation(fields: [areaId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([teacherId, gradeId, areaId, schoolYear])
+  // La migración añade el índice único parcial asignacion_docente_director_grupo_unico
+  // (grupo_id, anio_lectivo) WHERE es_director_grupo AND estado = 'activa': un director por grupo y año.
+  @@unique([teacherId, groupId, areaId, schoolYear])
   @@index([teacherId])
-  @@index([gradeId])
+  @@index([groupId])
   @@index([areaId])
   @@map("asignacion_docente")
 }

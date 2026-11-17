@@ -83,7 +83,8 @@ describe('demo users and assignments (R18)', () => {
   it('assigns teachers in the four levels, with homeroom directions', async () => {
     const levels = await rows(
       `SELECT DISTINCT n.nombre FROM asignacion_docente a
-       JOIN grado g ON g.id = a.grado_id JOIN nivel n ON n.id = g.nivel_id
+       JOIN grupo gr ON gr.id = a.grupo_id JOIN grado g ON g.id = gr.grado_id
+       JOIN nivel n ON n.id = g.nivel_id
        WHERE a.anio_lectivo = '2026-2027' AND a.docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
     );
@@ -94,6 +95,54 @@ describe('demo users and assignments (R18)', () => {
 
     expect(levels).toHaveLength(4);
     expect(homeroom).toBeGreaterThanOrEqual(2);
+  });
+
+  it('keeps assignments in active groups, with one homeroom per group and year', async () => {
+    const outsideGrades = await count(
+      `SELECT count(*) FROM asignacion_docente a JOIN grupo gr ON gr.id = a.grupo_id
+       WHERE a.docente_id IN ${DEMO_TEACHERS} AND NOT gr.activo`,
+      [DEMO_LIKE],
+    );
+    const duplicated = await count(
+      `SELECT count(*) FROM (
+         SELECT grupo_id, anio_lectivo FROM asignacion_docente
+         WHERE es_director_grupo AND estado = 'activa'
+         GROUP BY grupo_id, anio_lectivo HAVING count(*) > 1) AS d`,
+    );
+
+    expect([outsideGrades, duplicated]).toEqual([0, 0]);
+  });
+
+  it('puts the demo coordinators in charge of the preschool grades and leaves First Grade without one', async () => {
+    const coordinators = await rows(
+      `SELECT g.nombre AS grado, u.nombre_completo AS coordinadora FROM grado g
+       JOIN usuario u ON u.id = g.coordinador_id WHERE u.correo_institucional LIKE $1 ORDER BY g.orden`,
+      [DEMO_LIKE],
+    );
+    const firstGrade = await rows(`SELECT coordinador_id FROM grado WHERE nombre = 'First Grade'`);
+
+    expect(coordinators).toEqual([
+      ...['Red', 'Blue', 'Purple', 'Green', 'Garden'].map((grado) => ({
+        grado,
+        coordinadora: 'Elena Ravassa',
+      })),
+      { grado: 'Kinder', coordinadora: 'Tomás Aldaverde' },
+      { grado: 'Transition', coordinadora: 'Tomás Aldaverde' },
+    ]);
+    expect(firstGrade).toEqual([{ coordinador_id: null }]);
+  });
+
+  it('adds groups «<grade> 1» for the non-preschool grades the demo uses', async () => {
+    const groups = await rows(
+      `SELECT g.nombre AS grado, gr.nombre FROM grupo gr JOIN grado g ON g.id = gr.grado_id
+       WHERE g.nombre IN ('First Grade', '3°', '10°') ORDER BY g.orden`,
+    );
+
+    expect(groups).toEqual([
+      { grado: 'First Grade', nombre: 'First Grade 1' },
+      { grado: '3°', nombre: '3° 1' },
+      { grado: '10°', nombre: '10° 1' },
+    ]);
   });
 });
 
@@ -123,8 +172,9 @@ describe('demo records (R19)', () => {
       `SELECT count(*) FROM planeacion p JOIN planeacion_area pa ON pa.planeacion_id = p.id
        WHERE p.docente_id IN ${DEMO_TEACHERS}
        AND NOT EXISTS (
-         SELECT 1 FROM asignacion_docente d WHERE d.docente_id = p.docente_id
-         AND d.grado_id = p.grado_id AND d.area_id = pa.area_id AND d.estado = 'activa')`,
+         SELECT 1 FROM asignacion_docente d JOIN grupo gr ON gr.id = d.grupo_id
+         WHERE d.docente_id = p.docente_id
+         AND gr.grado_id = p.grado_id AND d.area_id = pa.area_id AND d.estado = 'activa')`,
       [DEMO_LIKE],
     );
 

@@ -151,8 +151,11 @@ describe('ruta y módulo del docente (BE-7)', () => {
     const course = await populatedCourse();
     const loner = await signIn(app, await createTestUser(app));
     const retired = await createTestUser(app);
-    const { gradeId } = await prisma.teacherAssignment.findFirstOrThrow({
+    const {
+      group: { gradeId },
+    } = await prisma.teacherAssignment.findFirstOrThrow({
       where: { teacherId: course.user.id },
+      include: { group: true },
     });
     await planning.assign(retired.id, gradeId, course.areaId, 'retirada');
 

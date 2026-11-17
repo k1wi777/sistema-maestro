@@ -36,6 +36,7 @@ describe('menú de las vistas', () => {
       '/coordinacion/formatos',
       '/coordinacion/bitacora',
       '/coordinacion/docentes',
+      '/coordinacion/grados-y-areas',
       '/coordinacion/planes',
       '/coordinacion/avance',
       '/coordinacion/asistente',

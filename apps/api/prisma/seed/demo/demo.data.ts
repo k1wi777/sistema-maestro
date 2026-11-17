@@ -54,15 +54,58 @@ const ANDRES = 'andres.penaverde';
 const DANIELA = 'daniela.fontalba';
 const RICARDO = 'ricardo.altamora';
 
+/**
+ * Grupos que el demo añade a los datos iniciales: los datos iniciales solo traen los grupos de
+ * preescolar, así que los demás grados usan `<grado> 1` (coordinación los renombra desde «Grados
+ * y áreas»).
+ */
+export const DEMO_GROUPS: readonly { grade: string; name: string }[] = [
+  'First Grade',
+  '3°',
+  '4°',
+  '5°',
+  '7°',
+  '8°',
+  '10°',
+  '11°',
+].map((grade) => ({ grade, name: `${grade} 1` }));
+
+/**
+ * Coordinadora de cada grado en el demo: Elena, preescolar bajo; Tomás, preescolar alto
+ * (Kinder y Transition). First Grade queda sin coordinadora, como en el tablero, para mostrar el aviso.
+ */
+export const DEMO_COORDINATOR_GRADES: readonly {
+  coordinator: string;
+  grades: readonly string[];
+}[] = [
+  { coordinator: COORDINATOR_1, grades: ['Red', 'Blue', 'Purple', 'Green', 'Garden'] },
+  { coordinator: COORDINATOR_2, grades: ['Kinder', 'Transition'] },
+];
+
 export interface DemoAssignment {
   teacher: string;
+  /** Nombre del grupo (único dentro de su grado, p. ej. `Red 1`). */
+  group: string;
+  /** Grado del grupo, para resolverlo sin ambigüedad. */
   grade: string;
   area: string;
   isHomeroomTeacher: boolean;
 }
 
-const assignment = (teacher: string, grade: string, area: string, isHomeroomTeacher = false) =>
-  ({ teacher, grade, area, isHomeroomTeacher }) satisfies DemoAssignment;
+const assignment = (
+  teacher: string,
+  grade: string,
+  area: string,
+  isHomeroomTeacher = false,
+  groupNumber = 1,
+) =>
+  ({
+    teacher,
+    grade,
+    group: `${grade} ${groupNumber}`,
+    area,
+    isHomeroomTeacher,
+  }) satisfies DemoAssignment;
 
 export const DEMO_ASSIGNMENTS: readonly DemoAssignment[] = [
   assignment(VALERIA, 'Red', 'Dimensión cognitiva', true),

@@ -13,6 +13,7 @@ import type { TransactionRunner } from '../../../shared/database/transaction-run
 import type { UsersService } from '../../identidad/users/users.service';
 import type { AreasService } from '../catalogs/area/areas.service';
 import type { GradesService } from '../catalogs/grade/grades.service';
+import type { GroupsService } from '../catalogs/group/groups.service';
 import type { SchoolYearsService } from '../school-years/school-years.service';
 import { groupAssignmentsByGrade } from './my-assignments';
 import type { TeacherAssignmentRepository } from './teacher-assignment.repository';
@@ -41,6 +42,7 @@ function assignment(overrides: Partial<TeacherAssignment> = {}): TeacherAssignme
     status: TeacherAssignmentStatus.Active,
     isHomeroomTeacher: false,
     teacher: { id: 'teacher-1', fullName: 'Docente Uno', status: UserStatus.Active },
+    group: { id: 'gr-1', name: 'Primero 1' },
     grade: { id: 'g-1', name: 'Primero', sortOrder: 5 },
     level: { id: 'l-1', name: 'Primaria' },
     area: { id: 'ar-1', name: 'Matemáticas', type: AreaType.Subject },
@@ -52,12 +54,14 @@ function assignment(overrides: Partial<TeacherAssignment> = {}): TeacherAssignme
 
 interface Options {
   teacher?: User | null;
-  grade?: boolean;
-  area?: boolean;
+  group?: 'missing' | 'inactive';
+  grade?: 'inactive';
+  area?: 'missing' | 'inactive' | 'other-level';
   registeredYears?: string[];
   currentYear?: string | null;
   existing?: TeacherAssignment | null;
-  homeroomOfAnother?: TeacherAssignment | null;
+  homeroomInGroup?: TeacherAssignment | null;
+  hasOtherActive?: boolean;
   stored?: TeacherAssignment | null;
   mine?: TeacherAssignment[];
 }
@@ -69,8 +73,9 @@ function setup(options: Options = {}) {
       Promise.resolve({ items: [], page: 1, pageSize: 20, totalItems: 0, totalPages: 0 }),
     ),
     findByNaturalKey: jest.fn(() => Promise.resolve(options.existing ?? null)),
-    findHomeroomOfAnotherTeacher: jest.fn(() => Promise.resolve(options.homeroomOfAnother ?? null)),
-    lockGrade: jest.fn(() => Promise.resolve()),
+    findHomeroomInGroup: jest.fn(() => Promise.resolve(options.homeroomInGroup ?? null)),
+    lockGroup: jest.fn(() => Promise.resolve()),
+    markOldestActiveAsHomeroom: jest.fn(() => Promise.resolve(options.hasOtherActive ?? false)),
     findActiveByTeacher: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveByYear: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveTeachers: jest.fn(() => Promise.resolve([{ id: 'teacher-1', fullName: 'Ana' }])),
@@ -82,11 +87,32 @@ function setup(options: Options = {}) {
   const users = {
     find: jest.fn(() => Promise.resolve(options.teacher === undefined ? user() : options.teacher)),
   } as unknown as UsersService;
+  const groups = {
+    find: jest.fn(() =>
+      Promise.resolve(
+        options.group === 'missing'
+          ? null
+          : { id: 'gr-1', gradeId: 'g-1', active: options.group !== 'inactive' },
+      ),
+    ),
+  } as unknown as GroupsService;
   const grades = {
-    find: jest.fn(() => Promise.resolve(options.grade === false ? null : { id: 'g-1' })),
+    find: jest.fn(() =>
+      Promise.resolve({ id: 'g-1', levelId: 'l-1', active: options.grade !== 'inactive' }),
+    ),
   } as unknown as GradesService;
   const areas = {
-    find: jest.fn(() => Promise.resolve(options.area === false ? null : { id: 'ar-1' })),
+    find: jest.fn(() =>
+      Promise.resolve(
+        options.area === 'missing'
+          ? null
+          : {
+              id: 'ar-1',
+              active: options.area !== 'inactive',
+              levelIds: options.area === 'other-level' ? ['l-2'] : ['l-1'],
+            },
+      ),
+    ),
   } as unknown as AreasService;
   const currentYear = options.currentYear === undefined ? YEAR : options.currentYear;
   const schoolYears = {
@@ -104,6 +130,7 @@ function setup(options: Options = {}) {
     repository,
     transactions,
     users,
+    groups,
     grades,
     areas,
     schoolYears,
@@ -113,7 +140,7 @@ function setup(options: Options = {}) {
 
 const input = {
   teacherId: 'teacher-1',
-  gradeId: 'g-1',
+  groupId: 'gr-1',
   areaId: 'ar-1',
   isHomeroomTeacher: false,
 };
@@ -160,12 +187,29 @@ describe('TeacherAssignmentsService.create', () => {
     expect(repository.create).not.toHaveBeenCalled();
   });
 
-  it('rechaza con 400 un grado, un área o un año inexistentes', async () => {
-    expect(await fieldOf(setup({ grade: false }).service.create(input))).toBe('gradeId');
-    expect(await fieldOf(setup({ area: false }).service.create(input))).toBe('areaId');
+  it('rechaza con 400 un grupo, un área o un año inexistentes', async () => {
+    expect(await fieldOf(setup({ group: 'missing' }).service.create(input))).toBe('groupId');
+    expect(await fieldOf(setup({ area: 'missing' }).service.create(input))).toBe('areaId');
     expect(await fieldOf(setup().service.create({ ...input, schoolYear: '2030-2031' }))).toBe(
       'schoolYear',
     );
+  });
+
+  it.each([
+    ['un grupo inactivo', { group: 'inactive' }, 'groupId', /grupo está inactivo/],
+    ['un grado inactivo', { grade: 'inactive' }, 'groupId', /grado está inactivo/],
+    ['un área inactiva', { area: 'inactive' }, 'areaId', /área está inactiva/],
+    ['un área de otro nivel', { area: 'other-level' }, 'areaId', /no pertenece al nivel/],
+  ] as const)('rechaza con 400 %s', async (_label, options, field, reason) => {
+    const { service, repository } = setup(options);
+
+    const error = await service.create(input).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(RequestValidationException);
+    const [first] = (error as RequestValidationException).fieldErrors;
+    expect(first?.field).toBe(field);
+    expect(first?.reason).toMatch(reason);
+    expect(repository.create).not.toHaveBeenCalled();
   });
 
   it('responde 409 si no hay año vigente y no se indica año', async () => {
@@ -185,15 +229,20 @@ describe('TeacherAssignmentsService.create', () => {
     expect(active.repository.create).not.toHaveBeenCalled();
   });
 
-  it('responde 409 si otro docente ya dirige el grupo, tras bloquear el grado', async () => {
+  it('responde 409 con el nombre si el grupo ya tiene director(a), tras bloquear el grupo', async () => {
     const { service, repository } = setup({
-      homeroomOfAnother: assignment({ id: 'other', isHomeroomTeacher: true }),
+      homeroomInGroup: assignment({
+        id: 'other',
+        isHomeroomTeacher: true,
+        teacher: { id: 'teacher-2', fullName: 'Docente Dos', status: UserStatus.Active },
+      }),
     });
 
-    await expect(service.create({ ...input, isHomeroomTeacher: true })).rejects.toBeInstanceOf(
-      ConflictException,
+    await expect(service.create({ ...input, isHomeroomTeacher: true })).rejects.toThrow(
+      /Primero 1 ya tiene director\(a\) de grupo: Docente Dos/,
     );
-    expect(repository.lockGrade).toHaveBeenCalledWith('g-1');
+    expect(repository.lockGroup).toHaveBeenCalledWith('gr-1');
+    expect(repository.findHomeroomInGroup).toHaveBeenCalledWith('gr-1', YEAR, null);
     expect(repository.create).not.toHaveBeenCalled();
   });
 
@@ -202,7 +251,7 @@ describe('TeacherAssignmentsService.create', () => {
 
     await service.create(input);
 
-    expect(repository.lockGrade).not.toHaveBeenCalled();
+    expect(repository.lockGroup).not.toHaveBeenCalled();
   });
 });
 
@@ -218,26 +267,60 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
     );
   });
 
-  it('rechaza con 409 marcar la dirección si otro docente la tiene', async () => {
+  it('rechaza con 409 marcar la dirección si el grupo ya la tiene (de cualquier docente)', async () => {
     const { service, repository } = setup({
       stored: assignment(),
-      homeroomOfAnother: assignment({ id: 'other', isHomeroomTeacher: true }),
+      homeroomInGroup: assignment({ id: 'other', isHomeroomTeacher: true }),
     });
 
     await expect(service.update('a-1', { isHomeroomTeacher: true })).rejects.toBeInstanceOf(
       ConflictException,
     );
+    expect(repository.findHomeroomInGroup).toHaveBeenCalledWith('gr-1', YEAR, 'a-1');
     expect(repository.update).not.toHaveBeenCalled();
   });
 
   it('retira sin validar nada más y conserva el registro', async () => {
-    const { service, repository } = setup({ stored: assignment({ isHomeroomTeacher: true }) });
+    const { service, repository } = setup({ stored: assignment() });
 
     const result = await service.setStatus('a-1', TeacherAssignmentStatus.Withdrawn);
 
     expect(result.status).toBe(TeacherAssignmentStatus.Withdrawn);
     expect(repository.update).toHaveBeenCalledWith('a-1', { status: 'retirada' });
-    expect(repository.findHomeroomOfAnotherTeacher).not.toHaveBeenCalled();
+    expect(repository.findHomeroomInGroup).not.toHaveBeenCalled();
+    expect(repository.markOldestActiveAsHomeroom).not.toHaveBeenCalled();
+  });
+
+  it('al retirar la fila con la dirección de grupo quita la marca y la traslada al mismo docente', async () => {
+    const { service, repository } = setup({
+      stored: assignment({ isHomeroomTeacher: true }),
+      hasOtherActive: true,
+    });
+
+    const result = await service.setStatus('a-1', TeacherAssignmentStatus.Withdrawn);
+
+    expect(result).toMatchObject({ status: 'retirada', isHomeroomTeacher: false });
+    expect(repository.lockGroup).toHaveBeenCalledWith('gr-1');
+    expect(repository.update).toHaveBeenCalledWith('a-1', {
+      status: 'retirada',
+      isHomeroomTeacher: false,
+    });
+    expect(repository.markOldestActiveAsHomeroom).toHaveBeenCalledWith('teacher-1', 'gr-1', YEAR);
+  });
+
+  it('reactivar repite las validaciones del grupo y del área', async () => {
+    const stored = assignment({ status: TeacherAssignmentStatus.Withdrawn });
+
+    const inactiveGroup = setup({ stored, group: 'inactive' });
+    const inactiveArea = setup({ stored, area: 'inactive' });
+
+    expect(
+      await fieldOf(inactiveGroup.service.setStatus('a-1', TeacherAssignmentStatus.Active)),
+    ).toBe('groupId');
+    expect(
+      await fieldOf(inactiveArea.service.setStatus('a-1', TeacherAssignmentStatus.Active)),
+    ).toBe('areaId');
+    expect(inactiveGroup.repository.update).not.toHaveBeenCalled();
   });
 
   it('reactiva repitiendo las validaciones del docente y de la dirección', async () => {
@@ -248,7 +331,7 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
     const inactive = setup({ stored, teacher: user({ status: UserStatus.Inactive }) });
     const taken = setup({
       stored,
-      homeroomOfAnother: assignment({ id: 'other', isHomeroomTeacher: true }),
+      homeroomInGroup: assignment({ id: 'other', isHomeroomTeacher: true }),
     });
     const free = setup({ stored });
 
@@ -303,6 +386,30 @@ describe('TeacherAssignmentsService.list', () => {
 });
 
 describe('mis asignaciones', () => {
+  it('muestra una sola vez el área que el docente tiene en varios grupos del grado', async () => {
+    const { service } = setup({
+      mine: [
+        assignment({ id: 'a-1', group: { id: 'gr-10', name: 'Primero 10' } }),
+        assignment({
+          id: 'a-2',
+          group: { id: 'gr-2', name: 'Primero 2' },
+          isHomeroomTeacher: true,
+        }),
+        assignment({ id: 'a-3', group: { id: 'gr-1', name: 'Primero 1' } }),
+      ],
+    });
+
+    const [grade] = (await service.listMine('teacher-1')).grades;
+
+    expect(grade?.areas).toEqual([{ id: 'ar-1', name: 'Matemáticas', type: 'asignatura' }]);
+    expect(grade?.groups).toEqual([
+      { id: 'gr-1', name: 'Primero 1', isHomeroomTeacher: false },
+      { id: 'gr-2', name: 'Primero 2', isHomeroomTeacher: true },
+      { id: 'gr-10', name: 'Primero 10', isHomeroomTeacher: false },
+    ]);
+    expect(grade?.isHomeroomTeacher).toBe(true);
+  });
+
   it('agrupa por grado, ordena y marca la dirección de grupo', async () => {
     const second = { id: 'g-2', name: 'Segundo', sortOrder: 6 };
     const { service } = setup({

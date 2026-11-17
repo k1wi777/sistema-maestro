@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../shared/database/database.module';
 import { IdentityModule } from '../identidad/identity.module';
+import { AcademicStructureController } from './academic-structure/academic-structure.controller';
+import { ACADEMIC_STRUCTURE_REPOSITORY } from './academic-structure/academic-structure.repository';
+import { AcademicStructureService } from './academic-structure/academic-structure.service';
+import { PrismaAcademicStructureRepository } from './academic-structure/prisma-academic-structure.repository';
 import { MyAssignmentsController } from './assignments/my-assignments.controller';
 import { PrismaTeacherAssignmentRepository } from './assignments/prisma-teacher-assignment.repository';
 import { TeacherAssignmentAuditSnapshot } from './assignments/teacher-assignment.audit-snapshot';
@@ -17,11 +21,19 @@ import { AREA_REPOSITORY } from './catalogs/area/area.repository';
 import { AreasController } from './catalogs/area/areas.controller';
 import { AreasService } from './catalogs/area/areas.service';
 import { PrismaAreaRepository } from './catalogs/area/prisma-area.repository';
+import { CATALOG_USAGE_REPOSITORY } from './catalogs/catalog-usage.repository';
+import { PrismaCatalogUsageRepository } from './catalogs/prisma-catalog-usage.repository';
+import { CoordinatorGradesAuditSnapshot } from './catalogs/grade/coordinator-grades.audit-snapshot';
 import { GradeAuditSnapshot } from './catalogs/grade/grade.audit-snapshot';
 import { GRADE_REPOSITORY } from './catalogs/grade/grade.repository';
 import { GradesController } from './catalogs/grade/grades.controller';
 import { GradesService } from './catalogs/grade/grades.service';
 import { PrismaGradeRepository } from './catalogs/grade/prisma-grade.repository';
+import { GroupAuditSnapshot } from './catalogs/group/group.audit-snapshot';
+import { GROUP_REPOSITORY } from './catalogs/group/group.repository';
+import { GroupsController } from './catalogs/group/groups.controller';
+import { GroupsService } from './catalogs/group/groups.service';
+import { PrismaGroupRepository } from './catalogs/group/prisma-group.repository';
 import { LevelAuditSnapshot } from './catalogs/level/level.audit-snapshot';
 import { LEVEL_REPOSITORY } from './catalogs/level/level.repository';
 import { LevelsController } from './catalogs/level/levels.controller';
@@ -34,7 +46,7 @@ import { SchoolYearsController } from './school-years/school-years.controller';
 import { SchoolYearsService } from './school-years/school-years.service';
 
 /**
- * Estructura académica: catálogos (niveles, grados, áreas y periodos), años lectivos y
+ * Estructura académica: catálogos (niveles, grados, grupos, áreas y periodos), años lectivos y
  * asignaciones docentes. Usa `UsersService` (exportado por identidad) para validar al docente.
  */
 @Module({
@@ -42,7 +54,9 @@ import { SchoolYearsService } from './school-years/school-years.service';
   controllers: [
     LevelsController,
     GradesController,
+    GroupsController,
     AreasController,
+    AcademicStructureController,
     AcademicPeriodsController,
     SchoolYearsController,
     TeacherAssignmentsController,
@@ -55,6 +69,13 @@ import { SchoolYearsService } from './school-years/school-years.service';
     GradesService,
     GradeAuditSnapshot,
     { provide: GRADE_REPOSITORY, useClass: PrismaGradeRepository },
+    GroupsService,
+    GroupAuditSnapshot,
+    { provide: GROUP_REPOSITORY, useClass: PrismaGroupRepository },
+    CoordinatorGradesAuditSnapshot,
+    { provide: CATALOG_USAGE_REPOSITORY, useClass: PrismaCatalogUsageRepository },
+    AcademicStructureService,
+    { provide: ACADEMIC_STRUCTURE_REPOSITORY, useClass: PrismaAcademicStructureRepository },
     AreasService,
     AreaAuditSnapshot,
     { provide: AREA_REPOSITORY, useClass: PrismaAreaRepository },
@@ -74,6 +95,7 @@ import { SchoolYearsService } from './school-years/school-years.service';
     TeacherAssignmentsService,
     AcademicPeriodsService,
     GradesService,
+    GroupsService,
     LevelsService,
     AreasService,
   ],

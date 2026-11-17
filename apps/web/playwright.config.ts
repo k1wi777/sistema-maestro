@@ -52,6 +52,7 @@ export default defineConfig({
       testMatch: /accessibility\.spec\.ts/,
       dependencies: ['setup'],
     },
+    { name: 'catalog', testMatch: /catalog\.spec\.ts/, dependencies: ['setup'] },
     { name: 'ingreso', testMatch: /ingreso\.spec\.ts/ },
     { name: 'role', testMatch: /role-protection\.spec\.ts/, dependencies: ['ingreso'] },
   ],

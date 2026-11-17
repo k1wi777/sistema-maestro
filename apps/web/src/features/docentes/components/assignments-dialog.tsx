@@ -1,7 +1,7 @@
 'use client';
 
 import { AreaType, TeacherAssignmentStatus, UserStatus } from '@gns/shared';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
 import { Button, Checkbox, Dialog, Notice, Select } from '@/shared/ui';
@@ -12,14 +12,19 @@ import {
   setHomeroom,
   type CatalogArea,
   type CatalogGrade,
+  type CatalogGroup,
+  type CatalogLevel,
 } from '../api/assignments';
-import { homeroomTargets, planAssignments } from '../model/assignment-plan';
+import { homeroomTargets, planAssignments, planHomeroom } from '../model/assignment-plan';
+import { areasForLevel, groupOptions } from '../model/group-options';
 import type { RosterTeacher } from '../model/roster';
 import styles from './assignments-dialog.module.css';
 
 interface AssignmentsDialogProps {
   teacher: RosterTeacher | null;
   grades: CatalogGrade[];
+  groups: CatalogGroup[];
+  levels: CatalogLevel[];
   areas: CatalogArea[];
   /** No hay año lectivo vigente: no se puede asignar. */
   noYear: boolean;
@@ -42,6 +47,8 @@ const AREA_GROUPS: { type: AreaType; label: string }[] = [
 function Body({
   teacher,
   grades,
+  groups,
+  levels,
   areas,
   noYear,
   onChanged,
@@ -49,16 +56,20 @@ function Body({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
-  const [gradeId, setGradeId] = useState('');
+  const [groupId, setGroupId] = useState('');
+  const [homeroom, setHomeroomChoice] = useState(false);
   const [areaIds, setAreaIds] = useState<string[]>([]);
   const [report, setReport] = useState<Report | null>(null);
 
   const inactive = teacher.status === UserStatus.Inactive;
   const readOnly = inactive || noYear;
 
+  const options = useMemo(() => groupOptions(groups, grades, levels), [groups, grades, levels]);
+  const chosen = options.find((option) => option.id === groupId);
+  const levelAreas = chosen ? areasForLevel(areas, chosen.levelId) : [];
   const activeAreaIds = new Set(
     teacher.assignments
-      .filter((item) => item.grade.id === gradeId && item.status === TeacherAssignmentStatus.Active)
+      .filter((item) => item.group.id === groupId && item.status === TeacherAssignmentStatus.Active)
       .map((item) => item.area.id),
   );
 
@@ -82,10 +93,10 @@ function Body({
     setBusy(false);
   }
 
-  async function toggleHomeroom(targetGradeId: string, on: boolean) {
+  async function toggleHomeroom(targetGroupId: string, on: boolean) {
     setBusy(true);
     setError(null);
-    for (const id of homeroomTargets(teacher.assignments, targetGradeId, on)) {
+    for (const id of homeroomTargets(teacher.assignments, targetGroupId, on)) {
       const result = await setHomeroom(id, on);
       if (!result.ok) {
         setError(result.error.message);
@@ -97,8 +108,11 @@ function Body({
   }
 
   async function assign() {
-    const chosen = areas.filter((area) => areaIds.includes(area.id));
-    const steps = planAssignments(teacher.assignments, gradeId, chosen);
+    const picked = levelAreas.filter((area) => areaIds.includes(area.id));
+    const steps = planAssignments(teacher.assignments, groupId, picked);
+    const mark = homeroom
+      ? planHomeroom(steps, teacher.assignments, groupId)
+      : { onCreateAreaId: null, afterAssignmentId: null };
     setBusy(true);
     setError(null);
     const next: Report = { saved: [], skipped: [], failed: [] };
@@ -110,7 +124,12 @@ function Body({
       }
       const result =
         step.kind === 'create'
-          ? await createAssignment({ teacherId: teacher.id, gradeId, areaId: step.areaId })
+          ? await createAssignment({
+              teacherId: teacher.id,
+              groupId,
+              areaId: step.areaId,
+              isHomeroomTeacher: mark.onCreateAreaId === step.areaId,
+            })
           : await setAssignmentStatus(step.assignmentId, TeacherAssignmentStatus.Active);
       if (result.ok) {
         next.saved.push(step.areaName);
@@ -118,10 +137,18 @@ function Body({
         next.failed.push({ area: step.areaName, message: result.error.message });
       }
     }
+    // La marca de director(a) sobre una asignación que ya existía o se reactivó: la API valida que el
+    // grupo no tenga otro (409) y el mensaje se muestra tal cual.
+    if (mark.afterAssignmentId && next.failed.length === 0) {
+      const marked = await setHomeroom(mark.afterAssignmentId, true);
+      if (!marked.ok) {
+        setError(marked.error.message);
+      }
+    }
     setReport(next);
     setAreaIds(
       next.failed.length > 0
-        ? chosen
+        ? picked
             .filter((area) => next.failed.some((item) => item.area === area.name))
             .map((area) => area.id)
         : [],
@@ -152,32 +179,32 @@ function Body({
         <h3 id="active-assignments" className={styles.heading}>
           Asignaciones activas
         </h3>
-        {teacher.grades.length === 0 ? (
+        {teacher.groups.length === 0 ? (
           <p className={styles.muted}>Aún no tiene asignaciones activas en el año vigente.</p>
         ) : (
           <ul className={styles.grades}>
-            {teacher.grades.map((grade) => (
-              <li key={grade.id} className={styles.grade}>
+            {teacher.groups.map((group) => (
+              <li key={group.id} className={styles.grade}>
                 <div className={styles.gradeHead}>
-                  <strong>{grade.name}</strong>
+                  <strong>{group.name}</strong>
                   {!readOnly ? (
                     <Checkbox
-                      label="Director(a) de grupo"
-                      checked={grade.isHomeroom}
+                      label={`Director(a) de ${group.name}`}
+                      checked={group.isHomeroom}
                       disabled={busy}
-                      onChange={(event) => void toggleHomeroom(grade.id, event.target.checked)}
+                      onChange={(event) => void toggleHomeroom(group.id, event.target.checked)}
                     />
-                  ) : grade.isHomeroom ? (
-                    <span className={styles.muted}>Director(a) de grupo</span>
+                  ) : group.isHomeroom ? (
+                    <span className={styles.muted}>{`Director(a) de ${group.name}`}</span>
                   ) : null}
                 </div>
                 <ul className={styles.areas}>
-                  {grade.areas.map((area) => (
+                  {group.areas.map((area) => (
                     <li key={area.assignmentId} className={styles.area}>
                       <span>{area.name}</span>
                       {readOnly ? null : confirming === area.assignmentId ? (
                         <span className={styles.confirm}>
-                          <span>{`¿Retirar ${area.name} de ${grade.name}?`}</span>
+                          <span>{`¿Retirar ${area.name} de ${group.name}?`}</span>
                           <Button
                             variant="danger"
                             size="sm"
@@ -197,7 +224,7 @@ function Body({
                         </span>
                       ) : (
                         <Button
-                          context={`la asignación de ${area.name} en ${grade.name}`}
+                          context={`la asignación de ${area.name} en ${group.name}`}
                           variant="outline"
                           size="sm"
                           disabled={busy}
@@ -225,28 +252,37 @@ function Body({
       {readOnly ? null : (
         <section aria-labelledby="assign-grade" className={styles.assign}>
           <h3 id="assign-grade" className={styles.heading}>
-            Asignar al grado
+            Asignar al grupo
           </h3>
           <Select
-            label="Grado"
-            placeholder="Selecciona un grado"
-            value={gradeId}
+            label="Grupo"
+            placeholder="Selecciona un grupo"
+            value={groupId}
             disabled={busy}
-            options={grades.map((grade) => ({ value: grade.id, label: grade.name }))}
+            options={options.map((option) => ({ value: option.id, label: option.label }))}
             onChange={(event) => {
-              setGradeId(event.target.value);
+              setGroupId(event.target.value);
               setAreaIds([]);
+              setHomeroomChoice(false);
               setReport(null);
             }}
           />
-          {gradeId
-            ? AREA_GROUPS.map((group) => {
-                const options = areas.filter((area) => area.type === group.type);
-                return options.length === 0 ? null : (
-                  <fieldset key={group.type} className={styles.fieldset}>
-                    <legend className={styles.legend}>{group.label}</legend>
+          {groupId ? (
+            <Checkbox
+              label="Director(a) de este grupo"
+              checked={homeroom}
+              disabled={busy}
+              onChange={(event) => setHomeroomChoice(event.target.checked)}
+            />
+          ) : null}
+          {groupId
+            ? AREA_GROUPS.map((kind) => {
+                const typed = levelAreas.filter((area) => area.type === kind.type);
+                return typed.length === 0 ? null : (
+                  <fieldset key={kind.type} className={styles.fieldset}>
+                    <legend className={styles.legend}>{kind.label}</legend>
                     <div className={styles.checks}>
-                      {options.map((area) => (
+                      {typed.map((area) => (
                         <Checkbox
                           key={area.id}
                           label={area.name}
@@ -269,10 +305,10 @@ function Body({
             : null}
           <div>
             <Button
-              disabled={busy || !gradeId || areaIds.length === 0}
+              disabled={busy || !groupId || areaIds.length === 0}
               onClick={() => void assign()}
             >
-              {busy ? 'Asignando…' : 'Asignar'}
+              {busy ? 'Asignando…' : 'Asignar al grupo'}
             </Button>
           </div>
           {report ? (
@@ -307,7 +343,7 @@ export function AssignmentsDialog({ teacher, onClose, ...rest }: AssignmentsDial
       open={teacher !== null}
       wide
       title={teacher ? `Asignaciones de ${teacher.name}` : 'Asignaciones'}
-      description="Grados y áreas del año lectivo vigente. Retirar una asignación no la borra."
+      description="Grupos y áreas del año lectivo vigente. Retirar una asignación no la borra."
       onClose={onClose}
       footer={
         <Button variant="outline" onClick={onClose}>

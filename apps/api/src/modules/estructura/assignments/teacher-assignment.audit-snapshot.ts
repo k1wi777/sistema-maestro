@@ -18,7 +18,7 @@ export class TeacherAssignmentAuditSnapshot implements AuditSnapshotSource {
     return {
       id: assignment.id,
       teacherId: assignment.teacher.id,
-      gradeId: assignment.grade.id,
+      groupId: assignment.group.id,
       areaId: assignment.area.id,
       schoolYear: assignment.schoolYear,
       status: assignment.status,

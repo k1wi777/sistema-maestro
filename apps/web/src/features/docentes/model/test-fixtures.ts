@@ -8,6 +8,7 @@ export function makeAssignment(overrides: Partial<TeacherAssignment> = {}): Teac
     status: 'activa',
     isHomeroomTeacher: false,
     teacher: { id: 't-1', fullName: 'Laura Demo', status: 'activo' },
+    group: { id: 'gr-1', name: 'Tercero 1' },
     grade: { id: 'g-1', name: 'Tercero', sortOrder: 3 },
     level: { id: 'l-1', name: 'Primaria' },
     area: { id: 'a-1', name: 'Matemáticas', type: 'asignatura' },

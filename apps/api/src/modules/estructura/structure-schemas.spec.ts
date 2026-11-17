@@ -1,7 +1,14 @@
 import {
   ASSIGNABLE_ROLES,
   createAcademicPeriodSchema,
+  createAreaSchema,
   createGradeSchema,
+  createGroupSchema,
+  areaListQuerySchema,
+  groupListQuerySchema,
+  setCoordinatorGradesSchema,
+  updateGradeSchema,
+  updateGroupSchema,
   createSchoolYearSchema,
   createTeacherAssignmentSchema,
   schoolYearSchema,
@@ -81,10 +88,60 @@ describe('catálogos', () => {
   });
 });
 
+describe('grupos, áreas con niveles y coordinadoras', () => {
+  const id = '5b1e2d9e-5f2e-4c7a-9a0e-0b6d6f1a2c11';
+  const other = '5b1e2d9e-5f2e-4c7a-9a0e-0b6d6f1a2c12';
+
+  it('un grupo pide grado y nombre de hasta 40 caracteres; su PATCH no mueve el grado', () => {
+    expect(createGroupSchema.safeParse({ gradeId: id, name: 'Kinder 1' }).success).toBe(true);
+    expect(createGroupSchema.safeParse({ gradeId: id, name: '' }).success).toBe(false);
+    expect(createGroupSchema.safeParse({ gradeId: id, name: 'x'.repeat(41) }).success).toBe(false);
+    expect(updateGroupSchema.safeParse({ active: false }).success).toBe(true);
+    expect(updateGroupSchema.safeParse({}).success).toBe(false);
+    expect(updateGroupSchema.safeParse({ gradeId: id }).success).toBe(false);
+  });
+
+  it('un área exige al menos un nivel, sin repetir; su PATCH admite activa y niveles', () => {
+    const base = { name: 'Danza', type: 'asignatura' };
+    expect(createAreaSchema.safeParse({ ...base, levelIds: [id, other] }).success).toBe(true);
+    expect(createAreaSchema.safeParse({ ...base, levelIds: [] }).success).toBe(false);
+    expect(createAreaSchema.safeParse({ ...base, levelIds: [id, id] }).success).toBe(false);
+    expect(createAreaSchema.safeParse({ ...base, levelIds: ['x'] }).success).toBe(false);
+    expect(createAreaSchema.safeParse(base).success).toBe(false);
+    expect(updateAreaSchema.safeParse({ active: false, levelIds: [id] }).success).toBe(true);
+    expect(updateAreaSchema.safeParse({ levelIds: [] }).success).toBe(false);
+  });
+
+  it('el grado admite activar o desactivar en su PATCH', () => {
+    expect(updateGradeSchema.safeParse({ active: false }).success).toBe(true);
+    expect(updateGradeSchema.safeParse({ active: 'no' }).success).toBe(false);
+  });
+
+  it('los listados filtran por activo con true o false y rechazan otros valores', () => {
+    expect(groupListQuerySchema.parse({ gradeId: id, active: 'false' }).filters).toEqual({
+      gradeId: id,
+      active: false,
+    });
+    expect(areaListQuerySchema.parse({ levelId: id, active: 'true' }).filters).toEqual({
+      levelId: id,
+      active: true,
+    });
+    expect(groupListQuerySchema.safeParse({ active: 'si' }).success).toBe(false);
+  });
+
+  it('los grados de una coordinadora pueden quedar vacíos pero no repetirse', () => {
+    expect(setCoordinatorGradesSchema.safeParse({ gradeIds: [] }).success).toBe(true);
+    expect(setCoordinatorGradesSchema.safeParse({ gradeIds: [id, other] }).success).toBe(true);
+    expect(setCoordinatorGradesSchema.safeParse({ gradeIds: [id, id] }).success).toBe(false);
+    expect(setCoordinatorGradesSchema.safeParse({ gradeIds: ['x'] }).success).toBe(false);
+    expect(setCoordinatorGradesSchema.safeParse({}).success).toBe(false);
+  });
+});
+
 describe('asignaciones docentes', () => {
   const ids = {
     teacherId: '5b1e2d9e-5f2e-4c7a-9a0e-0b6d6f1a2c11',
-    gradeId: '5b1e2d9e-5f2e-4c7a-9a0e-0b6d6f1a2c12',
+    groupId: '5b1e2d9e-5f2e-4c7a-9a0e-0b6d6f1a2c12',
     areaId: '5b1e2d9e-5f2e-4c7a-9a0e-0b6d6f1a2c13',
   };
 
@@ -92,6 +149,14 @@ describe('asignaciones docentes', () => {
     const parsed = createTeacherAssignmentSchema.parse(ids);
     expect(parsed.isHomeroomTeacher).toBe(false);
     expect(parsed.schoolYear).toBeUndefined();
+  });
+
+  it('la asignación es por grupo y ya no admite gradeId', () => {
+    expect(createTeacherAssignmentSchema.safeParse({ ...ids, gradeId: ids.groupId }).success).toBe(
+      false,
+    );
+    const withoutGroup = { teacherId: ids.teacherId, areaId: ids.areaId };
+    expect(createTeacherAssignmentSchema.safeParse(withoutGroup).success).toBe(false);
   });
 
   it('rechaza campos desconocidos y años mal formados', () => {

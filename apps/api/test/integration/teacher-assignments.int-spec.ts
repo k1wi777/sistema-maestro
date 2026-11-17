@@ -17,6 +17,7 @@ interface AssignmentBody {
   status: string;
   isHomeroomTeacher: boolean;
   teacher: Record<string, unknown>;
+  group: { id: string; name: string };
   grade: { id: string; name: string };
   level: { id: string; name: string };
   area: { id: string; name: string };
@@ -30,7 +31,8 @@ interface MineBody {
   grades: {
     grade: { id: string };
     isHomeroomTeacher: boolean;
-    areas: { assignmentId: string; name: string }[];
+    groups: { id: string; name: string; isHomeroomTeacher: boolean }[];
+    areas: { id: string; name: string }[];
   }[];
 }
 
@@ -77,14 +79,18 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
     const grade = await prisma.grade.create({
       data: { name: `Grado ${unique()}`, levelId: level.id, sortOrder: 1 },
     });
-    const area = await prisma.area.create({
-      data: { name: `Área ${unique()}`, type: 'asignatura' },
+    const group = await prisma.group.create({
+      data: { gradeId: grade.id, name: `Grupo ${unique()}` },
     });
-    return { level, grade, area };
+    const area = await newArea(level);
+    return { level, grade, group, area };
   }
 
-  async function newArea(name = `Área ${unique()}`) {
-    return prisma.area.create({ data: { name, type: 'asignatura' } });
+  /** Área activa del nivel indicado (las asignaciones exigen que el área sea del nivel del grupo). */
+  async function newArea(level: { id: string }, name = `Área ${unique()}`) {
+    return prisma.area.create({
+      data: { name, type: 'asignatura', areaLevels: { create: [{ levelId: level.id }] } },
+    });
   }
 
   async function yearWithPeriods(code: string, periods = 3) {
@@ -100,7 +106,7 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
 
   describe('sin año vigente (R15)', () => {
     it('responde 409 conflicto en mis asignaciones, el año vigente y el alta o listado sin año', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area } = await createGradeAndArea();
       const paths: [Method, string, Cookies, object?][] = [
         ['get', '/me/assignments', teacher],
         ['get', '/school-years/current', teacher],
@@ -109,7 +115,7 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
           'post',
           '/teacher-assignments',
           coordinator,
-          { teacherId: teacherUser.id, gradeId: grade.id, areaId: area.id },
+          { teacherId: teacherUser.id, groupId: group.id, areaId: area.id },
         ],
       ];
 
@@ -185,18 +191,18 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
       currentCode = year.code;
     });
 
-    const body = (teacherId: string, gradeId: string, areaId: string, extra: object = {}) => ({
+    const body = (teacherId: string, groupId: string, areaId: string, extra: object = {}) => ({
       teacherId,
-      gradeId,
+      groupId,
       areaId,
       ...extra,
     });
 
     it('crea activa con el año vigente y devuelve docente, grado, nivel y área sin correo (R7)', async () => {
-      const { grade, area, level } = await createGradeAndArea();
+      const { grade, group, area, level } = await createGradeAndArea();
 
       const res = await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(teacherUser.id, grade.id, area.id))
+        .send(body(teacherUser.id, group.id, area.id))
         .expect(201);
       const created = res.body as AssignmentBody;
 
@@ -204,6 +210,7 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
         schoolYear: currentCode,
         status: 'activa',
         isHomeroomTeacher: false,
+        group: { id: group.id, name: group.name },
         grade: { id: grade.id, name: grade.name },
         level: { id: level.id, name: level.name },
         area: { id: area.id, name: area.name },
@@ -226,17 +233,17 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
     });
 
     it('un administrador también puede crear; un docente recibe 403 en todas las rutas (R13)', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area, level } = await createGradeAndArea();
       const target = (
         await as(admin, 'post', '/teacher-assignments')
-          .send(body(teacherUser.id, grade.id, area.id))
+          .send(body(teacherUser.id, group.id, area.id))
           .expect(201)
       ).body as AssignmentBody;
 
       const responses = await Promise.all([
         as(teacher, 'get', '/teacher-assignments'),
         as(teacher, 'post', '/teacher-assignments').send(
-          body(teacherUser.id, grade.id, (await newArea()).id),
+          body(teacherUser.id, group.id, (await newArea(level)).id),
         ),
         as(teacher, 'patch', `/teacher-assignments/${target.id}`).send({ isHomeroomTeacher: true }),
         as(teacher, 'patch', `/teacher-assignments/${target.id}/status`).send({
@@ -253,15 +260,15 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
     });
 
     it('rechaza con 409 el duplicado y avisa si la existente está retirada (R8)', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area } = await createGradeAndArea();
       const created = (
         await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(teacherUser.id, grade.id, area.id))
+          .send(body(teacherUser.id, group.id, area.id))
           .expect(201)
       ).body as AssignmentBody;
 
       const active = await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(teacherUser.id, grade.id, area.id))
+        .send(body(teacherUser.id, group.id, area.id))
         .expect(409);
       expect(apiErrorBodySchema.parse(active.body).code).toBe('conflicto');
 
@@ -269,54 +276,87 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
         .send({ status: 'retirada' })
         .expect(200);
       const withdrawn = await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(teacherUser.id, grade.id, area.id))
+        .send(body(teacherUser.id, group.id, area.id))
         .expect(409);
       expect(apiErrorBodySchema.parse(withdrawn.body).message).toContain('retirada');
       expect(
         await prisma.teacherAssignment.count({
-          where: { teacherId: teacherUser.id, gradeId: grade.id, areaId: area.id },
+          where: { teacherId: teacherUser.id, groupId: group.id, areaId: area.id },
         }),
       ).toBe(1);
     });
 
     it('responde 400 señalando el campo con docente inactivo o administrador, grado, área o año inválidos (R9)', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area } = await createGradeAndArea();
       const inactive = await createTestUser(app, { status: UserStatus.Inactive });
       const adminTarget = await createTestUser(app, { role: UserRole.Administrator });
       const cases: [object, string][] = [
-        [body(inactive.id, grade.id, area.id), 'teacherId'],
-        [body(adminTarget.id, grade.id, area.id), 'teacherId'],
-        [body(randomUUID(), grade.id, area.id), 'teacherId'],
-        [body(teacherUser.id, randomUUID(), area.id), 'gradeId'],
-        [body(teacherUser.id, grade.id, randomUUID()), 'areaId'],
-        [body(teacherUser.id, grade.id, area.id, { schoolYear: '1990-1991' }), 'schoolYear'],
+        [body(inactive.id, group.id, area.id), 'teacherId'],
+        [body(adminTarget.id, group.id, area.id), 'teacherId'],
+        [body(randomUUID(), group.id, area.id), 'teacherId'],
+        [body(teacherUser.id, randomUUID(), area.id), 'groupId'],
+        [body(teacherUser.id, group.id, randomUUID()), 'areaId'],
+        [body(teacherUser.id, group.id, area.id, { schoolYear: '1990-1991' }), 'schoolYear'],
       ];
 
       for (const [payload, field] of cases) {
         const res = await as(coordinator, 'post', '/teacher-assignments').send(payload).expect(400);
         expect(apiErrorBodySchema.parse(res.body).errors?.[0]?.field).toBe(field);
       }
-      expect(await prisma.teacherAssignment.count({ where: { gradeId: grade.id } })).toBe(0);
+      expect(await prisma.teacherAssignment.count({ where: { groupId: group.id } })).toBe(0);
+    });
+
+    it('rechaza con 400 un grupo o grado inactivo, un área inactiva o de otro nivel (R9)', async () => {
+      const { grade, group, area, level } = await createGradeAndArea();
+      const otherLevel = await prisma.educationLevel.create({
+        data: { name: `Nivel ${unique()}`, sortOrder: 2 },
+      });
+      const foreign = await newArea(otherLevel);
+      const inactiveArea = await newArea(level);
+      await prisma.area.update({ where: { id: inactiveArea.id }, data: { active: false } });
+      const dormantGroup = await prisma.group.create({
+        data: { gradeId: grade.id, name: `Dormido ${unique()}`, active: false },
+      });
+      const cases: [object, string, RegExp][] = [
+        [body(teacherUser.id, dormantGroup.id, area.id), 'groupId', /grupo está inactivo/],
+        [body(teacherUser.id, group.id, inactiveArea.id), 'areaId', /área está inactiva/],
+        [body(teacherUser.id, group.id, foreign.id), 'areaId', /no pertenece al nivel/],
+      ];
+
+      for (const [payload, field, reason] of cases) {
+        const res = await as(coordinator, 'post', '/teacher-assignments').send(payload).expect(400);
+        const first = apiErrorBodySchema.parse(res.body).errors?.[0];
+        expect([first?.field, first?.reason]).toEqual([field, expect.stringMatching(reason)]);
+      }
+
+      await prisma.grade.update({ where: { id: grade.id }, data: { active: false } });
+      const res = await as(coordinator, 'post', '/teacher-assignments')
+        .send(body(teacherUser.id, group.id, area.id))
+        .expect(400);
+      expect(apiErrorBodySchema.parse(res.body).errors?.[0]?.reason).toMatch(/grado está inactivo/);
+      expect(
+        await prisma.teacherAssignment.count({ where: { group: { gradeId: grade.id } } }),
+      ).toBe(0);
     });
 
     it('un coordinador es asignable y se puede usar un año registrado distinto del vigente', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area } = await createGradeAndArea();
       const next = await yearWithPeriods('3303-3304');
       const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
 
       const res = await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(coordinatorUser.id, grade.id, area.id, { schoolYear: next.code }))
+        .send(body(coordinatorUser.id, group.id, area.id, { schoolYear: next.code }))
         .expect(201);
 
       expect(res.body).toMatchObject({ schoolYear: next.code });
     });
 
     it('retira y reactiva sin borrar, y la reactivación repite las validaciones (R10)', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area } = await createGradeAndArea();
       const user = await createTestUser(app);
       const created = (
         await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(user.id, grade.id, area.id))
+          .send(body(user.id, group.id, area.id))
           .expect(201)
       ).body as AssignmentBody;
       const statusPath = `/teacher-assignments/${created.id}/status`;
@@ -350,30 +390,32 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
       await as(coordinator, 'patch', statusPath).send({ status: 'otra' }).expect(400);
     });
 
-    it('permite un solo director de grupo por grado y año, con varias áreas del mismo docente (R12)', async () => {
-      const { grade, area } = await createGradeAndArea();
-      const secondArea = await newArea();
+    it('permite un solo director de grupo por grupo y año; la marca se repite en otra fila solo si el grupo no la tiene (R10)', async () => {
+      const { group, area, level } = await createGradeAndArea();
+      const secondArea = await newArea(level);
       const other = await createTestUser(app);
       const first = (
         await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(teacherUser.id, grade.id, area.id, { isHomeroomTeacher: true }))
-          .expect(201)
-      ).body as AssignmentBody;
-      const sibling = (
-        await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(teacherUser.id, grade.id, secondArea.id, { isHomeroomTeacher: true }))
+          .send(body(teacherUser.id, group.id, area.id, { isHomeroomTeacher: true }))
           .expect(201)
       ).body as AssignmentBody;
 
+      // Una segunda fila marcada del mismo docente en el mismo grupo también da 409.
+      const sameTeacher = await as(coordinator, 'post', '/teacher-assignments')
+        .send(body(teacherUser.id, group.id, secondArea.id, { isHomeroomTeacher: true }))
+        .expect(409);
+      expect(apiErrorBodySchema.parse(sameTeacher.body).message).toMatch(
+        new RegExp(`${group.name} ya tiene director\\(a\\) de grupo`),
+      );
       const conflict = await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(other.id, grade.id, area.id, { isHomeroomTeacher: true }))
+        .send(body(other.id, group.id, area.id, { isHomeroomTeacher: true }))
         .expect(409);
       expect(apiErrorBodySchema.parse(conflict.body).code).toBe('conflicto');
       expect(await prisma.teacherAssignment.count({ where: { teacherId: other.id } })).toBe(0);
 
       const plain = (
         await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(other.id, grade.id, area.id))
+          .send(body(other.id, group.id, area.id))
           .expect(201)
       ).body as AssignmentBody;
       await as(coordinator, 'patch', `/teacher-assignments/${plain.id}`)
@@ -381,36 +423,111 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
         .expect(409);
 
       // Retirar al director libera la dirección; reactivarlo con otro director vigente falla.
-      await as(coordinator, 'patch', `/teacher-assignments/${sibling.id}/status`)
-        .send({ status: 'retirada' })
-        .expect(200);
       await as(coordinator, 'patch', `/teacher-assignments/${first.id}/status`)
         .send({ status: 'retirada' })
         .expect(200);
+      expect(
+        (await prisma.teacherAssignment.findUniqueOrThrow({ where: { id: first.id } }))
+          .isHomeroomTeacher,
+      ).toBe(false);
       await as(coordinator, 'patch', `/teacher-assignments/${plain.id}`)
         .send({ isHomeroomTeacher: true })
         .expect(200);
       await as(coordinator, 'patch', `/teacher-assignments/${first.id}/status`)
         .send({ status: 'activa' })
-        .expect(409);
+        .expect(200);
       expect(
         (await prisma.teacherAssignment.findUniqueOrThrow({ where: { id: first.id } })).status,
-      ).toBe('retirada');
+      ).toBe('activa');
+    });
+
+    it('dos grupos del mismo grado pueden tener cada uno su director(a)', async () => {
+      const { grade, group, area } = await createGradeAndArea();
+      const second = await prisma.group.create({
+        data: { gradeId: grade.id, name: `Grupo ${unique()}` },
+      });
+      const other = await createTestUser(app);
+
+      await as(coordinator, 'post', '/teacher-assignments')
+        .send(body(teacherUser.id, group.id, area.id, { isHomeroomTeacher: true }))
+        .expect(201);
+      await as(coordinator, 'post', '/teacher-assignments')
+        .send(body(other.id, second.id, area.id, { isHomeroomTeacher: true }))
+        .expect(201);
+    });
+
+    it('dos altas simultáneas de director en el mismo grupo: una gana y la otra recibe 409 (R10)', async () => {
+      const { group, area } = await createGradeAndArea();
+      const [one, two] = [await createTestUser(app), await createTestUser(app)];
+
+      const results = await Promise.all(
+        [one, two].map((user) =>
+          as(coordinator, 'post', '/teacher-assignments').send(
+            body(user.id, group.id, area.id, { isHomeroomTeacher: true }),
+          ),
+        ),
+      );
+
+      expect(results.map((res) => res.status).sort()).toEqual([201, 409]);
+      expect(
+        await prisma.teacherAssignment.count({
+          where: { groupId: group.id, isHomeroomTeacher: true, status: 'activa' },
+        }),
+      ).toBe(1);
+    });
+
+    it('al retirar la fila que dirige el grupo, la marca pasa a otra fila activa del mismo docente o el grupo queda sin director (R11)', async () => {
+      const { group, area, level } = await createGradeAndArea();
+      const secondArea = await newArea(level);
+      const [first, second] = [
+        (
+          await as(coordinator, 'post', '/teacher-assignments')
+            .send(body(teacherUser.id, group.id, area.id, { isHomeroomTeacher: true }))
+            .expect(201)
+        ).body as AssignmentBody,
+        (
+          await as(coordinator, 'post', '/teacher-assignments')
+            .send(body(teacherUser.id, group.id, secondArea.id))
+            .expect(201)
+        ).body as AssignmentBody,
+      ];
+
+      await as(coordinator, 'patch', `/teacher-assignments/${first.id}/status`)
+        .send({ status: 'retirada' })
+        .expect(200);
+
+      const afterFirst = await prisma.teacherAssignment.findMany({
+        where: { groupId: group.id },
+        orderBy: { createdAt: 'asc' },
+      });
+      expect(afterFirst.map((row) => [row.id, row.status, row.isHomeroomTeacher])).toEqual([
+        [first.id, 'retirada', false],
+        [second.id, 'activa', true],
+      ]);
+
+      await as(coordinator, 'patch', `/teacher-assignments/${second.id}/status`)
+        .send({ status: 'retirada' })
+        .expect(200);
+      expect(
+        await prisma.teacherAssignment.count({
+          where: { groupId: group.id, isHomeroomTeacher: true },
+        }),
+      ).toBe(0);
     });
 
     it('lista paginado con filtros y por defecto el año vigente (R11)', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { grade, group, area, level } = await createGradeAndArea();
       const user = await createTestUser(app);
       const next = await yearWithPeriods('3305-3306');
       const inCurrent = (
         await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(user.id, grade.id, area.id))
+          .send(body(user.id, group.id, area.id))
           .expect(201)
       ).body as AssignmentBody;
-      const second = await newArea();
+      const second = await newArea(level);
       const inNext = (
         await as(coordinator, 'post', '/teacher-assignments')
-          .send(body(user.id, grade.id, second.id, { schoolYear: next.code }))
+          .send(body(user.id, group.id, second.id, { schoolYear: next.code }))
           .expect(201)
       ).body as AssignmentBody;
       await as(coordinator, 'patch', `/teacher-assignments/${inCurrent.id}/status`)
@@ -443,30 +560,41 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
         `/teacher-assignments?teacherId=${user.id}&areaId=${area.id}&gradeId=${grade.id}&status=retirada`,
       ).expect(200);
       expect((byArea.body as PageBody).items.map((a) => a.id)).toEqual([inCurrent.id]);
+      const byGroup = await as(
+        coordinator,
+        'get',
+        `/teacher-assignments?teacherId=${user.id}&groupId=${group.id}&status=retirada`,
+      ).expect(200);
+      expect((byGroup.body as PageBody).items.map((a) => a.id)).toEqual([inCurrent.id]);
       await as(coordinator, 'get', '/teacher-assignments?pageSize=1').expect(200);
       await as(coordinator, 'get', '/teacher-assignments?status=otra').expect(400);
     });
 
-    it('mis asignaciones agrupa por grado y excluye retiradas y otros años (R14)', async () => {
+    it('mis asignaciones agrupa por grado, con sus grupos, y muestra una sola vez el área repetida en varios grupos (R14, R15)', async () => {
       const user = await createTestUser(app);
       const cookies = await signIn(app, user);
-      const { grade, area } = await createGradeAndArea();
-      const second = await newArea('Zoología ' + unique());
-      const third = await newArea('Álgebra ' + unique());
-      const retired = await newArea();
-      const otherYear = await newArea();
+      const { grade, group, area, level } = await createGradeAndArea();
+      const secondGroup = await prisma.group.create({
+        data: { gradeId: grade.id, name: `Grupo ${unique()}` },
+      });
+      const second = await newArea(level, 'Zoología ' + unique());
+      const third = await newArea(level, 'Álgebra ' + unique());
+      const retired = await newArea(level);
+      const otherYear = await newArea(level);
       const next = await yearWithPeriods('3307-3308');
-      const create = async (areaId: string, extra: object = {}) =>
+      const create = async (groupId: string, areaId: string, extra: object = {}) =>
         (
           await as(coordinator, 'post', '/teacher-assignments')
-            .send(body(user.id, grade.id, areaId, extra))
+            .send(body(user.id, groupId, areaId, extra))
             .expect(201)
         ).body as AssignmentBody;
-      await create(second.id);
-      await create(third.id, { isHomeroomTeacher: true });
-      await create(area.id);
-      const gone = await create(retired.id);
-      await create(otherYear.id, { schoolYear: next.code });
+      await create(group.id, second.id);
+      await create(group.id, third.id, { isHomeroomTeacher: true });
+      await create(group.id, area.id);
+      // La misma área en otro grupo del grado no se repite.
+      await create(secondGroup.id, area.id);
+      const gone = await create(group.id, retired.id);
+      await create(group.id, otherYear.id, { schoolYear: next.code });
       await as(coordinator, 'patch', `/teacher-assignments/${gone.id}/status`)
         .send({ status: 'retirada' })
         .expect(200);
@@ -482,6 +610,13 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
       expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'es')));
       expect(names).not.toContain(retired.name);
       expect(names).not.toContain(otherYear.name);
+      expect(mine.grades[0]?.groups.map((g) => [g.id, g.isHomeroomTeacher]).sort()).toEqual(
+        [
+          [group.id, true],
+          [secondGroup.id, false],
+        ].sort(),
+      );
+      expect(JSON.stringify(mine)).not.toContain('assignmentId');
     });
 
     it('sin asignaciones devuelve la lista vacía, también para un administrador', async () => {
@@ -491,14 +626,14 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
     });
 
     it('no deja fila de bitácora si la escritura falla (R16)', async () => {
-      const { grade, area } = await createGradeAndArea();
+      const { group, area } = await createGradeAndArea();
       const before = await prisma.auditLog.count({ where: { entity: 'asignacion_docente' } });
 
       await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(randomUUID(), grade.id, area.id))
+        .send(body(randomUUID(), group.id, area.id))
         .expect(400);
       await as(coordinator, 'post', '/teacher-assignments')
-        .send(body(teacherUser.id, grade.id, area.id, { schoolYear: '1990-1991' }))
+        .send(body(teacherUser.id, group.id, area.id, { schoolYear: '1990-1991' }))
         .expect(400);
       await as(coordinator, 'patch', `/teacher-assignments/${randomUUID()}`)
         .send({ isHomeroomTeacher: true })
