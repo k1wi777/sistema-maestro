@@ -20,6 +20,7 @@ import {
   LEVELS,
   SCHOOL_YEAR,
 } from '../../prisma/seed/initial/catalogs.data.ts';
+import { DEMO_EMAIL_DOMAIN } from '../../prisma/seed/demo/demo.data.ts';
 import { FAQ_ENTRIES } from '../../prisma/seed/initial/faq.data.ts';
 import {
   GENERAL_PLAN_NAME,
@@ -170,13 +171,18 @@ describe('initial data content', () => {
     expect(english).toEqual([{ nombre: 'Bachillerato' }, { nombre: 'Primaria' }]);
   });
 
-  it('starts every grade and area active and without coordinator', async () => {
+  // CI runs test:db again with the demo loaded, which assigns coordinators to 7 grades
+  // (covered in demo-data.db-spec.ts); the seed itself must never assign one.
+  it('starts every grade and area active and without a non-demo coordinator', async () => {
     const inactive = await rows(
-      `SELECT (SELECT count(*) FROM grado WHERE NOT activo OR coordinador_id IS NOT NULL) AS grados,
-              (SELECT count(*) FROM area WHERE NOT activa) AS areas`,
+      `SELECT (SELECT count(*) FROM grado WHERE NOT activo) AS grados,
+              (SELECT count(*) FROM area WHERE NOT activa) AS areas,
+              (SELECT count(*) FROM grado g JOIN usuario u ON u.id = g.coordinador_id
+                WHERE u.correo_institucional NOT LIKE $1) AS coordinadores`,
+      [`%@${DEMO_EMAIL_DOMAIN}`],
     );
 
-    expect(inactive).toEqual([{ grados: '0', areas: '0' }]);
+    expect(inactive).toEqual([{ grados: '0', areas: '0', coordinadores: '0' }]);
   });
 
   it('has periods 1 to 3 of the school year without dates', async () => {

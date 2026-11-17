@@ -33,11 +33,11 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
   }
 
   async function createArea(page: Page, name: string): Promise<void> {
-    await page.getByRole('button', { name: 'Nueva área' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Nueva área' });
+    await page.getByRole('button', { name: 'Nueva área', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nueva área', exact: true });
     await dialog.getByRole('textbox', { name: /Nombre del área/ }).fill(name);
     await dialog.getByRole('checkbox', { name: LEVEL, exact: true }).check();
-    await dialog.getByRole('button', { name: 'Guardar área' }).click();
+    await dialog.getByRole('button', { name: 'Guardar área', exact: true }).click();
     await expect(dialog).toBeHidden();
     await expect(page.getByRole('row').filter({ hasText: name })).toBeVisible();
   }
@@ -45,7 +45,7 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
   test('crea una área con uso y otra sin uso', async () => {
     const { page } = coordinator;
     await open(page, '/coordinacion/grados-y-areas', 'Grados y áreas');
-    await page.getByRole('tab', { name: 'Áreas' }).click();
+    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
 
     await createArea(page, USED_AREA);
     await createArea(page, FREE_AREA);
@@ -53,7 +53,7 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
 
   test('crea un grado nuevo y le agrega su primer grupo', async () => {
     const { page } = coordinator;
-    await page.getByRole('tab', { name: 'Grados y grupos' }).click();
+    await page.getByRole('tab', { name: 'Grados y grupos', exact: true }).click();
 
     await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Nuevo grado' });
@@ -73,7 +73,7 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
 
   test('agrega un grupo a un grado', async () => {
     const { page } = coordinator;
-    await page.getByRole('tab', { name: 'Grados y grupos' }).click();
+    await page.getByRole('tab', { name: 'Grados y grupos', exact: true }).click();
 
     await page.getByRole('button', { name: 'Agregar grupo a Red', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Agregar grupo a Red' });
@@ -98,7 +98,7 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
     await dialog.getByRole('button', { name: 'Asignar al grupo' }).click();
     await expect(dialog.getByText('Asignadas')).toBeVisible();
     await expect(dialog.getByRole('checkbox', { name: 'Director(a) de Red 3' })).toBeChecked();
-    await dialog.getByRole('button', { name: 'Cerrar' }).click();
+    await dialog.getByRole('button', { name: 'Cerrar', exact: true }).click();
 
     await open(page, '/coordinacion/grados-y-areas', 'Grados y áreas');
     await expect(page.getByText(`Red 3 · Dir.: ${TEACHER}`)).toBeVisible();
@@ -106,7 +106,7 @@ test.describe('Catálogo: grados, grupos y áreas', () => {
 
   test('desactiva el área en uso y borra la que no tiene uso', async () => {
     const { page } = coordinator;
-    await page.getByRole('tab', { name: 'Áreas' }).click();
+    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
     const row = (name: string) => page.getByRole('row').filter({ hasText: name });
 
     await page.getByRole('button', { name: `Desactivar del área ${USED_AREA}` }).click();
