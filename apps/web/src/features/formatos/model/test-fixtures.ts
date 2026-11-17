@@ -1,4 +1,4 @@
-import type { FieldJournal, FieldJournalEntry, ObserverNote, Review } from '@gns/shared';
+import type { FieldJournalDay, JournalAnnotation, ObserverNote, Review } from '@gns/shared';
 
 /** Datos de prueba con nombres de pila inventados; solo los usan las pruebas de este módulo. */
 const UUID_A = '11111111-1111-4111-8111-111111111111';
@@ -6,36 +6,61 @@ const UUID_B = '22222222-2222-4222-8222-222222222222';
 const UUID_C = '33333333-3333-4333-8333-333333333333';
 const UUID_D = '44444444-4444-4444-8444-444444444444';
 
-export const ENTRY_ID = UUID_D;
+export const ANNOTATION_ID = UUID_D;
 
-export function makeEntry(overrides: Partial<FieldJournalEntry> = {}): FieldJournalEntry {
+export function makeAnnotation(overrides: Partial<JournalAnnotation> = {}): JournalAnnotation {
   return {
-    id: ENTRY_ID,
-    date: '2026-11-06',
-    lesson: 'English · Sweet Home',
+    id: ANNOTATION_ID,
+    teacher: { id: UUID_B, fullName: 'Laura Demo' },
+    area: { id: UUID_C, name: 'Pre-ciencias' },
     eventType: 'positivo',
     students: ['Sofía', 'Matías'],
-    description: 'Presentó a su familia en inglés.',
+    description: 'Clasificaron objetos con el imán y explicaron sus hallazgos.',
     actions: null,
     reflection: null,
-    createdAt: new Date('2026-11-06T15:00:00Z'),
-    updatedAt: new Date('2026-11-06T15:00:00Z'),
+    status: 'lista',
+    readyAt: new Date('2026-11-09T15:40:00Z'),
+    sent: false,
+    isMine: true,
+    observation: null,
+    createdAt: new Date('2026-11-09T14:00:00Z'),
+    updatedAt: new Date('2026-11-09T15:40:00Z'),
     ...overrides,
   };
 }
 
-export function makeJournal(overrides: Partial<FieldJournal> = {}): FieldJournal {
+export function makeJournalDay(overrides: Partial<FieldJournalDay> = {}): FieldJournalDay {
   return {
     id: UUID_A,
-    teacher: { id: UUID_B, fullName: 'Laura Demo' },
+    status: 'en_curso',
+    createdAt: new Date('2026-11-09T14:00:00Z'),
+    updatedAt: new Date('2026-11-09T15:40:00Z'),
+    schoolYear: '2026-2027',
+    level: { id: UUID_C, name: 'Preescolar alto (KTF)' },
     grade: { id: UUID_C, name: 'Transition' },
-    period: { id: UUID_D, number: 1, schoolYear: '2026-2027' },
-    status: 'borrador',
+    group: { id: UUID_D, name: 'Transition 1' },
+    date: '2026-11-09',
+    homeroomTeacher: { id: UUID_B, fullName: 'Laura Demo' },
     submittedAt: null,
-    entryCount: 1,
-    entries: [makeEntry()],
-    createdAt: new Date('2026-11-01T15:00:00Z'),
-    updatedAt: new Date('2026-11-06T15:00:00Z'),
+    readyCount: 1,
+    expectedCount: 3,
+    contributors: [],
+    missing: [],
+    annotations: [makeAnnotation()],
+    generalObservation: null,
+    signature: null,
+    history: [],
+    viewer: {
+      isParticipant: true,
+      isHomeroomTeacher: true,
+      areas: [{ id: UUID_C, name: 'Pre-ciencias' }],
+      canAnnotate: true,
+      canSubmit: true,
+      canResubmit: false,
+      canVoid: true,
+      canReview: false,
+      blockedReason: null,
+    },
     ...overrides,
   };
 }

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { RecordStatus, type LessonPlan } from '@gns/shared';
 import { PrismaService } from '../../../src/shared/database/prisma.service';
+import { groupOfGrade } from './groups';
 import { asUser, type Cookies } from './session';
 
 /** Año vigente de las pruebas de planeación (todas lo comparten bajo el candado compartido). */
@@ -102,7 +103,13 @@ export async function setupPlanning(app: INestApplication): Promise<Planning> {
 
     async assign(teacherId, gradeId, areaId, status = 'activa') {
       await prisma.teacherAssignment.create({
-        data: { teacherId, gradeId, areaId, schoolYear: PLANNING_YEAR, status },
+        data: {
+          teacherId,
+          groupId: await groupOfGrade(prisma, gradeId),
+          areaId,
+          schoolYear: PLANNING_YEAR,
+          status,
+        },
       });
     },
   };

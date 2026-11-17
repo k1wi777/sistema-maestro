@@ -1,6 +1,7 @@
 import { randomInt } from 'node:crypto';
 import type { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../../../src/shared/database/prisma.service';
+import { groupOfGrade } from './groups';
 import { PLANNING_YEAR } from './planning';
 import { createTestUser, signIn, type Cookies, type TestUser } from './session';
 import { call, createSection, type Created } from './training';
@@ -47,8 +48,16 @@ export async function assignInYear(
   schoolYear: string,
   status: 'activa' | 'retirada' = 'activa',
 ): Promise<void> {
-  await app.get(PrismaService).teacherAssignment.create({
-    data: { teacherId, gradeId, areaId, schoolYear, status, isHomeroomTeacher: false },
+  const prisma = app.get(PrismaService);
+  await prisma.teacherAssignment.create({
+    data: {
+      teacherId,
+      groupId: await groupOfGrade(prisma, gradeId),
+      areaId,
+      schoolYear,
+      status,
+      isHomeroomTeacher: false,
+    },
   });
 }
 

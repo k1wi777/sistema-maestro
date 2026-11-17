@@ -93,6 +93,12 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
             description: 'Gestiona los docentes, sus grados, áreas y asignaciones.',
           },
           {
+            href: '/coordinacion/grados-y-areas',
+            label: 'Grados y áreas',
+            icon: 'grados',
+            description: 'Organiza grados, grupos, áreas y coordinadoras.',
+          },
+          {
             href: '/coordinacion/planes',
             label: 'Planes de formación',
             icon: 'ruta',

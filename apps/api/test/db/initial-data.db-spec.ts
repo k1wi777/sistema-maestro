@@ -13,11 +13,14 @@ import { parseAdminConfig } from '../../prisma/seed/initial/admin-config.ts';
 import { BENEFITS_ACTIVITIES } from '../../prisma/seed/initial/benefits.data.ts';
 import {
   ACADEMIC_PERIOD_NUMBERS,
+  AREA_LEVELS,
   AREAS,
   GRADES,
+  GROUPS,
   LEVELS,
   SCHOOL_YEAR,
 } from '../../prisma/seed/initial/catalogs.data.ts';
+import { DEMO_EMAIL_DOMAIN } from '../../prisma/seed/demo/demo.data.ts';
 import { FAQ_ENTRIES } from '../../prisma/seed/initial/faq.data.ts';
 import {
   GENERAL_PLAN_NAME,
@@ -36,6 +39,8 @@ const SEEDED_TABLES = [
   'nivel',
   'grado',
   'area',
+  'grupo',
+  'area_nivel',
   'periodo_academico',
   'plan_formacion',
   'seccion_plan',
@@ -119,6 +124,65 @@ describe('initial data content', () => {
     for (const area of AREAS) {
       expect(byName.get(area.name)).toBe(area.type);
     }
+  });
+
+  it('has the 24 preschool groups, each in its grade', async () => {
+    const groups = await rows(
+      `SELECT g.nombre AS grado, gr.nombre FROM grupo gr JOIN grado g ON g.id = gr.grado_id
+       WHERE g.nombre = ANY($1) ORDER BY g.orden, gr.nombre`,
+      [GROUPS.map((group) => group.gradeName)],
+    );
+    const perGrade = (gradeName: string) => groups.filter((group) => group.grado === gradeName);
+
+    expect(GROUPS).toHaveLength(24);
+    expect(groups).toHaveLength(24);
+    expect(perGrade('Red').map((group) => group.nombre)).toEqual(['Red 1', 'Red 2']);
+    expect(perGrade('Green')).toHaveLength(3);
+    expect(perGrade('Kinder')).toHaveLength(6);
+    expect(perGrade('Transition')).toHaveLength(6);
+    expect(perGrade('First Grade')).toHaveLength(0);
+    expect(perGrade('2°')).toHaveLength(0);
+  });
+
+  it('relates each area with the levels of the previous fixed rule (area_nivel)', async () => {
+    const perLevel = await rows(
+      `SELECT n.nombre AS nivel, count(*)::int AS areas FROM area_nivel an
+       JOIN nivel n ON n.id = an.nivel_id WHERE n.nombre = ANY($1) GROUP BY n.nombre ORDER BY n.nombre`,
+      [LEVELS.map((level) => level.name)],
+    );
+    const physics = await rows(
+      `SELECT n.nombre FROM area_nivel an JOIN area a ON a.id = an.area_id
+       JOIN nivel n ON n.id = an.nivel_id WHERE a.nombre = 'Física'`,
+    );
+    const english = await rows(
+      `SELECT n.nombre FROM area_nivel an JOIN area a ON a.id = an.area_id
+       JOIN nivel n ON n.id = an.nivel_id WHERE a.nombre = 'English' ORDER BY n.nombre`,
+    );
+
+    expect(perLevel).toEqual([
+      { nivel: 'Bachillerato', areas: 21 },
+      { nivel: 'Preescolar alto (KTF)', areas: 18 },
+      { nivel: 'Preescolar bajo', areas: 18 },
+      { nivel: 'Primaria', areas: 16 },
+    ]);
+    expect(AREA_LEVELS).toHaveLength(18 + 18 + 16 + 21);
+    expect(physics).toEqual([{ nombre: 'Bachillerato' }]);
+    // «English» (asignatura) no es de preescolar; «English (CLIL)» sí.
+    expect(english).toEqual([{ nombre: 'Bachillerato' }, { nombre: 'Primaria' }]);
+  });
+
+  // CI runs test:db again with the demo loaded, which assigns coordinators to 7 grades
+  // (covered in demo-data.db-spec.ts); the seed itself must never assign one.
+  it('starts every grade and area active and without a non-demo coordinator', async () => {
+    const inactive = await rows(
+      `SELECT (SELECT count(*) FROM grado WHERE NOT activo) AS grados,
+              (SELECT count(*) FROM area WHERE NOT activa) AS areas,
+              (SELECT count(*) FROM grado g JOIN usuario u ON u.id = g.coordinador_id
+                WHERE u.correo_institucional NOT LIKE $1) AS coordinadores`,
+      [`%@${DEMO_EMAIL_DOMAIN}`],
+    );
+
+    expect(inactive).toEqual([{ grados: '0', areas: '0', coordinadores: '0' }]);
   });
 
   it('has periods 1 to 3 of the school year without dates', async () => {

@@ -82,3 +82,13 @@ export function describeDatabaseError(
     ? { prismaCode: error.code, sqlState: state }
     : { prismaCode: error.code };
 }
+
+/** Violación de llave foránea (`P2003`): el registro sigue referenciado por otros. */
+export function isForeignKeyViolation(error: unknown): boolean {
+  return isPrismaError(error) && error.code === 'P2003';
+}
+
+/** Violación de unicidad (`P2002`), incluidos los índices únicos parciales que Prisma no modela. */
+export function isUniqueViolation(error: unknown): boolean {
+  return isPrismaError(error) && error.code === 'P2002';
+}

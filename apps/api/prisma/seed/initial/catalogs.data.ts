@@ -241,3 +241,79 @@ export const AREAS = [
 
 /** Periodos del año lectivo, sin fechas hasta que coordinación las defina. */
 export const ACADEMIC_PERIOD_NUMBERS = [1, 2, 3] as const;
+
+// Niveles de cada área: relación área–nivel inicial, igual a la regla que `@gns/shared` tuvo
+// hasta la #99 (`areaNamesForLevel`). Desde ahora es dato editable desde «Grados y áreas».
+const PRESCHOOL_AREA_NAMES: readonly string[] = [
+  'Dimensión cognitiva',
+  'Dimensión comunicativa',
+  'Dimensión corporal y motora',
+  'Dimensión estética',
+  'Dimensión socioafectiva',
+  'Dimensión espiritual',
+  'Dimensión ética',
+  'English (CLIL)',
+  'Pre-ciencias',
+  'Lengua Castellana',
+  'Ciencias Naturales',
+  'Ciencias Sociales',
+  'Math',
+  'Science',
+  'Art',
+  'Música',
+  'Deportes',
+  'Social Studies',
+];
+const PRIMARY_AREA_NAMES: readonly string[] = [
+  'Lengua Castellana',
+  'Ciencias Naturales',
+  'Ciencias Sociales',
+  'Math',
+  'Science',
+  'English',
+  'Art',
+  'Música',
+  'Deportes',
+  'Social Studies',
+  'Matemáticas',
+  'Tecnología e Informática',
+  'Educación Artística',
+  'Educación Física',
+  'Ética y Valores',
+  'Educación Religiosa',
+];
+const SECONDARY_AREA_NAMES: readonly string[] = [
+  ...PRIMARY_AREA_NAMES,
+  'Física',
+  'Química',
+  'Filosofía',
+  'Ciencias Económicas y Políticas',
+  'Emprendimiento',
+];
+
+export const AREA_LEVELS: readonly { areaName: string; levelName: string }[] = [
+  ...PRESCHOOL_AREA_NAMES.map((areaName) => ({ areaName, levelName: 'Preescolar bajo' })),
+  ...PRESCHOOL_AREA_NAMES.map((areaName) => ({ areaName, levelName: 'Preescolar alto (KTF)' })),
+  ...PRIMARY_AREA_NAMES.map((areaName) => ({ areaName, levelName: 'Primaria' })),
+  ...SECONDARY_AREA_NAMES.map((areaName) => ({ areaName, levelName: 'Bachillerato' })),
+];
+
+/**
+ * Grupos de preescolar del colegio. Primaria y bachillerato (y First Grade) no traen grupos
+ * hasta que coordinación los cree desde «Grados y áreas» (o la migración los cree a partir de
+ * las asignaciones existentes como «<grado> 1»).
+ */
+export const GROUPS: readonly { gradeName: string; name: string }[] = [
+  ['Red', 2],
+  ['Blue', 2],
+  ['Purple', 2],
+  ['Green', 3],
+  ['Garden', 3],
+  ['Kinder', 6],
+  ['Transition', 6],
+].flatMap(([gradeName, count]) =>
+  Array.from({ length: Number(count) }, (_, index) => ({
+    gradeName: String(gradeName),
+    name: `${String(gradeName)} ${index + 1}`,
+  })),
+);

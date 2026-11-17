@@ -1,6 +1,7 @@
 import {
   AuditLogType,
   crossCuttingProjectFor,
+  JournalStatus,
   isStudentFirstName,
   levelAllowsCuriocity,
   JournalEventType,
@@ -83,7 +84,8 @@ describe('demo users and assignments (R18)', () => {
   it('assigns teachers in the four levels, with homeroom directions', async () => {
     const levels = await rows(
       `SELECT DISTINCT n.nombre FROM asignacion_docente a
-       JOIN grado g ON g.id = a.grado_id JOIN nivel n ON n.id = g.nivel_id
+       JOIN grupo gr ON gr.id = a.grupo_id JOIN grado g ON g.id = gr.grado_id
+       JOIN nivel n ON n.id = g.nivel_id
        WHERE a.anio_lectivo = '2026-2027' AND a.docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
     );
@@ -95,6 +97,56 @@ describe('demo users and assignments (R18)', () => {
     expect(levels).toHaveLength(4);
     expect(homeroom).toBeGreaterThanOrEqual(2);
   });
+
+  it('keeps assignments in active groups, with one homeroom per group and year', async () => {
+    const outsideGrades = await count(
+      `SELECT count(*) FROM asignacion_docente a JOIN grupo gr ON gr.id = a.grupo_id
+       WHERE a.docente_id IN ${DEMO_TEACHERS} AND NOT gr.activo`,
+      [DEMO_LIKE],
+    );
+    const duplicated = await count(
+      `SELECT count(*) FROM (
+         SELECT grupo_id, anio_lectivo FROM asignacion_docente
+         WHERE es_director_grupo AND estado = 'activa'
+         GROUP BY grupo_id, anio_lectivo HAVING count(*) > 1) AS d`,
+    );
+
+    expect([outsideGrades, duplicated]).toEqual([0, 0]);
+  });
+
+  it('puts the demo coordinators in charge of the preschool, primary and secondary grades and leaves First Grade without one', async () => {
+    const coordinators = await rows(
+      `SELECT g.nombre AS grado, u.nombre_completo AS coordinadora FROM grado g
+       JOIN usuario u ON u.id = g.coordinador_id WHERE u.correo_institucional LIKE $1 ORDER BY g.orden`,
+      [DEMO_LIKE],
+    );
+    const firstGrade = await rows(`SELECT coordinador_id FROM grado WHERE nombre = 'First Grade'`);
+
+    expect(coordinators).toEqual([
+      ...['Red', 'Blue', 'Purple', 'Green', 'Garden'].map((grado) => ({
+        grado,
+        coordinadora: 'Elena Ravassa',
+      })),
+      { grado: 'Kinder', coordinadora: 'Tomás Aldaverde' },
+      { grado: 'Transition', coordinadora: 'Tomás Aldaverde' },
+      ...['3°', '4°', '5°'].map((grado) => ({ grado, coordinadora: 'Elena Ravassa' })),
+      ...['7°', '8°', '10°', '11°'].map((grado) => ({ grado, coordinadora: 'Tomás Aldaverde' })),
+    ]);
+    expect(firstGrade).toEqual([{ coordinador_id: null }]);
+  });
+
+  it('adds groups «<grade> 1» for the non-preschool grades the demo uses', async () => {
+    const groups = await rows(
+      `SELECT g.nombre AS grado, gr.nombre FROM grupo gr JOIN grado g ON g.id = gr.grado_id
+       WHERE g.nombre IN ('First Grade', '3°', '10°') ORDER BY g.orden`,
+    );
+
+    expect(groups).toEqual([
+      { grado: 'First Grade', nombre: 'First Grade 1' },
+      { grado: '3°', nombre: '3° 1' },
+      { grado: '10°', nombre: '10° 1' },
+    ]);
+  });
 });
 
 describe('demo records (R19)', () => {
@@ -102,7 +154,6 @@ describe('demo records (R19)', () => {
 
   it.each([
     ['planeacion', 'docente_id'],
-    ['diario_campo', 'docente_id'],
     ['observador_anotacion', 'docente_id'],
   ])('has %s in each of the 5 states', async (table, teacherColumn) => {
     const found = await rows(
@@ -123,8 +174,9 @@ describe('demo records (R19)', () => {
       `SELECT count(*) FROM planeacion p JOIN planeacion_area pa ON pa.planeacion_id = p.id
        WHERE p.docente_id IN ${DEMO_TEACHERS}
        AND NOT EXISTS (
-         SELECT 1 FROM asignacion_docente d WHERE d.docente_id = p.docente_id
-         AND d.grado_id = p.grado_id AND d.area_id = pa.area_id AND d.estado = 'activa')`,
+         SELECT 1 FROM asignacion_docente d JOIN grupo gr ON gr.id = d.grupo_id
+         WHERE d.docente_id = p.docente_id
+         AND gr.grado_id = p.grado_id AND d.area_id = pa.area_id AND d.estado = 'activa')`,
       [DEMO_LIKE],
     );
 
@@ -148,15 +200,14 @@ describe('demo records (R19)', () => {
     expect(Number(several[0]?.areas)).toBe(2);
   });
 
-  it('sets the submission date on every submitted lesson plan and journal', async () => {
-    for (const table of ['planeacion', 'diario_campo']) {
-      const inconsistent = await count(
-        `SELECT count(*) FROM ${table} WHERE docente_id IN ${DEMO_TEACHERS}
-         AND ((estado = 'borrador') <> (enviada_en IS NULL))`,
-        [DEMO_LIKE],
-      );
-      expect([table, inconsistent]).toEqual([table, 0]);
-    }
+  it('sets the submission date on every submitted lesson plan', async () => {
+    const inconsistent = await count(
+      `SELECT count(*) FROM planeacion WHERE docente_id IN ${DEMO_TEACHERS}
+       AND ((estado = 'borrador') <> (enviada_en IS NULL))`,
+      [DEMO_LIKE],
+    );
+
+    expect(inconsistent).toBe(0);
   });
 
   it('gives every lesson plan the cross-cutting project of its level and period, and CurioCity only in secondary', async () => {
@@ -204,22 +255,133 @@ describe('demo records (R19)', () => {
     expect(resources).toBeGreaterThanOrEqual(1);
   });
 
-  it('has journals with 2 to 4 entries covering the 3 event types', async () => {
-    const perJournal = await rows(
-      `SELECT count(e.id)::int AS total FROM diario_campo d LEFT JOIN diario_entrada e ON e.diario_id = d.id
-       WHERE d.docente_id IN ${DEMO_TEACHERS} GROUP BY d.id`,
-      [DEMO_LIKE],
-    );
-    const types = await rows(
-      `SELECT DISTINCT e.tipo_evento FROM diario_entrada e JOIN diario_campo d ON d.id = e.diario_id
-       WHERE d.docente_id IN ${DEMO_TEACHERS}`,
-      [DEMO_LIKE],
-    );
+  describe('collaborative field journals (#107)', () => {
+    const DEMO_JOURNALS = `(SELECT d.id FROM diario_campo d WHERE d.creado_por IN ${DEMO_TEACHERS})`;
 
-    expect(perJournal.every((row) => Number(row.total) >= 2 && Number(row.total) <= 4)).toBe(true);
-    expect(types.map((row) => row.tipo_evento).sort()).toEqual(
-      Object.values(JournalEventType).sort(),
-    );
+    it('has journals by group and day in each of the 5 states', async () => {
+      const found = await rows(
+        `SELECT DISTINCT estado FROM diario_campo WHERE creado_por IN ${DEMO_TEACHERS}`,
+        [DEMO_LIKE],
+      );
+
+      expect(found.map((row) => row.estado).sort()).toEqual(Object.values(JournalStatus).sort());
+    });
+
+    it('dates every journal between 13 October and 9 November 2026 and never a 7° 1 journal from 13 November on', async () => {
+      const outside = await count(
+        `SELECT count(*) FROM diario_campo WHERE id IN ${DEMO_JOURNALS}
+         AND fecha NOT BETWEEN '2026-10-13' AND '2026-11-09'`,
+        [DEMO_LIKE],
+      );
+      const late = await count(
+        `SELECT count(*) FROM diario_campo d JOIN grupo gr ON gr.id = d.grupo_id
+         JOIN grado g ON g.id = gr.grado_id
+         WHERE g.nombre = '7°' AND d.fecha >= '2026-11-13'`,
+      );
+
+      expect([outside, late]).toEqual([0, 0]);
+    });
+
+    it('keeps the submission date consistent with the state', async () => {
+      const inconsistent = await count(
+        `SELECT count(*) FROM diario_campo WHERE id IN ${DEMO_JOURNALS}
+         AND ((estado IN ('enviado', 'observaciones', 'revisado')) <> (enviado_en IS NOT NULL))
+         AND NOT (estado = 'anulado')`,
+        [DEMO_LIKE],
+      );
+      const voided = await count(
+        `SELECT count(*) FROM diario_campo WHERE id IN ${DEMO_JOURNALS}
+         AND ((estado = 'anulado') <> (anulado_en IS NOT NULL AND anulado_por IS NOT NULL))`,
+        [DEMO_LIKE],
+      );
+
+      expect([inconsistent, voided]).toEqual([0, 0]);
+    });
+
+    it('has annotations only from teachers assigned to the group that year, covering the 3 event types and the 3 states', async () => {
+      const strangers = await count(
+        `SELECT count(*) FROM diario_anotacion a JOIN diario_campo d ON d.id = a.diario_id
+         WHERE d.id IN ${DEMO_JOURNALS} AND NOT EXISTS (
+           SELECT 1 FROM asignacion_docente ad WHERE ad.docente_id = a.docente_id
+           AND ad.grupo_id = d.grupo_id AND ad.area_id = a.area_id
+           AND ad.anio_lectivo = d.anio_lectivo AND ad.estado = 'activa')`,
+        [DEMO_LIKE],
+      );
+      const types = await rows(
+        `SELECT DISTINCT tipo_evento FROM diario_anotacion WHERE diario_id IN ${DEMO_JOURNALS}`,
+        [DEMO_LIKE],
+      );
+      const states = await rows(
+        `SELECT DISTINCT estado FROM diario_anotacion WHERE diario_id IN ${DEMO_JOURNALS}`,
+        [DEMO_LIKE],
+      );
+
+      expect(strangers).toBe(0);
+      expect(types.map((row) => row.tipo_evento).sort()).toEqual(
+        Object.values(JournalEventType).sort(),
+      );
+      expect(states.map((row) => row.estado).sort()).toEqual(['borrador', 'lista', 'observada']);
+    });
+
+    it('records a coherent n of m for every submission and never lists a teacher who contributed as missing', async () => {
+      const submissions = await rows(
+        `SELECT e.diario_id, e.aportes_listos, e.docentes_esperados, e.faltantes, e.director_id
+         FROM diario_envio e WHERE e.diario_id IN ${DEMO_JOURNALS}`,
+        [DEMO_LIKE],
+      );
+
+      expect(submissions.length).toBeGreaterThanOrEqual(4);
+      for (const submission of submissions) {
+        const missing = submission.faltantes as { docenteId: string }[];
+        expect(Number(submission.aportes_listos) + missing.length).toBe(
+          Number(submission.docentes_esperados),
+        );
+        const contributed = await rows(
+          `SELECT DISTINCT docente_id FROM diario_anotacion
+           WHERE diario_id = $1 AND estado IN ('lista', 'observada')`,
+          [submission.diario_id],
+        );
+        for (const entry of missing) {
+          expect(contributed.map((row) => row.docente_id)).not.toContain(entry.docenteId);
+        }
+        // El director(a) del envío dirige el grupo ese año.
+        const homeroom = await count(
+          `SELECT count(*) FROM asignacion_docente ad JOIN diario_campo d ON d.grupo_id = ad.grupo_id
+           WHERE d.id = $1 AND ad.docente_id = $2 AND ad.es_director_grupo AND ad.estado = 'activa'`,
+          [submission.diario_id, submission.director_id],
+        );
+        expect(homeroom).toBeGreaterThan(0);
+      }
+    });
+
+    it('covers the special cases of the board: a group without homeroom, a grade without coordinator, one observed annotation and one general observation', async () => {
+      const withoutHomeroom = await count(
+        `SELECT count(*) FROM diario_campo d WHERE d.id IN ${DEMO_JOURNALS} AND NOT EXISTS (
+           SELECT 1 FROM asignacion_docente ad WHERE ad.grupo_id = d.grupo_id
+           AND ad.es_director_grupo AND ad.estado = 'activa')`,
+        [DEMO_LIKE],
+      );
+      const withoutCoordinator = await count(
+        `SELECT count(*) FROM diario_campo d JOIN grupo gr ON gr.id = d.grupo_id
+         JOIN grado g ON g.id = gr.grado_id WHERE d.id IN ${DEMO_JOURNALS} AND g.coordinador_id IS NULL`,
+        [DEMO_LIKE],
+      );
+      const observations = await count(
+        `SELECT count(*) FROM diario_observacion o JOIN diario_anotacion a ON a.id = o.anotacion_id
+         WHERE a.diario_id IN ${DEMO_JOURNALS} AND a.estado = 'observada'`,
+        [DEMO_LIKE],
+      );
+      const general = await count(
+        `SELECT count(*) FROM revision r JOIN diario_campo d ON d.id = r.registro_id
+         WHERE r.tipo_registro = 'diario' AND r.accion = 'observaciones' AND r.comentario IS NOT NULL
+         AND d.estado = 'observaciones'`,
+      );
+
+      expect(withoutHomeroom).toBeGreaterThanOrEqual(1);
+      expect(withoutCoordinator).toBeGreaterThanOrEqual(1);
+      expect(observations).toBeGreaterThanOrEqual(1);
+      expect(general).toBeGreaterThanOrEqual(1);
+    });
   });
 
   it('has observer notes of the 6 types', async () => {
@@ -275,7 +437,15 @@ describe('demo reviews (R20)', () => {
 
       // `ajuste` nunca es la última fila: no determina estado y siempre lo sigue una decisión.
       expect(review.accion).not.toBe(ReviewAction.Adjustment);
-      expect(record?.estado).toBe(REVIEW_DECISION_RESULT_STATUS[review.accion as ReviewDecision]);
+      // El diario tiene estados propios (sin ajustes): devolver deja «observaciones» y aprobar, «revisado».
+      const expected =
+        review.tipo_registro === ReviewRecordType.FieldJournal
+          ? {
+              [ReviewAction.ChangesRequested]: 'observaciones',
+              [ReviewAction.Approved]: 'revisado',
+            }[review.accion as ReviewDecision]
+          : REVIEW_DECISION_RESULT_STATUS[review.accion as ReviewDecision];
+      expect(record?.estado).toBe(expected);
     }
   });
 
@@ -595,8 +765,7 @@ describe('demo privacy (R23)', () => {
       [DEMO_LIKE],
     );
     const journalEntries = await rows(
-      `SELECT e.estudiantes FROM diario_entrada e JOIN diario_campo d ON d.id = e.diario_id
-       WHERE d.docente_id IN ${DEMO_TEACHERS}`,
+      `SELECT a.estudiantes FROM diario_anotacion a WHERE a.docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
     );
 
@@ -622,6 +791,8 @@ describe('demo privacy (R23)', () => {
       'version_estudiante',
       'estrategias_pedagogicas',
       'seguimiento',
+      'texto',
+      'comentario',
     ]);
     const entries = await rows(
       `SELECT accion, datos_antes, datos_despues FROM bitacora

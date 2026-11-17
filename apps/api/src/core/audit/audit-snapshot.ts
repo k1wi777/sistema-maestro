@@ -6,4 +6,9 @@
  */
 export interface AuditSnapshotSource {
   load(id: string): Promise<Record<string, unknown> | null>;
+  /**
+   * Detalle de la fila de bitácora calculado desde el estado posterior, para cuando la acción
+   * no tiene detalle estático ni del cuerpo. Solo debe devolver datos sin textos libres.
+   */
+  describe?(snapshot: Record<string, unknown>): string | null;
 }

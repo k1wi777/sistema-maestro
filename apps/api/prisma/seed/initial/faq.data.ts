@@ -141,7 +141,7 @@ export const FAQ_ENTRIES: readonly FaqSeed[] = [
     category: 'Uso de la plataforma',
     question: '¿Cómo uso el diario de campo y el observador del estudiante?',
     answer:
-      'En **Formatos**:\n- **Diario de campo:** una hoja por grado y periodo; agrega cada evento relevante y envíala a coordinación.\n- **Observador del estudiante:** registra reconocimientos y situaciones académicas o de convivencia de cada estudiante.\n\nUsa **solo el nombre de pila** y no registres documentos, datos de salud ni fotos.',
+      'En **Formatos**:\n- **Diario de campo:** un diario por grupo y día; cada docente del grupo agrega su anotación y la marca lista, y el director o la directora de grupo lo envía a coordinación.\n- **Observador del estudiante:** registra reconocimientos y situaciones académicas o de convivencia de cada estudiante.\n\nUsa **solo el nombre de pila** y no registres documentos, datos de salud ni fotos.',
     keywords: 'diario campo observador anotacion formato registro',
     source: 'Guía del Panel Docente',
   },

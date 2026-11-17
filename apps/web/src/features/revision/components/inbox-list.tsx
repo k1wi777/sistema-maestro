@@ -1,8 +1,8 @@
-import { RecordStatus, type FieldJournalSummary, type ObserverNote } from '@gns/shared';
+import { RecordStatus, type ObserverNote } from '@gns/shared';
 import type { ReactNode } from 'react';
 
 import { LoadError, Loading, type PagedList } from '@/shared/data';
-import { formatDayWithYear, formatShortDate } from '@/shared/format/dates';
+import { formatDayWithYear } from '@/shared/format/dates';
 import { OBSERVER_TYPE_INFO, STATUS_INFO, STATUS_ORDER } from '@/shared/records';
 import {
   Button,
@@ -15,7 +15,7 @@ import {
 } from '@/shared/ui';
 
 import { shortStatusLabel } from '../model/status-label';
-import { JOURNAL_INBOX_PATH, OBSERVER_INBOX_PATH } from '../model/paths';
+import { OBSERVER_INBOX_PATH } from '../model/paths';
 import styles from './inbox-list.module.css';
 
 const ALL = 'todas';
@@ -32,42 +32,6 @@ export function statusFromUrl(value: string | null): RecordStatus | undefined {
 function StatusCell({ status }: { status: RecordStatus }) {
   return <StatusBadge tone={STATUS_INFO[status].tone}>{shortStatusLabel(status)}</StatusBadge>;
 }
-
-export const JOURNAL_COLUMNS: DataTableColumn<FieldJournalSummary>[] = [
-  { key: 'teacher', header: 'Docente', render: (journal) => journal.teacher.fullName },
-  { key: 'grade', header: 'Grado', render: (journal) => journal.grade.name },
-  {
-    key: 'period',
-    header: 'Periodo',
-    render: (journal) => (
-      <>
-        <span aria-hidden="true">{`P${journal.period.number}`}</span>
-        <span className="sr-only">{`Periodo ${journal.period.number}`}</span>
-      </>
-    ),
-  },
-  { key: 'entries', header: 'Registros', numeric: true, render: (journal) => journal.entryCount },
-  {
-    key: 'submitted',
-    header: 'Enviada',
-    render: (journal) => (journal.submittedAt ? formatShortDate(journal.submittedAt) : '—'),
-  },
-  { key: 'status', header: 'Estado', render: (journal) => <StatusCell status={journal.status} /> },
-  {
-    key: 'action',
-    header: 'Acción',
-    render: (journal) => (
-      <ButtonLink
-        context={`diario de ${journal.teacher.fullName}, ${journal.grade.name}`}
-        href={`${JOURNAL_INBOX_PATH}/${journal.id}`}
-        variant={journal.status === RecordStatus.Submitted ? 'primary' : 'outline'}
-        size="sm"
-      >
-        {journal.status === RecordStatus.Submitted ? 'Revisar' : 'Abrir'}
-      </ButtonLink>
-    ),
-  },
-];
 
 export const NOTE_COLUMNS: DataTableColumn<ObserverNote>[] = [
   { key: 'teacher', header: 'Docente', render: (note) => note.teacher.fullName },

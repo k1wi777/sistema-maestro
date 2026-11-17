@@ -89,10 +89,28 @@ test.describe('Accesibilidad: vista docente', () => {
     await visit(page, '/docente/formatos/planeacion/nueva', 'docente · nueva planeación');
   });
 
-  test('diario de campo: lista y una hoja', async () => {
+  test('diario de campo: lista, diario del día (aportante y director) y confirmación de envío', async () => {
     const { page } = teacher;
     await visit(page, '/docente/formatos/diario', 'docente · diario de campo (lista)');
-    await openFirst(page, page.getByRole('link', { name: OPEN_LINK }), 'docente · diario');
+    // Julián participa en Red 1 (aportante) y dirige Transition 1 (director): los diarios demo del
+    // 9 de nov están en curso. Solo se abre y se cancela el diálogo de envío.
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Abrir diario de Red 1 del 2026-11-09/ }),
+      'docente · diario del día (aportante)',
+    );
+    await page.goBack();
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Abrir diario de Transition 1 del 2026-11-09/ }),
+      'docente · diario del día (director)',
+    );
+    await page.getByRole('button', { name: 'Enviar a coordinación' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Enviar a coordinación' });
+    await expect(dialog).toBeVisible();
+    await expectAccessible(page, 'docente · confirmación de envío del diario');
+    await dialog.getByRole('button', { name: 'Seguir esperando' }).click();
+    await expect(dialog).toBeHidden();
   });
 
   test('observador: lista y una anotación', async () => {
@@ -205,6 +223,27 @@ test.describe('Accesibilidad: vista de coordinación', () => {
   test('docentes, planes, módulo, avance, bitácora y asistente', async () => {
     const { page } = coordinator;
     await visit(page, '/coordinacion/docentes', 'coordinación · docentes');
+    await page
+      .getByRole('button', { name: /^Asignaciones de / })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await audit(page, 'coordinación · diálogo de asignaciones');
+    await page.getByRole('dialog').getByRole('button', { name: 'Cerrar', exact: true }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await visit(page, '/coordinacion/grados-y-areas', 'coordinación · grados y grupos');
+    await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo grado' })).toBeVisible();
+    await audit(page, 'coordinación · diálogo de nuevo grado');
+    await page
+      .getByRole('dialog', { name: 'Nuevo grado' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
+    await audit(page, 'coordinación · áreas');
+    await page.getByRole('tab', { name: 'Coordinadoras', exact: true }).click();
+    await audit(page, 'coordinación · coordinadoras');
     await visit(page, '/coordinacion/planes', 'coordinación · planes');
     await openFirst(
       page,

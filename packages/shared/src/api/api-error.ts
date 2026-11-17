@@ -9,6 +9,8 @@ export const ApiErrorCode = {
   ConsentRequired: 'consentimiento_requerido',
   NotFound: 'no_encontrado',
   Conflict: 'conflicto',
+  /** Borrar un grado, grupo o área que tiene registros o asignaciones. */
+  CatalogInUse: 'catalogo_en_uso',
   UnansweredQuestionClosed: 'pregunta_sin_respuesta_cerrada',
   ExportExceedsLimit: 'exportacion_excede_limite',
   TooManyRequests: 'demasiadas_peticiones',

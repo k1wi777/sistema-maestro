@@ -1,440 +1,418 @@
 import type { INestApplication } from '@nestjs/common';
-import { apiErrorBodySchema, RecordStatus, UserRole } from '@gns/shared';
+import { apiErrorBodySchema } from '@gns/shared';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
+import { call } from './support/formats';
 import {
-  addEntry,
-  call,
-  createJournal,
-  ENTRY_CONTENT,
-  forceJournalStatus,
-  freshGrade,
-  unknownId,
+  addAnnotation,
+  annotationBody,
+  annotationOf,
+  journalWorld,
+  markReady,
+  startedJournal,
+  TODAY,
+  TODAY_YEAR,
+  useTodayYear,
+  type Actor,
   type JournalBody,
-} from './support/formats';
-import { auditRows, setupPlanning, type Planning } from './support/planning';
+  type JournalWorld,
+} from './support/journal';
+import { auditRows } from './support/planning';
 import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
-import { createTestUser, signIn, type Cookies, type TestUser } from './support/session';
 
-type Page = { items: JournalBody[]; totalItems: number; page: number; totalPages: number };
+type Page = {
+  items: { id: string; status: string; readyCount: number; expectedCount: number }[];
+  totalItems: number;
+};
 
-describe('diario de campo (BE-61)', () => {
+describe('diario de campo colaborativo por grupo y día (#107)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let planning: Planning;
   let release: () => Promise<void>;
-  let teacherUser: TestUser;
-  let teacher: Cookies;
-  let other: Cookies;
-  let otherUser: TestUser;
-  let coord: Cookies;
-  let admin: Cookies;
+  let restoreYear: () => Promise<void>;
+  let world: JournalWorld;
 
-  const get = (cookies: Cookies, path: string) => call(app, cookies, 'get', path);
-  const post = (cookies: Cookies, path: string) => call(app, cookies, 'post', path);
+  const get = (who: Actor, path: string) => call(app, who.cookies, 'get', path);
+  const post = (who: Actor, path: string) => call(app, who.cookies, 'post', path);
+  const patch = (who: Actor, path: string) => call(app, who.cookies, 'patch', path);
   const errorOf = (body: unknown) => apiErrorBodySchema.parse(body);
-
-  /** Hoja nueva del docente en un grado y periodo propios. */
-  async function freshJournal(periodNumber: 1 | 2 | 3 = 1): Promise<JournalBody> {
-    const { gradeId } = await freshGrade(planning, [teacherUser.id]);
-    return createJournal(app, teacher, { gradeId, periodId: planning.periods[periodNumber] });
-  }
+  const fieldsOf = (body: unknown) => errorOf(body).errors?.map((error) => error.field);
 
   beforeAll(async () => {
-    release = await holdSchoolYearLock('shared');
+    release = await holdSchoolYearLock('exclusive');
     app = await createTestApp({ withFailures: false });
     prisma = app.get(PrismaService);
-    planning = await setupPlanning(app);
-    teacherUser = await createTestUser(app);
-    teacher = await signIn(app, teacherUser);
-    otherUser = await createTestUser(app);
-    other = await signIn(app, otherUser);
-    coord = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
-    admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
+    restoreYear = await useTodayYear(app);
+    world = await journalWorld(app);
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
+    await restoreYear();
     await app.close();
     await release();
   });
 
-  describe('crear la hoja (R1, R2)', () => {
-    it('crea en borrador, sin entradas y con el docente de la sesión, y lo deja en la bitácora', async () => {
-      const journal = await freshJournal();
+  describe('alta de anotaciones (R1 a R4)', () => {
+    it('crea el diario con la primera anotación en borrador y la agrega al mismo después; queda en la bitácora', async () => {
+      const first = await addAnnotation(app, world.ana, annotationBody(world, world.areas.math));
+      const second = await addAnnotation(app, world.luis, annotationBody(world, world.areas.art));
 
-      expect(journal).toMatchObject({
-        status: RecordStatus.Draft,
-        teacher: { id: teacherUser.id },
-        period: { id: planning.periods[1], schoolYear: planning.year },
-        entries: [],
-        entryCount: 0,
-        submittedAt: null,
+      expect(first).toMatchObject({
+        status: 'en_curso',
+        date: TODAY,
+        schoolYear: TODAY_YEAR,
+        group: { id: world.groupId },
+        homeroomTeacher: { id: world.director.user.id },
       });
-      const rows = await auditRows(app, journal.id);
-      expect(rows).toHaveLength(1);
+      expect(first.annotations).toHaveLength(1);
+      expect(first.annotations[0]).toMatchObject({ status: 'borrador', isMine: true, sent: false });
+      expect(second.id).toBe(first.id);
+      // Luis no ve el borrador de Ana: solo el suyo.
+      expect(second.annotations.map((annotation) => annotation.teacher.id)).toEqual([
+        world.luis.user.id,
+      ]);
+      expect(
+        await prisma.fieldJournal.count({
+          where: { groupId: world.groupId, date: new Date(TODAY) },
+        }),
+      ).toBe(1);
+
+      const rows = await auditRows(app, first.id!);
       expect(rows[0]).toMatchObject({
         type: 'diario',
         entity: 'diario_campo',
-        action: 'Creó una hoja de diario de campo',
-        userId: teacherUser.id,
+        action: 'Agregó una anotación al diario de campo',
+        userId: world.ana.user.id,
         dataBefore: null,
       });
+      expect(rows[0]?.detail).toBe(`${first.group.name} · ${TODAY}`);
     });
 
-    it('responde 403 si el grado no es de una asignación activa del docente', async () => {
-      const { gradeId } = await planning.gradeAndArea('Primaria');
-      const res = await post(teacher, '/field-journals')
-        .send({ gradeId, periodId: planning.periods[1] })
-        .expect(403);
-      expect(errorOf(res.body).message).toMatch(/asignación activa/);
-
-      const retired = await planning.gradeAndArea('Primaria');
-      await planning.assign(teacherUser.id, retired.gradeId, retired.areaId, 'retirada');
-      await post(teacher, '/field-journals')
-        .send({ gradeId: retired.gradeId, periodId: planning.periods[1] })
-        .expect(403);
-    });
-
-    it('responde 400 con el campo periodId si el periodo no existe o es de otro año', async () => {
-      const { gradeId } = await freshGrade(planning, [teacherUser.id]);
-      for (const periodId of [unknownId(), planning.otherYearPeriodId]) {
-        const res = await post(teacher, '/field-journals').send({ gradeId, periodId }).expect(400);
-        expect(errorOf(res.body).errors?.map((e) => e.field)).toEqual(['periodId']);
-      }
-    });
-
-    it('rechaza campos desconocidos y una hoja con estado o docente en el cuerpo', async () => {
-      const { gradeId } = await freshGrade(planning, [teacherUser.id]);
-      await post(teacher, '/field-journals')
-        .send({ gradeId, periodId: planning.periods[1], status: 'revisada' })
-        .expect(400);
-      await post(teacher, '/field-journals')
-        .send({ gradeId, periodId: planning.periods[1], teacherId: otherUser.id })
-        .expect(400);
-    });
-
-    it('responde 409 al repetir la combinación, también con la hoja anulada', async () => {
-      const journal = await freshJournal();
-      const body = { gradeId: await gradeOf(journal.id), periodId: planning.periods[1] };
-
-      await post(teacher, '/field-journals').send(body).expect(409);
-      await post(teacher, `/field-journals/${journal.id}/void`)
-        .send({ reason: 'Hoja creada por error' })
-        .expect(200);
-      const res = await post(teacher, '/field-journals').send(body).expect(409);
-
-      expect(errorOf(res.body).message).toMatch(/anulada/);
+    it('dos altas simultáneas del mismo grupo y fecha comparten un solo diario (R1)', async () => {
+      const date = `${TODAY.slice(0, 4)}-01-01`;
+      const results = await Promise.all([
+        call(app, world.ana.cookies, 'post', '/field-journals/annotations').send(
+          annotationBody(world, world.areas.math, { date }),
+        ),
+        call(app, world.luis.cookies, 'post', '/field-journals/annotations').send(
+          annotationBody(world, world.areas.art, { date }),
+        ),
+      ]);
+      expect(results.map((res) => res.status)).toEqual([201, 201]);
+      const ids = results.map((res) => (res.body as JournalBody).id);
+      expect(ids[0]).toBe(ids[1]);
       expect(
         await prisma.fieldJournal.count({
-          where: { teacherId: teacherUser.id, gradeId: body.gradeId },
+          where: { groupId: world.groupId, date: new Date(date) },
         }),
       ).toBe(1);
-    });
-
-    it('dos altas simultáneas de la misma combinación dejan una hoja y un 409', async () => {
-      const { gradeId } = await freshGrade(planning, [teacherUser.id]);
-      const body = { gradeId, periodId: planning.periods[2] };
-
-      const results = await Promise.all([
-        post(teacher, '/field-journals').send(body),
-        post(teacher, '/field-journals').send(body),
-      ]);
-
-      expect(results.map((res) => res.status).sort()).toEqual([201, 409]);
       expect(
-        await prisma.fieldJournal.count({ where: { teacherId: teacherUser.id, gradeId } }),
-      ).toBe(1);
+        await prisma.fieldJournalAnnotation.count({ where: { journalId: ids[0] ?? '' } }),
+      ).toBe(2);
     });
 
-    it('otro docente puede tener su propia hoja del mismo grado y periodo', async () => {
-      const { gradeId } = await freshGrade(planning, [teacherUser.id, otherUser.id]);
-      const body = { gradeId, periodId: planning.periods[1] };
-
-      await post(teacher, '/field-journals').send(body).expect(201);
-      await post(other, '/field-journals').send(body).expect(201);
-    });
-
-    async function gradeOf(journalId: string): Promise<string> {
-      return (await prisma.fieldJournal.findUniqueOrThrow({ where: { id: journalId } })).gradeId;
-    }
-  });
-
-  describe('entradas (R3, R4, R5, R16)', () => {
-    it('el dueño agrega, edita y quita entradas en borrador y la hoja las devuelve ordenadas', async () => {
-      const journal = await freshJournal();
-
-      const added = await addEntry(app, teacher, journal.id, {
-        date: '2031-03-12',
-        students: ['María José', 'Luis'],
-        actions: 'Repasar',
-        reflection: 'Funcionó bien',
-      });
-      await addEntry(app, teacher, journal.id, { date: '2031-03-11' });
-      const detail = (await get(teacher, `/field-journals/${journal.id}`).expect(200))
-        .body as JournalBody;
-
-      expect(detail.entryCount).toBe(2);
-      expect(detail.entries.map((e) => e.date)).toEqual(['2031-03-11', '2031-03-12']);
-      expect(detail.entries[1]).toMatchObject({
-        students: ['María José', 'Luis'],
-        actions: 'Repasar',
-        reflection: 'Funcionó bien',
-      });
-      expect(new Date(detail.updatedAt).getTime()).toBeGreaterThanOrEqual(
-        new Date(journal.updatedAt).getTime(),
-      );
-
-      const entryId = added.entries[0]?.id ?? '';
-      const edited = await call(
-        app,
-        teacher,
-        'patch',
-        `/field-journals/${journal.id}/entries/${entryId}`,
-      )
-        .send({ description: 'Texto editado', actions: null, students: [] })
-        .expect(200);
-      expect((edited.body as JournalBody).entries.find((e) => e.id === entryId)).toMatchObject({
-        description: 'Texto editado',
-        actions: null,
-        students: [],
-        lesson: 'Matemáticas',
-      });
-
-      const removed = await call(
-        app,
-        teacher,
-        'delete',
-        `/field-journals/${journal.id}/entries/${entryId}`,
-      ).expect(200);
-      expect((removed.body as JournalBody).entryCount).toBe(1);
-      expect(await prisma.fieldJournalEntry.count({ where: { id: entryId } })).toBe(0);
-      expect(await prisma.fieldJournal.count({ where: { id: journal.id } })).toBe(1);
-    });
-
-    it('cada escritura de entradas queda en la bitácora de la hoja', async () => {
-      const journal = await freshJournal();
-      const added = await addEntry(app, teacher, journal.id);
-      const entryId = added.entries[0]?.id ?? '';
-      await call(app, teacher, 'patch', `/field-journals/${journal.id}/entries/${entryId}`)
-        .send({ lesson: 'Arte' })
-        .expect(200);
-      await call(app, teacher, 'delete', `/field-journals/${journal.id}/entries/${entryId}`).expect(
-        200,
-      );
-
-      expect((await auditRows(app, journal.id)).map((row) => row.action)).toEqual([
-        'Creó una hoja de diario de campo',
-        'Agregó un registro al diario de campo',
-        'Editó un registro del diario de campo',
-        'Quitó un registro del diario de campo',
-      ]);
-    });
-
-    it('exige fecha, clase, tipo y descripción y acciones si el evento es «a mejorar»', async () => {
-      const journal = await freshJournal();
-      const path = `/field-journals/${journal.id}/entries`;
-
-      for (const missing of ['date', 'lesson', 'eventType', 'description']) {
-        const body: Record<string, unknown> = { ...ENTRY_CONTENT };
-        delete body[missing];
-        await post(teacher, path).send(body).expect(400);
-      }
-      const res = await post(teacher, path)
-        .send({ ...ENTRY_CONTENT, eventType: 'mejorar' })
-        .expect(400);
-      expect(errorOf(res.body).errors?.map((e) => e.field)).toEqual(['actions']);
-
-      const ok = await addEntry(app, teacher, journal.id, {
-        eventType: 'mejorar',
-        actions: 'Plan',
-      });
-      const entryId = ok.entries[0]?.id ?? '';
-      const patch = await call(app, teacher, 'patch', `${path}/${entryId}`)
-        .send({ actions: null })
-        .expect(400);
-      expect(errorOf(patch.body).errors?.map((e) => e.field)).toEqual(['actions']);
-      expect(await prisma.fieldJournalEntry.count({ where: { journalId: journal.id } })).toBe(1);
-    });
-
-    it('valida los estudiantes: solo nombres de pila, sin repetir y con tope, sin eco del valor', async () => {
-      const journal = await freshJournal();
-      const path = `/field-journals/${journal.id}/entries`;
-      const bad: Record<string, unknown>[] = [
-        { students: ['María del Carmen'] },
-        { students: ['Ana', 'ana'] },
-        { students: ['Ana3'] },
-        { students: ['1023456789'] },
-        { students: Array.from({ length: 13 }, (_, i) => `Ab${'cdefghijklmnop'[i]}`) },
-        { students: 'Ana, Luis' },
-      ];
-
-      for (const extra of bad) {
-        const res = await post(teacher, path)
-          .send({ ...ENTRY_CONTENT, ...extra })
+    it('rechaza fechas futuras y anteriores al año lectivo con 400 en `date` (R2)', async () => {
+      const future = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+      const before = `${Number(TODAY.slice(0, 4)) - 1}-12-31`;
+      for (const date of [future, before]) {
+        const res = await post(world.ana, '/field-journals/annotations')
+          .send(annotationBody(world, world.areas.math, { date }))
           .expect(400);
-        const fields = errorOf(res.body).errors?.map((e) => e.field) ?? [];
-        expect(fields.every((f) => f === 'students' || f.startsWith('students.'))).toBe(true);
-        expect(JSON.stringify(res.body)).not.toMatch(/Carmen|1023456789|Ana3/);
-      }
-      expect(await prisma.fieldJournalEntry.count({ where: { journalId: journal.id } })).toBe(0);
-    });
-
-    it('en observaciones el dueño puede seguir editando; en enviada o revisada responde 409', async () => {
-      const journal = await freshJournal();
-      const created = await addEntry(app, teacher, journal.id);
-      const entryId = created.entries[0]?.id ?? '';
-      const path = `/field-journals/${journal.id}/entries`;
-
-      await forceJournalStatus(app, journal.id, RecordStatus.ChangesRequested);
-      await addEntry(app, teacher, journal.id);
-
-      for (const status of [RecordStatus.Submitted, RecordStatus.Reviewed, RecordStatus.Voided]) {
-        await forceJournalStatus(app, journal.id, status);
-        await post(teacher, path).send(ENTRY_CONTENT).expect(409);
-        await call(app, teacher, 'patch', `${path}/${entryId}`)
-          .send({ lesson: 'Arte' })
-          .expect(409);
-        await call(app, teacher, 'delete', `${path}/${entryId}`).expect(409);
-      }
-      expect(await prisma.fieldJournalEntry.count({ where: { journalId: journal.id } })).toBe(2);
-    });
-
-    it('quien no es el dueño recibe 404 si no ve la hoja y 403 si la ve (coordinación)', async () => {
-      const journal = await freshJournal();
-      const created = await addEntry(app, teacher, journal.id);
-      const entryId = created.entries[0]?.id ?? '';
-      const path = `/field-journals/${journal.id}/entries`;
-
-      await post(other, path).send(ENTRY_CONTENT).expect(404);
-      for (const cookies of [coord, admin]) {
-        await post(cookies, path).send(ENTRY_CONTENT).expect(403);
-        await call(app, cookies, 'patch', `${path}/${entryId}`)
-          .send({ lesson: 'Arte' })
-          .expect(403);
-        await call(app, cookies, 'delete', `${path}/${entryId}`).expect(403);
-        await post(cookies, `/field-journals/${journal.id}/submit`).expect(403);
+        expect(fieldsOf(res.body)).toEqual(['date']);
       }
     });
 
-    it('una entrada que no es de la hoja de la ruta responde 404', async () => {
-      const a = await freshJournal();
-      const b = await freshJournal();
-      const entryOfB = (await addEntry(app, teacher, b.id)).entries[0]?.id ?? '';
-
-      await call(app, teacher, 'patch', `/field-journals/${a.id}/entries/${entryOfB}`)
-        .send({ lesson: 'Arte' })
+    it('403 al no participante, 404 al grupo inexistente y 400 en `areaId` si no es su asignatura (R3)', async () => {
+      await post(world.stranger, '/field-journals/annotations')
+        .send(annotationBody(world, world.areas.math))
+        .expect(403);
+      await post(world.ana, '/field-journals/annotations')
+        .send(
+          annotationBody(world, world.areas.math, {
+            groupId: '5f0b0a3e-8f4b-4c9b-9d0c-5a1d6f1c2b3a',
+          }),
+        )
         .expect(404);
-      await call(app, teacher, 'delete', `/field-journals/${a.id}/entries/${entryOfB}`).expect(404);
-      await call(app, teacher, 'patch', `/field-journals/${a.id}/entries/${unknownId()}`)
-        .send({ lesson: 'Arte' })
-        .expect(404);
-      expect(await prisma.fieldJournalEntry.count({ where: { id: entryOfB } })).toBe(1);
+      const res = await post(world.luis, '/field-journals/annotations')
+        .send(annotationBody(world, world.areas.math))
+        .expect(400);
+      expect(fieldsOf(res.body)).toEqual(['areaId']);
+    });
+
+    it('un grupo inactivo no admite diarios nuevos (400 en `groupId`) pero sí los existentes', async () => {
+      const inactive = await journalWorld(app);
+      await prisma.group.update({ where: { id: inactive.groupId }, data: { active: false } });
+      const res = await post(inactive.ana, '/field-journals/annotations')
+        .send(annotationBody(inactive, inactive.areas.math))
+        .expect(400);
+      expect(fieldsOf(res.body)).toEqual(['groupId']);
+    });
+
+    it('la anotación «a mejorar» exige acciones, los datos de menores no se admiten y los campos desconocidos se rechazan', async () => {
+      const own = await journalWorld(app);
+      const body = annotationBody(own, own.areas.math, { eventType: 'mejorar' });
+      const res = await post(own.ana, '/field-journals/annotations').send(body).expect(400);
+      expect(fieldsOf(res.body)).toEqual(['actions']);
+      await post(own.ana, '/field-journals/annotations')
+        .send({ ...body, actions: 'Repasar', students: ['Pedro Pérez 1023456789'] })
+        .expect(400);
+      await post(own.ana, '/field-journals/annotations')
+        .send({ ...body, actions: 'Repasar', status: 'lista' })
+        .expect(400);
+      expect(await prisma.fieldJournal.count({ where: { groupId: own.groupId } })).toBe(0);
     });
   });
 
-  describe('enviar (R4, R5)', () => {
-    it('sin entradas responde 400 con el campo entries; con una pasa a enviada con fecha de envío', async () => {
-      const journal = await freshJournal();
-
-      const res = await post(teacher, `/field-journals/${journal.id}/submit`).expect(400);
-      expect(errorOf(res.body).errors?.map((e) => e.field)).toEqual(['entries']);
-
-      await addEntry(app, teacher, journal.id);
-      const sent = (await post(teacher, `/field-journals/${journal.id}/submit`).expect(200))
-        .body as JournalBody;
-      expect(sent.status).toBe(RecordStatus.Submitted);
-      expect(sent.submittedAt).not.toBeNull();
-      expect((await auditRows(app, journal.id)).at(-1)).toMatchObject({
-        action: 'Envió el diario de campo',
-      });
+  describe('privacidad de las respuestas (R19)', () => {
+    it('los errores no repiten textos libres ni nombres de estudiantes', async () => {
+      const own = await journalWorld(app);
+      const secret = `texto-${Date.now()}`;
+      const student = 'Pedro Pérez Gómez 1023456789';
+      const bodies = [
+        (
+          await post(own.ana, '/field-journals/annotations')
+            .send(annotationBody(own, own.areas.math, { description: secret, students: [student] }))
+            .expect(400)
+        ).body,
+        (
+          await post(own.ana, '/field-journals/annotations')
+            .send(annotationBody(own, own.areas.math, { description: secret, documentId: secret }))
+            .expect(400)
+        ).body,
+        (
+          await post(own.stranger, '/field-journals/annotations')
+            .send(annotationBody(own, own.areas.math, { description: secret }))
+            .expect(403)
+        ).body,
+      ];
+      const { journalId } = await startedJournal(app, own);
+      await post(own.director, `/field-journals/${journalId}/submit`).expect(200);
+      bodies.push(
+        (
+          await post(own.ana, '/field-journals/annotations')
+            .send(annotationBody(own, own.areas.math, { description: secret }))
+            .expect(409)
+        ).body,
+      );
+      expect(JSON.stringify(bodies)).not.toContain(secret);
+      expect(JSON.stringify(bodies)).not.toContain('Pedro');
+      expect(JSON.stringify(bodies)).not.toContain('1023456789');
     });
+  });
 
-    it('una hoja que no está en borrador u observaciones responde 409 sin modificarla', async () => {
-      const journal = await freshJournal();
-      await addEntry(app, teacher, journal.id);
-      await post(teacher, `/field-journals/${journal.id}/submit`).expect(200);
+  describe('anotaciones propias y visibilidad (R5, R6)', () => {
+    it('solo el autor edita, marca lista y devuelve a borrador; nadie ve ni toca los borradores ajenos', async () => {
+      const own = await journalWorld(app);
+      const first = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      const journalId = first.id!;
+      const anaAnnotation = annotationOf(first, own.ana.user.id);
+      await addAnnotation(app, own.luis, annotationBody(own, own.areas.art));
 
-      await post(teacher, `/field-journals/${journal.id}/submit`).expect(409);
+      const base = `/field-journals/${journalId}/annotations/${anaAnnotation.id}`;
+      // Para Luis la anotación en borrador de Ana no existe.
+      await patch(own.luis, base).send({ description: 'X' }).expect(404);
+      await markReady(app, own.ana, journalId, anaAnnotation.id);
+      // Ya lista, Luis la ve pero no es suya.
+      await patch(own.luis, base).send({ description: 'X' }).expect(403);
+      await post(own.luis, `${base}/draft`).expect(403);
+      const edited = await patch(own.ana, base).send({ description: 'Editada' }).expect(200);
       expect(
-        (await prisma.fieldJournal.findUniqueOrThrow({ where: { id: journal.id } })).status,
-      ).toBe(RecordStatus.Submitted);
+        (edited.body as JournalBody).annotations.find((a) => a.id === anaAnnotation.id),
+      ).toMatchObject({
+        status: 'lista',
+        description: 'Editada',
+      });
+      const back = await post(own.ana, `${base}/draft`).expect(200);
+      expect(annotationOf(back.body as JournalBody, own.ana.user.id).status).toBe('borrador');
+      const forLuis = (await get(own.luis, `/field-journals/${journalId}`).expect(200))
+        .body as JournalBody;
+      expect(forLuis.annotations.map((a) => a.teacher.id)).toEqual([own.luis.user.id]);
+    });
+
+    it('un diario ajeno no se ve por id (404) y el de un día se pide por grupo y fecha', async () => {
+      const own = await journalWorld(app);
+      const created = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      await get(own.stranger, `/field-journals/${created.id}`).expect(404);
+      await get(own.coordinator, `/field-journals/${created.id}`).expect(404);
+
+      const day = (
+        await get(own.ana, `/field-journals/day?groupId=${own.groupId}&date=${TODAY}`).expect(200)
+      ).body as JournalBody;
+      expect(day.id).toBe(created.id);
+      const empty = (
+        await get(own.luis, `/field-journals/day?groupId=${own.groupId}&date=2020-01-01`).expect(
+          200,
+        )
+      ).body as JournalBody;
+      expect(empty).toMatchObject({ id: null, status: null });
+      expect(empty.viewer).toMatchObject({ isParticipant: true, canAnnotate: true });
+      await get(own.stranger, `/field-journals/day?groupId=${own.groupId}&date=${TODAY}`).expect(
+        403,
+      );
     });
   });
 
-  describe('visibilidad, listado y filtros (R20, R21)', () => {
-    it('un docente ve solo sus hojas y su filtro de docente se ignora; coordinación ve todas', async () => {
-      const mine = await freshJournal();
-      const { gradeId } = await freshGrade(planning, [otherUser.id]);
-      const theirs = await createJournal(app, other, { gradeId, periodId: planning.periods[1] });
+  describe('envío del director(a) (R7 a R11)', () => {
+    it('el director(a) ve el aporte de cada docente y envía con n de m congelado y faltantes', async () => {
+      const own = await journalWorld(app);
+      const { journalId } = await startedJournal(app, own);
 
-      await get(other, `/field-journals/${mine.id}`).expect(404);
-      await get(other, `/field-journals/${mine.id}/reviews`).expect(404);
-      const asOther = (
-        await get(other, `/field-journals?teacherId=${teacherUser.id}&pageSize=100`).expect(200)
-      ).body as Page;
-      expect(asOther.items.every((j) => j.teacher.id === otherUser.id)).toBe(true);
-      expect(asOther.items.map((j) => j.id)).toContain(theirs.id);
+      const before = (await get(own.director, `/field-journals/${journalId}`).expect(200))
+        .body as JournalBody;
+      expect(before.contributors.map((entry) => entry.status).sort()).toEqual([
+        'draft',
+        'none',
+        'ready',
+      ]);
+      expect(before.viewer).toMatchObject({
+        isHomeroomTeacher: true,
+        canSubmit: true,
+        canVoid: true,
+      });
+      expect(before).toMatchObject({ readyCount: 1, expectedCount: 3 });
+      // Quienes no dirigen el grupo no ven la tabla de aportes.
+      const forLuis = (await get(own.luis, `/field-journals/${journalId}`).expect(200))
+        .body as JournalBody;
+      expect(forLuis.contributors).toEqual([]);
 
-      for (const cookies of [coord, admin]) {
-        await get(cookies, `/field-journals/${mine.id}`).expect(200);
-        const page = (
-          await get(cookies, `/field-journals?teacherId=${teacherUser.id}&pageSize=100`).expect(200)
-        ).body as Page;
-        expect(page.items.map((j) => j.id)).toContain(mine.id);
-        expect(page.items.every((j) => j.teacher.id === teacherUser.id)).toBe(true);
-      }
+      await post(own.ana, `/field-journals/${journalId}/submit`).expect(403);
+      const sent = (await post(own.director, `/field-journals/${journalId}/submit`).expect(200))
+        .body as JournalBody;
+      expect(sent).toMatchObject({ status: 'enviado', readyCount: 1, expectedCount: 3 });
+      expect(sent.missing.map((entry) => entry.status).sort()).toEqual(['draft', 'none']);
+      expect(sent.annotations.every((annotation) => annotation.sent)).toBe(true);
+      // El borrador de Luis no viajó ni se borró.
+      expect(
+        await prisma.fieldJournalAnnotation.count({
+          where: { journalId, teacherId: own.luis.user.id, status: 'borrador', sent: false },
+        }),
+      ).toBe(1);
+
+      const rows = await auditRows(app, journalId);
+      expect(rows.at(-1)).toMatchObject({
+        action: 'Envió el diario de campo a coordinación',
+        detail: `${sent.group.name} · ${TODAY} · 1 de 3 aportes`,
+      });
+      // Nadie agrega ni modifica con el diario enviado (R11).
+      await post(own.ana, '/field-journals/annotations')
+        .send(annotationBody(own, own.areas.math))
+        .expect(409);
+      await post(own.director, `/field-journals/${journalId}/submit`).expect(409);
     });
 
-    it('coordinación ve también borradores y anuladas; el listado trae entryCount sin entradas', async () => {
-      const draft = await freshJournal();
-      await addEntry(app, teacher, draft.id);
-      await addEntry(app, teacher, draft.id);
-      const voided = await freshJournal();
-      await post(teacher, `/field-journals/${voided.id}/void`)
-        .send({ reason: 'Por error' })
-        .expect(200);
+    it('sin anotaciones listas responde 400 y sin director(a) 409 con aviso en el diario (R8, R9)', async () => {
+      const own = await journalWorld(app);
+      const created = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      const res = await post(own.director, `/field-journals/${created.id}/submit`).expect(400);
+      expect(fieldsOf(res.body)).toEqual(['annotations']);
+
+      await prisma.teacherAssignment.updateMany({
+        where: { groupId: own.groupId, isHomeroomTeacher: true },
+        data: { isHomeroomTeacher: false },
+      });
+      await post(own.director, `/field-journals/${created.id}/submit`).expect(409);
+      const day = (await get(own.ana, `/field-journals/${created.id}`).expect(200))
+        .body as JournalBody;
+      expect(day.viewer.blockedReason).toMatch(/director/);
+      expect(day.homeroomTeacher).toBeNull();
+    });
+
+    it('un envío y una edición simultáneos se serializan: nunca queda una lista sin enviar', async () => {
+      const own = await journalWorld(app);
+      const first = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      const journalId = first.id!;
+      const other = await addAnnotation(app, own.luis, annotationBody(own, own.areas.art));
+      await markReady(app, own.luis, journalId, annotationOf(other, own.luis.user.id).id);
+      const anaAnnotation = annotationOf(first, own.ana.user.id);
+
+      const [ready, submit] = await Promise.all([
+        post(own.ana, `/field-journals/${journalId}/annotations/${anaAnnotation.id}/ready`),
+        post(own.director, `/field-journals/${journalId}/submit`),
+      ]);
+      expect(submit.status).toBe(200);
+      expect([200, 409]).toContain(ready.status);
+      const annotations = await prisma.fieldJournalAnnotation.findMany({ where: { journalId } });
+      const submission = await prisma.fieldJournalSubmission.findFirstOrThrow({
+        where: { journalId },
+      });
+      for (const annotation of annotations) {
+        expect(annotation.status === 'lista' ? annotation.sent : true).toBe(true);
+      }
+      expect(submission.readyCount).toBe(ready.status === 200 ? 2 : 1);
+    });
+
+    it('el director(a) anula con motivo y nadie más (ni administración) lo hace (R18)', async () => {
+      const own = await journalWorld(app);
+      const { journalId } = await startedJournal(app, own);
+      await post(own.ana, `/field-journals/${journalId}/void`)
+        .send({ reason: 'Prueba' })
+        .expect(403);
+      await post(own.admin, `/field-journals/${journalId}/void`)
+        .send({ reason: 'Prueba' })
+        .expect(403);
+      await post(own.director, `/field-journals/${journalId}/void`).send({}).expect(400);
+      const voided = (
+        await post(own.director, `/field-journals/${journalId}/void`)
+          .send({ reason: 'Abierto por error' })
+          .expect(200)
+      ).body as JournalBody;
+      expect(voided.status).toBe('anulado');
+      expect((await auditRows(app, journalId)).at(-1)).toMatchObject({
+        action: 'Anuló un diario de campo',
+        detail: 'Abierto por error',
+      });
+      await post(own.director, `/field-journals/${journalId}/void`)
+        .send({ reason: 'Otra vez' })
+        .expect(409);
+      expect(await prisma.fieldJournalAnnotation.count({ where: { journalId } })).toBe(2);
+    });
+  });
+
+  describe('listas y bloque «Hoy» (R20)', () => {
+    it('la lista «mine» trae los diarios de sus grupos con n de m, filtra y pagina; «today» devuelve el de hoy', async () => {
+      const own = await journalWorld(app);
+      const { journalId } = await startedJournal(app, own);
+      await addAnnotation(
+        app,
+        own.ana,
+        annotationBody(own, own.areas.math, { date: `${TODAY.slice(0, 4)}-01-01` }),
+      );
 
       const page = (
-        await get(coord, `/field-journals?teacherId=${teacherUser.id}&pageSize=100`).expect(200)
+        await get(own.director, '/field-journals?sortBy=date&sortOrder=desc').expect(200)
       ).body as Page;
-      const byId = new Map(page.items.map((j) => [j.id, j]));
-
-      expect(byId.get(draft.id)).toMatchObject({ status: 'borrador', entryCount: 2 });
-      expect(byId.get(draft.id)).not.toHaveProperty('entries');
-      expect(byId.get(voided.id)?.status).toBe('anulado');
-    });
-
-    it('filtra por estado, grado y periodo y pagina', async () => {
-      const first = await freshJournal(1);
-      const second = await freshJournal(2);
-      await addEntry(app, teacher, second.id);
-      await post(teacher, `/field-journals/${second.id}/submit`).expect(200);
-      const base = `/field-journals?teacherId=${teacherUser.id}`;
-
-      const submitted = (await get(coord, `${base}&status=enviada&pageSize=100`).expect(200))
-        .body as Page;
-      expect(submitted.items.every((j) => j.status === 'enviada')).toBe(true);
-      expect(submitted.items.map((j) => j.id)).toContain(second.id);
-
-      const byGrade = (await get(coord, `${base}&gradeId=${first.grade.id}`).expect(200))
-        .body as Page;
-      expect(byGrade.items.map((j) => j.id)).toEqual([first.id]);
-
-      const byPeriod = (
-        await get(coord, `${base}&periodId=${planning.periods[2]}&pageSize=100`).expect(200)
+      expect(page.totalItems).toBe(2);
+      expect(page.items[0]).toMatchObject({ id: journalId, readyCount: 1, expectedCount: 3 });
+      const filtered = (
+        await get(own.director, `/field-journals?status=enviado&groupId=${own.groupId}`).expect(200)
       ).body as Page;
-      expect(byPeriod.items.every((j) => j.period.id === planning.periods[2])).toBe(true);
-      expect(byPeriod.items.map((j) => j.id)).toContain(second.id);
+      expect(filtered.totalItems).toBe(0);
+      const range = (
+        await get(own.director, `/field-journals?from=${TODAY}&to=${TODAY}`).expect(200)
+      ).body as Page;
+      expect(range.items.map((item) => item.id)).toEqual([journalId]);
+      await get(own.stranger, '/field-journals')
+        .expect(200)
+        .then((res) => expect((res.body as Page).totalItems).toBe(0));
+      await get(own.director, '/field-journals?scope=review').expect(403);
 
-      const paged = (await get(coord, `${base}&pageSize=1&page=2`).expect(200)).body as Page;
-      expect(paged).toMatchObject({ page: 2, items: expect.any(Array) as unknown[] });
-      expect(paged.items).toHaveLength(1);
-      expect(paged.totalItems).toBeGreaterThanOrEqual(2);
-    });
-
-    it('rechaza orden por un campo no permitido y estado inválido', async () => {
-      await get(coord, '/field-journals?sortBy=students').expect(400);
-      await get(coord, '/field-journals?status=otro').expect(400);
+      const today = (await get(own.ana, '/field-journals/today').expect(200)).body as {
+        date: string;
+        groups: {
+          group: { id: string };
+          isHomeroomTeacher: boolean;
+          areas: { name: string }[];
+          journal: { id: string } | null;
+        }[];
+      };
+      expect(today.date).toBe(TODAY);
+      expect(today.groups).toHaveLength(1);
+      expect(today.groups[0]).toMatchObject({
+        group: { id: own.groupId },
+        isHomeroomTeacher: false,
+        journal: { id: journalId },
+      });
+      expect(today.groups[0]?.areas).toHaveLength(2);
     });
   });
 });

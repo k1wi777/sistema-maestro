@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { isoDateTimeSchema } from '../api/iso-date-time';
 import { AreaType } from '../constants/area';
-import { createListQuerySchema } from '../list-query/list-query';
+import { createListQuerySchema, queryBoolean } from '../list-query/list-query';
 import { schoolYearSchema } from './school-year';
 
 export const LEVEL_NAME_MAX_LENGTH = 60;
 export const GRADE_NAME_MAX_LENGTH = 40;
+export const GROUP_NAME_MAX_LENGTH = 40;
 export const AREA_NAME_MAX_LENGTH = 80;
 export const MAX_SORT_ORDER = 32767;
 export const ACADEMIC_PERIODS_PER_YEAR = 3;
@@ -29,6 +30,12 @@ const areaTypeSchema = z.enum(Object.values(AreaType) as [AreaType, ...AreaType[
 });
 
 const calendarDateSchema = z.iso.date({ error: 'debe ser una fecha AAAA-MM-DD' });
+
+const uuidSchema = z.uuid({ error: 'debe ser un UUID' });
+const activeSchema = z.boolean({ error: 'debe ser verdadero o falso' });
+
+/** Filtro `active` de la query: llega como texto `true`/`false`. */
+const activeFilterSchema = queryBoolean.optional();
 
 const timestamps = { createdAt: isoDateTimeSchema, updatedAt: isoDateTimeSchema };
 
@@ -70,6 +77,8 @@ export const gradeSchema = z.object({
   levelId: z.uuid(),
   name: z.string(),
   sortOrder: z.number().int(),
+  active: z.boolean(),
+  coordinatorId: z.uuid().nullable(),
   ...timestamps,
 });
 export type Grade = z.output<typeof gradeSchema>;
@@ -84,6 +93,7 @@ export const createGradeSchema = z
 export type CreateGradeInput = z.output<typeof createGradeSchema>;
 
 export const updateGradeSchema = createGradeSchema
+  .extend({ active: activeSchema })
   .partial()
   .refine((value) => Object.keys(value).length > 0, atLeastOneField);
 export type UpdateGradeInput = z.output<typeof updateGradeSchema>;
@@ -93,10 +103,47 @@ export type GradeSortField = (typeof GRADE_SORT_FIELDS)[number];
 export const gradeListQuerySchema = createListQuerySchema({
   sortFields: GRADE_SORT_FIELDS,
   defaultSort: { field: 'sortOrder', order: 'asc' },
-  filters: { levelId: z.uuid({ error: 'debe ser un UUID' }).optional() },
+  filters: { levelId: uuidSchema.optional(), active: activeFilterSchema },
 });
 export interface GradeFilters {
   levelId?: string;
+  active?: boolean;
+}
+
+// ---------- Grupos ----------
+
+export const groupSchema = z.object({
+  id: z.uuid(),
+  gradeId: z.uuid(),
+  name: z.string(),
+  active: z.boolean(),
+  ...timestamps,
+});
+export type Group = z.output<typeof groupSchema>;
+
+export const createGroupSchema = z
+  .object({ gradeId: uuidSchema, name: nameSchema(GROUP_NAME_MAX_LENGTH) })
+  .strict();
+export type CreateGroupInput = z.output<typeof createGroupSchema>;
+
+/** El grado de un grupo no se edita: moverlo cambiaría el grado de sus asignaciones. */
+export const updateGroupSchema = z
+  .object({ name: nameSchema(GROUP_NAME_MAX_LENGTH), active: activeSchema })
+  .partial()
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, atLeastOneField);
+export type UpdateGroupInput = z.output<typeof updateGroupSchema>;
+
+export const GROUP_SORT_FIELDS = ['name', 'createdAt'] as const;
+export type GroupSortField = (typeof GROUP_SORT_FIELDS)[number];
+export const groupListQuerySchema = createListQuerySchema({
+  sortFields: GROUP_SORT_FIELDS,
+  defaultSort: { field: 'name', order: 'asc' },
+  filters: { gradeId: uuidSchema.optional(), active: activeFilterSchema },
+});
+export interface GroupFilters {
+  gradeId?: string;
+  active?: boolean;
 }
 
 // ---------- Áreas ----------
@@ -105,16 +152,29 @@ export const areaSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   type: areaTypeSchema,
+  active: z.boolean(),
+  levelIds: z.array(z.uuid()),
   ...timestamps,
 });
 export type Area = z.output<typeof areaSchema>;
 
+/** Niveles del área: al menos uno y sin repetidos. */
+const levelIdsSchema = z
+  .array(uuidSchema, { error: 'debe ser una lista de niveles' })
+  .min(1, 'debe incluir al menos un nivel')
+  .refine((ids) => new Set(ids).size === ids.length, 'no puede repetir niveles');
+
 export const createAreaSchema = z
-  .object({ name: nameSchema(AREA_NAME_MAX_LENGTH), type: areaTypeSchema })
+  .object({
+    name: nameSchema(AREA_NAME_MAX_LENGTH),
+    type: areaTypeSchema,
+    levelIds: levelIdsSchema,
+  })
   .strict();
 export type CreateAreaInput = z.output<typeof createAreaSchema>;
 
 export const updateAreaSchema = createAreaSchema
+  .extend({ active: activeSchema })
   .partial()
   .refine((value) => Object.keys(value).length > 0, atLeastOneField);
 export type UpdateAreaInput = z.output<typeof updateAreaSchema>;
@@ -124,10 +184,16 @@ export type AreaSortField = (typeof AREA_SORT_FIELDS)[number];
 export const areaListQuerySchema = createListQuerySchema({
   sortFields: AREA_SORT_FIELDS,
   defaultSort: { field: 'name', order: 'asc' },
-  filters: { type: areaTypeSchema.optional() },
+  filters: {
+    type: areaTypeSchema.optional(),
+    levelId: uuidSchema.optional(),
+    active: activeFilterSchema,
+  },
 });
 export interface AreaFilters {
   type?: AreaType;
+  levelId?: string;
+  active?: boolean;
 }
 
 // ---------- Periodos académicos ----------

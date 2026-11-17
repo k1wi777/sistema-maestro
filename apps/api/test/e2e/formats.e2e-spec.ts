@@ -2,16 +2,17 @@ import { randomBytes } from 'node:crypto';
 import {
   AuditLogType,
   JournalEventType,
+  JournalStatus,
   ObserverNoteType,
   RecordStatus,
-  ReviewAction,
   UserRole,
   type FieldJournal,
   type FieldJournalSummary,
   type ObserverNote,
   type Page,
-  type Review,
+  type TodayJournals,
 } from '@gns/shared';
+import { todayInBogota } from '../../src/shared/time/bogota-time';
 import {
   DemoWorld,
   findAssignment,
@@ -19,10 +20,12 @@ import {
   type DemoSession,
 } from './support/demo-session';
 
-// Actores: Andrés Peñaverde (director de grupo de 7°, con la hoja demo del periodo 1: este
-// recorrido abre la del periodo 2) y Tomás Aldaverde (la coordinadora del recorrido de
-// planeación es Elena, así que las filas de bitácora de cada recorrido no se mezclan).
+// Actores: Andrés Peñaverde (director de grupo de 7° 1) y Sofía Marquesina (docente de matemáticas
+// en 7° 1) escriben el diario de hoy, que ningún diario demo ocupa; Tomás Aldaverde, coordinador de
+// 7°, lo revisa (la coordinadora del recorrido de planeación es Elena, así que las filas de
+// bitácora de cada recorrido no se mezclan).
 const TEACHER = 'andres.penaverde';
+const PARTICIPANT = 'sofia.marquesina';
 const COORDINATOR = 'tomas.aldaverde';
 
 // Nombres de pila inventados que no están en los datos demo; los textos llevan un marcador único.
@@ -52,46 +55,66 @@ const MARKERS = [
 describe('punta a punta · diario de campo y observador del estudiante', () => {
   let world: DemoWorld;
   let teacher: DemoSession;
+  let participant: DemoSession;
   let coordinator: DemoSession;
   let ids: AssignmentIds;
   let journal: FieldJournal;
+  let groupId: string;
+  let physicsId: string;
+  let mathId: string;
   let note: ObserverNote;
   const errors: string[] = [];
 
   beforeAll(async () => {
     world = await DemoWorld.start();
     teacher = await world.signInAs(TEACHER);
+    participant = await world.signInAs(PARTICIPANT);
     coordinator = await world.signInAs(COORDINATOR);
     ids = await findAssignment(teacher, '7°', 'Física', 2);
+    const today = (await teacher.call('get', '/field-journals/today').expect(200))
+      .body as TodayJournals;
+    const group = today.groups.find((entry) => entry.group.name === '7° 1');
+    groupId = group?.group.id ?? '';
+    physicsId = group?.areas.find((area) => area.name === 'Física')?.id ?? '';
+    const sofia = (await participant.call('get', '/field-journals/today').expect(200))
+      .body as TodayJournals;
+    mathId =
+      sofia.groups
+        .find((entry) => entry.group.id === groupId)
+        ?.areas.find((area) => area.name === 'Matemáticas')?.id ?? '';
   });
 
   afterAll(async () => {
     await world.close();
   });
 
-  it('el docente registra una hoja del diario con entradas por nombre de pila y la envía', async () => {
-    const created = await teacher
-      .call('post', '/field-journals')
-      .send({ gradeId: ids.gradeId, periodId: ids.periodId })
-      .expect(201);
-    journal = created.body as FieldJournal;
-    expect(journal.status).toBe(RecordStatus.Draft);
-
-    await teacher
-      .call('post', `/field-journals/${journal.id}/entries`)
+  it('los docentes del grupo agregan sus anotaciones por nombre de pila y el director(a) envía el diario', async () => {
+    expect([groupId, physicsId, mathId].every(Boolean)).toBe(true);
+    const date = todayInBogota();
+    const created = await participant
+      .call('post', '/field-journals/annotations')
       .send({
-        date: '2026-10-13',
-        lesson: 'Física',
+        groupId,
+        date,
+        areaId: mathId,
         eventType: JournalEventType.Group,
         students: [STUDENT_A, STUDENT_B],
         description: DESCRIPTION,
       })
       .expect(201);
-    const second = await teacher
-      .call('post', `/field-journals/${journal.id}/entries`)
+    journal = created.body as FieldJournal;
+    expect(journal.status).toBe(JournalStatus.InProgress);
+    const sofiaAnnotation = journal.annotations[0];
+    await participant
+      .call('post', `/field-journals/${journal.id}/annotations/${sofiaAnnotation?.id}/ready`)
+      .expect(200);
+
+    const own = await teacher
+      .call('post', '/field-journals/annotations')
       .send({
-        date: '2026-10-14',
-        lesson: 'Física',
+        groupId,
+        date,
+        areaId: physicsId,
         eventType: JournalEventType.ToImprove,
         students: [STUDENT_A],
         description: DESCRIPTION,
@@ -99,20 +122,27 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
         reflection: REFLECTION,
       })
       .expect(201);
-    expect((second.body as FieldJournal).entries).toHaveLength(2);
-
-    const submitted = await teacher
-      .call('post', `/field-journals/${journal.id}/submit`)
+    const mine = (own.body as FieldJournal).annotations.find((annotation) => annotation.isMine);
+    await teacher
+      .call('post', `/field-journals/${journal.id}/annotations/${mine?.id}/ready`)
       .expect(200);
-    expect((submitted.body as FieldJournal).status).toBe(RecordStatus.Submitted);
+
+    // Quien no dirige el grupo no envía; el director(a) sí, con el n de m congelado.
+    await participant.call('post', `/field-journals/${journal.id}/submit`).expect(403);
+    const submitted = (
+      await teacher.call('post', `/field-journals/${journal.id}/submit`).expect(200)
+    ).body as FieldJournal;
+    expect(submitted).toMatchObject({ status: JournalStatus.Submitted, readyCount: 2 });
+    expect(submitted.expectedCount).toBe(2);
   });
 
   it('un nombre que no es de pila se rechaza sin repetirlo en el error', async () => {
-    const res = await teacher
-      .call('post', `/field-journals/${journal.id}/entries`)
+    const res = await participant
+      .call('post', '/field-journals/annotations')
       .send({
-        date: '2026-10-15',
-        lesson: 'Física',
+        groupId,
+        date: todayInBogota(),
+        areaId: mathId,
         eventType: JournalEventType.Group,
         students: [`${STUDENT_A} Apellido Segundo`],
         description: DESCRIPTION,
@@ -141,43 +171,48 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
     expect((submitted.body as ObserverNote).status).toBe(RecordStatus.Submitted);
   });
 
-  it('coordinación revisa el diario: lo devuelve, el docente lo corrige y lo aprueba', async () => {
+  it('coordinación revisa el diario: lo devuelve con una observación, la autora corrige, el director(a) reenvía y se aprueba', async () => {
     const pending = (
       await coordinator
-        .call(
-          'get',
-          `/field-journals?status=${RecordStatus.Submitted}&teacherId=${teacher.id}&pageSize=100`,
-        )
+        .call('get', `/field-journals?scope=review&status=${JournalStatus.Submitted}&pageSize=100`)
         .expect(200)
     ).body as Page<FieldJournalSummary>;
     expect(pending.items.map((item) => item.id)).toContain(journal.id);
+    const sofiaAnnotation = journal.annotations[0];
 
     await coordinator
       .call('post', `/field-journals/${journal.id}/return`)
-      .send({ comment: OBSERVATION })
+      .send({
+        comment: OBSERVATION,
+        observations: [{ annotationId: sofiaAnnotation?.id, text: OBSERVATION }],
+      })
       .expect(200);
-    const entry = (
-      (await teacher.call('get', `/field-journals/${journal.id}`).expect(200)).body as FieldJournal
-    ).entries[0];
-    await teacher
-      .call('patch', `/field-journals/${journal.id}/entries/${entry?.id}`)
+    await participant
+      .call('patch', `/field-journals/${journal.id}/annotations/${sofiaAnnotation?.id}`)
       .send({ description: CORRECTED })
       .expect(200);
-    await teacher.call('post', `/field-journals/${journal.id}/submit`).expect(200);
+    await participant
+      .call('post', `/field-journals/${journal.id}/annotations/${sofiaAnnotation?.id}/ready`)
+      .expect(200);
+    await teacher.call('post', `/field-journals/${journal.id}/resubmit`).expect(200);
 
     const approved = await coordinator
       .call('post', `/field-journals/${journal.id}/approve`)
       .send({})
       .expect(200);
-    expect((approved.body as FieldJournal).status).toBe(RecordStatus.Reviewed);
-
-    const reviews = (
-      await coordinator.call('get', `/field-journals/${journal.id}/reviews`).expect(200)
-    ).body as Review[];
-    expect(reviews.map((review) => review.action)).toEqual([
-      ReviewAction.ChangesRequested,
-      ReviewAction.Approved,
-    ]);
+    const reviewed = approved.body as FieldJournal;
+    expect(reviewed.status).toBe(JournalStatus.Reviewed);
+    expect(reviewed.signature?.reviewer.id).toBe(coordinator.id);
+    expect(reviewed.history.map((item) => item.kind)).toEqual(
+      expect.arrayContaining([
+        'opened',
+        'ready',
+        'submitted',
+        'returned',
+        'resubmitted',
+        'approved',
+      ]),
+    );
   });
 
   it('coordinación aprueba la anotación del observador', async () => {
@@ -225,7 +260,7 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
 
     const journals = teacherRows.filter((row) => row.type === AuditLogType.FieldJournal);
     const notes = teacherRows.filter((row) => row.type === AuditLogType.ObserverNote);
-    expect(journals.length).toBeGreaterThanOrEqual(6);
+    expect(journals.length).toBeGreaterThanOrEqual(4);
     expect(notes.length).toBeGreaterThanOrEqual(2);
     expect([...journals, ...notes].every((row) => row.role === UserRole.Teacher)).toBe(true);
     const reviews = coordinatorRows.filter(

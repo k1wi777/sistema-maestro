@@ -95,10 +95,19 @@ export class ObserverNotesService {
 
   // ---------- Escritura del dueño ----------
 
-  /** Cualquier grado existente: anotar sobre un estudiante no exige asignación. */
+  /**
+   * Cualquier grado activo: anotar sobre un estudiante no exige asignación, pero un grado
+   * desactivado ya no admite registros nuevos (editar los existentes no se ve afectado).
+   */
   async create(user: RequestUser, input: CreateObserverNoteInput): Promise<ObserverNote> {
-    if (!(await this.grades.find(input.gradeId))) {
+    const grade = await this.grades.find(input.gradeId);
+    if (!grade) {
       throw new RequestValidationException([{ field: 'gradeId', reason: 'no existe' }]);
+    }
+    if (!grade.active) {
+      throw new RequestValidationException([
+        { field: 'gradeId', reason: 'el grado está inactivo' },
+      ]);
     }
     return this.repository.create({ ...input, teacherId: user.id });
   }

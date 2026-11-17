@@ -24,7 +24,7 @@ export const FORMAT_CARDS: readonly FormatCardData[] = [
   {
     id: 'diario',
     title: 'Diario de campo (F-PA-05)',
-    description: 'Registra los eventos de tus clases y envía cada hoja a coordinación.',
+    description: 'Registra los eventos de tus clases en el diario de cada grupo y día.',
     icon: 'formatos',
     href: JOURNAL_LIST_PATH,
   },

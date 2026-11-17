@@ -372,8 +372,9 @@ export async function addTeacher(
   const prisma = app.get(PrismaService);
   const assignment = await prisma.teacherAssignment.findFirstOrThrow({
     where: { teacherId: course.user.id, areaId: course.areaId },
+    include: { group: true },
   });
   const user = await createTestUser(app);
-  await planning.assign(user.id, assignment.gradeId, course.areaId);
+  await planning.assign(user.id, assignment.group.gradeId, course.areaId);
   return { user, cookies: await signIn(app, user) };
 }

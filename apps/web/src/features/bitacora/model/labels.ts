@@ -11,6 +11,7 @@ export const AUDIT_TYPE_LABELS: Record<AuditLogType, string> = {
   [AuditLogType.Assistant]: 'Asistente',
   [AuditLogType.DataConsent]: 'Datos personales',
   [AuditLogType.Coordination]: 'Coordinación',
+  [AuditLogType.Structure]: 'Grados y áreas',
 };
 
 /** Roles que registra la bitácora; `desconocido` es una acción sin sesión. */

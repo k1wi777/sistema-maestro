@@ -27,7 +27,7 @@ export const REVIEW_FORMAT_CARDS: readonly ReviewFormatCardData[] = [
   {
     id: 'diarios',
     title: 'Diarios de campo',
-    description: 'Revisa las hojas del diario de campo (F-PA-05).',
+    description: 'Revisa el diario de cada grupo y día.',
     icon: 'formatos',
     href: JOURNAL_INBOX_PATH,
     pending: 'journals',
