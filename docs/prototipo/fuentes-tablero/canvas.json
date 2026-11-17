@@ -1,0 +1,367 @@
+{
+  "attachments": {},
+  "boards": {
+    "Aviso-datos.dc.html": {
+      "expand": "fill",
+      "h": 980,
+      "page": "ingreso",
+      "title": "02 · Aviso de tratamiento de datos",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Co-asistente.dc.html": {
+      "expand": "fill",
+      "h": 1800,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "28 · Asistente · gestión de preguntas",
+      "w": 1280,
+      "x": 2720,
+      "y": 5780
+    },
+    "Co-avance.dc.html": {
+      "expand": "fill",
+      "h": 1300,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "27 · Avance en la formación",
+      "w": 1280,
+      "x": 1360,
+      "y": 5780
+    },
+    "Co-bitacora.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "22 · Bitácora de actividad",
+      "w": 1280,
+      "x": 0,
+      "y": 2820
+    },
+    "Co-diario-revision.dc.html": {
+      "expand": "fill",
+      "h": 2240,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "21 · Revisión de un diario de campo",
+      "w": 1280,
+      "x": 4080,
+      "y": 2820
+    },
+    "Co-diarios.dc.html": {
+      "expand": "fill",
+      "h": 1460,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "20 · Diarios de campo · bandeja",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "Co-docentes.dc.html": {
+      "expand": "fill",
+      "h": 2840,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "23 · Docentes y asignaciones",
+      "w": 1280,
+      "x": 1360,
+      "y": 2820
+    },
+    "Co-editor-modulo.dc.html": {
+      "expand": "fill",
+      "h": 6600,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "26 · Editor de módulo (nuevo)",
+      "w": 1280,
+      "x": 0,
+      "y": 5780
+    },
+    "Co-formatos.dc.html": {
+      "expand": "fill",
+      "h": 2700,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "17 · Formatos · hub y observadores",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "Co-grados.dc.html": {
+      "expand": "fill",
+      "h": 3420,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "24 · Grados y áreas",
+      "w": 1280,
+      "x": 4080,
+      "y": 5780
+    },
+    "Co-planeaciones.dc.html": {
+      "expand": "fill",
+      "h": 1760,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "18 · Planeaciones · bandeja",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Co-planes.dc.html": {
+      "expand": "fill",
+      "h": 1500,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "25 · Planes de formación",
+      "w": 1280,
+      "x": 2720,
+      "y": 2820
+    },
+    "Co-revision.dc.html": {
+      "expand": "fill",
+      "h": 2200,
+      "is_interactive": true,
+      "page": "coordinacion",
+      "title": "19 · Revisión de una planeación",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Doc-asistente.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "16 · Asistente GNS",
+      "w": 1280,
+      "x": 2720,
+      "y": 6340
+    },
+    "Doc-beneficios.dc.html": {
+      "expand": "fill",
+      "h": 2900,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "05 · Módulo 8 · Beneficios (actividades)",
+      "w": 1280,
+      "x": 2720,
+      "y": 0
+    },
+    "Doc-diario-dia.dc.html": {
+      "expand": "fill",
+      "h": 2200,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "12 · Diario de campo · mi anotación",
+      "w": 1280,
+      "x": 0,
+      "y": 8420
+    },
+    "Doc-diario-director.dc.html": {
+      "expand": "fill",
+      "h": 2940,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "13 · Diario de campo · director(a) de grupo",
+      "w": 1280,
+      "x": 1360,
+      "y": 8420
+    },
+    "Doc-diario.dc.html": {
+      "expand": "fill",
+      "h": 1500,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "11 · Diario de campo · mis diarios",
+      "w": 1280,
+      "x": 4080,
+      "y": 3020
+    },
+    "Doc-formatos.dc.html": {
+      "expand": "fill",
+      "h": 900,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "07 · Formatos",
+      "w": 1280,
+      "x": 4080,
+      "y": 6340
+    },
+    "Doc-modulo.dc.html": {
+      "expand": "fill",
+      "h": 2820,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "04 · Módulo de formación",
+      "w": 1280,
+      "x": 1360,
+      "y": 0
+    },
+    "Doc-observador.dc.html": {
+      "expand": "fill",
+      "h": 1960,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "14 · Observador del estudiante",
+      "w": 1280,
+      "x": 0,
+      "y": 6340
+    },
+    "Doc-piar.dc.html": {
+      "expand": "fill",
+      "h": 860,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "15 · PIAR · pronto",
+      "w": 1280,
+      "x": 1360,
+      "y": 6340
+    },
+    "Doc-planeacion-editor.dc.html": {
+      "expand": "fill",
+      "h": 3200,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "09 · Planeación · editor",
+      "w": 1280,
+      "x": 1360,
+      "y": 3020
+    },
+    "Doc-planeaciones.dc.html": {
+      "expand": "fill",
+      "h": 2120,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "08 · Planeación · lista y nueva",
+      "w": 1280,
+      "x": 0,
+      "y": 3020
+    },
+    "Doc-progreso.dc.html": {
+      "expand": "fill",
+      "h": 1400,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "06 · Mi progreso y certificados",
+      "w": 1280,
+      "x": 4080,
+      "y": 0
+    },
+    "Doc-repositorio.dc.html": {
+      "expand": "fill",
+      "h": 1500,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "10 · Repositorio de la comunidad",
+      "w": 1280,
+      "x": 2720,
+      "y": 3020
+    },
+    "Doc-ruta.dc.html": {
+      "expand": "fill",
+      "h": 1560,
+      "is_interactive": true,
+      "page": "docente",
+      "title": "03 · Plan de formación · ruta de módulos",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 860,
+      "is_interactive": true,
+      "page": "ingreso",
+      "title": "01 · Ingreso",
+      "w": 1280,
+      "x": 0,
+      "y": 0
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-09T04:00:30Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t-coord": {
+      "kind": "title1",
+      "maxW": 5360,
+      "page": "coordinacion",
+      "text": "Coordinación académica",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t-docente": {
+      "kind": "title1",
+      "maxW": 5360,
+      "page": "docente",
+      "text": "Panel Docente",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t-ingreso": {
+      "kind": "title1",
+      "maxW": 2640,
+      "page": "ingreso",
+      "text": "Ingreso",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Aviso-datos.dc.html",
+    "Doc-ruta.dc.html",
+    "Doc-modulo.dc.html",
+    "Doc-beneficios.dc.html",
+    "Doc-progreso.dc.html",
+    "Doc-formatos.dc.html",
+    "Doc-planeaciones.dc.html",
+    "Doc-planeacion-editor.dc.html",
+    "Doc-repositorio.dc.html",
+    "Doc-diario.dc.html",
+    "Doc-diario-dia.dc.html",
+    "Doc-diario-director.dc.html",
+    "Doc-observador.dc.html",
+    "Doc-piar.dc.html",
+    "Doc-asistente.dc.html",
+    "Co-formatos.dc.html",
+    "Co-planeaciones.dc.html",
+    "Co-revision.dc.html",
+    "Co-diarios.dc.html",
+    "Co-diario-revision.dc.html",
+    "Co-bitacora.dc.html",
+    "Co-docentes.dc.html",
+    "Co-grados.dc.html",
+    "Co-planes.dc.html",
+    "Co-editor-modulo.dc.html",
+    "Co-avance.dc.html",
+    "Co-asistente.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "ingreso",
+      "name": "Ingreso"
+    },
+    {
+      "id": "docente",
+      "name": "Docente"
+    },
+    {
+      "id": "coordinacion",
+      "name": "Coordinación"
+    }
+  ],
+  "title": "Plataforma GNS · Pantallas",
+  "v": 3
+}
