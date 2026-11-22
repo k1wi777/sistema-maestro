@@ -68,6 +68,14 @@ type AnnotationDbRow = Prisma.FieldJournalAnnotationGetPayload<{
   include: typeof ANNOTATION_INCLUDE;
 }>;
 
+/**
+ * Intentos de abrir o crear el diario en una misma alta. Bajo Read Committed, un descarte
+ * concurrente puede borrar el diario entre el `INSERT … DO NOTHING` (que lo vio vivo) y el
+ * `SELECT … FOR UPDATE` (que descarta la fila borrada): no hay error SQL, solo 0 filas, y el
+ * siguiente `INSERT` toma una instantánea nueva y crea el diario. Depende de ese aislamiento.
+ */
+const MAX_OPEN_ATTEMPTS = 3;
+
 const toDay = (value: Date): string => value.toISOString().slice(0, 10);
 const READY_STATUSES: AnnotationStatus[] = [AnnotationStatus.Ready, AnnotationStatus.Observed];
 
@@ -152,20 +160,27 @@ export class PrismaFieldJournalRepository
     date: string;
     schoolYear: string;
     createdById: string;
-  }): Promise<{ id: string; status: JournalStatus }> {
-    await this.prisma.db.$executeRaw`
-      INSERT INTO diario_campo (grupo_id, fecha, anio_lectivo, estado, creado_por)
-      VALUES (${input.groupId}::uuid, ${input.date}::date, ${input.schoolYear},
-              ${JournalStatus.InProgress}, ${input.createdById}::uuid)
-      ON CONFLICT (grupo_id, fecha) DO NOTHING`;
-    const rows = await this.prisma.db.$queryRaw<{ id: string; estado: string }[]>`
-      SELECT id, estado FROM diario_campo
-      WHERE grupo_id = ${input.groupId}::uuid AND fecha = ${input.date}::date FOR UPDATE`;
-    const row = rows[0];
-    if (!row) {
-      throw new Error('El diario no existe tras crearlo');
+  }): Promise<{ id: string; status: JournalStatus; created: boolean } | null> {
+    for (let attempt = 0; attempt < MAX_OPEN_ATTEMPTS; attempt += 1) {
+      // Fila propia no confirmada: nadie más la ve ni la borra, no hace falta bloquearla.
+      const inserted = await this.prisma.db.$queryRaw<{ id: string }[]>`
+        INSERT INTO diario_campo (grupo_id, fecha, anio_lectivo, estado, creado_por)
+        VALUES (${input.groupId}::uuid, ${input.date}::date, ${input.schoolYear},
+                ${JournalStatus.InProgress}, ${input.createdById}::uuid)
+        ON CONFLICT (grupo_id, fecha) DO NOTHING
+        RETURNING id`;
+      if (inserted[0]) {
+        return { id: inserted[0].id, status: JournalStatus.InProgress, created: true };
+      }
+      const rows = await this.prisma.db.$queryRaw<{ id: string; estado: string }[]>`
+        SELECT id, estado FROM diario_campo
+        WHERE grupo_id = ${input.groupId}::uuid AND fecha = ${input.date}::date FOR UPDATE`;
+      const row = rows[0];
+      if (row) {
+        return { id: row.id, status: row.estado as JournalStatus, created: false };
+      }
     }
-    return { id: row.id, status: row.estado as JournalStatus };
+    return null;
   }
 
   async lock(id: string): Promise<void> {

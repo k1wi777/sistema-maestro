@@ -95,6 +95,7 @@ function makeRepository(roster: GroupRoster) {
     ),
     openOrCreate: jest.fn(
       (input: { groupId: string; date: string; schoolYear: string; createdById: string }) => {
+        const created = journal === null;
         journal ??= {
           id: id(50),
           groupId: input.groupId,
@@ -111,7 +112,7 @@ function makeRepository(roster: GroupRoster) {
           grade: { id: GRADE, name: 'Quinto', coordinatorId: COORD },
           level: { id: id(12), name: 'Primaria' },
         };
-        return Promise.resolve({ id: journal.id, status: journal.status });
+        return Promise.resolve({ id: journal.id, status: journal.status, created });
       },
     ),
     lock: jest.fn(() => Promise.resolve()),
@@ -353,6 +354,32 @@ describe('FieldJournalsService · alta de anotaciones', () => {
       setup.annotations.every((annotation) => annotation.status === AnnotationStatus.Draft),
     ).toBe(true);
     expect(setup.repository.openOrCreate).toHaveBeenCalledTimes(2);
+  });
+
+  it('409 sin anotación si el diario no se pudo abrir ni crear (carrera con un descarte)', async () => {
+    const setup = makeRepository(makeRoster());
+    setup.repository.openOrCreate.mockResolvedValueOnce(null as never);
+    await expect(setup.service.addAnnotation(ana, input())).rejects.toMatchObject({
+      status: 409,
+      message: 'El diario de ese día cambió mientras guardabas la anotación. Vuelve a intentarlo.',
+    });
+    expect(setup.repository.insertAnnotation).not.toHaveBeenCalled();
+    expect(setup.annotations).toHaveLength(0);
+  });
+
+  it('400 en `groupId` si el alta crea el diario que había visto y el grupo está inactivo', async () => {
+    const setup = makeRepository(makeRoster({ groupActive: false }));
+    // El diario existía al comprobar, pero se descartó y esta alta lo crea.
+    setup.repository.findByKey.mockResolvedValueOnce({
+      id: id(50),
+      status: JournalStatus.InProgress,
+      schoolYear: YEAR,
+    });
+    await expect(setup.service.addAnnotation(ana, input())).rejects.toMatchObject({
+      fieldErrors: [{ field: 'groupId' }],
+    });
+    expect(setup.repository.openOrCreate).toHaveBeenCalledTimes(1);
+    expect(setup.repository.insertAnnotation).not.toHaveBeenCalled();
   });
 
   it('403 si no es participante del grupo y 404 si el grupo no existe', async () => {

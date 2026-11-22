@@ -61,6 +61,8 @@ import {
 
 const NOT_FOUND = 'Diario de campo no encontrado';
 const ANNOTATION_NOT_FOUND = 'Anotación no encontrada';
+const DAY_CHANGED =
+  'El diario de ese día cambió mientras guardabas la anotación. Vuelve a intentarlo.';
 const NO_HOMEROOM_REASON =
   'El grupo no tiene director(a) de grupo asignado: no se puede enviar el diario hasta que coordinación lo asigne.';
 
@@ -211,7 +213,8 @@ export class FieldJournalsService {
 
   /**
    * Orden: 404 (grupo) → 403 (no participante) → 400 (`groupId` inactivo, solo si el diario aún no
-   * existe) → 400 (`date`) → 400 (`areaId`) → 409 (el diario ya no está En curso).
+   * existe, o si el alta lo crea tras una carrera) → 400 (`date`) → 400 (`areaId`) → 409 (el diario
+   * ya no está En curso) → 409 (el diario cambió durante el alta y no se pudo abrir ni crear).
    */
   async addAnnotation(user: RequestUser, input: CreateAnnotationInput): Promise<FieldJournal> {
     const year = await this.schoolYears.requireCurrent();
@@ -221,10 +224,8 @@ export class FieldJournalsService {
       throw new ForbiddenException('No eres docente de ese grupo');
     }
     const existing = await this.repository.findByKey(input.groupId, input.date);
-    if (!existing && (!roster.group.active || !roster.grade.active)) {
-      throw new RequestValidationException([
-        { field: 'groupId', reason: 'el grupo o su grado están inactivos' },
-      ]);
+    if (!existing) {
+      this.assertGroupActive(roster);
     }
     await this.assertDateAllowed(input.date, year.code);
     if (!me.areas.some((area) => area.id === input.areaId)) {
@@ -233,12 +234,21 @@ export class FieldJournalsService {
       ]);
     }
 
-    const { id, status } = await this.repository.openOrCreate({
+    const opened = await this.repository.openOrCreate({
       groupId: input.groupId,
       date: input.date,
       schoolYear: year.code,
       createdById: user.id,
     });
+    if (!opened) {
+      throw new ConflictException(DAY_CHANGED);
+    }
+    const { id, status, created } = opened;
+    // Si el diario visto se descartó y este alta lo creó, el control de grupo inactivo aplica ahora
+    // (el 400 revierte la inserción con la transacción).
+    if (created && existing) {
+      this.assertGroupActive(roster);
+    }
     if (status !== JournalStatus.InProgress) {
       throw new ConflictException(
         `El diario está ${JOURNAL_STATUS_LABEL[status]} y no admite nuevas anotaciones`,
@@ -251,6 +261,15 @@ export class FieldJournalsService {
     });
     await this.repository.touch(id);
     return this.get(user, id);
+  }
+
+  /** Un diario nuevo no se admite en un grupo o grado inactivos. */
+  private assertGroupActive(roster: GroupRoster): void {
+    if (!roster.group.active || !roster.grade.active) {
+      throw new RequestValidationException([
+        { field: 'groupId', reason: 'el grupo o su grado están inactivos' },
+      ]);
+    }
   }
 
   /** Solo el autor; En curso: borrador o lista; Con observaciones: solo las observadas. */
