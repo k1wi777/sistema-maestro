@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   ApproveFieldJournalDto,
@@ -20,7 +20,7 @@ import { FieldJournalsService } from './field-journals.service';
  * (el servicio comprueba el alcance). Coordinación nunca modifica el texto de las anotaciones.
  */
 @Controller('field-journals')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator)
 export class FieldJournalReviewController {
   constructor(private readonly journals: FieldJournalsService) {}
 

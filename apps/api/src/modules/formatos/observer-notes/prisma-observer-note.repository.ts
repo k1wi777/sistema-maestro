@@ -10,6 +10,7 @@ import {
 } from '@gns/shared';
 import type { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
+import { gradeCoordinatorWhere } from '../../../shared/records/coordinator-filter';
 import type { TransactionClient } from '../../../shared/database/transaction-context';
 import {
   PrismaReadRepository,
@@ -203,6 +204,7 @@ export class PrismaObserverNoteRepository
       teacherId: filters.teacherId,
       status: filters.status,
       gradeId: filters.gradeId,
+      grade: gradeCoordinatorWhere(filters.coordinatorId),
       type: filters.type,
       date: hasRange
         ? {

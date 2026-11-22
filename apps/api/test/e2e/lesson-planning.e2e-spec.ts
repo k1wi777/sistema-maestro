@@ -170,8 +170,8 @@ describe('punta a punta · planeación y revisión', () => {
   });
 
   it('la bitácora registra el recorrido sin datos sensibles', async () => {
-    const teacherRows = await world.auditRowsOf(coordinator, teacher.id);
-    const coordinatorRows = await world.auditRowsOf(coordinator, coordinator.id);
+    const teacherRows = await world.auditRowsOf(teacher.id);
+    const coordinatorRows = await world.auditRowsOf(coordinator.id);
 
     const planning = teacherRows.filter((row) => row.type === AuditLogType.LessonPlan);
     expect(planning.length).toBeGreaterThanOrEqual(4);
@@ -186,10 +186,10 @@ describe('punta a punta · planeación y revisión', () => {
     // la planeación; las filas y los detalles, ningún secreto. (El detalle sí guarda el contenido
     // de la planeación, que no incluye datos de menores: ver la lista de chequeo.)
     world.expectNoSensitiveData(JSON.stringify([...teacherRows, ...coordinatorRows]), MARKERS);
-    world.expectNoSensitiveData(await world.auditCsvOf(coordinator, teacher.id), MARKERS);
-    world.expectNoSensitiveData(await world.auditCsvOf(coordinator, coordinator.id), MARKERS);
+    world.expectNoSensitiveData(await world.auditCsvOf(teacher.id), MARKERS);
+    world.expectNoSensitiveData(await world.auditCsvOf(coordinator.id), MARKERS);
     for (const row of [...planning, ...reviews]) {
-      const detail = await coordinator.call('get', `/audit-log/${row.id}`).expect(200);
+      const detail = await world.admin.call('get', `/audit-log/${row.id}`).expect(200);
       world.expectNoSensitiveData(detail.text, []);
     }
   });

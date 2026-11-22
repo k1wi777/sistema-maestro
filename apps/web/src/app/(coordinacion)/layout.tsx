@@ -1,12 +1,11 @@
-import { UserRole } from '@gns/shared';
 import type { ReactNode } from 'react';
 
-import { RequireRole } from '@/shared/session';
+import { PROTECTED_ROUTES, RequireRole } from '@/shared/session';
 import { AppShell } from '@/shared/shell';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <RequireRole role={UserRole.Coordinator}>
+    <RequireRole roles={PROTECTED_ROUTES['/coordinacion']}>
       <AppShell view="/coordinacion">{children}</AppShell>
     </RequireRole>
   );

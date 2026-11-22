@@ -15,6 +15,7 @@ import {
   Tabs,
   type DataTableColumn,
 } from '@/shared/ui';
+import { useView } from '@/shared/shell';
 
 import { deleteArea, deleteGrade, updateArea, updateGrade } from '../api/structure';
 import { useAcademicStructure } from '../hooks/use-structure';
@@ -316,6 +317,7 @@ function CoordinatorsPanel({
 
 /** «Grados y áreas»: grados con sus grupos, áreas con sus niveles y coordinadoras por grado. */
 export function AcademicStructureScreen() {
+  const view = useView();
   const remote = useAcademicStructure();
   const structure = remote.state.status === 'ready' ? remote.state.data : null;
   const [gradeTarget, setGradeTarget] = useState<{ gradeId: string; levelId: string } | null>(null);
@@ -375,7 +377,7 @@ export function AcademicStructureScreen() {
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={view.title}
         title="Grados y áreas"
         description="Organiza grados, grupos, áreas y coordinadoras. Lo que no se use se borra; lo que tiene registros se desactiva."
       />

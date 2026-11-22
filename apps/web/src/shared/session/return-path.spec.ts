@@ -5,8 +5,19 @@ describe('safeReturnPath', () => {
     ['/docente', 'docente', '/docente'],
     ['/docente/formatos/planeacion?x=1', 'docente', '/docente/formatos/planeacion?x=1'],
     ['/coordinacion', 'coordinador', '/coordinacion'],
-    ['/docente', 'coordinador', '/docente'],
-    ['/docente', 'administrador', '/docente'],
+    [
+      '/coordinacion/formatos/planeaciones/abc?x=1',
+      'coordinador',
+      '/coordinacion/formatos/planeaciones/abc?x=1',
+    ],
+    ['/administracion/bitacora', 'administrador', '/administracion/bitacora'],
+    // Ruta equivalente entre coordinación y administración (conserva la consulta).
+    [
+      '/coordinacion/formatos/planeaciones/abc?x=1',
+      'administrador',
+      '/administracion/formatos/planeaciones/abc?x=1',
+    ],
+    ['/administracion/planes#a', 'coordinador', '/coordinacion/planes#a'],
   ] as const)('acepta %s para %s', (value, role, expected) => {
     expect(safeReturnPath(value, role)).toBe(expected);
   });
@@ -33,13 +44,19 @@ describe('safeReturnPath', () => {
     expect(safeReturnPath(value, 'docente')).toBe('/docente');
   });
 
-  it('ignora una ruta que el rol no alcanza', () => {
+  it('ignora una ruta que el rol no alcanza y no tiene equivalente', () => {
     expect(safeReturnPath('/coordinacion', 'docente')).toBe('/docente');
+    expect(safeReturnPath('/docente', 'coordinador')).toBe('/coordinacion');
+    expect(safeReturnPath('/docente', 'administrador')).toBe('/administracion');
+    // Bitácora y «Grados y áreas» no existen en coordinación.
+    expect(safeReturnPath('/administracion/bitacora', 'coordinador')).toBe('/coordinacion');
+    expect(safeReturnPath('/administracion/grados-y-areas', 'coordinador')).toBe('/coordinacion');
   });
 
-  it('usa la vista propia si no hay valor', () => {
+  it('usa la vista propia de cada rol si no hay valor', () => {
+    expect(safeReturnPath(null, 'docente')).toBe('/docente');
     expect(safeReturnPath(null, 'coordinador')).toBe('/coordinacion');
-    expect(safeReturnPath(undefined, 'administrador')).toBe('/coordinacion');
+    expect(safeReturnPath(undefined, 'administrador')).toBe('/administracion');
   });
 });
 

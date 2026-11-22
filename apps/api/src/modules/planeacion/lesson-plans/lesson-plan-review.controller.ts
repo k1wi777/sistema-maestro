@@ -1,10 +1,10 @@
 import { Body, Controller, Get, HttpCode, Param, Post } from '@nestjs/common';
-import { UserRole } from '@gns/shared';
+import { ALL_ROLES, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   ApproveLessonPlanDto,
@@ -21,7 +21,7 @@ import { LessonPlansService } from './lesson-plans.service';
  * contenido opcionales (`changes`), que se aplican en la misma operación.
  */
 @Controller('lesson-plans')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator)
 export class LessonPlanReviewController {
   constructor(private readonly lessonPlans: LessonPlansService) {}
 
@@ -49,9 +49,9 @@ export class LessonPlanReviewController {
     return this.lessonPlans.returnPlan(user, id, body);
   }
 
-  /** El dueño también ve su historial: el rol mínimo es docente y el servicio decide la visibilidad. */
+  /** El dueño también ve su historial: la ruta admite a los tres roles y el servicio decide la visibilidad. */
   @Get(':id/reviews')
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @ZodResponse({ status: 200, type: ReviewListDto })
   history(@CurrentUser() user: RequestUser, @Param() { id }: IdParamDto) {
     return this.lessonPlans.history(user, id);

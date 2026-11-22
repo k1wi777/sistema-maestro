@@ -9,7 +9,7 @@ import { AUDIT_LOG_EXPORT_LIMIT, AuditLogQueryService } from './audit-log-query.
 import { PrismaAuditLogReadRepository } from './prisma-audit-log-read.repository';
 import { PrismaAuditLogRepository } from './prisma-audit-log.repository';
 
-// Sin importar `IdentityModule`: `RequireRole` y `CurrentUser` son metadatos y decoradores, los guards
+// Sin importar `IdentityModule`: `Roles` y `CurrentUser` son metadatos y decoradores, los guards
 // son globales, e `IdentityModule` ya importa este módulo (habría un ciclo).
 @Module({
   imports: [DatabaseModule],

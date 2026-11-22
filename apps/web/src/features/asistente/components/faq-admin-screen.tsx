@@ -20,6 +20,7 @@ import {
   Select,
   StatusBadge,
 } from '@/shared/ui';
+import { useView } from '@/shared/shell';
 
 import { updateFaq } from '../api/faq-admin';
 import { useAdminFaqs, usePendingQuestions } from '../hooks/use-faq-admin';
@@ -50,6 +51,7 @@ interface PageNotice {
 
 /** Gestión del asistente: preguntas programadas (sin borrado) y preguntas sin respuesta. */
 export function FaqAdminScreen() {
+  const view = useView();
   const faqs = useAdminFaqs();
   const pending = usePendingQuestions();
   const [filters, setFilters] = useState<FaqAdminFilters>({ category: '', status: 'all' });
@@ -111,7 +113,7 @@ export function FaqAdminScreen() {
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={view.title}
         title="Asistente"
         description="Preguntas programadas que responde el Asistente GNS y preguntas que quedaron sin respuesta."
         actions={

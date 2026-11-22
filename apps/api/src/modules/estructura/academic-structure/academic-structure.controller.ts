@@ -3,7 +3,7 @@ import { AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CoordinatorGradesAuditSnapshot } from '../catalogs/grade/coordinator-grades.audit-snapshot';
 import { GradesService } from '../catalogs/grade/grades.service';
 import { AcademicStructureService } from './academic-structure.service';
@@ -14,7 +14,7 @@ import {
 } from './dto/academic-structure.dto';
 
 @Controller()
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Administrator)
 export class AcademicStructureController {
   constructor(
     private readonly structure: AcademicStructureService,

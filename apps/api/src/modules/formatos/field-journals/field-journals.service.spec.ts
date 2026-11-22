@@ -608,14 +608,19 @@ describe('FieldJournalsService · revisión', () => {
     expect(JSON.stringify(resent.history)).not.toContain('Falta contexto');
   });
 
-  it('aprueba con la firma y la aprobación es de la coordinadora del grado o de administración', async () => {
+  it('aprueba con la firma y solo la coordinadora del grado aprueba y administración solo consulta', async () => {
     const { setup, journalId } = await submitted();
     await expect(setup.service.approve(otherCoordinator, journalId, {})).rejects.toBeInstanceOf(
       ForbiddenException,
     );
-    const approved = await setup.service.approve(admin, journalId, { comment: 'Gracias' });
+    // Administración consulta todo pero no decide.
+    await expect(setup.service.approve(admin, journalId, {})).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    await expect(setup.service.get(admin, journalId)).resolves.toBeDefined();
+    const approved = await setup.service.approve(coordinator, journalId, { comment: 'Gracias' });
     expect(approved.status).toBe(JournalStatus.Reviewed);
-    expect(approved.signature?.reviewer.id).toBe(ADMIN);
+    expect(approved.signature?.reviewer.id).toBe(COORD);
     await expect(setup.service.approve(coordinator, journalId, {})).rejects.toBeInstanceOf(
       ConflictException,
     );
@@ -663,6 +668,10 @@ describe('FieldJournalsService · revisión', () => {
     expect(forCoordinator.viewer.canReview).toBe(true);
     // Nunca borradores ajenos: solo las anotaciones listas.
     expect(forCoordinator.annotations).toHaveLength(1);
+    // Coordinación de otro grado consulta todo el colegio (desde el primer envío), sin decidir.
+    const forOther = await setup.service.get(otherCoordinator, journalId);
+    expect(forOther.viewer.canReview).toBe(false);
+    expect((await setup.service.get(admin, journalId)).viewer.canReview).toBe(false);
   });
 });
 

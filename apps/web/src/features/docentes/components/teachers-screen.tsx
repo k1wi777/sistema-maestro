@@ -1,10 +1,12 @@
 'use client';
 
 import { UserRole, UserStatus } from '@gns/shared';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
-import { LoadError, Loading } from '@/shared/data';
+import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { joinNames } from '@/shared/records';
 import { roleLabel, useSession } from '@/shared/session';
+import type { User } from '@gns/shared';
 import {
   Button,
   ButtonLink,
@@ -13,17 +15,18 @@ import {
   PageContainer,
   PageHeader,
   StatusBadge,
+  Tabs,
   TextInput,
   type DataTableColumn,
 } from '@/shared/ui';
+import { useView } from '@/shared/shell';
 
 import { useRoster, useTeachersData } from '../hooks/use-teachers';
+import { roleChangeConsequences } from '../model/role-change';
 import { filterRoster, type RosterTeacher } from '../model/roster';
 import { AssignmentsDialog } from './assignments-dialog';
 import styles from './teachers-screen.module.css';
 import { UsersPanel } from './users-panel';
-
-const ACTIVITY_PATH = '/coordinacion/bitacora';
 
 function GradesCell({ teacher }: { teacher: RosterTeacher }) {
   if (teacher.groups.length === 0) {
@@ -51,11 +54,44 @@ function GradesCell({ teacher }: { teacher: RosterTeacher }) {
 
 /** Docentes y asignaciones del año vigente; para administración, también usuarios y roles. */
 export function TeachersScreen() {
+  const view = useView();
+  const activityPath = `${view.path}/bitacora`;
   const { state } = useSession();
-  const isAdmin = state.status === 'authenticated' && state.user.role === UserRole.Administrator;
+  const user = state.status === 'authenticated' ? state.user : null;
+  // La vista decide qué se ve: administración tiene rol y «Usuarios y roles»; coordinación, no.
+  const isAdmin = user?.role === UserRole.Administrator;
+  const { params, update } = useQueryParams();
+  const tab = params.get('pestana') === 'usuarios' ? 'usuarios' : 'asignaciones';
   const remote = useTeachersData(isAdmin);
   const data = remote.state.status === 'ready' ? remote.state.data : null;
   const roster = useRoster(data);
+  // Coordinación solo asigna en los grupos de sus grados; administración, en cualquiera.
+  const myGrades = useMemo(
+    () => (data?.grades ?? []).filter((grade) => grade.coordinator?.id === user?.id),
+    [data, user?.id],
+  );
+  const allowedGradeIds = useMemo(
+    () => (isAdmin ? null : new Set(myGrades.map((grade) => grade.id))),
+    [isAdmin, myGrades],
+  );
+  const scopeHint = isAdmin
+    ? undefined
+    : myGrades.length > 0
+      ? `Solo asignas en los grupos de tus grados: ${joinNames(myGrades.map((grade) => grade.name))}.`
+      : 'Aún no tienes grados asignados: puedes consultar las asignaciones, pero no cambiarlas.';
+  const consequences = (target: User, to: UserRole) =>
+    roleChangeConsequences({
+      name: target.fullName,
+      from: target.role,
+      to,
+      groups: (roster.find((teacher) => teacher.id === target.id)?.groups ?? []).map((group) => ({
+        name: group.name,
+        isHomeroom: group.isHomeroom,
+      })),
+      coordinatedGrades: (data?.grades ?? [])
+        .filter((grade) => grade.coordinator?.id === target.id)
+        .map((grade) => grade.name),
+    });
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const visible = filterRoster(roster, search);
@@ -99,25 +135,71 @@ export function TeachersScreen() {
           >
             Asignaciones
           </Button>
-          <ButtonLink
-            context={`de ${teacher.name}`}
-            variant="outline"
-            size="sm"
-            href={`${ACTIVITY_PATH}?userId=${teacher.id}`}
-          >
-            Actividad
-          </ButtonLink>
+          {isAdmin ? (
+            <ButtonLink
+              context={`de ${teacher.name}`}
+              variant="outline"
+              size="sm"
+              href={`${activityPath}?userId=${teacher.id}`}
+            >
+              Actividad
+            </ButtonLink>
+          ) : null}
         </span>
       ),
     },
   ];
 
+  const assignmentsBody = (
+    <>
+      {data ? (
+        <>
+          {data.year === null ? (
+            <Notice tone="warning" title="Sin año lectivo vigente">
+              Administración debe definir el año lectivo vigente para poder asignar grados y áreas.
+            </Notice>
+          ) : (
+            <p className={styles.year}>{`Año lectivo ${data.year.code}`}</p>
+          )}
+          {isAdmin ? null : (
+            <Notice tone="info">
+              Un docente nuevo aparece en esta lista cuando administración le hace su primera
+              asignación.
+            </Notice>
+          )}
+          <TextInput
+            label="Buscar docente"
+            type="search"
+            placeholder="Nombre"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <DataTable
+            caption="Docentes del año lectivo"
+            columns={columns}
+            rows={visible}
+            getRowKey={(teacher) => teacher.id}
+            emptyMessage={
+              search.trim() === ''
+                ? 'Aún no hay docentes con asignaciones en este año.'
+                : 'Ningún docente coincide con la búsqueda.'
+            }
+          />
+        </>
+      ) : null}
+    </>
+  );
+
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={view.title}
         title="Docentes y asignaciones"
-        description="Grupos y áreas de cada docente en el año lectivo vigente."
+        description={
+          isAdmin
+            ? 'Asignaciones de los docentes en el año lectivo vigente y usuarios y roles de la plataforma.'
+            : 'Grupos y áreas de cada docente en el año lectivo vigente.'
+        }
       />
       <div className={styles.root}>
         {remote.state.status === 'loading' ? <Loading>Cargando los docentes…</Loading> : null}
@@ -128,43 +210,34 @@ export function TeachersScreen() {
             onRetry={remote.reload}
           />
         ) : null}
-        {data ? (
-          <>
-            {data.year === null ? (
-              <Notice tone="warning" title="Sin año lectivo vigente">
-                Administración debe definir el año lectivo vigente para poder asignar grados y
-                áreas.
-              </Notice>
-            ) : (
-              <p className={styles.year}>{`Año lectivo ${data.year.code}`}</p>
-            )}
-            {isAdmin ? null : (
-              <Notice tone="info">
-                Un docente nuevo aparece en esta lista cuando administración le hace su primera
-                asignación.
-              </Notice>
-            )}
-            <TextInput
-              label="Buscar docente"
-              type="search"
-              placeholder="Nombre"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <DataTable
-              caption="Docentes del año lectivo"
-              columns={columns}
-              rows={visible}
-              getRowKey={(teacher) => teacher.id}
-              emptyMessage={
-                search.trim() === ''
-                  ? 'Aún no hay docentes con asignaciones en este año.'
-                  : 'Ningún docente coincide con la búsqueda.'
-              }
-            />
-          </>
-        ) : null}
-        {isAdmin ? <UsersPanel onChanged={() => void remote.refresh()} /> : null}
+        {isAdmin ? (
+          <Tabs
+            label="Docentes y asignaciones"
+            value={tab}
+            onChange={(id) => update({ pestana: id === 'usuarios' ? id : null })}
+            tabs={[
+              { id: 'asignaciones', label: 'Asignaciones', content: assignmentsBody },
+              {
+                id: 'usuarios',
+                label: 'Usuarios y roles',
+                content: user ? (
+                  <UsersPanel
+                    currentUserId={user.id}
+                    consequences={consequences}
+                    coordinatedGrades={(id) =>
+                      (data?.grades ?? [])
+                        .filter((grade) => grade.coordinator?.id === id)
+                        .map((grade) => grade.name)
+                    }
+                    onChanged={() => void remote.refresh()}
+                  />
+                ) : null,
+              },
+            ]}
+          />
+        ) : (
+          assignmentsBody
+        )}
       </div>
       <AssignmentsDialog
         teacher={selected}
@@ -173,6 +246,8 @@ export function TeachersScreen() {
         levels={data?.levels ?? []}
         areas={data?.areas ?? []}
         noYear={data?.year === null}
+        allowedGradeIds={allowedGradeIds}
+        scopeHint={scopeHint}
         onChanged={remote.refresh}
         onClose={() => setOpenId(null)}
       />

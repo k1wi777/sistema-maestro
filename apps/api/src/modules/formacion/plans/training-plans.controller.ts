@@ -3,7 +3,7 @@ import { AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import {
   CreateTrainingModuleDto,
   CreateTrainingPlanDto,
@@ -35,9 +35,9 @@ const SECTION_AUDIT = {
   snapshot: TrainingSectionAuditSnapshot,
 };
 
-/** Planes de formación y sus secciones (coordinación; administración hereda por jerarquía). */
+/** Planes de formación y sus secciones (coordinación y administración). */
 @Controller('training-plans')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TrainingPlansController {
   constructor(private readonly plans: TrainingPlansService) {}
 
@@ -84,7 +84,7 @@ export class TrainingPlansController {
 
 /** Secciones de un plan y los módulos que contienen. */
 @Controller('training-sections')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TrainingSectionsController {
   constructor(private readonly plans: TrainingPlansService) {}
 

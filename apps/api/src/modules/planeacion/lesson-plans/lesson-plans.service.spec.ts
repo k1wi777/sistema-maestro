@@ -28,6 +28,8 @@ const YEAR = '2026-2027';
 const owner: RequestUser = { id: 'owner', role: UserRole.Teacher, sessionId: 's1' };
 const stranger: RequestUser = { id: 'stranger', role: UserRole.Teacher, sessionId: 's2' };
 const coordinator: RequestUser = { id: 'coord', role: UserRole.Coordinator, sessionId: 's3' };
+const otherCoordinator: RequestUser = { id: 'other', role: UserRole.Coordinator, sessionId: 's4' };
+const admin: RequestUser = { id: 'admin', role: UserRole.Administrator, sessionId: 's5' };
 const UUID_PERIOD = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1b3c';
 
 function plan(overrides: Partial<LessonPlan> = {}): LessonPlan {
@@ -68,6 +70,8 @@ interface Options {
   /** Id del nivel del grado; las áreas del catálogo se relacionan por él. */
   levelId?: string;
   gradeActive?: boolean;
+  /** Coordinadora del grado de la planeación; por defecto `coord`. */
+  coordinatorId?: string | null;
 }
 
 function setup(options: Options = {}) {
@@ -123,6 +127,12 @@ function setup(options: Options = {}) {
     updatedAt: NOW,
   })) as Area[];
   const grades = {
+    find: jest.fn(() =>
+      Promise.resolve({
+        id: 'g-1',
+        coordinatorId: options.coordinatorId === undefined ? 'coord' : options.coordinatorId,
+      }),
+    ),
     list: jest.fn(() =>
       Promise.resolve({
         items: options.gradeActive === false ? [] : [{ id: 'g-1' }],
@@ -160,6 +170,7 @@ function setup(options: Options = {}) {
     periods as unknown as AcademicPeriodsService,
     schoolYears as unknown as SchoolYearsService,
     new ReviewsService(reviewRepository),
+    grades as unknown as GradesService,
   );
   return { service, repository, reviews, periods, areas };
 }
@@ -546,6 +557,56 @@ describe('LessonPlansService.voidPlan', () => {
         setup({ stored: voided }).service.voidPlan(user, 'plan-1'),
       ).rejects.toBeInstanceOf(ConflictException);
     }
+  });
+});
+
+describe('LessonPlansService: alcance por grado', () => {
+  const submitted = plan({ status: RecordStatus.Submitted });
+
+  it('administración y otra coordinadora consultan pero no deciden ni anulan (403)', async () => {
+    for (const user of [admin, otherCoordinator]) {
+      const { service, repository } = setup({ stored: submitted });
+
+      await expect(service.get(user, 'plan-1')).resolves.toBeDefined();
+      for (const call of [
+        () => service.approve(user, 'plan-1', {}),
+        () => service.returnPlan(user, 'plan-1', { comment: 'x' }),
+        () => service.voidPlan(user, 'plan-1'),
+      ]) {
+        await expect(call()).rejects.toBeInstanceOf(ForbiddenException);
+      }
+      expect(repository.updateIfStatus).not.toHaveBeenCalled();
+    }
+  });
+
+  it('un grado sin coordinadora no lo revisa nadie, ni administración (403)', async () => {
+    for (const user of [coordinator, admin]) {
+      const { service } = setup({ stored: submitted, coordinatorId: null });
+
+      await expect(service.approve(user, 'plan-1', {})).rejects.toBeInstanceOf(ForbiddenException);
+    }
+  });
+
+  it('la coordinadora del grado decide y el filtro por coordinadora se ignora para un docente', async () => {
+    const { service, repository } = setup({ stored: submitted });
+    await service.approve(coordinator, 'plan-1', {});
+    expect(repository.updateIfStatus).toHaveBeenCalled();
+
+    const query = {
+      page: 1,
+      pageSize: 20,
+      sort: { field: 'updatedAt' as const, order: 'desc' as const },
+    };
+    await service.list(owner, { ...query, filters: { coordinatorId: 'coord' } });
+    const [sent] = repository.findPage.mock.calls.at(-1) as unknown as [
+      { filters: { teacherId?: string; coordinatorId?: string } },
+    ];
+    expect(sent.filters.teacherId).toBe('owner');
+    expect(sent.filters.coordinatorId).toBeUndefined();
+    await service.list(admin, { ...query, filters: { coordinatorId: 'none' } });
+    expect(repository.findPage).toHaveBeenLastCalledWith(
+      expect.objectContaining({ filters: { coordinatorId: 'none' } }),
+    );
   });
 });
 

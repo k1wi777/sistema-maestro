@@ -15,6 +15,18 @@ export {
   type JournalStatusInfo,
 } from './journal-status';
 export { printWithTitle } from './print';
+export {
+  canReviewGrade,
+  consultNotice,
+  coordinatorOfGrade,
+  gradesWithoutCoordinator,
+  joinNames,
+  myGrades,
+  reviewerHint,
+  type CatalogGradeScope,
+  type GradeCoordinator,
+  type ReviewUser,
+} from './review-access';
 export { latestDecision, type LatestDecision } from './review-feedback';
 export { STATUS_INFO, STATUS_ORDER, canVoid, isEditable, type StatusInfo } from './status';
 export { VoidRecordDialog } from './VoidRecordDialog';

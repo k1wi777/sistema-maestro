@@ -26,6 +26,7 @@ import { PASSWORD_CREDENTIAL_REPOSITORY } from './credentials/password-credentia
 import { PrismaPasswordCredentialRepository } from './credentials/prisma-password-credential.repository';
 import { PrismaUserRepository } from './users/prisma-user.repository';
 import { UserAuditSnapshot } from './users/user.audit-snapshot';
+import { UserRoleChangeEffects } from './users/user-role-change-effects';
 import { USER_REPOSITORY } from './users/user.repository';
 import { UsersController } from './users/users.controller';
 import { UsersService } from './users/users.service';
@@ -71,6 +72,7 @@ const SECONDS_PER_MINUTE = 60;
     InitialAdminPasswordService,
     { provide: PASSWORD_CREDENTIAL_REPOSITORY, useClass: PrismaPasswordCredentialRepository },
     UsersService,
+    UserRoleChangeEffects,
     UserAuditSnapshot,
     { provide: USER_REPOSITORY, useClass: PrismaUserRepository },
   ],
@@ -82,6 +84,7 @@ const SECONDS_PER_MINUTE = 60;
     AccessGuard,
     ConsentService,
     UsersService,
+    UserRoleChangeEffects,
     CredentialsService,
     InitialAdminPasswordService,
   ],

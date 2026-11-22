@@ -48,11 +48,20 @@ describe('validateUpdate', () => {
     expect(validateUpdate(same, original)).toEqual({ ok: false, errors: {}, unchanged: true });
   });
 
-  it('envía solo los campos cambiados', () => {
+  it('envía solo los campos cambiados y el rol aparte', () => {
     expect(validateUpdate({ ...same, role: 'coordinador' }, original)).toEqual({
       ok: true,
-      input: { role: 'coordinador' },
+      input: null,
+      role: 'coordinador',
     });
+    expect(validateUpdate({ ...same, fullName: 'Nombre Nuevo' }, original)).toEqual({
+      ok: true,
+      input: { fullName: 'Nombre Nuevo' },
+      role: null,
+    });
+    expect(
+      validateUpdate({ ...same, fullName: 'Nombre Nuevo', role: 'administrador' }, original),
+    ).toEqual({ ok: true, input: { fullName: 'Nombre Nuevo' }, role: 'administrador' });
   });
 
   it('rechaza un correo inválido', () => {

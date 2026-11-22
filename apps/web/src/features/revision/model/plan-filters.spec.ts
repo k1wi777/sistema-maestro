@@ -21,6 +21,7 @@ describe('planFiltersFromParams', () => {
       areaId: undefined,
       periodId: undefined,
       teacherId: UUID_B,
+      coordinatorId: undefined,
     });
   });
 
@@ -34,8 +35,19 @@ describe('planFiltersFromParams', () => {
       areaId: undefined,
       periodId: undefined,
       teacherId: undefined,
+      coordinatorId: undefined,
     });
     expect(hasActiveFilters(filters)).toBe(false);
+  });
+});
+
+describe('filtro de coordinadora (administración)', () => {
+  it('acepta un id o «none» y lo conserva en la consulta y la clave', () => {
+    expect(planFiltersFromParams(params({ coordinatorId: UUID_A })).coordinatorId).toBe(UUID_A);
+    expect(planFiltersFromParams(params({ coordinatorId: 'none' })).coordinatorId).toBe('none');
+    expect(planFiltersFromParams(params({ coordinatorId: 'otra' })).coordinatorId).toBeUndefined();
+    expect(planFiltersToQuery({ coordinatorId: 'none' })).toBe('coordinatorId=none');
+    expect(planFiltersKey({ coordinatorId: 'none' })).not.toBe(planFiltersKey({}));
   });
 });
 

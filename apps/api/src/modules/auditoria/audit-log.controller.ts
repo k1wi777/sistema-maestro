@@ -3,7 +3,7 @@ import { ApiOkResponse } from '@nestjs/swagger';
 import { UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import type { RequestUser } from '../../core/audit/request-user';
-import { RequireRole } from '../identidad/auth/access.decorators';
+import { Roles } from '../identidad/auth/access.decorators';
 import { CurrentUser } from '../identidad/auth/current-user.decorator';
 import {
   AuditLogEntryDetailDto,
@@ -15,12 +15,12 @@ import {
 import { AuditLogQueryService } from './audit-log-query.service';
 
 /**
- * Consulta de la bitácora: coordinación (administración hereda por jerarquía de `RequireRole`) y solo lecturas. No hay
+ * Consulta de la bitácora: solo administración y solo lecturas. No hay
  * ruta que cree, modifique o borre filas. El listado y el detalle no escriben en la bitácora;
  * la exportación sí (la escribe el servicio, con los filtros y el número de filas).
  */
 @Controller('audit-log')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Administrator)
 export class AuditLogController {
   constructor(private readonly query: AuditLogQueryService) {}
 

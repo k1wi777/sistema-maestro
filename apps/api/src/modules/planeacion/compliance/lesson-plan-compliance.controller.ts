@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import {
   LessonPlanComplianceDto,
   LessonPlanComplianceQueryDto,
@@ -10,7 +10,7 @@ import { LessonPlanComplianceService } from './lesson-plan-compliance.service';
 
 /** Informe de solo lectura para coordinación (y administración); sin bitácora. */
 @Controller('lesson-plan-compliance')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class LessonPlanComplianceController {
   constructor(private readonly compliance: LessonPlanComplianceService) {}
 

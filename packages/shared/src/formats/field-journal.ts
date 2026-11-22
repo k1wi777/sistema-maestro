@@ -7,7 +7,11 @@ import {
   JournalStatus,
 } from '../constants/field-journal';
 import { createListQuerySchema, createPageSchema } from '../list-query/list-query';
-import { REVIEW_COMMENT_MAX_LENGTH, voidRecordSchema } from '../review/review';
+import {
+  coordinatorFilterSchema,
+  REVIEW_COMMENT_MAX_LENGTH,
+  voidRecordSchema,
+} from '../review/review';
 
 export const JOURNAL_DESCRIPTION_MAX_LENGTH = 1500;
 export const JOURNAL_OBSERVATIONS_MAX = 200;
@@ -295,6 +299,7 @@ export const fieldJournalListQuerySchema = createListQuerySchema({
     groupId: uuid.optional(),
     from: day.optional(),
     to: day.optional(),
+    coordinatorId: coordinatorFilterSchema.optional(),
   },
 });
 export interface FieldJournalFilters {
@@ -305,4 +310,6 @@ export interface FieldJournalFilters {
   groupId?: string;
   from?: string;
   to?: string;
+  /** Coordinadora del grado del grupo (UUID) o `none` (sin coordinadora); un docente lo ignora. */
+  coordinatorId?: string;
 }

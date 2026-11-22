@@ -9,7 +9,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import { AppZodValidationPipe } from '../../../core/http/zod-validation.pipe';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { ZodRequestBody } from '../dto/zod-request-body';
 import {
   ActivityDto,
@@ -42,7 +42,7 @@ const AUDIT = {
  * el interceptor audita el padre con un snapshot de sus diapositivas, preguntas y actividades.
  */
 @Controller('training-modules')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TrainingModulesController {
   constructor(
     private readonly plans: TrainingPlansService,

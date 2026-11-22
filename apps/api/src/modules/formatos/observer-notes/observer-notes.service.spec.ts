@@ -62,7 +62,9 @@ function setup(status: RecordStatus = RecordStatus.Draft) {
     }),
     findByRecord: jest.fn(() => Promise.resolve([])),
   };
-  const grades = { find: jest.fn(() => Promise.resolve({ id: GRADE, active: true })) };
+  const grades = {
+    find: jest.fn(() => Promise.resolve({ id: GRADE, active: true, coordinatorId: COORD })),
+  };
   const periods = {
     find: jest.fn(() =>
       Promise.resolve({ id: PERIOD, startDate: '2031-02-01', endDate: '2031-04-30' }),
@@ -104,7 +106,7 @@ describe('ObserverNotesService · crear y editar', () => {
 
   it('400 con el campo gradeId si el grado está inactivo: ya no admite registros nuevos', async () => {
     const { service, grades, repository } = setup();
-    grades.find.mockResolvedValueOnce({ id: GRADE, active: false });
+    grades.find.mockResolvedValueOnce({ id: GRADE, active: false, coordinatorId: COORD });
     await expect(service.create(owner, input)).rejects.toMatchObject({
       fieldErrors: [{ field: 'gradeId', reason: 'el grado está inactivo' }],
     });
@@ -191,12 +193,36 @@ describe('ObserverNotesService · enviar, anular y revisar', () => {
   });
 
   it('autorrevisión 403 y solo se revisan las enviadas (409)', async () => {
+    const own = setup(RecordStatus.Submitted);
+    own.grades.find.mockResolvedValue({ id: GRADE, active: true, coordinatorId: OWNER });
     await expect(
-      setup(RecordStatus.Submitted).service.approve(asUser(OWNER, UserRole.Coordinator), NOTE, {}),
+      own.service.approve(asUser(OWNER, UserRole.Coordinator), NOTE, {}),
     ).rejects.toMatchObject({ status: 403 });
     await expect(setup().service.approve(coordinator, NOTE, {})).rejects.toBeInstanceOf(
       ConflictException,
     );
+  });
+
+  it('solo la coordinadora del grado revisa o anula como revisora: otra, administración y grado sin coordinadora reciben 403', async () => {
+    const other = asUser('otra-coord', UserRole.Coordinator);
+    const admin = asUser('admin', UserRole.Administrator);
+    for (const actor of [other, admin]) {
+      const { service, repository } = setup(RecordStatus.Submitted);
+      await expect(service.get(actor, NOTE)).resolves.toBeDefined();
+      for (const call of [
+        () => service.approve(actor, NOTE, {}),
+        () => service.returnNote(actor, NOTE, { comment: 'x' }),
+        () => service.voidNote(actor, NOTE),
+      ]) {
+        await expect(call()).rejects.toMatchObject({ status: 403 });
+      }
+      expect(repository.updateIfStatus).not.toHaveBeenCalled();
+    }
+    const orphan = setup(RecordStatus.Submitted);
+    orphan.grades.find.mockResolvedValue({ id: GRADE, active: true, coordinatorId: null as never });
+    await expect(orphan.service.approve(coordinator, NOTE, {})).rejects.toMatchObject({
+      status: 403,
+    });
   });
 
   it('devolver con ajustes guarda antes y después de cada campo y aplica el cambio', async () => {

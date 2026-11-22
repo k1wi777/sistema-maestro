@@ -44,7 +44,7 @@ import { TeacherAssignmentsService } from '../../estructura/assignments/teacher-
 import { AcademicPeriodsService } from '../../estructura/catalogs/academic-period/academic-periods.service';
 import { SchoolYearsService } from '../../estructura/school-years/school-years.service';
 import { ReviewsService } from '../../planeacion/review/reviews.service';
-import { isReviewer } from '../common/record-rules';
+import { canReviewGrade, isStaff } from '../../../shared/records/review-scope';
 import {
   FIELD_JOURNAL_REPOSITORY,
   type AnnotationRow,
@@ -116,10 +116,10 @@ export class FieldJournalsService {
     query: ListQuery<FieldJournalFilters, FieldJournalSortField>,
   ): Promise<Page<FieldJournalSummary>> {
     const visibility = await this.visibilityFor(user, query.filters.scope ?? 'mine');
-    const page = await this.repository.findPage({
-      ...query,
-      filters: { ...query.filters, visibility },
-    });
+    // El filtro por coordinadora es de la bandeja de revisión: en «mis diarios» se ignora.
+    const filters =
+      visibility.kind === 'review' ? query.filters : { ...query.filters, coordinatorId: undefined };
+    const page = await this.repository.findPage({ ...query, filters: { ...filters, visibility } });
     const items = await this.summarize(user, page.items);
     return { ...page, items };
   }
@@ -153,9 +153,11 @@ export class FieldJournalsService {
   /** Cifras por estado y grados y grupos del alcance de revisión de la persona de coordinación. */
   async reviewScope(user: RequestUser): Promise<JournalReviewScope> {
     const unrestricted = isAdministrator(user);
+    // Las cifras y los grados son los de la coordinadora (sus grados); administración, todo.
     const visibility: JournalVisibility = {
       kind: 'review',
       coordinatorId: unrestricted ? null : user.id,
+      submittedOnly: !unrestricted,
     };
     const [counts, scope] = await Promise.all([
       this.repository.countByStatus(visibility),
@@ -447,7 +449,7 @@ export class FieldJournalsService {
 
   /**
    * Orden: 404 → 403 (fuera de alcance) → 403 (autorrevisión) → bloqueo → 409 (no está Enviado).
-   * La coordinadora revisa los diarios de sus grados; administración, cualquiera.
+   * Solo la coordinadora del grado revisa; administración consulta pero no decide.
    */
   private async reviewContext(user: RequestUser, id: string): Promise<JournalContext> {
     const base = await this.repository.findBase(id);
@@ -484,7 +486,7 @@ export class FieldJournalsService {
   // ---------- Contexto y visibilidad ----------
 
   private inReviewScope(user: RequestUser, base: JournalBase): boolean {
-    return isAdministrator(user) || (isReviewer(user) && base.grade.coordinatorId === user.id);
+    return canReviewGrade(user, base.grade.coordinatorId);
   }
 
   private async visibilityFor(
@@ -492,10 +494,12 @@ export class FieldJournalsService {
     scope: 'mine' | 'review',
   ): Promise<JournalVisibility> {
     if (scope === 'review') {
-      if (!isReviewer(user)) {
+      if (!isStaff(user)) {
         throw new ForbiddenException('La bandeja de revisión es solo para coordinación');
       }
-      return { kind: 'review', coordinatorId: isAdministrator(user) ? null : user.id };
+      // Todo el colegio: la coordinadora desde el primer envío (no «En curso»); administración,
+      // todos. «Mis grados» llega como filtro `coordinatorId`.
+      return { kind: 'review', coordinatorId: null, submittedOnly: !isAdministrator(user) };
     }
     const year = await this.schoolYears.findCurrent();
     const groups = year ? await this.assignments.myGroups(user.id, year.code) : [];
@@ -510,7 +514,10 @@ export class FieldJournalsService {
     return roster;
   }
 
-  /** Quién puede ver el diario: participantes y autores; la coordinadora desde el primer envío. */
+  /**
+   * Quién puede ver el diario: participantes y autores; coordinación (de cualquier grado)
+   * desde el primer envío y administración siempre.
+   */
   private canSee(user: RequestUser, context: JournalContext): boolean {
     const base = context.base!;
     if (isAdministrator(user)) {
@@ -522,7 +529,7 @@ export class FieldJournalsService {
     ) {
       return true;
     }
-    return isReviewer(user) && this.inReviewScope(user, base) && base.submittedAt !== null;
+    return user.role === UserRole.Coordinator && base.submittedAt !== null;
   }
 
   private async buildContext(user: RequestUser, id: string): Promise<JournalContext> {
@@ -764,7 +771,7 @@ export class FieldJournalsService {
     }
 
     let canReview = false;
-    if (base && isReviewer(user) && this.inReviewScope(user, base)) {
+    if (base && this.inReviewScope(user, base)) {
       const last = context.submissions[context.submissions.length - 1];
       const involved = new Set([
         ...(last ? [last.directorId] : []),
@@ -789,7 +796,7 @@ export class FieldJournalsService {
   private async compose(user: RequestUser, context: JournalContext): Promise<FieldJournalDay> {
     const { base, roster } = context;
     const viewer = this.viewerOf(user, context);
-    const seesRoster = viewer.isHomeroomTeacher || isReviewer(user);
+    const seesRoster = viewer.isHomeroomTeacher || isStaff(user);
     const lastSubmission = context.submissions[context.submissions.length - 1] ?? null;
     const contributors = this.contributorList(context);
     const readyContributors = contributors.filter((entry) => entry.ready > 0);
@@ -804,7 +811,7 @@ export class FieldJournalsService {
       : [[], [] as Review[], []];
 
     const seesObservation = (annotation: AnnotationRow) =>
-      annotation.teacherId === user.id || viewer.isHomeroomTeacher || isReviewer(user);
+      annotation.teacherId === user.id || viewer.isHomeroomTeacher || isStaff(user);
     const annotations: JournalAnnotation[] = context.annotations.map((annotation) => {
       const latest = seesObservation(annotation)
         ? observations.filter((entry) => entry.annotationId === annotation.id).at(-1)
@@ -878,7 +885,7 @@ export class FieldJournalsService {
       missing,
       annotations,
       generalObservation:
-        generalReturn && (viewer.isHomeroomTeacher || isReviewer(user))
+        generalReturn && (viewer.isHomeroomTeacher || isStaff(user))
           ? {
               text: generalReturn.comment ?? '',
               reviewer: generalReturn.reviewer,

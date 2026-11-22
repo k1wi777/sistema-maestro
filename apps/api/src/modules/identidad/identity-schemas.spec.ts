@@ -1,21 +1,18 @@
 import {
+  ALL_ROLES,
   acceptConsentSchema,
   changePasswordSchema,
+  changeUserRoleSchema,
   createUserSchema,
   loginSchema,
   passwordSchema,
-  roleSatisfies,
   updateUserSchema,
   UserRole,
 } from '@gns/shared';
 
-describe('roleSatisfies', () => {
-  it('aplica la jerarquía docente < coordinador < administrador', () => {
-    expect(roleSatisfies(UserRole.Administrator, UserRole.Teacher)).toBe(true);
-    expect(roleSatisfies(UserRole.Coordinator, UserRole.Teacher)).toBe(true);
-    expect(roleSatisfies(UserRole.Teacher, UserRole.Teacher)).toBe(true);
-    expect(roleSatisfies(UserRole.Teacher, UserRole.Coordinator)).toBe(false);
-    expect(roleSatisfies(UserRole.Coordinator, UserRole.Administrator)).toBe(false);
+describe('ALL_ROLES', () => {
+  it('lista los tres roles en orden fijo, sin jerarquía', () => {
+    expect(ALL_ROLES).toEqual([UserRole.Teacher, UserRole.Coordinator, UserRole.Administrator]);
   });
 });
 
@@ -52,9 +49,15 @@ describe('createUserSchema', () => {
 describe('updateUserSchema', () => {
   it('exige al menos un campo y no repone valores', () => {
     expect(updateUserSchema.safeParse({}).success).toBe(false);
-    expect(updateUserSchema.parse({ role: UserRole.Coordinator })).toEqual({
+    expect(updateUserSchema.parse({ fullName: 'Ana Demo' })).toEqual({ fullName: 'Ana Demo' });
+  });
+
+  it('ya no acepta el rol: cambiarlo es PUT /users/:id/role', () => {
+    expect(updateUserSchema.safeParse({ role: UserRole.Coordinator }).success).toBe(false);
+    expect(changeUserRoleSchema.parse({ role: UserRole.Coordinator })).toEqual({
       role: UserRole.Coordinator,
     });
+    expect(changeUserRoleSchema.safeParse({ role: 'dios' }).success).toBe(false);
   });
 });
 

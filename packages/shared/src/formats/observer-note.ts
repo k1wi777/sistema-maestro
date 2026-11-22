@@ -3,7 +3,11 @@ import { isoDateTimeSchema } from '../api/iso-date-time';
 import { ObserverNoteType } from '../constants/observer';
 import { RecordStatus } from '../constants/record-status';
 import { createListQuerySchema, createPageSchema } from '../list-query/list-query';
-import { createApproveReviewSchema, createReturnReviewSchema } from '../review/review';
+import {
+  coordinatorFilterSchema,
+  createApproveReviewSchema,
+  createReturnReviewSchema,
+} from '../review/review';
 import { studentFirstNameSchema } from './student-first-name';
 
 export const OBSERVER_DESCRIPTION_MAX_LENGTH = 1500;
@@ -140,6 +144,7 @@ export const observerNoteListQuerySchema = createListQuerySchema({
     type: typeSchema.optional(),
     teacherId: uuid.optional(),
     periodId: uuid.optional(),
+    coordinatorId: coordinatorFilterSchema.optional(),
   },
 });
 export interface ObserverNoteFilters {
@@ -150,4 +155,6 @@ export interface ObserverNoteFilters {
   teacherId?: string;
   /** Se traduce a las fechas del periodo: la anotación no tiene periodo propio. */
   periodId?: string;
+  /** Coordinadora del grado (UUID) o `none` (sin coordinadora); un docente lo ignora. */
+  coordinatorId?: string;
 }

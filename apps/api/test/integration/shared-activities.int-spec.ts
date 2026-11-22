@@ -149,14 +149,19 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
   });
 
   describe('listar, ver y filtrar (R11)', () => {
-    it('todo docente, coordinador y administrador ven las actividades de otros autores', async () => {
+    it('todo docente ve las actividades de otros autores; coordinación y administración no usan el repositorio (403)', async () => {
       const t = token();
       const created = await share(author, { title: `Visible ${t}`, steps: 'Paso' });
 
-      for (const cookies of [author, other, coordinator, admin]) {
+      for (const cookies of [author, other]) {
         const detail = await call(cookies, 'get', `/shared-activities/${created.id}`).expect(200);
         expect((detail.body as ActivityBody).title).toBe(`Visible ${t}`);
         expect(await search(cookies, t)).toEqual([`Visible ${t}`]);
+      }
+      // El repositorio es del trabajo propio del docente: no hay jerarquía que lo abra.
+      for (const cookies of [coordinator, admin]) {
+        await call(cookies, 'get', `/shared-activities/${created.id}`).expect(403);
+        await call(cookies, 'get', '/shared-activities').expect(403);
       }
       await call(other, 'get', `/shared-activities/${MISSING}`).expect(404);
       await call(other, 'get', '/shared-activities/no-uuid').expect(400);
@@ -271,7 +276,7 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
       await patch({ studentName: 'Ana' }).expect(400);
     });
 
-    it('otro docente, coordinación y administración reciben 403 al editar y retirar; sin existir, 404', async () => {
+    it('otro docente recibe 403 al editar y retirar (coordinación y administración, también, por rol); sin existir, 404', async () => {
       const created = await share(author, { title: 'Ajena', steps: 'Paso' });
 
       for (const cookies of [other, coordinator, admin]) {
@@ -306,7 +311,7 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
 
       expect(await prisma.favoriteActivity.count({ where: { activityId: created.id } })).toBe(0);
       expect(await prisma.sharedActivity.count({ where: { id: created.id } })).toBe(0);
-      for (const cookies of [author, other, coordinator]) {
+      for (const cookies of [author, other]) {
         await call(cookies, 'get', `/shared-activities/${created.id}`).expect(404);
         expect(await search(cookies, t)).toEqual([]);
         expect((await listBy(cookies, `favorites=true&q=${t}`)).items).toEqual([]);
@@ -585,7 +590,7 @@ describe('repositorio de actividades y favoritos (BE-57)', () => {
       await share(author, { title: 'r4', steps: 'p', levelId: own.id });
       await share(other, { title: 'r5', steps: 'p', learningCorner: `Fuera ${t}` });
 
-      for (const cookies of [author, other, coordinator, admin]) {
+      for (const cookies of [author, other]) {
         const res = await call(
           cookies,
           'get',

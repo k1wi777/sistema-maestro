@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import {
   AreaType,
   TeacherAssignmentStatus,
@@ -8,8 +8,11 @@ import {
   type TeacherAssignment,
   type User,
 } from '@gns/shared';
+import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import type { TransactionRunner } from '../../../shared/database/transaction-runner';
+import type { AuditLogService } from '../../auditoria/audit-log.service';
+import type { UserRoleChangeEffects } from '../../identidad/users/user-role-change-effects';
 import type { UsersService } from '../../identidad/users/users.service';
 import type { AreasService } from '../catalogs/area/areas.service';
 import type { GradesService } from '../catalogs/grade/grades.service';
@@ -19,6 +22,8 @@ import { groupAssignmentsByGrade } from './my-assignments';
 import type { TeacherAssignmentRepository } from './teacher-assignment.repository';
 import { TeacherAssignmentsService } from './teacher-assignments.service';
 
+const admin: RequestUser = { id: 'admin-1', role: UserRole.Administrator, sessionId: 's-a' };
+const coordinator: RequestUser = { id: 'coord-1', role: UserRole.Coordinator, sessionId: 's-c' };
 const NOW = new Date('2026-11-09T00:00:00Z');
 const YEAR = '2026-2027';
 
@@ -64,6 +69,8 @@ interface Options {
   hasOtherActive?: boolean;
   stored?: TeacherAssignment | null;
   mine?: TeacherAssignment[];
+  /** Coordinadora del grado del grupo; por defecto `coord-1`. */
+  gradeCoordinator?: string | null;
 }
 
 function setup(options: Options = {}) {
@@ -78,6 +85,7 @@ function setup(options: Options = {}) {
     markOldestActiveAsHomeroom: jest.fn(() => Promise.resolve(options.hasOtherActive ?? false)),
     findActiveByTeacher: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveByYear: jest.fn(() => Promise.resolve(options.mine ?? [])),
+    findAllActiveByTeacher: jest.fn(() => Promise.resolve(options.mine ?? [])),
     findActiveTeachers: jest.fn(() => Promise.resolve([{ id: 'teacher-1', fullName: 'Ana' }])),
     findGroupRoster: jest.fn(() => Promise.resolve(null)),
     findMyGroups: jest.fn(() => Promise.resolve([])),
@@ -100,7 +108,13 @@ function setup(options: Options = {}) {
   } as unknown as GroupsService;
   const grades = {
     find: jest.fn(() =>
-      Promise.resolve({ id: 'g-1', levelId: 'l-1', active: options.grade !== 'inactive' }),
+      Promise.resolve({
+        id: 'g-1',
+        levelId: 'l-1',
+        active: options.grade !== 'inactive',
+        coordinatorId:
+          options.gradeCoordinator === undefined ? 'coord-1' : options.gradeCoordinator,
+      }),
     ),
   } as unknown as GradesService;
   const areas = {
@@ -127,6 +141,8 @@ function setup(options: Options = {}) {
       Promise.resolve((options.registeredYears ?? [YEAR]).includes(code) ? { code } : null),
     ),
   } as unknown as SchoolYearsService;
+  const audit = { record: jest.fn(() => Promise.resolve()) };
+  const effects = { register: jest.fn() };
   const transactions: TransactionRunner = { run: (fn) => fn() };
   const service = new TeacherAssignmentsService(
     repository,
@@ -136,8 +152,10 @@ function setup(options: Options = {}) {
     grades,
     areas,
     schoolYears,
+    audit as unknown as AuditLogService,
+    effects as unknown as UserRoleChangeEffects,
   );
-  return { service, repository };
+  return { service, repository, audit, effects };
 }
 
 const input = {
@@ -157,7 +175,7 @@ describe('TeacherAssignmentsService.create', () => {
   it('guarda con el año vigente si no se indica año', async () => {
     const { service, repository } = setup();
 
-    await service.create(input);
+    await service.create(admin, input);
 
     expect(repository.create).toHaveBeenCalledWith({ ...input, schoolYear: YEAR });
   });
@@ -165,7 +183,7 @@ describe('TeacherAssignmentsService.create', () => {
   it('acepta un año registrado distinto del vigente', async () => {
     const { service, repository } = setup({ registeredYears: [YEAR, '2027-2028'] });
 
-    await service.create({ ...input, schoolYear: '2027-2028' });
+    await service.create(admin, { ...input, schoolYear: '2027-2028' });
 
     expect(repository.create).toHaveBeenCalledWith({ ...input, schoolYear: '2027-2028' });
   });
@@ -173,7 +191,7 @@ describe('TeacherAssignmentsService.create', () => {
   it('acepta al coordinador como docente asignable', async () => {
     const { service, repository } = setup({ teacher: user({ role: UserRole.Coordinator }) });
 
-    await service.create(input);
+    await service.create(admin, input);
 
     expect(repository.create).toHaveBeenCalled();
   });
@@ -185,16 +203,16 @@ describe('TeacherAssignmentsService.create', () => {
   ])('rechaza con 400 en teacherId a un docente %s', async (_label, teacher) => {
     const { service, repository } = setup({ teacher });
 
-    expect(await fieldOf(service.create(input))).toBe('teacherId');
+    expect(await fieldOf(service.create(admin, input))).toBe('teacherId');
     expect(repository.create).not.toHaveBeenCalled();
   });
 
   it('rechaza con 400 un grupo, un área o un año inexistentes', async () => {
-    expect(await fieldOf(setup({ group: 'missing' }).service.create(input))).toBe('groupId');
-    expect(await fieldOf(setup({ area: 'missing' }).service.create(input))).toBe('areaId');
-    expect(await fieldOf(setup().service.create({ ...input, schoolYear: '2030-2031' }))).toBe(
-      'schoolYear',
-    );
+    expect(await fieldOf(setup({ group: 'missing' }).service.create(admin, input))).toBe('groupId');
+    expect(await fieldOf(setup({ area: 'missing' }).service.create(admin, input))).toBe('areaId');
+    expect(
+      await fieldOf(setup().service.create(admin, { ...input, schoolYear: '2030-2031' })),
+    ).toBe('schoolYear');
   });
 
   it.each([
@@ -205,7 +223,7 @@ describe('TeacherAssignmentsService.create', () => {
   ] as const)('rechaza con 400 %s', async (_label, options, field, reason) => {
     const { service, repository } = setup(options);
 
-    const error = await service.create(input).catch((e: unknown) => e);
+    const error = await service.create(admin, input).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(RequestValidationException);
     const [first] = (error as RequestValidationException).fieldErrors;
@@ -217,7 +235,7 @@ describe('TeacherAssignmentsService.create', () => {
   it('responde 409 si no hay año vigente y no se indica año', async () => {
     const { service } = setup({ currentYear: null });
 
-    await expect(service.create(input)).rejects.toBeInstanceOf(ConflictException);
+    await expect(service.create(admin, input)).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('responde 409 por duplicado y avisa si la existente está retirada', async () => {
@@ -226,8 +244,12 @@ describe('TeacherAssignmentsService.create', () => {
       existing: assignment({ id: 'old-1', status: TeacherAssignmentStatus.Withdrawn }),
     });
 
-    await expect(active.service.create(input)).rejects.toThrow(/Ya existe una asignación con/);
-    await expect(withdrawn.service.create(input)).rejects.toThrow(/retirada.*old-1.*reactívala/);
+    await expect(active.service.create(admin, input)).rejects.toThrow(
+      /Ya existe una asignación con/,
+    );
+    await expect(withdrawn.service.create(admin, input)).rejects.toThrow(
+      /retirada.*old-1.*reactívala/,
+    );
     expect(active.repository.create).not.toHaveBeenCalled();
   });
 
@@ -240,7 +262,7 @@ describe('TeacherAssignmentsService.create', () => {
       }),
     });
 
-    await expect(service.create({ ...input, isHomeroomTeacher: true })).rejects.toThrow(
+    await expect(service.create(admin, { ...input, isHomeroomTeacher: true })).rejects.toThrow(
       /Primero 1 ya tiene director\(a\) de grupo: Docente Dos/,
     );
     expect(repository.lockGroup).toHaveBeenCalledWith('gr-1');
@@ -251,7 +273,7 @@ describe('TeacherAssignmentsService.create', () => {
   it('no consulta la dirección de grupo si no se marca', async () => {
     const { service, repository } = setup();
 
-    await service.create(input);
+    await service.create(admin, input);
 
     expect(repository.lockGroup).not.toHaveBeenCalled();
   });
@@ -261,12 +283,12 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
   it('responde 404 si la asignación no existe', async () => {
     const { service } = setup();
 
-    await expect(service.update('x', { isHomeroomTeacher: true })).rejects.toBeInstanceOf(
+    await expect(service.update(admin, 'x', { isHomeroomTeacher: true })).rejects.toBeInstanceOf(
       NotFoundException,
     );
-    await expect(service.setStatus('x', TeacherAssignmentStatus.Withdrawn)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.setStatus(admin, 'x', TeacherAssignmentStatus.Withdrawn),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('rechaza con 409 marcar la dirección si el grupo ya la tiene (de cualquier docente)', async () => {
@@ -275,7 +297,7 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
       homeroomInGroup: assignment({ id: 'other', isHomeroomTeacher: true }),
     });
 
-    await expect(service.update('a-1', { isHomeroomTeacher: true })).rejects.toBeInstanceOf(
+    await expect(service.update(admin, 'a-1', { isHomeroomTeacher: true })).rejects.toBeInstanceOf(
       ConflictException,
     );
     expect(repository.findHomeroomInGroup).toHaveBeenCalledWith('gr-1', YEAR, 'a-1');
@@ -285,7 +307,7 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
   it('retira sin validar nada más y conserva el registro', async () => {
     const { service, repository } = setup({ stored: assignment() });
 
-    const result = await service.setStatus('a-1', TeacherAssignmentStatus.Withdrawn);
+    const result = await service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Withdrawn);
 
     expect(result.status).toBe(TeacherAssignmentStatus.Withdrawn);
     expect(repository.update).toHaveBeenCalledWith('a-1', { status: 'retirada' });
@@ -299,7 +321,7 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
       hasOtherActive: true,
     });
 
-    const result = await service.setStatus('a-1', TeacherAssignmentStatus.Withdrawn);
+    const result = await service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Withdrawn);
 
     expect(result).toMatchObject({ status: 'retirada', isHomeroomTeacher: false });
     expect(repository.lockGroup).toHaveBeenCalledWith('gr-1');
@@ -317,10 +339,10 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
     const inactiveArea = setup({ stored, area: 'inactive' });
 
     expect(
-      await fieldOf(inactiveGroup.service.setStatus('a-1', TeacherAssignmentStatus.Active)),
+      await fieldOf(inactiveGroup.service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Active)),
     ).toBe('groupId');
     expect(
-      await fieldOf(inactiveArea.service.setStatus('a-1', TeacherAssignmentStatus.Active)),
+      await fieldOf(inactiveArea.service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Active)),
     ).toBe('areaId');
     expect(inactiveGroup.repository.update).not.toHaveBeenCalled();
   });
@@ -337,21 +359,21 @@ describe('TeacherAssignmentsService.update y setStatus', () => {
     });
     const free = setup({ stored });
 
-    expect(await fieldOf(inactive.service.setStatus('a-1', TeacherAssignmentStatus.Active))).toBe(
-      'teacherId',
-    );
+    expect(
+      await fieldOf(inactive.service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Active)),
+    ).toBe('teacherId');
     await expect(
-      taken.service.setStatus('a-1', TeacherAssignmentStatus.Active),
+      taken.service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Active),
     ).rejects.toBeInstanceOf(ConflictException);
     await expect(
-      free.service.setStatus('a-1', TeacherAssignmentStatus.Active),
+      free.service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Active),
     ).resolves.toMatchObject({ status: 'activa' });
   });
 
   it('es idempotente al repetir el estado actual', async () => {
     const { service, repository } = setup({ stored: assignment() });
 
-    await service.setStatus('a-1', TeacherAssignmentStatus.Active);
+    await service.setStatus(admin, 'a-1', TeacherAssignmentStatus.Active);
 
     expect(repository.update).not.toHaveBeenCalled();
   });
@@ -483,5 +505,88 @@ describe('TeacherAssignmentsService.groupRoster y myGroups', () => {
     expect(repository.findGroupRoster).toHaveBeenCalledWith('gr-1', YEAR);
     await expect(service.myGroups('teacher-1', YEAR)).resolves.toEqual([]);
     expect(repository.findMyGroups).toHaveBeenCalledWith('teacher-1', YEAR);
+  });
+});
+
+describe('TeacherAssignmentsService: alcance de la coordinadora (Q3)', () => {
+  const stored = assignment();
+
+  it('la coordinadora asigna, edita y retira en grupos de sus grados', async () => {
+    const { service, repository } = setup({ stored });
+
+    await service.create(coordinator, input);
+    await service.update(coordinator, 'a-1', { isHomeroomTeacher: true });
+    await service.setStatus(coordinator, 'a-1', TeacherAssignmentStatus.Withdrawn);
+
+    expect(repository.create).toHaveBeenCalled();
+  });
+
+  it('responde 403 sin escribir si el grupo es de otro grado o de uno sin coordinadora', async () => {
+    for (const gradeCoordinator of ['coord-2', null]) {
+      const { service, repository } = setup({ stored, gradeCoordinator });
+
+      for (const call of [
+        () => service.create(coordinator, input),
+        () => service.update(coordinator, 'a-1', { isHomeroomTeacher: true }),
+        () => service.setStatus(coordinator, 'a-1', TeacherAssignmentStatus.Withdrawn),
+      ]) {
+        await expect(call()).rejects.toBeInstanceOf(ForbiddenException);
+      }
+      expect(repository.create).not.toHaveBeenCalled();
+      expect(repository.update).not.toHaveBeenCalled();
+    }
+  });
+
+  it('administración asigna en cualquier grupo', async () => {
+    const { service, repository } = setup({ stored, gradeCoordinator: 'coord-2' });
+
+    await service.create(admin, input);
+
+    expect(repository.create).toHaveBeenCalled();
+  });
+});
+
+describe('TeacherAssignmentsService: efecto del cambio de rol', () => {
+  const change = (from: UserRole, to: UserRole) => ({
+    userId: 'teacher-1',
+    from,
+    to,
+    actor: admin,
+  });
+  const mine = [
+    assignment({ id: 'a-1', isHomeroomTeacher: true }),
+    assignment({ id: 'a-2', schoolYear: '2025-2026' }),
+  ];
+
+  it('al dejar de ser docente retira todas sus asignaciones activas sin borrar y deja constancia', async () => {
+    for (const to of [UserRole.Coordinator, UserRole.Administrator]) {
+      const { service, repository, audit } = setup({ mine });
+      await service.onRoleChange(change(UserRole.Teacher, to));
+
+      expect(repository.update).toHaveBeenCalledTimes(2);
+      expect(repository.update).toHaveBeenCalledWith('a-1', {
+        status: TeacherAssignmentStatus.Withdrawn,
+        isHomeroomTeacher: false,
+      });
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'Retiró asignaciones por cambio de rol',
+          entityId: 'teacher-1',
+          detail: expect.stringContaining('dirección de grupo') as string,
+        }),
+      );
+    }
+  });
+
+  it('no hace nada si no era docente, sigue siéndolo o no tenía asignaciones', async () => {
+    const { service, repository, audit } = setup({ mine });
+    await service.onRoleChange(change(UserRole.Coordinator, UserRole.Administrator));
+    await service.onRoleChange(change(UserRole.Teacher, UserRole.Teacher));
+    const empty = setup();
+    await empty.service.onRoleChange(change(UserRole.Teacher, UserRole.Coordinator));
+
+    expect(repository.update).not.toHaveBeenCalled();
+    expect(audit.record).not.toHaveBeenCalled();
+    expect(empty.audit.record).not.toHaveBeenCalled();
   });
 });

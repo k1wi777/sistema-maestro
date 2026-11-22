@@ -7,7 +7,7 @@ import type { ApiResult } from '@/shared/api';
 import { roleLabel } from '@/shared/session';
 import { Button, Dialog, Notice, Select, TextInput } from '@/shared/ui';
 
-import { createUser, updateUser } from '../api/users';
+import { changeUserRole, createUser, updateUser } from '../api/users';
 import {
   EMPTY_USER_FORM,
   apiFieldErrors,
@@ -26,6 +26,8 @@ const ROLE_OPTIONS = Object.values(UserRole).map((role) => ({
 interface UserFormDialogProps {
   /** `null` crea un usuario; con un usuario, lo edita. */
   user: User | null;
+  /** Consecuencias de pasar al rol indicado (datos ya cargados); orientativas. */
+  consequences?: (user: User, to: UserRole) => string[];
   onSaved: () => void;
   onClose: () => void;
 }
@@ -34,7 +36,7 @@ interface UserFormDialogProps {
  * Alta y edición de un usuario. Se monta solo mientras está abierto (así la contraseña inicial
  * nunca sobrevive al cierre) y conserva lo escrito cuando la API rechaza el envío.
  */
-export function UserFormDialog({ user, onSaved, onClose }: UserFormDialogProps) {
+export function UserFormDialog({ user, consequences, onSaved, onClose }: UserFormDialogProps) {
   const [values, setValues] = useState<UserFormValues>(
     user
       ? { fullName: user.fullName, email: user.email, role: user.role, password: '' }
@@ -43,9 +45,12 @@ export function UserFormDialog({ user, onSaved, onClose }: UserFormDialogProps) 
   const [errors, setErrors] = useState<UserFormErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  /** Aviso de consecuencias de un cambio de rol, pendiente de confirmar. */
+  const [confirming, setConfirming] = useState<string[] | null>(null);
 
   function change<K extends keyof UserFormValues>(field: K, value: UserFormValues[K]) {
     setValues((current) => ({ ...current, [field]: value }));
+    setConfirming(null);
     setErrors((current) => ({ ...current, [field]: undefined }));
   }
 
@@ -56,7 +61,21 @@ export function UserFormDialog({ user, onSaved, onClose }: UserFormDialogProps) 
     if (user) {
       const validation = validateUpdate(values, user);
       if (validation.ok) {
-        send = () => updateUser(user.id, validation.input);
+        const { input, role } = validation;
+        if (role !== null && confirming === null) {
+          // Primero el aviso: un cambio de rol tiene consecuencias y se confirma aparte.
+          setConfirming(consequences?.(user, role) ?? []);
+          return;
+        }
+        send = async () => {
+          if (input) {
+            const edited = await updateUser(user.id, input);
+            if (!edited.ok || role === null) {
+              return edited;
+            }
+          }
+          return changeUserRole(user.id, role as UserRole);
+        };
       } else {
         setErrors(validation.errors);
         if (validation.unchanged) {
@@ -105,7 +124,13 @@ export function UserFormDialog({ user, onSaved, onClose }: UserFormDialogProps) 
             Cancelar
           </Button>
           <Button type="submit" form="user-form" disabled={busy}>
-            {busy ? 'Guardando…' : user ? 'Guardar cambios' : 'Crear usuario'}
+            {busy
+              ? 'Guardando…'
+              : confirming
+                ? 'Confirmar cambio de rol'
+                : user
+                  ? 'Guardar cambios'
+                  : 'Crear usuario'}
           </Button>
         </>
       }
@@ -147,6 +172,15 @@ export function UserFormDialog({ user, onSaved, onClose }: UserFormDialogProps) 
           error={errors.role}
           onChange={(event) => change('role', event.target.value as UserFormValues['role'])}
         />
+        {confirming ? (
+          <Notice tone="warning" title="Qué pasa al cambiar el rol">
+            <ul>
+              {confirming.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </Notice>
+        ) : null}
         {user ? null : (
           <TextInput
             label="Contraseña inicial"

@@ -30,7 +30,6 @@ describe('revisión de coordinación de planeaciones (BE-54)', () => {
   let coordB: Cookies;
   let coordAUser: TestUser;
   let admin: Cookies;
-  let adminUser: TestUser;
   let target: { gradeId: string; areaId: string };
 
   type Method = 'get' | 'post' | 'patch';
@@ -73,12 +72,14 @@ describe('revisión de coordinación de planeaciones (BE-54)', () => {
     coordAUser = await createTestUser(app, { role: UserRole.Coordinator });
     coordA = await signIn(app, coordAUser);
     coordB = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
-    adminUser = await createTestUser(app, { role: UserRole.Administrator });
-    admin = await signIn(app, adminUser);
+    admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
     target = await planning.gradeAndArea('Bachillerato');
-    for (const user of [teacherUser, coordAUser, adminUser]) {
-      await planning.assign(user.id, target.gradeId, target.areaId);
-    }
+    await planning.assign(teacherUser.id, target.gradeId, target.areaId);
+    // Solo la coordinadora del grado decide (#115): coordA es la de `target`; coordB, de otro grado.
+    await prisma.grade.update({
+      where: { id: target.gradeId },
+      data: { coordinatorId: coordAUser.id },
+    });
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -114,15 +115,15 @@ describe('revisión de coordinación de planeaciones (BE-54)', () => {
       expect(audit?.dataAfter).toMatchObject({ status: 'revisada' });
     });
 
-    it('aprobar admite comentario vacío y el administrador también puede revisar', async () => {
+    it('aprobar admite comentario vacío', async () => {
       const created = await submitted();
 
-      await approve(admin, created.id).expect(200);
+      await approve(coordA, created.id).expect(200);
 
       expect((await reviewRows(created.id))[0]).toMatchObject({
         action: 'aprobada',
         comment: null,
-        reviewerId: adminUser.id,
+        reviewerId: coordAUser.id,
       });
     });
 
@@ -283,7 +284,7 @@ describe('revisión de coordinación de planeaciones (BE-54)', () => {
         changes: { topic: 'Tema de coordinación' },
       }).expect(200);
       await as(teacher, 'post', `/lesson-plans/${created.id}/submit`).expect(200);
-      await approve(coordB, created.id, { comment: 'Aprobada' }).expect(200);
+      await approve(coordA, created.id, { comment: 'Aprobada' }).expect(200);
 
       for (const cookies of [teacher, coordA, admin]) {
         const rows = await history(cookies, created.id);
@@ -345,55 +346,103 @@ describe('revisión de coordinación de planeaciones (BE-54)', () => {
       expect((await stored(created.id)).status).toBe('enviada');
     });
 
-    it.each([
-      ['coordinador', () => coordA, () => coordAUser],
-      ['administrador', () => admin, () => adminUser],
-    ] as const)(
-      'el %s dueño de la planeación recibe 403 autorrevision_no_permitida al aprobar o devolver, con o sin ajustes',
-      async (_role, cookies, user) => {
-        const own = await createPlan(app, cookies(), {
-          ...target,
-          periodId: planning.periods[1],
-          topic: 'Propia',
-          ...SUBMITTABLE_CONTENT,
-        });
-        await as(cookies(), 'post', `/lesson-plans/${own.id}/submit`).expect(200);
+    it('la coordinadora de otro grado y administración reciben 403 sin cambiar nada; un grado sin coordinadora, 403 para todos', async () => {
+      const created = await submitted();
 
+      for (const cookies of [coordB, admin]) {
         for (const res of [
-          await approve(cookies(), own.id),
-          await approve(cookies(), own.id, { changes: { topic: 'Ajuste propio' } }),
-          await giveBack(cookies(), own.id, { comment: 'x' }),
-          await giveBack(cookies(), own.id, { comment: 'x', changes: { topic: 'Ajuste propio' } }),
+          await approve(cookies, created.id),
+          await giveBack(cookies, created.id, { comment: 'x' }),
+          await as(cookies, 'post', `/lesson-plans/${created.id}/void`).send({ reason: 'Motivo' }),
+        ]) {
+          expect(res.status).toBe(403);
+          expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Forbidden);
+        }
+      }
+      expect((await stored(created.id)).status).toBe('enviada');
+      expect(await reviewRows(created.id)).toEqual([]);
+
+      // Ambas consultan: ver todo el colegio no es revisar.
+      await as(coordB, 'get', `/lesson-plans/${created.id}`).expect(200);
+      await as(admin, 'get', `/lesson-plans/${created.id}`).expect(200);
+
+      await prisma.grade.update({ where: { id: target.gradeId }, data: { coordinatorId: null } });
+      try {
+        await approve(coordA, created.id).expect(403);
+        await approve(admin, created.id).expect(403);
+      } finally {
+        await prisma.grade.update({
+          where: { id: target.gradeId },
+          data: { coordinatorId: coordAUser.id },
+        });
+      }
+      expect((await stored(created.id)).status).toBe('enviada');
+    });
+
+    it('una coordinadora que fue dueña de la planeación recibe 403 autorrevision_no_permitida al aprobar o devolver, con o sin ajustes', async () => {
+      // Quien antes era docente y hoy coordina el grado no revisa lo que ella misma envió.
+      const formerTeacherUser = await createTestUser(app);
+      const formerTeacher = await signIn(app, formerTeacherUser);
+      await planning.assign(formerTeacherUser.id, target.gradeId, target.areaId);
+      const own = await createPlan(app, formerTeacher, {
+        ...target,
+        periodId: planning.periods[1],
+        topic: 'Propia',
+        ...SUBMITTABLE_CONTENT,
+      });
+      await as(formerTeacher, 'post', `/lesson-plans/${own.id}/submit`).expect(200);
+      await prisma.user.update({
+        where: { id: formerTeacherUser.id },
+        data: { role: UserRole.Coordinator },
+      });
+      await prisma.grade.update({
+        where: { id: target.gradeId },
+        data: { coordinatorId: formerTeacherUser.id },
+      });
+
+      try {
+        for (const res of [
+          await approve(formerTeacher, own.id),
+          await approve(formerTeacher, own.id, { changes: { topic: 'Ajuste propio' } }),
+          await giveBack(formerTeacher, own.id, { comment: 'x' }),
+          await giveBack(formerTeacher, own.id, {
+            comment: 'x',
+            changes: { topic: 'Ajuste propio' },
+          }),
         ]) {
           expect(res.status).toBe(403);
           expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.SelfReviewForbidden);
         }
-        const unchanged = await stored(own.id);
-        expect(unchanged).toMatchObject({
-          status: 'enviada',
-          topic: 'Propia',
-          teacherId: user().id,
+      } finally {
+        await prisma.grade.update({
+          where: { id: target.gradeId },
+          data: { coordinatorId: coordAUser.id },
         });
-        expect(await reviewRows(own.id)).toEqual([]);
+      }
+      expect(await stored(own.id)).toMatchObject({
+        status: 'enviada',
+        topic: 'Propia',
+        teacherId: formerTeacherUser.id,
+      });
+      expect(await reviewRows(own.id)).toEqual([]);
 
-        // Otra persona de coordinación sí puede revisarla.
-        await approve(cookies() === admin ? coordB : admin, own.id).expect(200);
-      },
-    );
+      // La coordinadora del grado sí puede revisarla.
+      await approve(coordA, own.id).expect(200);
+    });
 
     it('dos decisiones simultáneas sobre la misma planeación producen una sola y un 409', async () => {
       const created = await submitted();
 
       const approvals = await Promise.all([
         approve(coordA, created.id, { comment: 'A' }),
-        approve(coordB, created.id, { comment: 'B' }),
+        approve(coordA, created.id, { comment: 'B' }),
       ]);
       expect(approvals.map((res) => res.status).sort()).toEqual([200, 409]);
 
       const mixed = await submitted();
       const results = await Promise.all([
         approve(coordA, mixed.id, { changes: { topic: 'Ajuste de A' } }),
-        giveBack(coordB, mixed.id, {
+        giveBack(coordA, mixed.id, {
           comment: 'Devuelta por B',
           changes: { topic: 'Ajuste de B' },
         }),

@@ -44,10 +44,12 @@ interface CompliancePanelProps {
   remote: Remote<LessonPlanCompliance>;
   periodId: string | undefined;
   teacherId: string | undefined;
+  /** Solo los grados de la coordinadora («en tus grados»); sin él, todo el colegio. */
+  gradeIds?: ReadonlySet<string>;
 }
 
 /** Cumplimiento de entregas de un periodo: por docente, entregadas de total y asignaciones pendientes. */
-export function CompliancePanel({ remote, periodId, teacherId }: CompliancePanelProps) {
+export function CompliancePanel({ remote, periodId, teacherId, gradeIds }: CompliancePanelProps) {
   const ready = remote.state.status === 'ready' ? remote.state.data : null;
   const view = useMemo(() => {
     if (!ready) {
@@ -57,19 +59,17 @@ export function CompliancePanel({ remote, periodId, teacherId }: CompliancePanel
     if (!period) {
       return { period: null, rows: [] };
     }
-    const rows = complianceRows(ready, period.id).filter(
+    const rows = complianceRows(ready, period.id, gradeIds).filter(
       (row) => !teacherId || row.teacherId === teacherId,
     );
     return { period, rows };
-  }, [ready, periodId, teacherId]);
+  }, [ready, periodId, teacherId, gradeIds]);
 
   return (
     <Card
-      title={
-        view?.period
-          ? `Cumplimiento de entregas · Periodo ${view.period.number}`
-          : 'Cumplimiento de entregas'
-      }
+      title={`${gradeIds ? 'Cumplimiento de entregas en tus grados' : 'Cumplimiento de entregas'}${
+        view?.period ? ` · Periodo ${view.period.number}` : ''
+      }`}
     >
       {remote.state.status === 'loading' ? <Loading>Calculando el cumplimiento…</Loading> : null}
       {remote.state.status === 'error' ? (

@@ -32,8 +32,14 @@ export interface Planning {
   periods: Record<1 | 2 | 3, string>;
   /** Periodo de un año que no es el vigente. */
   otherYearPeriodId: string;
-  /** Crea un grado en el nivel (con el nombre del catálogo inicial si existe) y un área nueva. */
-  gradeAndArea(levelName: string): Promise<{ gradeId: string; areaId: string }>;
+  /**
+   * Crea un grado en el nivel (con el nombre del catálogo inicial si existe) y un área nueva;
+   * con `coordinatorId`, ese usuario es la coordinadora del grado (quien lo revisa).
+   */
+  gradeAndArea(
+    levelName: string,
+    coordinatorId?: string | null,
+  ): Promise<{ gradeId: string; areaId: string }>;
   assign(
     teacherId: string,
     gradeId: string,
@@ -86,14 +92,14 @@ export async function setupPlanning(app: INestApplication): Promise<Planning> {
     },
     otherYearPeriodId: periodId(OTHER_YEAR, 1),
 
-    async gradeAndArea(levelName) {
+    async gradeAndArea(levelName, coordinatorId = null) {
       await prisma.educationLevel.createMany({
         data: [{ name: levelName, sortOrder: LEVEL_ORDER[levelName] ?? 9 }],
         skipDuplicates: true,
       });
       const level = await prisma.educationLevel.findUniqueOrThrow({ where: { name: levelName } });
       const grade = await prisma.grade.create({
-        data: { name: `Grado ${unique()}`, levelId: level.id, sortOrder: 1 },
+        data: { name: `Grado ${unique()}`, levelId: level.id, sortOrder: 1, coordinatorId },
       });
       const area = await prisma.area.create({
         data: { name: `Área ${unique()}`, type: 'asignatura' },

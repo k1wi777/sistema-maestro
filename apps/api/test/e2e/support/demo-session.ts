@@ -45,7 +45,8 @@ export class DemoWorld {
 
   private constructor(
     readonly app: INestApplication,
-    private readonly admin: DemoSession,
+    /** Administración: única que lee la bitácora (coordinación ya no la consulta). */
+    readonly admin: DemoSession,
   ) {}
 
   static async start(): Promise<DemoWorld> {
@@ -135,13 +136,13 @@ export class DemoWorld {
     return session;
   }
 
-  /** Todas las filas de la bitácora de un usuario, leídas por la API como coordinación. */
-  async auditRowsOf(coordinator: DemoSession, userId: string): Promise<AuditLogEntry[]> {
+  /** Todas las filas de la bitácora de un usuario, leídas por la API como administración. */
+  async auditRowsOf(userId: string): Promise<AuditLogEntry[]> {
     const rows: AuditLogEntry[] = [];
     let cursor: string | null = null;
     do {
       const query: string = `userId=${userId}&limit=100${cursor ? `&cursor=${cursor}` : ''}`;
-      const res = await coordinator.call('get', `/audit-log?${query}`).expect(200);
+      const res = await this.admin.call('get', `/audit-log?${query}`).expect(200);
       const page = res.body as AuditLogPage;
       rows.push(...page.items);
       cursor = page.nextCursor;
@@ -150,8 +151,8 @@ export class DemoWorld {
   }
 
   /** CSV de la bitácora de un usuario (la exportación deja además su propia fila). */
-  async auditCsvOf(coordinator: DemoSession, userId: string): Promise<string> {
-    const res = await coordinator.call('get', `/audit-log/export?userId=${userId}`).expect(200);
+  async auditCsvOf(userId: string): Promise<string> {
+    const res = await this.admin.call('get', `/audit-log/export?userId=${userId}`).expect(200);
     return res.text;
   }
 

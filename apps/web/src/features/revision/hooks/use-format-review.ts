@@ -13,8 +13,15 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { NETWORK_ERROR_CODE, type ApiError, type ApiResult } from '@/shared/api';
 import { useRemote, type Remote } from '@/shared/data';
+import {
+  canReviewGrade,
+  consultNotice,
+  coordinatorOfGrade,
+  type GradeCoordinator,
+} from '@/shared/records';
 import { useSession } from '@/shared/session';
 
+import { listGrades } from '../api/catalogs';
 import { approveNote, getNote, listNoteReviews, returnNote, voidNote } from '../api/observer-notes';
 import { buildHistory } from '../model/history';
 import {
@@ -30,6 +37,7 @@ interface ReviewableRecord {
   id: string;
   status: RecordStatus;
   teacher: { id: string; fullName: string };
+  grade: { id: string; name: string };
 }
 
 interface CommentParser {
@@ -69,6 +77,8 @@ export const NOTE_FORMAT: FormatApi<ObserverNote> = {
 export interface RecordWithReviews<T> {
   record: T;
   reviews: Review[];
+  /** Coordinadora del grado del registro (quien lo revisa) o `null`. */
+  coordinator: GradeCoordinator | null;
 }
 
 /** Un registro con su historial de revisión. */
@@ -78,14 +88,28 @@ export function useFormatReviewData<T extends ReviewableRecord>(
   key: string,
 ): Remote<RecordWithReviews<T>> {
   return useRemote(async () => {
-    const [record, reviews] = await Promise.all([format.get(id), format.reviews(id)]);
+    const [record, reviews, grades] = await Promise.all([
+      format.get(id),
+      format.reviews(id),
+      listGrades(),
+    ]);
     if (!record.ok) {
       return record;
     }
     if (!reviews.ok) {
       return reviews;
     }
-    return { ok: true, data: { record: record.data, reviews: reviews.data } };
+    if (!grades.ok) {
+      return grades;
+    }
+    return {
+      ok: true,
+      data: {
+        record: record.data,
+        reviews: reviews.data,
+        coordinator: coordinatorOfGrade(grades.data, record.data.grade.id),
+      },
+    };
   }, `${key}:${id}`);
 }
 
@@ -93,6 +117,7 @@ interface UseFormatReviewOptions<T extends ReviewableRecord> {
   format: FormatApi<T>;
   record: T;
   reviews: Review[];
+  coordinator: GradeCoordinator | null;
   refresh: () => Promise<ApiError | null>;
 }
 
@@ -104,6 +129,7 @@ export function useFormatReview<T extends ReviewableRecord>({
   format,
   record,
   reviews,
+  coordinator,
   refresh,
 }: UseFormatReviewOptions<T>) {
   const { state: session } = useSession();
@@ -115,8 +141,18 @@ export function useFormatReview<T extends ReviewableRecord>({
   const lastDecision = useRef<'approve' | 'return'>('approve');
 
   const own = user !== null && record.teacher.id === user.id;
-  const canDecide = user !== null && record.status === RecordStatus.Submitted && !own;
-  const blockedReason = formatReadOnlyReason(record.status, own, format.noun);
+  // Solo la coordinadora del grado revisa: para el resto es «Solo consulta».
+  const canReview = canReviewGrade(user, coordinator);
+  const canDecide = canReview && record.status === RecordStatus.Submitted && !own;
+  const blockedReason = canReview ? formatReadOnlyReason(record.status, own, format.noun) : null;
+  const consultText = canReview
+    ? null
+    : consultNotice(
+        user,
+        coordinator,
+        record.grade.name,
+        format.noun === 'hoja' ? 'este diario' : 'esta anotación',
+      );
   const excess = Math.max(0, comment.trim().length - REVIEW_COMMENT_MAX_LENGTH);
   const submittedAt = format.submittedAt(record);
   const history = useMemo(() => buildHistory(reviews, submittedAt), [reviews, submittedAt]);
@@ -262,6 +298,8 @@ export function useFormatReview<T extends ReviewableRecord>({
     setComment,
     excess,
     canDecide,
+    canReview,
+    consultText,
     blockedReason,
     notice,
     busy,

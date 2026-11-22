@@ -6,7 +6,7 @@ import { openAs, type ActorPage } from './support/browser';
 // Revisión de accesibilidad (FE-42): cada pantalla principal pasa por axe-core en tema claro y
 // oscuro (falla con lo grave y con la estructura de encabezados) y se muestra a 375 y 768 px sin
 // desplazamiento horizontal. Julián Casaverde y una segunda sesión de Elena Ravassa son actores
-// propios. Solo se escribe una cosa: la partida del Desafío de Julián; el diálogo de devolución se
+// propios, igual que una sesión de administración. Solo se escribe una cosa: la partida del Desafío de Julián; el diálogo de devolución se
 // abre y se cancela.
 const DESKTOP = { width: 1280, height: 720 };
 const NARROW_WIDTHS = [375, 768];
@@ -220,7 +220,7 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await audit(page, 'coordinación · vista previa con video');
   });
 
-  test('docentes, planes, módulo, avance, bitácora y asistente', async () => {
+  test('docentes (solo sus grupos), planes, módulo, avance y asistente', async () => {
     const { page } = coordinator;
     await visit(page, '/coordinacion/docentes', 'coordinación · docentes');
     await page
@@ -231,19 +231,6 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await audit(page, 'coordinación · diálogo de asignaciones');
     await page.getByRole('dialog').getByRole('button', { name: 'Cerrar', exact: true }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
-    await visit(page, '/coordinacion/grados-y-areas', 'coordinación · grados y grupos');
-    await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
-    await expect(page.getByRole('dialog', { name: 'Nuevo grado' })).toBeVisible();
-    await audit(page, 'coordinación · diálogo de nuevo grado');
-    await page
-      .getByRole('dialog', { name: 'Nuevo grado' })
-      .getByRole('button', { name: 'Cancelar', exact: true })
-      .click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
-    await audit(page, 'coordinación · áreas');
-    await page.getByRole('tab', { name: 'Coordinadoras', exact: true }).click();
-    await audit(page, 'coordinación · coordinadoras');
     await visit(page, '/coordinacion/planes', 'coordinación · planes');
     await openFirst(
       page,
@@ -251,7 +238,79 @@ test.describe('Accesibilidad: vista de coordinación', () => {
       'coordinación · módulo',
     );
     await visit(page, '/coordinacion/avance', 'coordinación · avance');
-    await visit(page, '/coordinacion/bitacora', 'coordinación · bitácora');
     await visit(page, '/coordinacion/asistente', 'coordinación · asistente');
+  });
+
+  test('formatos: «Todo el colegio» y una planeación ajena en solo consulta', async () => {
+    const { page } = coordinator;
+    await visit(
+      page,
+      '/coordinacion/formatos/planeaciones?vista=colegio',
+      'coordinación · todo el colegio',
+    );
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Ver\b/ }),
+      'coordinación · planeación en solo consulta',
+    );
+    await expect(page.getByText('Solo consulta').first()).toBeVisible();
+  });
+});
+
+test.describe('Accesibilidad: vista de administración', () => {
+  let admin: ActorPage;
+
+  test.beforeAll(async ({ browser }) => {
+    admin = await openAs(browser, ACTORS.accessibilityAdmin);
+  });
+
+  test.afterAll(async () => {
+    await admin.context.close();
+  });
+
+  test('formatos: hub, bandejas y una planeación en solo consulta', async () => {
+    const { page } = admin;
+    await visit(page, '/administracion/formatos', 'administración · formatos (hub)');
+    await expect(page.getByText('Todos los grados · Solo consulta').first()).toBeVisible();
+    await visit(page, '/administracion/formatos/planeaciones', 'administración · planeaciones');
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Ver\b/ }),
+      'administración · planeación en solo consulta',
+    );
+    await expect(page.getByText('Solo consulta').first()).toBeVisible();
+    await visit(page, '/administracion/formatos/diario', 'administración · diarios de campo');
+    await visit(page, '/administracion/formatos/observador', 'administración · observadores');
+  });
+
+  test('docentes: asignaciones y usuarios y roles, bitácora y grados y áreas', async () => {
+    const { page } = admin;
+    await visit(page, '/administracion/docentes', 'administración · docentes (asignaciones)');
+    await page.getByRole('tab', { name: 'Usuarios y roles', exact: true }).click();
+    await expect(page.getByText('Es tu cuenta')).toBeVisible();
+    await audit(page, 'administración · usuarios y roles');
+    await page.getByRole('button', { name: 'Nuevo usuario', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo usuario' })).toBeVisible();
+    await audit(page, 'administración · diálogo de nuevo usuario');
+    await page
+      .getByRole('dialog', { name: 'Nuevo usuario' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+
+    await visit(page, '/administracion/bitacora', 'administración · bitácora');
+    await visit(page, '/administracion/grados-y-areas', 'administración · grados y grupos');
+    await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo grado' })).toBeVisible();
+    await audit(page, 'administración · diálogo de nuevo grado');
+    await page
+      .getByRole('dialog', { name: 'Nuevo grado' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
+    await audit(page, 'administración · áreas');
+    await page.getByRole('tab', { name: 'Coordinadoras', exact: true }).click();
+    await audit(page, 'administración · coordinadoras');
   });
 });

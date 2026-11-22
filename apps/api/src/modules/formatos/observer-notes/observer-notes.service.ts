@@ -34,7 +34,8 @@ import { RequestValidationException } from '../../../core/http/request-validatio
 import { AcademicPeriodsService } from '../../estructura/catalogs/academic-period/academic-periods.service';
 import { GradesService } from '../../estructura/catalogs/grade/grades.service';
 import { ReviewsService } from '../../planeacion/review/reviews.service';
-import { actorsOf, isReviewer, STATUS_LABEL, voidConflictMessage } from '../common/record-rules';
+import { actorsOf, canReviewGrade, isStaff } from '../../../shared/records/review-scope';
+import { STATUS_LABEL, voidConflictMessage } from '../common/record-rules';
 import {
   OBSERVER_NOTE_REPOSITORY,
   type ObserverNoteContent,
@@ -44,6 +45,7 @@ import {
 } from './observer-note.repository';
 
 const NOT_FOUND = 'Anotación no encontrada';
+const OUT_OF_SCOPE = 'Esa anotación no es de un grado que coordines';
 const CONTENT_KEYS = Object.keys(OBSERVER_NOTE_ADJUSTABLE_FIELDS) as (keyof ObserverNoteContent)[];
 
 const contentOf = (source: ObserverNoteContent): ObserverNoteContent =>
@@ -63,8 +65,8 @@ export class ObserverNotesService {
   // ---------- Lectura ----------
 
   /**
-   * Un docente ve solo las suyas (su filtro de docente se ignora); coordinación, todas. El
-   * periodo se traduce a sus fechas: la anotación no tiene periodo propio.
+   * Un docente ve solo las suyas (sus filtros de docente y coordinadora se ignoran);
+   * coordinación y administración, todas (consultar no es revisar). El periodo se traduce a sus fechas: la anotación no tiene periodo propio.
    */
   async list(
     user: RequestUser,
@@ -73,7 +75,7 @@ export class ObserverNotesService {
     const { periodId, ...rest } = query.filters;
     const filters: ObserverNoteQueryFilters = {
       ...rest,
-      ...(isReviewer(user) ? {} : { teacherId: user.id }),
+      ...(isStaff(user) ? {} : { teacherId: user.id, coordinatorId: undefined }),
       ...(periodId === undefined ? {} : await this.periodDates(periodId)),
     };
     return this.repository.findPage({ ...query, filters });
@@ -141,9 +143,12 @@ export class ObserverNotesService {
   /** El motivo lo registra la bitácora (`detailFromBody`); aquí solo cambia el estado. */
   async voidNote(user: RequestUser, id: string): Promise<ObserverNote> {
     const visible = await this.loadVisible(user, id);
-    const from = allowedFromAny(RecordOperation.Void, actorsOf(user, visible.teacher.id));
+    const actors = actorsOf(user, visible.teacher.id, await this.coordinatorOf(visible));
+    const from = allowedFromAny(RecordOperation.Void, actors);
     if (from.length === 0) {
-      throw new ForbiddenException('No puedes anular esta anotación');
+      throw new ForbiddenException(
+        isStaff(user) ? OUT_OF_SCOPE : 'No puedes anular esta anotación',
+      );
     }
     await this.repository.lock(id);
     const note = await this.loadVisible(user, id);
@@ -167,7 +172,7 @@ export class ObserverNotesService {
   }
 
   /**
-   * Orden: 404 → 403 (autorrevisión) → 409 (estado) → 400 (ajustes). La fila se bloquea antes de
+   * Orden: 404 → 403 (grado ajeno) → 403 (autorrevisión) → 409 (estado) → 400 (ajustes). La fila se bloquea antes de
    * leer el estado: una segunda decisión simultánea espera y responde 409, y el «antes» de los
    * ajustes es exactamente lo que se reemplaza.
    */
@@ -179,6 +184,9 @@ export class ObserverNotesService {
     input: { comment?: string | null; changes?: ObserverNoteContent },
   ): Promise<ObserverNote> {
     const visible = await this.loadVisible(user, id);
+    if (!canReviewGrade(user, await this.coordinatorOf(visible))) {
+      throw new ForbiddenException(OUT_OF_SCOPE);
+    }
     this.reviews.assertNotSelfReview(visible.teacher.id, user.id);
 
     await this.repository.lock(id);
@@ -255,10 +263,15 @@ export class ObserverNotesService {
 
   private async loadVisible(user: RequestUser, id: string): Promise<ObserverNote> {
     const note = await this.repository.findById(id);
-    if (!note || (!isReviewer(user) && note.teacher.id !== user.id)) {
+    if (!note || (!isStaff(user) && note.teacher.id !== user.id)) {
       throw new NotFoundException(NOT_FOUND);
     }
     return note;
+  }
+
+  /** Coordinadora del grado de la anotación (`null` si el grado no tiene): quien la revisa. */
+  private async coordinatorOf(note: ObserverNote): Promise<string | null> {
+    return (await this.grades.find(note.grade.id))?.coordinatorId ?? null;
   }
 
   private transition(operation: RecordOperation, actor: RecordActor) {

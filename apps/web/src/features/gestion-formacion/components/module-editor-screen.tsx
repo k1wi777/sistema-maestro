@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { useView } from '@/shared/shell';
 import {
   ActionBar,
   Button,
@@ -35,7 +36,6 @@ import { PresentationStep } from './steps/presentation-step';
 import { PreviewStep } from './steps/preview-step';
 import { VideoStep } from './steps/video-step';
 
-const PLANS_PATH = '/coordinacion/planes';
 const PUBLISH_HELP_ID = 'module-publish-help';
 
 function saveText(state: ReturnType<typeof useModuleEditor>['saveState'], dirty: boolean): string {
@@ -52,6 +52,7 @@ function saveText(state: ReturnType<typeof useModuleEditor>['saveState'], dirty:
 }
 
 function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
+  const PLANS_PATH = `${useView().path}/planes`;
   if (error.statusCode === 404) {
     return (
       <Notice tone="warning" title="No encontramos este módulo">
@@ -66,6 +67,7 @@ function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) 
 }
 
 function EditorBody({ initial }: { initial: EditorData }) {
+  const PLANS_PATH = `${useView().path}/planes`;
   const editor = useModuleEditor(initial);
   const { detail, tree } = editor;
   const { params, update } = useQueryParams();

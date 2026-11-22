@@ -6,8 +6,16 @@ import { VIEWS, firstSectionHref, isActiveSection, sectionByHref, sectionsOf } f
 // apps/web/src/shared/shell → apps/web/src/app
 const APP = join(__dirname, '..', '..', 'app');
 
-const pageFile = (href: string) =>
-  join(APP, href.startsWith('/docente') ? '(docente)' : '(coordinacion)', href, 'page.tsx');
+const GROUPS = {
+  '/docente': '(docente)',
+  '/coordinacion': '(coordinacion)',
+  '/administracion': '(administracion)',
+} as const;
+
+const pageFile = (href: string) => {
+  const view = `/${href.split('/')[1]}` as keyof typeof GROUPS;
+  return join(APP, GROUPS[view], href, 'page.tsx');
+};
 
 describe('isActiveSection', () => {
   it.each([
@@ -34,12 +42,17 @@ describe('menú de las vistas', () => {
       '/docente/formatos',
       '/docente/asistente',
       '/coordinacion/formatos',
-      '/coordinacion/bitacora',
       '/coordinacion/docentes',
-      '/coordinacion/grados-y-areas',
       '/coordinacion/planes',
       '/coordinacion/avance',
       '/coordinacion/asistente',
+      '/administracion/formatos',
+      '/administracion/bitacora',
+      '/administracion/docentes',
+      '/administracion/grados-y-areas',
+      '/administracion/planes',
+      '/administracion/avance',
+      '/administracion/asistente',
     ]);
   });
 
@@ -57,13 +70,44 @@ describe('menú de las vistas', () => {
     expect(labels).toContain('Formatos');
   });
 
+  it('la bitácora y «Grados y áreas» son solo de administración', () => {
+    const coordination = sectionsOf(VIEWS['/coordinacion']).map((section) => section.href);
+    expect(coordination).not.toContain('/coordinacion/bitacora');
+    expect(coordination).not.toContain('/coordinacion/grados-y-areas');
+    expect(existsSync(join(APP, '(coordinacion)', 'coordinacion', 'bitacora'))).toBe(false);
+    expect(existsSync(join(APP, '(coordinacion)', 'coordinacion', 'grados-y-areas'))).toBe(false);
+  });
+
+  it('el menú de administración sigue los grupos del tablero', () => {
+    expect(
+      VIEWS['/administracion'].groups.map((group) => [
+        group.title,
+        group.sections.map((section) => section.label),
+      ]),
+    ).toEqual([
+      ['Seguimiento', ['Formatos', 'Bitácora de actividad']],
+      [
+        'Gestión',
+        [
+          'Docentes y asignaciones',
+          'Grados y áreas',
+          'Planes de formación',
+          'Avance en la formación',
+          'Asistente',
+        ],
+      ],
+    ]);
+  });
+
   it('cada vista empieza en su primera sección', () => {
     expect(firstSectionHref(VIEWS['/docente'])).toBe('/docente/formacion');
     expect(firstSectionHref(VIEWS['/coordinacion'])).toBe('/coordinacion/formatos');
+    expect(firstSectionHref(VIEWS['/administracion'])).toBe('/administracion/formatos');
   });
 
   it('busca la vista de una sección y falla con una ruta desconocida', () => {
     expect(sectionByHref('/coordinacion/avance').view.path).toBe('/coordinacion');
+    expect(sectionByHref('/administracion/bitacora').view.path).toBe('/administracion');
     expect(() => sectionByHref('/docente/otra')).toThrow();
   });
 });

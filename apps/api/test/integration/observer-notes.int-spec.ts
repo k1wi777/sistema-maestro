@@ -300,6 +300,38 @@ describe('observador del estudiante (BE-63)', () => {
       await get(coord, '/observer-notes?type=tipo_iv').expect(400);
     });
 
+    it('filtra por la coordinadora del grado, incluido «none» (sin coordinadora); un docente lo ignora (R7)', async () => {
+      const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
+      const own = await freshGrade(planning, [], coordinatorUser.id);
+      const orphan = await freshGrade(planning, [], null);
+      const inOwn = await createNote(app, ownerCookies, { gradeId: own.gradeId });
+      const inOrphan = await createNote(app, ownerCookies, { gradeId: orphan.gradeId });
+      const idsOf = (page: Page) => page.items.map((n) => n.id);
+
+      for (const cookies of [coord, admin]) {
+        const mine = (
+          await get(
+            cookies,
+            `/observer-notes?teacherId=${owner.id}&coordinatorId=${coordinatorUser.id}&pageSize=100`,
+          ).expect(200)
+        ).body as Page;
+        expect(idsOf(mine)).toEqual([inOwn.id]);
+        const none = (
+          await get(
+            cookies,
+            `/observer-notes?teacherId=${owner.id}&coordinatorId=none&pageSize=100`,
+          ).expect(200)
+        ).body as Page;
+        expect(idsOf(none)).toContain(inOrphan.id);
+        expect(idsOf(none)).not.toContain(inOwn.id);
+      }
+      const asOwner = (
+        await get(ownerCookies, '/observer-notes?coordinatorId=none&pageSize=100').expect(200)
+      ).body as Page;
+      expect(idsOf(asOwner)).toEqual(expect.arrayContaining([inOwn.id, inOrphan.id]));
+      await get(coord, '/observer-notes?coordinatorId=no-es-un-uuid').expect(400);
+    });
+
     it('filtra por periodo con sus fechas y responde 400 con el campo periodId si no las tiene', async () => {
       await prisma.schoolYear.createMany({ data: [{ code: DATED_YEAR }], skipDuplicates: true });
       await prisma.academicPeriod.createMany({

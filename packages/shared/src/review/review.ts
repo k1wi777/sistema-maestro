@@ -116,3 +116,15 @@ export const voidRecordSchema = z
   })
   .strict();
 export type VoidRecordInput = z.output<typeof voidRecordSchema>;
+
+/** Valor de `coordinatorId` para listar los registros de grados sin coordinadora. */
+export const NO_COORDINATOR_FILTER = 'none';
+
+/**
+ * Filtro de las bandejas por la coordinadora del grado: un UUID o `none` (grados sin
+ * coordinadora). Un docente no lo usa: su visibilidad ya es la propia.
+ */
+export const coordinatorFilterSchema = z.union([
+  z.literal(NO_COORDINATOR_FILTER),
+  z.uuid({ error: 'debe ser un UUID o «none»' }),
+]);

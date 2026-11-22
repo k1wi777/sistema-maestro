@@ -4,7 +4,7 @@ import { AreaType, TeacherAssignmentStatus, UserStatus } from '@gns/shared';
 import { useMemo, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
-import { Button, Checkbox, Dialog, Notice, Select } from '@/shared/ui';
+import { Button, Checkbox, Dialog, Notice, Select, StatusBadge } from '@/shared/ui';
 
 import {
   createAssignment,
@@ -16,7 +16,7 @@ import {
   type CatalogLevel,
 } from '../api/assignments';
 import { homeroomTargets, planAssignments, planHomeroom } from '../model/assignment-plan';
-import { areasForLevel, groupOptions } from '../model/group-options';
+import { areasForLevel, editableGroupIds, groupOptions } from '../model/group-options';
 import type { RosterTeacher } from '../model/roster';
 import styles from './assignments-dialog.module.css';
 
@@ -28,6 +28,10 @@ interface AssignmentsDialogProps {
   areas: CatalogArea[];
   /** No hay año lectivo vigente: no se puede asignar. */
   noYear: boolean;
+  /** Grados en los que se puede asignar (coordinación: los suyos); `null`, todos (administración). */
+  allowedGradeIds: ReadonlySet<string> | null;
+  /** Texto de ayuda cuando el alcance está restringido. */
+  scopeHint?: string;
   /** Vuelve a pedir los datos de la pantalla sin perder el diálogo. */
   onChanged: () => Promise<ApiError | null>;
   onClose: () => void;
@@ -51,6 +55,8 @@ function Body({
   levels,
   areas,
   noYear,
+  allowedGradeIds,
+  scopeHint,
   onChanged,
 }: Omit<AssignmentsDialogProps, 'teacher' | 'onClose'> & { teacher: RosterTeacher }) {
   const [busy, setBusy] = useState(false);
@@ -64,7 +70,14 @@ function Body({
   const inactive = teacher.status === UserStatus.Inactive;
   const readOnly = inactive || noYear;
 
-  const options = useMemo(() => groupOptions(groups, grades, levels), [groups, grades, levels]);
+  const editable = useMemo(
+    () => editableGroupIds(groups, allowedGradeIds),
+    [groups, allowedGradeIds],
+  );
+  const options = useMemo(
+    () => groupOptions(groups, grades, levels).filter((option) => editable.has(option.id)),
+    [groups, grades, levels, editable],
+  );
   const chosen = options.find((option) => option.id === groupId);
   const levelAreas = chosen ? areasForLevel(areas, chosen.levelId) : [];
   const activeAreaIds = new Set(
@@ -187,7 +200,10 @@ function Body({
               <li key={group.id} className={styles.grade}>
                 <div className={styles.gradeHead}>
                   <strong>{group.name}</strong>
-                  {!readOnly ? (
+                  {!editable.has(group.id) ? (
+                    <StatusBadge tone="neutral">Solo consulta</StatusBadge>
+                  ) : null}
+                  {!readOnly && editable.has(group.id) ? (
                     <Checkbox
                       label={`Director(a) de ${group.name}`}
                       checked={group.isHomeroom}
@@ -202,7 +218,8 @@ function Body({
                   {group.areas.map((area) => (
                     <li key={area.assignmentId} className={styles.area}>
                       <span>{area.name}</span>
-                      {readOnly ? null : confirming === area.assignmentId ? (
+                      {readOnly || !editable.has(group.id) ? null : confirming ===
+                        area.assignmentId ? (
                         <span className={styles.confirm}>
                           <span>{`¿Retirar ${area.name} de ${group.name}?`}</span>
                           <Button
@@ -254,6 +271,7 @@ function Body({
           <h3 id="assign-grade" className={styles.heading}>
             Asignar al grupo
           </h3>
+          {scopeHint ? <p className={styles.muted}>{scopeHint}</p> : null}
           <Select
             label="Grupo"
             placeholder="Selecciona un grupo"

@@ -744,7 +744,7 @@ describe('check constraints', () => {
       );
     });
 
-    it.each(['cierre', 'desactivacion', 'contrasena', 'reutilizacion'])(
+    it.each(['cierre', 'desactivacion', 'contrasena', 'reutilizacion', 'cambio_rol'])(
       'accepts the revocation reason %s together with revocada_en',
       async (reason) => {
         const session = await insertSession(db.client, {

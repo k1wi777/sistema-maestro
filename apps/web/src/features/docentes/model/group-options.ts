@@ -53,6 +53,21 @@ export function groupOptions(
     }));
 }
 
+/**
+ * Ids de los grupos en los que se puede asignar: con `allowedGradeIds` (coordinadora: solo sus
+ * grados) los de esos grados; sin él (administración), todos.
+ */
+export function editableGroupIds(
+  groups: readonly GroupSource[],
+  allowedGradeIds: ReadonlySet<string> | null,
+): Set<string> {
+  return new Set(
+    groups
+      .filter((group) => allowedGradeIds === null || allowedGradeIds.has(group.gradeId))
+      .map((group) => group.id),
+  );
+}
+
 /** Áreas activas del nivel del grupo. */
 export function areasForLevel<T extends AreaSource>(areas: T[], levelId: string): T[] {
   return areas.filter((area) => area.active && area.levelIds.includes(levelId));

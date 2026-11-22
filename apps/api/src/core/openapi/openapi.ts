@@ -66,7 +66,7 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
   const options = new DocumentBuilder()
     .setTitle(PRODUCT_NAME)
     .setVersion(apiVersion())
-    // Sesión por cookie httpOnly: los endpoints con `@RequireRole` la exigen.
+    // Sesión por cookie httpOnly: los endpoints con `@Roles` la exigen.
     .addCookieAuth(ACCESS_COOKIE)
     .build();
   const document = cleanupOpenApiDoc(SwaggerModule.createDocument(app, options));

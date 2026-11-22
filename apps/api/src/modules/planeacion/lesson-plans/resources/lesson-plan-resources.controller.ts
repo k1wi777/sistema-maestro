@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../../core/audit/request-user';
 import { IdParamDto } from '../../../../shared/http/id-param.dto';
-import { RequireRole } from '../../../identidad/auth/access.decorators';
+import { Roles } from '../../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../../identidad/auth/current-user.decorator';
 import {
   CreateLessonPlanResourceDto,
@@ -21,7 +21,7 @@ const AUDIT = {
 };
 
 @Controller('lesson-plans/:id/resources')
-@RequireRole(UserRole.Teacher)
+@Roles(UserRole.Teacher)
 export class LessonPlanResourcesController {
   constructor(private readonly resources: LessonPlanResourcesService) {}
 

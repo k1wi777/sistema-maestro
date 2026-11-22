@@ -9,7 +9,8 @@ export {
   consentPath,
   safeReturnPath,
 } from './return-path';
-export { availableViews, homePathFor, type ProtectedRoute } from './route-access';
+export { equivalentPath } from './equivalent-path';
+export { PROTECTED_ROUTES, homePathFor, type ProtectedRoute } from './route-access';
 export {
   SessionProvider,
   useSession,

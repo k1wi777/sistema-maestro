@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { AppZodValidationPipe } from '../../../core/http/zod-validation.pipe';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import { ZodRequestBody } from '../dto/zod-request-body';
 import {
@@ -32,10 +32,10 @@ import { TrainingGamesService } from '../games/training-games.service';
 import { TrainingProgressService } from '../progress/training-progress.service';
 import { TrainingRouteService } from './training-route.service';
 
-// Prefijo propio (como `/me/assignments`): separa el rol mínimo del de coordinación. Sin
+// Prefijo propio (como `/me/assignments`): separa el rol docente del de coordinación. Sin
 // `@Audited`: sus hitos los escribe el servicio dentro de su transacción (R30).
 @Controller('me/training')
-@RequireRole(UserRole.Teacher)
+@Roles(UserRole.Teacher)
 export class MyTrainingController {
   constructor(
     private readonly route: TrainingRouteService,
