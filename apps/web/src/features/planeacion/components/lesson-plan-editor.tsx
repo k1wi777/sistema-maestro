@@ -7,6 +7,7 @@ import {
   type Review,
   type SharedActivity,
 } from '@gns/shared';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
@@ -60,7 +61,15 @@ import { PerformanceStep } from './steps/performance-step';
 import { ResourcesStep } from './steps/resources-step';
 import { ReviewStep } from './steps/review-step';
 import { SubmitDialog } from './submit-dialog';
-import { STATUS_INFO, VoidRecordDialog, canVoid, printWithTitle } from '@/shared/records';
+import {
+  DISCARDED_NOTICE,
+  DiscardDraftDialog,
+  STATUS_INFO,
+  VoidRecordDialog,
+  canDiscard,
+  canVoid,
+  printWithTitle,
+} from '@/shared/records';
 import { PLANNING_PATH } from '../model/paths';
 
 const CONFLICT_MESSAGE =
@@ -109,6 +118,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
   const { plan, draft, errors, editable } = editor;
   const teaching = useTeachingContext();
   const { params, update } = useQueryParams();
+  const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
 
   const [success, setSuccess] = useState<string | null>(null);
@@ -116,6 +126,7 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
   const [submitOpen, setSubmitOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
   const [shareMode, setShareMode] = useState<ShareActivityMode | null>(null);
   const [focusRequest, setFocusRequest] = useState<MomentFocusRequest | null>(null);
 
@@ -236,6 +247,15 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
     setVoidOpen(false);
     setSuccess('Planeación anulada. Queda constancia del motivo.');
     window.scrollTo({ top: 0 });
+    return null;
+  }
+
+  async function handleDiscard(): Promise<string | null> {
+    const result = await editor.discardPlan();
+    if (!result.ok) {
+      return result.error.message;
+    }
+    router.push(`${PLANNING_PATH}?aviso=${DISCARDED_NOTICE}`);
     return null;
   }
 
@@ -395,6 +415,16 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
       icon: 'bajar' as const,
       onSelect: () => printWithTitle(printTitle(plan)),
     },
+    ...(canDiscard(plan.status)
+      ? [
+          {
+            id: 'discard',
+            label: 'Descartar borrador',
+            icon: 'papelera' as const,
+            onSelect: () => setDiscardOpen(true),
+          },
+        ]
+      : []),
     ...(canVoid(plan.status)
       ? [
           {
@@ -580,6 +610,13 @@ function EditorScreen({ initial, reviews, notice, onConflict }: EditorScreenProp
               setSuccess(`Publicaste «${activity.title}» en el repositorio de la comunidad.`);
             }
           }}
+        />
+      ) : null}
+      {discardOpen ? (
+        <DiscardDraftDialog
+          description={`«${plan.topic ?? 'Sin tema'}» se borrará por completo y no podrás recuperarla. Puedes descartarla porque nunca la enviaste a revisión.`}
+          onClose={() => setDiscardOpen(false)}
+          onConfirm={handleDiscard}
         />
       ) : null}
       {voidOpen ? (

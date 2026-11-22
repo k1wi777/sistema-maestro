@@ -88,6 +88,14 @@ export async function voidObserverNote(
   return parseResult(result, observerNoteSchema);
 }
 
+/** Borrado real de una anotación propia en borrador (204 sin cuerpo). */
+export async function discardObserverNote(id: string): Promise<ApiResult<undefined>> {
+  const result = await callApi(() =>
+    api.DELETE('/observer-notes/{id}', { params: { path: { id } } }),
+  );
+  return result.ok ? { ok: true, data: undefined } : result;
+}
+
 export async function listObserverNoteReviews(id: string): Promise<ApiResult<Review[]>> {
   const result = await callApi(() =>
     api.GET('/observer-notes/{id}/reviews', { params: { path: { id } } }),

@@ -308,6 +308,68 @@ export class FieldJournalsService {
     return this.get(user, id);
   }
 
+  /**
+   * Borrado real de una anotación propia en borrador mientras el diario está En curso (nunca
+   * enviado); si era la única, también el diario. Orden: 404 (anotación o diario que no ve) → 403
+   * (de otra persona) → 409. Bloquea el diario antes de leer el estado: así «Enviar» y otro descarte
+   * simultáneos esperan y ven el resultado.
+   */
+  async discardAnnotation(user: RequestUser, annotationId: string): Promise<void> {
+    const found = await this.repository.findAnnotationById(annotationId);
+    if (!found) {
+      throw new NotFoundException(ANNOTATION_NOT_FOUND);
+    }
+    const { context, annotation } = await this.lockOwnAnnotation(
+      user,
+      found.journalId,
+      annotationId,
+    );
+    const journalStatus = context.base!.status;
+    if (
+      journalStatus !== JournalStatus.InProgress ||
+      annotation.status !== AnnotationStatus.Draft ||
+      annotation.sent
+    ) {
+      throw new ConflictException(
+        journalStatus === JournalStatus.InProgress
+          ? 'Solo se descarta una anotación en borrador'
+          : `El diario está ${JOURNAL_STATUS_LABEL[journalStatus]}: solo se descartan borradores de un diario en curso`,
+      );
+    }
+    if (!(await this.repository.deleteDraftAnnotation(annotationId))) {
+      throw new ConflictException('La anotación cambió de estado y no se pudo descartar');
+    }
+    if ((await this.repository.countAnnotations(found.journalId)) === 0) {
+      await this.repository.deleteEmptyJournal(found.journalId);
+    } else {
+      await this.repository.touch(found.journalId);
+    }
+  }
+
+  /**
+   * Para la bitácora del descarte: solo identificadores y catálogo (grupo, fecha, área) y si era la
+   * única anotación del diario; sin textos ni nombres. Sin comprobar visibilidad.
+   */
+  async findAnnotationDiscardSnapshot(
+    annotationId: string,
+  ): Promise<Record<string, unknown> | null> {
+    const annotation = await this.repository.findAnnotationById(annotationId);
+    const base = annotation ? await this.repository.findBase(annotation.journalId) : null;
+    if (!annotation || !base) {
+      return null;
+    }
+    return {
+      id: annotation.id,
+      journalId: base.id,
+      group: base.group.name,
+      date: base.date,
+      area: annotation.areaName,
+      status: annotation.status,
+      journalStatus: base.status,
+      onlyAnnotation: (await this.repository.countAnnotations(base.id)) === 1,
+    };
+  }
+
   // ---------- Envío y anulación (director(a) de grupo) ----------
 
   /** Orden: 404 → 409 (sin director(a)) → 403 → 409 (estado) → 400 (sin anotaciones listas). */

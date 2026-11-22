@@ -105,7 +105,17 @@ describe('AuditInterceptor con describe', () => {
     expect(record.mock.calls[0]?.[0]).toMatchObject({ detail: 'Fijo' });
   });
 
-  it('sin estado posterior no calcula nada', async () => {
+  it('tras un borrado calcula el detalle del estado anterior', async () => {
+    const { record, run } = setup(undefined, [{ n: 5 }, null], { describe: describeState });
+    await run();
+    expect(record.mock.calls[0]?.[0]).toMatchObject({
+      detail: 'Grupo · 5',
+      dataBefore: { n: 5 },
+      dataAfter: null,
+    });
+  });
+
+  it('sin ningún estado no calcula nada', async () => {
     const { record, run } = setup(undefined, [null, null], { describe: describeState });
     await run();
     expect(record.mock.calls[0]?.[0]).toMatchObject({ detail: null });

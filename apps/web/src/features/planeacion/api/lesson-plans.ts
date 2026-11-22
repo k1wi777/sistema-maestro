@@ -79,6 +79,14 @@ export async function voidLessonPlan(id: string, reason: string): Promise<ApiRes
   return parseResult(result, lessonPlanSchema);
 }
 
+/** Borrado real de un borrador propio que nunca se envió (204 sin cuerpo). */
+export async function discardLessonPlan(id: string): Promise<ApiResult<undefined>> {
+  const result = await callApi(() =>
+    api.DELETE('/lesson-plans/{id}', { params: { path: { id } } }),
+  );
+  return result.ok ? { ok: true, data: undefined } : result;
+}
+
 /** Historial de revisión: filas `ajuste` y decisión con la misma fecha. */
 export async function listLessonPlanReviews(id: string): Promise<ApiResult<Review[]>> {
   const result = await callApi(() =>

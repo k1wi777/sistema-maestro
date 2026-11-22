@@ -46,19 +46,23 @@ describe('máquina de estados de registros', () => {
     expect(allowedFrom(RecordOperation.Return, RecordActor.Owner)).toBeNull();
   });
 
-  it('el dueño anula antes de la revisión y coordinación desde cualquier estado salvo anulado', () => {
+  it('anular es solo para lo enviado: el dueño antes de la revisión y coordinación hasta revisada', () => {
     expect(statesFor(RecordOperation.Void, RecordActor.Owner)).toEqual([
-      Draft,
       Submitted,
       ChangesRequested,
     ]);
     expect(statesFor(RecordOperation.Void, RecordActor.Reviewer)).toEqual([
-      Draft,
       Submitted,
       ChangesRequested,
       Reviewed,
     ]);
     expect(allowedFrom(RecordOperation.Void, RecordActor.Reviewer)?.to).toBe(Voided);
+  });
+
+  it('descartar es solo del dueño y solo desde borrador, y la fila desaparece', () => {
+    expect(statesFor(RecordOperation.Discard, RecordActor.Owner)).toEqual([Draft]);
+    expect(allowedFrom(RecordOperation.Discard, RecordActor.Owner)?.to).toBeNull();
+    expect(allowedFrom(RecordOperation.Discard, RecordActor.Reviewer)).toBeNull();
   });
 
   it('crear es del dueño y deja borrador; anulado es terminal', () => {

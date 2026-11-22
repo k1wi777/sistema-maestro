@@ -5,6 +5,7 @@ import { createTestApp } from './support/create-test-app';
 import {
   call,
   createNote,
+  forceNoteStatus,
   freshGrade,
   reviewRows,
   submittedNote,
@@ -242,7 +243,7 @@ describe('revisión y anulación del observador (BE-64)', () => {
   });
 
   describe('anular (R13)', () => {
-    it('el dueño anula desde borrador y enviada y el motivo queda en la bitácora', async () => {
+    it('el dueño anula una enviada y el motivo queda en la bitácora', async () => {
       const sent = await submitted();
       const res = await voidNote(teacher, sent.id, 'Estudiante equivocado').expect(200);
 
@@ -252,11 +253,19 @@ describe('revisión y anulación del observador (BE-64)', () => {
         detail: 'Estudiante equivocado',
       });
       expect(await prisma.observerNote.count({ where: { id: sent.id } })).toBe(1);
+    });
 
-      const draft = await createNote(app, teacher, {
-        gradeId: (await freshGrade(planning, [])).gradeId,
-      });
-      await voidNote(teacher, draft.id).expect(200);
+    it('un borrador no se anula, ni por el dueño ni por coordinación: 409 «se descarta»', async () => {
+      const { gradeId } = await freshGrade(planning, [], coordUser.id);
+      const draft = await createNote(app, teacher, { gradeId });
+
+      for (const cookies of [teacher, coordA]) {
+        const res = await voidNote(cookies, draft.id).expect(409);
+        expect(apiErrorBodySchema.parse(res.body).message).toContain(
+          'se descarta en lugar de anularse',
+        );
+      }
+      expect((await stored(draft.id)).status).toBe(RecordStatus.Draft);
     });
 
     it('revisada solo la anula la coordinadora del grado; anulada no se anula de nuevo; un tercero no la ve', async () => {
@@ -277,6 +286,68 @@ describe('revisión y anulación del observador (BE-64)', () => {
       await voidNote(coordA, created.id, 'x'.repeat(301)).expect(400);
       await voidNote(coordA, unknownId()).expect(404);
       await approve(coordA, unknownId()).expect(404);
+    });
+  });
+
+  describe('descartar un borrador (#117)', () => {
+    const discard = (cookies: Cookies, id: string) =>
+      call(app, cookies, 'delete', `/observer-notes/${id}`);
+    const draftNote = async (extra: Record<string, unknown> = {}) => {
+      const { gradeId } = await freshGrade(planning, [], coordUser.id);
+      return createNote(app, teacher, { gradeId, ...extra });
+    };
+
+    it('el autor descarta su borrador: 204, desaparece y la bitácora no guarda nombre ni textos', async () => {
+      const created = await draftNote({
+        studentFirstName: 'Zaphod',
+        description: 'Texto reservado del borrador',
+      });
+
+      await discard(teacher, created.id).expect(204);
+
+      await call(app, teacher, 'get', `/observer-notes/${created.id}`).expect(404);
+      await call(app, coordA, 'get', `/observer-notes/${created.id}`).expect(404);
+      expect(await prisma.observerNote.count({ where: { id: created.id } })).toBe(0);
+      const rows = await auditRows(app, created.id);
+      expect(rows.at(-1)).toMatchObject({
+        action: 'Descartó un borrador',
+        type: 'observador',
+        role: 'docente',
+      });
+      const text = JSON.stringify([
+        rows.at(-1)?.detail,
+        rows.at(-1)?.dataBefore,
+        rows.at(-1)?.dataAfter,
+      ]);
+      expect(text).not.toMatch(/Zaphod|Texto reservado/);
+    });
+
+    it('otro docente recibe 404; coordinación y administración, 403; nada se borra', async () => {
+      const created = await draftNote();
+
+      await discard(other, created.id).expect(404);
+      await discard(coordA, created.id).expect(403);
+      await discard(admin, created.id).expect(403);
+      expect(await prisma.observerNote.count({ where: { id: created.id } })).toBe(1);
+    });
+
+    it.each([
+      RecordStatus.Submitted,
+      RecordStatus.ChangesRequested,
+      RecordStatus.Reviewed,
+      RecordStatus.Voided,
+    ])('una anotación %s responde 409 y no se borra', async (status) => {
+      const created = await draftNote();
+      await forceNoteStatus(app, created.id, status);
+
+      const res = await discard(teacher, created.id).expect(409);
+
+      expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Conflict);
+      expect(await prisma.observerNote.count({ where: { id: created.id } })).toBe(1);
+    });
+
+    it('descartar una inexistente responde 404', async () => {
+      await discard(teacher, unknownId()).expect(404);
     });
   });
 });

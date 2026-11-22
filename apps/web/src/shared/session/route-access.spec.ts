@@ -108,11 +108,11 @@ describe('transiciones de sesión', () => {
           kind: 'authenticated',
           user: user('coordinador'),
           consent: 'pending',
-          policyVersion: '2026-3',
+          policyVersion: '2026-4',
         },
         true,
       ),
-    ).toEqual({ ...auth('coordinador', 'pending'), policyVersion: '2026-3' });
+    ).toEqual({ ...auth('coordinador', 'pending'), policyVersion: '2026-4' });
   });
 });
 

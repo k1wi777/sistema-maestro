@@ -6,7 +6,7 @@ como **Pendiente** mientras no se confirme; ningún dato legal se completa con u
 La columna «Quién lo confirma (propuesta)» es solo una sugerencia de este trabajo, no un dato confirmado: el colegio la valida.
 La prueba `legal.spec.ts` comprueba que cada id de `LEGAL_PENDING` figure en esta tabla.
 
-Versión de los textos: `2026-3` (`LEGAL_DOCUMENTS_VERSION` en el frontend y
+Versión de los textos: `2026-4` (`LEGAL_DOCUMENTS_VERSION` en el frontend y
 `DATA_POLICY_VERSION` en la API; al cambiar un texto se suben las dos).
 
 | Id | Dato pendiente | Dónde aparece | Quién lo confirma (propuesta) | Estado |

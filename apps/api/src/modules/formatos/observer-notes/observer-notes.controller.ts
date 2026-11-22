@@ -1,5 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ALL_ROLES, UserRole } from '@gns/shared';
+import { ApiNoContentResponse } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
@@ -14,7 +15,7 @@ import {
   UpdateObserverNoteDto,
   VoidObserverNoteDto,
 } from './dto/observer-note.dto';
-import { OBSERVER_NOTE_AUDIT } from './observer-note.audit-snapshot';
+import { OBSERVER_NOTE_AUDIT, ObserverNoteDiscardSnapshot } from './observer-note.audit-snapshot';
 import { ObserverNotesService } from './observer-notes.service';
 
 /**
@@ -84,5 +85,20 @@ export class ObserverNotesController {
     @Body() _body: VoidObserverNoteDto,
   ) {
     return this.notes.voidNote(user, id);
+  }
+
+  /** Borrado real de una anotación propia en borrador; lo enviado solo se anula. */
+  @Delete(':id')
+  @Roles(UserRole.Teacher)
+  @HttpCode(204)
+  @Audited({
+    type: OBSERVER_NOTE_AUDIT.type,
+    entity: OBSERVER_NOTE_AUDIT.entity,
+    snapshot: ObserverNoteDiscardSnapshot,
+    action: 'Descartó un borrador',
+  })
+  @ApiNoContentResponse({ description: 'Borrador descartado' })
+  discard(@CurrentUser() user: RequestUser, @Param() { id }: IdParamDto) {
+    return this.notes.discard(user, id);
   }
 }

@@ -20,7 +20,7 @@ import {
 import { useLessonPlanList } from '../hooks/use-lesson-plan-list';
 import { useQueryParams } from '@/shared/data';
 import { useTeachingContext } from '../hooks/use-teaching-context';
-import { STATUS_INFO, STATUS_ORDER, isEditable } from '@/shared/records';
+import { DiscardedNotice, STATUS_INFO, STATUS_ORDER, isEditable } from '@/shared/records';
 import { LoadError, Loading } from '@/shared/data';
 import styles from './lesson-plan-list.module.css';
 import { planPath } from '../model/paths';
@@ -124,6 +124,7 @@ export function LessonPlanList() {
 
   return (
     <div className={styles.root}>
+      <DiscardedNotice />
       <div className={styles.filters}>
         <SegmentedFilter
           label="Filtrar por estado"

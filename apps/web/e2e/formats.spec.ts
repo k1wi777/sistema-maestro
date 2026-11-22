@@ -8,12 +8,13 @@ import { openAs, type ActorPage } from './support/browser';
 // es de hoy: el recorrido crea el de hoy. Los nombres de pila son inventados y no están en los datos
 // demo (R12).
 const marker = runMarker();
-const FIRST_NAMES = { positive: 'Xiomaro', note: 'Quirino' };
+const FIRST_NAMES = { positive: 'Xiomaro', note: 'Quirino', discarded: 'Zafiro' };
 const POSITIVE = `Participación ${marker}`;
 const CORRECTED = `Corregida ${marker}`;
 const OBSERVATION = `Amplía el contexto ${marker}`;
 const NOTE = `Colaboración ${marker}`;
 const COMMITMENT = `Felicitación ${marker}`;
+const DISCARDED_NOTE = `Borrador ${marker}`;
 const TODAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date());
 
 test.describe.configure({ mode: 'serial' });
@@ -46,6 +47,45 @@ test.describe('Formatos: diario de campo y observador', () => {
       .click();
     await expect(statusBadge(page, 'Enviada · pendiente de revisión')).toBeVisible();
   }
+
+  test('una docente descarta su único borrador y el día vuelve a estar sin diario', async () => {
+    const { page } = participant;
+    await page.goto('/docente/formatos/diario');
+    await page.getByRole('button', { name: 'Agregar anotación' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Agregar anotación' });
+    await dialog.getByLabel('Grupo').selectOption({ label: '7° 1' });
+    await dialog.getByRole('button', { name: 'Continuar' }).click();
+    await expect(page).toHaveURL(new RegExp(`/docente/formatos/diario/[^/]+/${TODAY}$`));
+    const dayPath = new URL(page.url()).pathname;
+
+    const form = page.getByRole('form', { name: 'Nueva anotación' });
+    await form.getByLabel('Clase (asignatura)').selectOption({ label: 'Matemáticas' });
+    await form
+      .getByLabel('Descripción de eventos')
+      .fill(`${FIRST_NAMES.discarded}: ${DISCARDED_NOTE}`);
+    await form.getByRole('button', { name: 'Guardar borrador' }).click();
+    const card = page.getByRole('article', { name: 'Anotación de Matemáticas' });
+    await expect(card).toContainText(DISCARDED_NOTE);
+
+    await card.getByRole('button', { name: /^Descartar borrador/ }).click();
+    const confirm = page.getByRole('dialog', { name: 'Descartar borrador' });
+    await expect(confirm).toContainText('Matemáticas');
+    await confirm.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(card).toBeVisible();
+
+    await card.getByRole('button', { name: /^Descartar borrador/ }).click();
+    await page
+      .getByRole('dialog', { name: 'Descartar borrador' })
+      .getByRole('button', { name: 'Descartar borrador' })
+      .click();
+
+    await expect(page.getByText('Borrador descartado.')).toBeVisible();
+    await expect(page.getByRole('article', { name: 'Anotación de Matemáticas' })).toHaveCount(0);
+    // Era la única anotación: el diario se borró y el día se ve como un día sin diario.
+    await page.goto(dayPath);
+    await expect(page.getByRole('form', { name: 'Nueva anotación' })).toBeVisible();
+    await expect(page.getByRole('article', { name: 'Anotación de Matemáticas' })).toHaveCount(0);
+  });
 
   test('una docente agrega su anotación de hoy al diario del grupo y la marca lista', async () => {
     const { page } = participant;
@@ -291,5 +331,33 @@ test.describe('Formatos: diario de campo y observador', () => {
       await actor.page.goto(from);
       await expect(actor.page).toHaveURL(expected);
     }
+  });
+
+  test('el docente descarta un borrador del observador desde «Más»', async () => {
+    const { page } = teacher;
+    await page.goto('/docente/formatos/observador');
+    await page.getByRole('link', { name: 'Nueva anotación' }).click();
+    await page.getByLabel('Grado').selectOption({ label: '7° · Bachillerato' });
+    await page.getByLabel('Estudiante (nombre de pila)').fill(FIRST_NAMES.discarded);
+    await page.getByLabel('Tipo de anotación').selectOption({ label: 'Reconocimiento positivo' });
+    await page.getByLabel('Comportamiento específico').fill(`${FIRST_NAMES.discarded}: ${NOTE}`);
+    await page.getByRole('button', { name: 'Guardar anotación' }).click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: `Anotación de ${FIRST_NAMES.discarded}` }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Anular anotación' })).toHaveCount(0);
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    await page
+      .getByRole('dialog', { name: 'Descartar borrador' })
+      .getByRole('button', { name: 'Descartar borrador' })
+      .click();
+
+    await expect(page).toHaveURL(/\/docente\/formatos\/observador\?.*aviso=descartado/);
+    await expect(page.getByText('Borrador descartado.')).toBeVisible();
+    await expect(page.getByRole('article').filter({ hasText: FIRST_NAMES.discarded })).toHaveCount(
+      0,
+    );
   });
 });

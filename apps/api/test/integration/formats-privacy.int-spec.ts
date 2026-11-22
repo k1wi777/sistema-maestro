@@ -163,6 +163,28 @@ describe('privacidad del diario y el observador (BE-6)', () => {
     });
   });
 
+  describe('descartar un borrador del observador (#117)', () => {
+    it('la fila de bitácora del descarte no trae nombre, textos ni el contenido del borrador', async () => {
+      const { gradeId } = await freshGrade(planning, [], coordId);
+      const description = marker('descarte');
+      const created = await createNote(app, teacher, {
+        gradeId,
+        studentFirstName: STUDENT_A,
+        description,
+        followUp: marker('seguimiento-descarte'),
+      });
+
+      await call(app, teacher, 'delete', `/observer-notes/${created.id}`).expect(204);
+
+      const rows = await auditRows(app, created.id);
+      expect(rows.at(-1)).toMatchObject({ action: 'Descartó un borrador', type: 'observador' });
+      expect(await auditText(created.id, true)).not.toContain(run);
+      expect(await auditText(created.id, true)).not.toContain(STUDENT_A);
+      expect(rows.at(-1)?.dataBefore).toMatchObject({ status: 'borrador' });
+      expect(rows.at(-1)?.dataAfter).toBeNull();
+    });
+  });
+
   describe('logs y errores sin textos de los registros (R19)', () => {
     it('ningún nombre ni texto aparece en el log ni en las respuestas 201, 400, 403, 404 y 409', async () => {
       const { gradeId } = await freshGrade(planning, [teacherUser.id]);

@@ -9,6 +9,7 @@ import {
   removeLessonPlanResource,
   submitLessonPlan,
   updateLessonPlan,
+  discardLessonPlan,
   voidLessonPlan,
   type CreateResourceBody,
 } from '../api/lesson-plans';
@@ -57,6 +58,8 @@ export interface LessonPlanEditorState {
   /** Guarda lo pendiente y envía a coordinación. */
   submit: () => Promise<SubmitOutcome>;
   voidPlan: (reason: string) => Promise<ApiResult<LessonPlan>>;
+  /** Borrado real del borrador; en 409 la planeación cambió de estado en el servidor. */
+  discardPlan: () => Promise<ApiResult<undefined>>;
   addResource: (body: CreateResourceBody) => Promise<ApiResult<LessonPlanResource>>;
   removeResource: (resourceId: string) => Promise<ApiResult<undefined>>;
 }
@@ -212,6 +215,14 @@ export function useLessonPlanEditor({ initial, onConflict }: Options): LessonPla
     [updatePlan],
   );
 
+  const discardPlan = useCallback(async (): Promise<ApiResult<undefined>> => {
+    const result = await discardLessonPlan(planRef.current.id);
+    if (!result.ok && result.error.statusCode === CONFLICT_STATUS) {
+      conflictRef.current();
+    }
+    return result;
+  }, []);
+
   const addResource = useCallback(
     async (body: CreateResourceBody): Promise<ApiResult<LessonPlanResource>> => {
       const result = await addLessonPlanResource(planRef.current.id, body);
@@ -273,6 +284,7 @@ export function useLessonPlanEditor({ initial, onConflict }: Options): LessonPla
     save,
     submit,
     voidPlan,
+    discardPlan,
     addResource,
     removeResource,
   };

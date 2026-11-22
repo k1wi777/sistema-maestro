@@ -53,6 +53,7 @@ function setup(status: RecordStatus = RecordStatus.Draft) {
     create: jest.fn(() => Promise.resolve(note)),
     lock: jest.fn(() => Promise.resolve()),
     updateIfStatus: jest.fn(() => Promise.resolve(true)),
+    deleteDraft: jest.fn(() => Promise.resolve(true)),
   };
   const inserted: { action: string; adjustedFields: string[]; changes: unknown }[] = [];
   const reviewRepository = {
@@ -192,6 +193,16 @@ describe('ObserverNotesService · enviar, anular y revisar', () => {
     await expect(service.voidNote(coordinator, NOTE)).resolves.toBeDefined();
   });
 
+  it('anular un borrador responde 409 «se descarta» para el dueño y para coordinación', async () => {
+    for (const actor of [owner, coordinator]) {
+      const { service, repository } = setup(RecordStatus.Draft);
+      await expect(service.voidNote(actor, NOTE)).rejects.toThrow(
+        'La anotación está en borrador: se descarta en lugar de anularse',
+      );
+      expect(repository.updateIfStatus).not.toHaveBeenCalled();
+    }
+  });
+
   it('autorrevisión 403 y solo se revisan las enviadas (409)', async () => {
     const own = setup(RecordStatus.Submitted);
     own.grades.find.mockResolvedValue({ id: GRADE, active: true, coordinatorId: OWNER });
@@ -306,5 +317,53 @@ describe('splitPriorityWindow', () => {
       );
     }
     expect(seen.slice(0, total)).toEqual(Array.from({ length: total }, (_, i) => i));
+  });
+});
+
+describe('ObserverNotesService · descartar (404 → 403 → 409)', () => {
+  it('el autor descarta su borrador: bloquea la fila y borra', async () => {
+    const { service, repository } = setup();
+    await service.discard(owner, NOTE);
+    expect(repository.lock).toHaveBeenCalledWith(NOTE);
+    expect(repository.deleteDraft).toHaveBeenCalledWith(NOTE);
+  });
+
+  it('otro docente recibe 404; coordinación y administración, 403; nadie borra', async () => {
+    const admin = asUser('admin', UserRole.Administrator);
+    const { service, repository } = setup();
+    await expect(service.discard(other, NOTE)).rejects.toBeInstanceOf(NotFoundException);
+    for (const actor of [coordinator, admin]) {
+      await expect(service.discard(actor, NOTE)).rejects.toBeInstanceOf(ForbiddenException);
+    }
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    RecordStatus.Submitted,
+    RecordStatus.ChangesRequested,
+    RecordStatus.Reviewed,
+    RecordStatus.Voided,
+  ])('una anotación %s responde 409 y no borra', async (status) => {
+    const { service, repository } = setup(status);
+    await expect(service.discard(owner, NOTE)).rejects.toBeInstanceOf(ConflictException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('si otra petición la movió justo antes de borrar (0 filas), responde 409', async () => {
+    const { service, repository } = setup();
+    repository.deleteDraft.mockResolvedValueOnce(false);
+    await expect(service.discard(owner, NOTE)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('el estado de la bitácora del descarte no trae el nombre del estudiante ni textos', async () => {
+    const { service } = setup();
+    const snapshot = await service.findDiscardSnapshot(NOTE);
+    expect(snapshot).toEqual({
+      id: NOTE,
+      status: RecordStatus.Draft,
+      grade: 'Quinto',
+      type: ObserverNoteType.TypeI,
+    });
+    expect(JSON.stringify(snapshot)).not.toMatch(/Ana|Texto original/);
   });
 });

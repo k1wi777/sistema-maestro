@@ -7,7 +7,15 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading } from '@/shared/data';
 import { formatDateTime, formatTime, todayInColombia } from '@/shared/format/dates';
-import { STATUS_INFO, VoidRecordDialog, canVoid, latestDecision } from '@/shared/records';
+import {
+  DISCARDED_NOTICE,
+  DiscardDraftDialog,
+  STATUS_INFO,
+  VoidRecordDialog,
+  canDiscard,
+  canVoid,
+  latestDecision,
+} from '@/shared/records';
 import {
   ActionBar,
   ActionMenu,
@@ -117,6 +125,8 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const router = useRouter();
 
   const info = STATUS_INFO[note.status];
   const readOnlyMessage = readOnlyNotice(note.status, 'anotación');
@@ -179,6 +189,15 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
       return;
     }
     setSubmitError(outcome.message);
+  }
+
+  async function handleDiscard(): Promise<string | null> {
+    const outcome = await editor.discard();
+    if (!outcome.ok) {
+      return outcome.message;
+    }
+    router.push(`${OBSERVER_LIST_PATH}?aviso=${DISCARDED_NOTICE}`);
+    return null;
   }
 
   async function handleVoid(reason: string): Promise<string | null> {
@@ -245,7 +264,7 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
           </Card>
         </div>
 
-        {editable || canVoid(note.status) ? (
+        {editable || canVoid(note.status) || canDiscard(note.status) ? (
           <ActionBar
             className={styles.actionBar}
             status={
@@ -256,7 +275,7 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
               ) : undefined
             }
           >
-            {canVoid(note.status) ? (
+            {canVoid(note.status) || canDiscard(note.status) ? (
               <ActionMenu
                 label="Más"
                 ariaLabel="Más acciones"
@@ -264,12 +283,26 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
                 placement="up"
                 collapseLabel
                 items={[
-                  {
-                    id: 'void',
-                    label: 'Anular anotación',
-                    icon: 'anular',
-                    onSelect: () => setVoidOpen(true),
-                  },
+                  ...(canDiscard(note.status)
+                    ? [
+                        {
+                          id: 'discard',
+                          label: 'Descartar borrador',
+                          icon: 'papelera' as const,
+                          onSelect: () => setDiscardOpen(true),
+                        },
+                      ]
+                    : []),
+                  ...(canVoid(note.status)
+                    ? [
+                        {
+                          id: 'void',
+                          label: 'Anular anotación',
+                          icon: 'anular' as const,
+                          onSelect: () => setVoidOpen(true),
+                        },
+                      ]
+                    : []),
                 ]}
               />
             ) : null}
@@ -301,6 +334,13 @@ function NoteScreen({ initial, initialReviews, notice, onConflict }: NoteScreenP
           error={submitError}
           onClose={() => setSubmitOpen(false)}
           onConfirm={() => void handleConfirmSubmit()}
+        />
+      ) : null}
+      {discardOpen ? (
+        <DiscardDraftDialog
+          description="Se borrará esta anotación en borrador y no podrás recuperarla. Puedes descartarla porque nunca la enviaste a coordinación."
+          onClose={() => setDiscardOpen(false)}
+          onConfirm={handleDiscard}
         />
       ) : null}
       {voidOpen ? (

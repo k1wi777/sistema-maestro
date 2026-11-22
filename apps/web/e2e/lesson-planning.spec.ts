@@ -11,6 +11,7 @@ const PERFORMANCE = `Desempeño ${marker}`;
 const DEVELOPMENT = `Desarrollo ${marker}`;
 const OBSERVATION = `Observación ${marker}`;
 const CORRECTED = `Corregido ${marker}`;
+const DISCARDED_TOPIC = `Descartada ${marker}`;
 
 test.describe.configure({ mode: 'serial' });
 
@@ -31,6 +32,8 @@ test.describe('Planeación: del borrador a la aprobación', () => {
 
   const inboxRow = (page: Page) => page.getByRole('row').filter({ hasText: TOPIC });
   const planCard = (page: Page) => page.getByRole('article').filter({ hasText: TOPIC });
+  const planCardFor = (page: Page, topic: string) =>
+    page.getByRole('article').filter({ hasText: topic });
 
   async function submitToCoordination(page: Page): Promise<void> {
     await page.getByRole('button', { name: /Revisar y enviar/ }).click();
@@ -158,5 +161,40 @@ test.describe('Planeación: del borrador a la aprobación', () => {
     await expect(planCard(teacher.page)).toContainText('Revisada');
     await teacher.page.goto(planUrl);
     await expect(statusBadge(teacher.page, 'Revisada')).toBeVisible();
+  });
+
+  test('el docente descarta un borrador propio: «Anular» no se ofrece y la lista deja de mostrarlo', async () => {
+    const { page } = teacher;
+    await page.goto('/docente/formatos/planeacion/nueva');
+    await page.getByRole('combobox', { name: 'Grado', exact: true }).selectOption({ label: '4°' });
+    await page
+      .getByRole('combobox', { name: 'Periodo', exact: true })
+      .selectOption({ label: 'Periodo 1' });
+    await page.getByLabel('Proyecto o tema').fill(DISCARDED_TOPIC);
+    await page.getByRole('button', { name: 'Crear y continuar' }).click();
+    await expect(
+      page.getByRole('heading', { level: 1, name: new RegExp(DISCARDED_TOPIC) }),
+    ).toBeVisible();
+    await expect(statusBadge(page, 'Borrador')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Anular' })).toHaveCount(0);
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Descartar borrador' });
+    await expect(dialog).toContainText(DISCARDED_TOPIC);
+    await dialog.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(statusBadge(page, 'Borrador')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    await page
+      .getByRole('dialog', { name: 'Descartar borrador' })
+      .getByRole('button', { name: 'Descartar borrador' })
+      .click();
+
+    await expect(page).toHaveURL(/\/docente\/formatos\/planeacion\?.*aviso=descartado/);
+    await expect(page.getByText('Borrador descartado.')).toBeVisible();
+    await expect(planCardFor(page, DISCARDED_TOPIC)).toHaveCount(0);
   });
 });

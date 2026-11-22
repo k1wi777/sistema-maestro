@@ -40,7 +40,12 @@ export function isEditable(status: RecordStatus): boolean {
   return canTransition(RecordOperation.Edit, RecordActor.Owner, status);
 }
 
-/** El dueño puede anular su registro en borrador, enviada o con observaciones. */
+/** El dueño anula lo ya enviado: enviada o con observaciones (un borrador se descarta). */
 export function canVoid(status: RecordStatus): boolean {
   return canTransition(RecordOperation.Void, RecordActor.Owner, status);
+}
+
+/** El dueño descarta (borrado real) solo un borrador que nunca se envió. */
+export function canDiscard(status: RecordStatus): boolean {
+  return canTransition(RecordOperation.Discard, RecordActor.Owner, status);
 }

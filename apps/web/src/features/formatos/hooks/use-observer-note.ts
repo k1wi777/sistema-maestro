@@ -8,6 +8,7 @@ import { useRemote, type Remote } from '@/shared/data';
 import { isEditable } from '@/shared/records';
 
 import {
+  discardObserverNote,
   getObserverNote,
   listObserverNoteReviews,
   submitObserverNote,
@@ -49,7 +50,7 @@ interface UseNoteEditorOptions {
   onConflict: () => void;
 }
 
-/** Estado y acciones de una anotación abierta: guardar cambios, enviar y anular. */
+/** Estado y acciones de una anotación abierta: guardar cambios, enviar, anular y descartar. */
 export function useNoteEditor({ initial, onConflict }: UseNoteEditorOptions) {
   const [note, setNote] = useState(initial);
   const [reviews, setReviews] = useState<Review[] | null>(null);
@@ -118,6 +119,12 @@ export function useNoteEditor({ initial, onConflict }: UseNoteEditorOptions) {
     [failure, refreshReviews],
   );
 
+  /** Borrado real del borrador; tras un éxito la pantalla navega a la lista. */
+  const discard = useCallback(async (): Promise<NoteOutcome> => {
+    const result = await discardObserverNote(noteRef.current.id);
+    return result.ok ? { ok: true } : failure(result.error);
+  }, [failure]);
+
   return {
     note,
     /** `null` hasta que una acción recarga el historial: mientras tanto manda el cargado con la anotación. */
@@ -127,5 +134,6 @@ export function useNoteEditor({ initial, onConflict }: UseNoteEditorOptions) {
     save,
     submit,
     voidNote,
+    discard,
   };
 }

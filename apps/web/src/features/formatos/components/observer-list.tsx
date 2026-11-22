@@ -4,7 +4,7 @@ import { RecordStatus, type ObserverNote } from '@gns/shared';
 
 import { usePagedList, useQueryParams } from '@/shared/data';
 import { formatDayWithYear } from '@/shared/format/dates';
-import { STATUS_INFO } from '@/shared/records';
+import { DiscardedNotice, STATUS_INFO } from '@/shared/records';
 import { useSession } from '@/shared/session';
 import { ButtonLink, RecordCard, StatusBadge } from '@/shared/ui';
 
@@ -64,26 +64,29 @@ export function ObserverList() {
     return null;
   }
   return (
-    <RecordListView
-      list={list}
-      status={status}
-      onStatusChange={(value) => update({ estado: value })}
-      intro="Registra reconocimientos, avances y situaciones académicas o de convivencia de tus estudiantes. Coordinación las revisa y deja sus observaciones."
-      action={
-        <ButtonLink href={NEW_OBSERVER_NOTE_PATH} startIcon="mas">
-          Nueva anotación
-        </ButtonLink>
-      }
-      filterLabel="Filtrar anotaciones por estado"
-      texts={{
-        loading: 'Cargando tus anotaciones…',
-        loadError: 'No pudimos cargar tus anotaciones',
-        emptyTitle: 'Aún no tienes anotaciones',
-        emptyBody: 'Registra la primera con el botón «Nueva anotación».',
-        count: (total) => (total === 1 ? '1 anotación' : `${total} anotaciones`),
-      }}
-      getKey={(note) => note.id}
-      renderItem={(note) => <NoteCard note={note} />}
-    />
+    <>
+      <DiscardedNotice />
+      <RecordListView
+        list={list}
+        status={status}
+        onStatusChange={(value) => update({ estado: value })}
+        intro="Registra reconocimientos, avances y situaciones académicas o de convivencia de tus estudiantes. Coordinación las revisa y deja sus observaciones."
+        action={
+          <ButtonLink href={NEW_OBSERVER_NOTE_PATH} startIcon="mas">
+            Nueva anotación
+          </ButtonLink>
+        }
+        filterLabel="Filtrar anotaciones por estado"
+        texts={{
+          loading: 'Cargando tus anotaciones…',
+          loadError: 'No pudimos cargar tus anotaciones',
+          emptyTitle: 'Aún no tienes anotaciones',
+          emptyBody: 'Registra la primera con el botón «Nueva anotación».',
+          count: (total) => (total === 1 ? '1 anotación' : `${total} anotaciones`),
+        }}
+        getKey={(note) => note.id}
+        renderItem={(note) => <NoteCard note={note} />}
+      />
+    </>
   );
 }

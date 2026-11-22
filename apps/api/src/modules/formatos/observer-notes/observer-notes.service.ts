@@ -161,6 +161,38 @@ export class ObserverNotesService {
     return this.loadVisible(user, id);
   }
 
+  /**
+   * Borrado real de una anotación en borrador (nunca enviada). Orden: 404 (oculta lo ajeno al
+   * docente) → 403 (no es el autor) → 409 (ya no es borrador), con la fila bloqueada antes de releer.
+   */
+  async discard(user: RequestUser, id: string): Promise<void> {
+    const visible = await this.loadVisible(user, id);
+    if (visible.teacher.id !== user.id) {
+      throw new ForbiddenException('Solo quien creó la anotación puede descartarla');
+    }
+    await this.repository.lock(id);
+    const note = await this.loadVisible(user, id);
+    if (!canTransition(RecordOperation.Discard, RecordActor.Owner, note.status)) {
+      throw new ConflictException(
+        `La anotación está ${STATUS_LABEL[note.status]}: solo se descarta un borrador`,
+      );
+    }
+    if (!(await this.repository.deleteDraft(id))) {
+      await this.failTransition(user, id, 'descartar');
+    }
+  }
+
+  /**
+   * Para la bitácora del descarte: estado, grado y tipo, sin el nombre del estudiante ni textos.
+   * Sin comprobar visibilidad (no sale por la API).
+   */
+  async findDiscardSnapshot(id: string): Promise<Record<string, unknown> | null> {
+    const note = await this.repository.findById(id);
+    return note
+      ? { id: note.id, status: note.status, grade: note.grade.name, type: note.type }
+      : null;
+  }
+
   // ---------- Revisión de coordinación ----------
 
   approve(user: RequestUser, id: string, input: ApproveObserverNoteInput): Promise<ObserverNote> {

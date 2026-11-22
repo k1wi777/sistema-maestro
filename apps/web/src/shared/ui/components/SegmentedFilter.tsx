@@ -21,6 +21,11 @@ interface BaseProps<Value extends string> {
   label: string;
   options: SegmentedOption<Value>[];
   className?: string;
+  /**
+   * Solo el icono de cada opción: el nombre pasa a un texto `sr-only` (no a `aria-label`, para que
+   * el navegador lo pueda traducir) y a `title` para el tooltip. Exige `icon` en cada opción.
+   */
+  iconOnly?: boolean;
 }
 
 interface SingleProps<Value extends string> extends BaseProps<Value> {
@@ -38,11 +43,11 @@ interface MultipleProps<Value extends string> extends BaseProps<Value> {
 export type SegmentedFilterProps<Value extends string> = SingleProps<Value> | MultipleProps<Value>;
 
 /**
- * Control segmentado para filtrar. Selección única: `radiogroup` con flechas (la
+ * Control segmentado para filtrar. Selección única: `radiogroup` con flechas, Inicio y Fin (la
  * selección sigue al foco). Selección múltiple: botones con `aria-pressed`.
  */
 export function SegmentedFilter<Value extends string>(props: SegmentedFilterProps<Value>) {
-  const { label, options, className } = props;
+  const { label, options, className, iconOnly } = props;
   const refs = useRef(new Map<Value, HTMLButtonElement>());
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -69,7 +74,7 @@ export function SegmentedFilter<Value extends string>(props: SegmentedFilterProp
     <div
       role={props.multiple ? 'group' : 'radiogroup'}
       aria-label={label}
-      className={cx(styles.group, className)}
+      className={cx(styles.group, iconOnly && styles.iconOnly, className)}
     >
       {options.map((option, index) => {
         const selected = props.multiple
@@ -88,6 +93,7 @@ export function SegmentedFilter<Value extends string>(props: SegmentedFilterProp
             aria-checked={props.multiple ? undefined : selected}
             aria-pressed={props.multiple ? selected : undefined}
             tabIndex={roving}
+            title={iconOnly ? option.label : undefined}
             className={cx(styles.option, selected && styles.selected)}
             onClick={() => {
               if (props.multiple) {
@@ -103,7 +109,7 @@ export function SegmentedFilter<Value extends string>(props: SegmentedFilterProp
             onKeyDown={(event) => onKeyDown(event, index)}
           >
             {option.icon ? <Icon name={option.icon} size={16} /> : null}
-            {option.label}
+            {iconOnly ? <span className="sr-only">{option.label}</span> : option.label}
             {option.count !== undefined ? (
               <span className={styles.count}>
                 <span className="sr-only"> (</span>

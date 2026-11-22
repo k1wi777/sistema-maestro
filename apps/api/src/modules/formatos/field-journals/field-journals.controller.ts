@@ -1,5 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ALL_ROLES, UserRole } from '@gns/shared';
+import { ApiNoContentResponse } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
@@ -19,7 +20,10 @@ import {
   UpdateAnnotationDto,
   VoidFieldJournalDto,
 } from './dto/field-journal.dto';
-import { FIELD_JOURNAL_AUDIT } from './field-journal.audit-snapshot';
+import {
+  FIELD_JOURNAL_AUDIT,
+  JournalAnnotationDiscardSnapshot,
+} from './field-journal.audit-snapshot';
 import { FieldJournalsService } from './field-journals.service';
 
 /**
@@ -86,6 +90,24 @@ export class FieldJournalsController {
     @Body() body: UpdateAnnotationDto,
   ) {
     return this.journals.updateAnnotation(user, id, annotationId, body);
+  }
+
+  /**
+   * Borrado real de una anotación propia en borrador de un diario En curso (y del diario si era
+   * la única). El id de la ruta es el de la anotación: la bitácora la lee antes de borrarla.
+   */
+  @Delete('annotations/:id')
+  @Roles(UserRole.Teacher)
+  @HttpCode(204)
+  @Audited({
+    type: FIELD_JOURNAL_AUDIT.type,
+    entity: 'diario_anotacion',
+    snapshot: JournalAnnotationDiscardSnapshot,
+    action: 'Descartó un borrador',
+  })
+  @ApiNoContentResponse({ description: 'Borrador descartado' })
+  discardAnnotation(@CurrentUser() user: RequestUser, @Param() { id }: IdParamDto) {
+    return this.journals.discardAnnotation(user, id);
   }
 
   @Post(':id/annotations/:annotationId/ready')
