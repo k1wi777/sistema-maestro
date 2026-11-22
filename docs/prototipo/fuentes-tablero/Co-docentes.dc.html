@@ -15,6 +15,10 @@
 </helmet>
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-comentario" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></symbol>
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
   <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
   <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
@@ -28,20 +32,19 @@
   <symbol id="i-guardar" viewBox="0 0 24 24"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M7 3v5h8V3M7 21v-7h10v7"></path></symbol>
 <symbol id="i-anular" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="m5.6 5.6 12.8 12.8"></path></symbol><symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol></svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
     <nav class="menu menu-adm" aria-label="Coordinación académica">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
-      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
       <div class="menu-titulo" style="margin-top:12px">Gestión</div>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
-      <button type="button"><svg class="i"><use href="#i-grados"></use></svg>Grados y áreas</button>
       <button type="button"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
     <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
     <button type="button" class="priv-link">Tratamiento de datos personales</button>
   </aside>
   <main>
@@ -50,74 +53,45 @@
         <div class="encabezado"><div>
           <div class="eyebrow">Coordinación académica</div>
           <h1>Docentes y asignaciones</h1>
-          <p>Grupos y áreas de cada docente en el año lectivo vigente. Cada grupo tiene un director(a).</p>
+          <p>Grupos y áreas de cada docente en el año lectivo vigente.</p>
         </div></div>
-        <div class="bloque"><div class="bloque-h"><h2>Docentes y asignaciones</h2><button type="button" class="btn"><svg class="i"><use href="#i-mas"></use></svg>Registrar docente</button></div>
-          <div class="co-filtros"><label>Buscar<input type="search" placeholder="Nombre, grado o asignatura"></label><label>Año lectivo<select><option>2026-2027</option></select></label></div>
-          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Docentes del año lectivo</caption><thead><tr><th>Docente</th><th>Cargo</th><th>Grupos y áreas</th><th class="c">Planeaciones</th><th>Cuenta</th><th>Acciones</th></tr></thead><tbody>
-            <tr><td><b>Andrés Ruiz</b></td><td>Docente de área</td><td><div><b>Transition 1:</b> Tecnología e Informática</div></td><td class="c">2</td><td><span class="estado e-revisada">Vinculada</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm">Actividad</button> <button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Camila Torres</b><br><small class="hint">Directora de Kinder 1</small></td><td>Director(a) de grupo</td><td><div><b>Kinder 1:</b> English (CLIL), Dimensión comunicativa</div><div><b>Transition 1:</b> English (CLIL)</div></td><td class="c">3</td><td><span class="estado e-revisada">Vinculada</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm">Actividad</button> <button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Diego Herrera</b></td><td>Docente de área</td><td><div><b>Transition 1:</b> Lengua Castellana</div></td><td class="c">1</td><td><span class="estado e-revisada">Vinculada</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm">Actividad</button> <button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Julián Castro</b></td><td>Docente de área</td><td><div><b>Transition 1:</b> Música</div></td><td class="c">0</td><td><span class="estado e-revisada">Vinculada</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm">Actividad</button> <button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Laura Méndez</b><br><small class="hint">Directora de Transition 1</small></td><td>Docente titular</td><td><div><b>Transition 1:</b> Dimensión cognitiva, Pre-ciencias, Dimensión socioafectiva</div><div><b>Transition 2:</b> Pre-ciencias</div></td><td class="c">3</td><td><span class="estado e-revisada">Vinculada</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm">Actividad</button> <button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Sara Gómez</b></td><td>Auxiliar pedagógica</td><td><span class="hint">Sin asignar</span></td><td class="c">—</td><td><span class="estado e-borrador">Sin vincular</span></td><td style="white-space:nowrap"><button type="button" class="btn lin sm">Editar</button></td></tr>
-          </tbody></table></div></div>
-
-        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al editar un docente</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
-
-        <div class="bloque"><div class="bloque-h"><h2>Editar docente</h2><button type="button" class="btn lin sm"><svg class="i"><use href="#i-volver"></use></svg>Volver</button></div>
-          <div class="g">
-            <label>Nombre del docente<input maxlength="80" value="Laura Méndez" placeholder="Nombre y apellido"></label>
-            <label>Cargo<select><option>Docente titular</option><option>Docente de área</option><option>Director(a) de grupo</option><option>Docente de apoyo</option><option>Auxiliar pedagógica</option></select></label>
-            <label class="full">Cuenta en la plataforma <span class="hint">(vincula para ver su progreso y sus planeaciones)</span>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="co-tag" style="margin:0">Vinculada: laura.mendez@demo.gns.test</span><button type="button" class="co-x">Desvincular</button></div></label>
-          </div></div>
-        <div class="bloque"><div class="bloque-h"><h2>Grupos y áreas</h2></div>
-          <div class="g"><label>Grupo<select><option>Transition 1</option><option>Transition 2</option><option>Kinder 1</option></select></label>
-            <label style="flex-direction:row;align-items:center;gap:8px;font-weight:600;align-self:end"><input type="checkbox" style="width:18px;height:18px" checked>Director(a) de este grupo</label>
-            <div class="full"><span class="hint" style="font-weight:800">Áreas que orienta en ese grupo (las del nivel Preescolar alto)</span>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" checked disabled style="width:16px;height:16px">Dimensión cognitiva</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión comunicativa</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión corporal y motora</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión estética</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" checked disabled style="width:16px;height:16px">Dimensión socioafectiva</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">English (CLIL)</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" checked disabled style="width:16px;height:16px">Pre-ciencias</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Lengua Castellana</label>
-              <label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Música</label>
-            </div></div></div>
-          <p class="hint" style="margin:8px 0 0">Cada grupo tiene un solo director(a): si marcas esta casilla, el director(a) actual de Transition 1 deja de serlo. Un grupo sin director(a) no puede enviar su diario de campo.</p>
-          <div class="acciones-f" style="justify-content:flex-start"><button type="button" class="btn sec sm"><svg class="i" aria-hidden="true"><use href="#i-mas"></use></svg>Asignar al grupo</button></div>
-          <div style="margin-top:12px">
-            <div class="co-row" style="grid-template-columns:auto minmax(0,1fr)"><div class="co-n" style="font-size:12px;width:auto;min-width:44px;padding:0 8px">Transition 1</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Dimensión cognitiva <button type="button" class="co-x" aria-label="Quitar Dimensión cognitiva de Transition 1">×</button></span><span class="co-tag" style="margin:0">Pre-ciencias <button type="button" class="co-x" aria-label="Quitar Pre-ciencias de Transition 1">×</button></span><span class="co-tag" style="margin:0">Dimensión socioafectiva <button type="button" class="co-x" aria-label="Quitar Dimensión socioafectiva de Transition 1">×</button></span><span class="hint" style="margin-left:8px;align-self:center">Directora de este grupo</span></div></div>
-            <div class="co-row" style="grid-template-columns:auto minmax(0,1fr)"><div class="co-n" style="font-size:12px;width:auto;min-width:44px;padding:0 8px">Transition 2</div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Pre-ciencias <button type="button" class="co-x" aria-label="Quitar Pre-ciencias de Transition 2">×</button></span></div></div>
-          </div></div>
-        <div class="co-barra"><button type="button" class="btn-anular"><svg class="i" aria-hidden="true"><use href="#i-anular"></use></svg>Anular registro</button><button type="button" class="btn"><svg class="i"><use href="#i-guardar"></use></svg>Guardar docente</button></div>
-
-        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Solo administración · usuarios y roles</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
-
-        <div class="bloque"><div class="bloque-h"><h2>Usuarios de la plataforma</h2><button type="button" class="btn"><svg class="i"><use href="#i-mas"></use></svg>Crear usuario</button></div>
-          <p class="hint" style="margin:-6px 0 10px">Nadie se registra solo: administración crea cada cuenta con su correo institucional y le asigna un rol. Un usuario inactivo no puede ingresar; su historial se conserva.</p>
-          <div class="co-filtros"><label>Buscar<input type="search" placeholder="Nombre o correo"></label><label>Rol<select><option>Todos</option><option>Docente</option><option>Coordinador</option><option>Administrador</option></select></label><label>Estado<select><option>Todos</option><option>Activo</option><option>Inactivo</option></select></label></div>
-          <div class="fo-tabla-w"><table><thead><tr><th>Nombre</th><th>Correo institucional</th><th>Rol</th><th>Estado</th><th>Creado</th><th></th></tr></thead><tbody>
-            <tr><td><b>Marcela Rojas</b></td><td>marcela.rojas@demo.gns.test</td><td><span class="co-tag rojo" style="margin:0">Coordinador</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td><button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Laura Méndez</b></td><td>laura.mendez@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td><button type="button" class="btn lin sm">Editar</button></td></tr>
-            <tr><td><b>Sara Gómez</b></td><td>sara.gomez@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-borrador">Inactivo</span></td><td>15 ago 2026</td><td><button type="button" class="btn lin sm">Editar</button></td></tr>
+        <p class="hint" style="margin:-8px 0 14px">Año lectivo 2026-2027</p>
+        <div class="obs" style="border-left-width:4px"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg><div><b>Docentes nuevos</b><span>Un docente nuevo aparece en esta lista cuando administración le hace su primera asignación.</span></div></div>
+        <div class="bloque">
+          <div class="co-filtros"><label>Buscar docente<input type="search" placeholder="Nombre, grado o asignatura"></label></div>
+          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Docentes del año lectivo</caption><thead><tr><th>Docente</th><th>Grupos y áreas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+            <tr><td><b>Andrés Ruiz</b></td><td><div><b>Kinder 1:</b> Tecnología e Informática</div><div><b>Transition 1:</b> Tecnología e Informática</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Andrés Ruiz">Asignaciones</button></td></tr>
+            <tr><td><b>Camila Torres</b><br><small class="hint">Directora de Kinder 1</small></td><td><div><b>Kinder 1:</b> English (CLIL), Dimensión comunicativa</div><div><b>Transition 1:</b> English (CLIL)</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Camila Torres">Asignaciones</button></td></tr>
+            <tr><td><b>Daniela Fontalba</b><br><small class="hint">Directora de Transition 2</small></td><td><div><b>Transition 2:</b> Dimensión cognitiva, Dimensión socioafectiva</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Daniela Fontalba">Asignaciones</button></td></tr>
+            <tr><td><b>Diego Herrera</b></td><td><div><b>Transition 1:</b> Lengua Castellana</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Diego Herrera">Asignaciones</button></td></tr>
+            <tr><td><b>Julián Casaverde</b><br><small class="hint">Director de First Grade 1</small></td><td><div><b>First Grade 1:</b> Lengua Castellana</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Julián Casaverde">Asignaciones</button></td></tr>
+            <tr><td><b>Julián Castro</b></td><td><div><b>Kinder 1:</b> Música</div><div><b>Transition 1:</b> Música</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Julián Castro">Asignaciones</button></td></tr>
+            <tr><td><b>Laura Méndez</b><br><small class="hint">Directora de Transition 1</small></td><td><div><b>Transition 1:</b> Dimensión cognitiva, Pre-ciencias, Dimensión socioafectiva</div><div><b>Transition 2:</b> Pre-ciencias</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Laura Méndez">Asignaciones</button></td></tr>
+            <tr><td><b>Sofía Marquesina</b></td><td><div><b>Kinder 1:</b> Dimensión cognitiva</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Sofía Marquesina">Asignaciones</button></td></tr>
+            <tr><td><b>Valeria Montenueva</b><br><small class="hint">Directora de Red 1</small></td><td><div><b>Red 1:</b> English (CLIL), Dimensión comunicativa</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Valeria Montenueva">Asignaciones</button></td></tr>
           </tbody></table></div>
-          <div class="g" style="margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)">
-            <label>Nombre completo<input maxlength="120" placeholder="Nombre y apellidos"></label>
-            <label>Correo institucional<input type="email" maxlength="160" placeholder="nombre@…"></label>
-            <label>Rol<select><option>Docente</option><option>Coordinador</option><option>Administrador</option></select></label>
-            <label>Estado<select><option>Activo</option><option>Inactivo</option></select></label>
-          </div>
-          <div class="acciones-f"><button type="button" class="btn lin sm">Cancelar</button><button type="button" class="btn sm"><svg class="i"><use href="#i-guardar"></use></svg>Guardar usuario</button></div></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al abrir las asignaciones</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+
+        <div class="bloque" role="dialog" aria-label="Asignaciones de Valeria Montenueva" style="max-width:720px">
+          <div class="bloque-h"><h2>Asignaciones de Valeria Montenueva</h2></div>
+          <p style="margin:0 0 10px">Grupos y áreas del año lectivo vigente. Retirar una asignación no la borra.</p>
+          <p class="hint" style="margin:0 0 12px">Solo asignas en los grupos de tus grados: Kinder y Transition.</p>
+          <div class="co-row" style="grid-template-columns:auto minmax(0,1fr)"><div class="co-n" style="font-size:12px;width:auto;min-width:44px;padding:0 8px">Red 1</div><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><span class="co-tag" style="margin:0">English (CLIL)</span><span class="co-tag" style="margin:0">Dimensión comunicativa</span><span class="co-tag" style="margin:0">Solo consulta</span><span class="hint">Directora de este grupo · Revisa: Elena Ravassa</span></div></div>
+          <div class="g" style="margin-top:14px"><label>Grupo<select><option>Kinder 1</option><option>Kinder 2</option><option>Kinder 3</option><option>Kinder 4</option><option>Kinder 5</option><option>Kinder 6</option><option>Transition 1</option><option>Transition 2</option><option>Transition 3</option><option>Transition 4</option><option>Transition 5</option><option>Transition 6</option></select></label>
+            <label style="flex-direction:row;align-items:center;gap:8px;font-weight:600;align-self:end"><input type="checkbox" style="width:18px;height:18px">Director(a) de este grupo</label>
+            <div class="full"><span class="hint" style="font-weight:800">Áreas que orienta en ese grupo (las del nivel Preescolar alto)</span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión cognitiva</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión comunicativa</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión corporal y motora</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión estética</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Dimensión socioafectiva</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">English (CLIL)</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Pre-ciencias</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Lengua Castellana</label><label class="cs-check" style="padding:5px 10px;font-weight:600;color:var(--fg);flex-direction:row;gap:6px;border-radius:99px"><input type="checkbox" style="width:16px;height:16px">Música</label></div></div></div>
+          <div class="acciones-f" style="justify-content:flex-start"><button type="button" class="btn sec sm"><svg class="i" aria-hidden="true"><use href="#i-mas"></use></svg>Asignar al grupo</button></div>
+          <div class="acciones-f"><button type="button" class="btn lin sm">Cerrar</button></div>
+        </div>
       </section>
     </div>
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2840}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1980}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }

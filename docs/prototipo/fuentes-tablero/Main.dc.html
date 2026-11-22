@@ -14,11 +14,6 @@
 <style>body{margin:0}</style>
 </helmet>
 <div class="login" style="min-height:100vh">
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
-  <symbol id="i-coord" viewBox="0 0 24 24"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="12" cy="12" r="2.5"/></symbol>
-  <symbol id="i-flecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
-</svg>
   <section class="lg-marca" aria-label="George Noble School">
     <div class="lg-in">
       <div class="lg-logo"><div class="disco"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt="Escudo de George Noble School"></div><div><b>George Noble<br>School</b><small>Montería · Colombia</small></div></div>
@@ -30,13 +25,15 @@
   <section class="lg-acceso">
     <div class="lg-card">
       <div><h2>Te damos la bienvenida</h2></div>
-      <p class="lg-sub">Elige cómo quieres entrar hoy.</p>
-      <div class="lg-cuenta"><div class="av">MR</div><div><small>Sesión iniciada como</small><b>Marcela Rojas</b></div><button type="button" class="lg-salir">Cerrar sesión</button></div>
-      <div class="lg-roles">
-        <a class="lg-rol" href="Doc-ruta.dc.html" style="text-decoration:none"><span class="ic"><svg class="i"><use href="#i-plan"></use></svg></span><span><b>Panel Docente</b><small>Planeaciones, formatos y plan de formación</small></span><svg class="i fl"><use href="#i-flecha"></use></svg></a>
-        <a class="lg-rol adm" href="Co-formatos.dc.html" style="text-decoration:none"><span class="ic"><svg class="i"><use href="#i-coord"></use></svg></span><span><b>Coordinación académica</b><small>Revisión, bitácora y planes de formación</small></span><svg class="i fl"><use href="#i-flecha"></use></svg></a>
+      <p class="lg-sub">Ingresa con tu cuenta institucional.</p>
+      <div style="display:grid;gap:14px">
+        <label>Correo institucional<input type="email" autocomplete="username" placeholder="nombre@demo.gns.test"></label>
+        <label>Contraseña<input type="password" autocomplete="current-password"></label>
+        <label style="flex-direction:row;align-items:center;gap:8px;font-size:13.5px"><input type="checkbox" checked style="width:auto"> Mantener la sesión iniciada</label>
+        <button type="button" class="btn" style="width:100%">Ingresar</button>
+        <a href="#" style="color:var(--azul);font-size:13px;text-decoration:underline;justify-self:center">Verificar un certificado</a>
       </div>
-      <p class="lg-nota">Ingresas con tu cuenta institucional. Coordinación académica asigna los roles de cada usuario.</p>
+      <p class="lg-nota">Ingresas con tu cuenta institucional. Administración crea las cuentas y asigna los roles: cada rol entra directo a su vista.</p>
       <div class="lg-pie"><span>© George Noble School · Montería</span><a href="Aviso-datos.dc.html" style="color:var(--azul);font-size:12px">Tratamiento de datos personales</a></div>
     </div>
   </section>

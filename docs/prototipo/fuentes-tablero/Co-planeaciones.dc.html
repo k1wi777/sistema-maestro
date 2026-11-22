@@ -15,6 +15,9 @@
 </helmet>
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
   <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
   <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
@@ -26,20 +29,19 @@
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol><symbol id="i-comentario" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></symbol><symbol id="i-lapiz" viewBox="0 0 24 24"><path d="M21.17 6.81a2.83 2.83 0 0 0-4-4L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol><symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol><symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol><symbol id="i-volver" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></symbol>
 </svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
     <nav class="menu menu-adm" aria-label="Coordinación académica">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
-      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
       <div class="menu-titulo" style="margin-top:12px">Gestión</div>
       <button type="button"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
-      <button type="button"><svg class="i"><use href="#i-grados"></use></svg>Grados y áreas</button>
       <button type="button"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
     <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
     <button type="button" class="priv-link">Tratamiento de datos personales</button>
   </aside>
   <main>
@@ -49,13 +51,14 @@
           <a class="btn lin sm" href="Co-formatos.dc.html" style="text-decoration:none;margin-bottom:12px"><svg class="i" aria-hidden="true"><use href="#i-volver"></use></svg>Formatos</a>
           <div class="eyebrow">Coordinación académica</div>
           <h1>Planeaciones</h1>
-          <p>Revisa las planeaciones que envían los docentes: apruébalas, ajústalas o devuélvelas con observaciones.</p>
+          <p>Revisa las planeaciones de tus grados: apruébalas, ajústalas o devuélvelas con observaciones. Las de los demás grados solo las consultas.</p>
         </div></div>
+        <div class="subtabs" role="group" aria-label="Alcance de la bandeja"><button type="button" class="chip" aria-pressed="true">Mis grados · Kinder y Transition</button><button type="button" class="chip" aria-pressed="false">Todo el colegio</button></div>
         <div class="co-kpis">
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer;border-color:var(--azul);box-shadow:0 0 0 2px var(--azul-suave)"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-reloj"></use></svg></span><b>4</b><span>Pendiente de revisión</span></button>
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg></span><b>2</b><span>Con observaciones</span></button>
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><b>11</b><span>Revisada</span></button>
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-lapiz"></use></svg></span><b>3</b><span>Borrador</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer;border-color:var(--azul);box-shadow:0 0 0 2px var(--azul-suave)"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-reloj"></use></svg></span><b>4</b><span>Pendiente de revisión en tus grados</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg></span><b>2</b><span>Con observaciones en tus grados</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><b>11</b><span>Revisada en tus grados</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-lapiz"></use></svg></span><b>3</b><span>Borrador en tus grados</span></button>
         </div>
         <div class="bloque"><div class="bloque-h"><h2>Planeaciones de los docentes</h2></div>
           <div class="co-filtros">
@@ -73,18 +76,35 @@
             <tr><td><b>Julián Castro</b></td><td><b>Música</b><br><small>Ritmo con el cuerpo</small></td><td>Transition</td><td class="c">1</td><td>30 oct 2026</td><td><span class="estado e-revisada">Revisada</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
             <tr><td><b>Sofía Marquesina</b></td><td><b>Dimensión cognitiva</b><br><small>Contamos con material</small></td><td>Kinder</td><td class="c">1</td><td>—</td><td><span class="estado e-borrador">Borrador</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
           </tbody></table></div></div>
-        <div class="bloque"><div class="bloque-h"><h2>Cumplimiento de entregas · Periodo 1</h2><span class="hint">Elige un periodo en los filtros para cambiarlo.</span></div>
+        <div class="bloque"><div class="bloque-h"><h2>Cumplimiento de entregas en tus grados · Periodo 1</h2><span class="hint">Elige un periodo en los filtros para cambiarlo.</span></div>
           <div class="fo-tabla-w"><table><thead><tr><th>Docente</th><th class="c">Entregadas</th><th>Avance</th><th>Pendientes</th></tr></thead><tbody>
             <tr><td><b>Julián Castro</b></td><td class="c">0 de 2</td><td style="min-width:140px"><div class="co-mini" style="margin:0"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Entregas de Julián Castro"><span style="width:0%"></span></div>0%</div></td><td><span class="co-tag rojo" style="margin:2px 4px 2px 0;display:inline-block">Transition · Música</span><span class="co-tag rojo" style="margin:2px 4px 2px 0;display:inline-block">Kinder · Música</span></td></tr>
             <tr><td><b>Laura Méndez</b></td><td class="c">3 de 4</td><td style="min-width:140px"><div class="co-mini" style="margin:0"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="75" aria-label="Entregas de Laura Méndez"><span style="width:75%"></span></div>75%</div></td><td><span class="co-tag rojo" style="margin:2px 4px 2px 0;display:inline-block">Transition · Dimensión cognitiva</span></td></tr>
             <tr><td><b>Andrés Ruiz</b></td><td class="c">2 de 2</td><td style="min-width:140px"><div class="co-mini" style="margin:0"><div class="fo-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-label="Entregas de Andrés Ruiz"><span style="width:100%"></span></div>100%</div></td><td><span class="estado e-revisada">Al día</span></td></tr>
           </tbody></table></div></div>
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al ver todo el colegio</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+        <div class="subtabs" role="group" aria-label="Alcance de la bandeja"><button type="button" class="chip" aria-pressed="false">Mis grados · Kinder y Transition</button><button type="button" class="chip" aria-pressed="true">Todo el colegio</button></div>
+        <div class="bloque"><div class="bloque-h"><h2>Planeaciones de todo el colegio</h2></div>
+          <div class="co-filtros">
+            <label>Estado<select><option>Todos los estados</option><option>Borrador</option><option selected>Pendiente de revisión</option><option>Con observaciones</option><option>Revisada</option></select></label>
+            <label>Grado<select><option>Todos los grados</option><option>Red</option><option>Blue</option><option>Purple</option><option>Green</option><option>Garden</option><option>Kinder</option><option>Transition</option><option>First Grade</option></select></label>
+            <label>Asignatura<select><option>Todas</option><option>English (CLIL)</option><option>Pre-ciencias</option><option>Lengua Castellana</option><option>Dimensión cognitiva</option></select></label>
+            <label>Periodo<select><option>Todos</option><option>Periodo 1</option><option>Periodo 2</option><option>Periodo 3</option></select></label>
+            <label>Docente<input type="search" placeholder="Nombre"></label></div>
+          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Planeaciones de todo el colegio</caption><thead><tr><th>Docente</th><th>Asignatura y tema</th><th>Grado</th><th class="c">Periodo</th><th>Enviada</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+            <tr><td><b>Laura Méndez</b></td><td><b>Pre-ciencias</b><br><small>¿Qué atrae el imán?</small></td><td>Transition</td><td class="c">1</td><td>7 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr><td><b>Valeria Montenueva</b></td><td><b>English (CLIL)</b><br><small>Colors around me</small></td><td>Red<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Revisa: Elena Ravassa</small></td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
+            <tr><td><b>Camila Torres</b></td><td><b>English (CLIL)</b><br><small>Family time</small></td><td>Kinder</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr><td><b>Julián Casaverde</b></td><td><b>Lengua Castellana</b><br><small>Mis primeras palabras</small></td><td>First Grade<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Sin coordinadora</small></td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
+            <tr><td><b>Andrés Ruiz</b></td><td><b>Tecnología e Informática</b><br><small>Mi primer robot de cartón</small></td><td>Kinder</td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+          </tbody></table></div>
+          <p class="hint" style="margin:8px 0 0">Las cifras de arriba siguen contando solo tus grados.</p></div>
       </section>
     </div>
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1760}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2840}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }
