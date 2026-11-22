@@ -1,4 +1,4 @@
-# Tablero de diseño GNS (v48)
+# Tablero de diseño GNS (v50)
 
 Referencia visual y funcional aprobada de la Plataforma GNS. Es un conjunto de
 pantallas HTML estáticas con datos demo (nombres y correos inventados, dominio
@@ -9,7 +9,7 @@ comparar. Está excluida del lint (`.prettierignore`), del build y del código.
 
 Abre `pantallas/index.html` en el navegador (doble clic) y entra a cualquier pantalla.
 No necesita servidor. Las pantallas `Doc-*` son de la vista docente, las `Co-*` de
-coordinación y `Aviso-datos` / `Main` son transversales. Algunas cargan las fuentes
+coordinación, las `Ad-*` de administración y `Aviso-datos` / `Main` son transversales. Algunas cargan las fuentes
 desde Google Fonts: es solo del tablero, la app las sirve desde su propio dominio.
 
 ## Contenido
@@ -20,15 +20,11 @@ desde Google Fonts: es solo del tablero, la app las sirve desde su propio domini
 | `assets/` | `gns-premium.css` (hoja consolidada con todas las capas), las capas por separado y el escudo (`.webp`). |
 | `fuentes-tablero/` | Fuentes originales del tablero (`*.dc.html`) de las que salen las pantallas, y `canvas.json`, el índice del artefacto (páginas, posición y alto de cada tablero). |
 
-## Qué trae la v48
+## Qué trae la v50
 
-Pone el tablero al día con la app (menús de docente y coordinación, «Formatos» como
-centro de planeación, diario, observador y PIAR, planeación con varias dimensiones o
-asignaturas, «Recursos y D.U.A», video de YouTube en los módulos) y suma seis tableros
-nuevos: `Doc-formatos`, `Doc-diario-dia`, `Doc-diario-director`, `Co-diarios`,
-`Co-diario-revision` y `Co-grados`. El **diario de campo colaborativo** (un diario por
-grupo y día, con aportes de varios docentes) y el **catálogo de grados, grupos y áreas**
-son diseño de la épica #102: aún no están programados en la app.
+Suma la **vista de administración** (`Ad-*`: Formatos en consulta, Bitácora de actividad, Docentes y asignaciones con "Usuarios y roles", y Grados y áreas, que pasan de coordinación a administración) y separa las tres vistas: ya no hay "Cambiar de vista" y `Main` es el formulario de ingreso. Coordinación **revisa** los registros de sus grados y **consulta** los del resto del colegio ("Solo consulta"). Los docentes pueden **descartar borradores** nunca enviados (planeación, observador y anotación del diario), y todas las barras laterales traen el **selector de tema** con iconos (Claro, Oscuro, Sistema). La v49 había adaptado el diario al formato F-PA-05.
+
+Roles por vista, usuarios, descarte de borradores y selector de tema son diseño de la épica #112: aún no están programados en la app.
 
 ## Cómo se derivan las pantallas
 

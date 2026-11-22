@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>Coordinación · Bitácora de actividad</title>
+<title>Administración · Bitácora de actividad</title>
 <script src="./support.js"></script>
 <link rel="stylesheet" href="/_blob/96a8aca7488a806fa407e0e907b1f7a9">
 </head>
@@ -15,6 +15,9 @@
 </helmet>
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
   <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
   <symbol id="i-plan" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"></rect><path d="M8 8h8M8 12h8M8 16h5"></path></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
@@ -25,8 +28,8 @@
   <symbol id="i-grafica" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></symbol>
 <symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol></svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
-    <nav class="menu menu-adm" aria-label="Coordinación académica">
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Administración</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
+    <nav class="menu menu-adm" aria-label="Administración">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
@@ -37,24 +40,25 @@
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
-    <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <div class="quien"><span class="av">AG</span><span><b>Administrador GNS</b><br>Administración</span></div>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
     <button type="button" class="priv-link">Tratamiento de datos personales</button>
   </aside>
   <main>
     <div class="cont">
       <section>
         <div class="encabezado"><div>
-          <div class="eyebrow">Coordinación académica</div>
+          <div class="eyebrow">Administración</div>
           <h1>Bitácora de actividad</h1>
-          <p>Cada ingreso, registro y revisión de la plataforma, con fecha, hora y usuario. Solo lectura.</p>
+          <p>Cada ingreso, registro y revisión de la plataforma, con fecha, hora y usuario. Solo lectura. Solo administración la consulta.</p>
         </div></div>
-        <div class="co-kpis neutro"><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-bitacora"></use></svg></span><b>14</b><span>movimientos hoy</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-bitacora"></use></svg></span><b>87</b><span>movimientos en 7 días</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gente"></use></svg></span><b>6</b><span>usuarios activos en 7 días</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gente"></use></svg></span><b>8</b><span>usuarios con actividad</span></div></div>
+        <div class="co-kpis neutro"><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-bitacora"></use></svg></span><b>17</b><span>movimientos hoy</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-bitacora"></use></svg></span><b>90</b><span>movimientos en 7 días</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gente"></use></svg></span><b>7</b><span>usuarios activos en 7 días</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gente"></use></svg></span><b>9</b><span>usuarios con actividad</span></div></div>
         <div class="bloque"><div class="bloque-h"><h2>Bitácora de actividad</h2><button type="button" class="btn sec sm">Descargar CSV</button></div>
           <p class="hint" style="margin:-6px 0 10px">Cada ingreso, planeación, formato, avance en la formación y revisión queda registrado con fecha, hora y usuario.</p>
           <div class="co-filtros">
-            <label>Usuario<select><option>Todos los usuarios</option><option>Laura Méndez</option><option>Andrés Ruiz</option><option>Marcela Rojas</option></select></label>
-            <label>Tipo<select><option>Todos</option><option>Ingreso</option><option>Planeación</option><option>Diario de campo</option><option>Observador</option><option>Plan de formación</option><option>Repositorio</option><option>Asistente</option><option>Datos personales</option><option>Grados y áreas</option><option>Coordinación</option></select></label>
+            <label>Usuario<select><option>Todos los usuarios</option><option>Administrador GNS</option><option>Laura Méndez</option><option>Andrés Ruiz</option><option>Marcela Rojas</option></select></label>
+            <label>Tipo<select><option>Todos</option><option>Ingreso</option><option>Planeación</option><option>Diario de campo</option><option>Observador</option><option>Plan de formación</option><option>Repositorio</option><option>Asistente</option><option>Datos personales</option><option>Grados y áreas</option><option>Usuarios y roles</option><option>Coordinación</option></select></label>
             <label style="flex:0 1 160px">Desde<input type="date" value="2026-11-01"></label>
             <label style="flex:0 1 160px">Hasta<input type="date" value="2026-11-09"></label>
             <label>Buscar<input type="search" placeholder="Acción o detalle"></label></div>
@@ -69,13 +73,16 @@
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1400}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2380}}'>
 class Component extends DCLogic {
   renderVals() {
     const F = [
+      ["9 nov 2026 · 14:32","Camila Torres","Docente","Planeación","Descartó un borrador","Transition · English (CLIL)"],
+      ["9 nov 2026 · 14:10","Diego Herrera","Docente","Observador","Descartó un borrador","Transition"],
       ["9 nov 2026 · 13:05","Laura Méndez","Docente","Diario de campo","Envió el diario de campo a coordinación","Transition 1 · lunes 9 nov · 4 de 5 aportes"],
       ["9 nov 2026 · 11:15","Camila Torres","Docente","Diario de campo","Marcó su anotación como lista","Transition 1 · lunes 9 nov"],
-      ["9 nov 2026 · 09:10","Marcela Rojas","Coordinación","Grados y áreas","Desactivó un área","Deportes · tenía 3 registros"],
+      ["9 nov 2026 · 10:05","Administrador GNS","Administración","Usuarios y roles","Desactivó un usuario","Sara Gómez"],
+      ["9 nov 2026 · 09:10","Administrador GNS","Administración","Grados y áreas","Desactivó un área","Deportes · tenía 3 registros"],
       ["9 nov 2026 · 08:42","Marcela Rojas","Coordinación","Coordinación","Planeación: Devuelta con observaciones","Laura Méndez · English (CLIL) · Transition · Ajustó: Recursos y materiales"],
       ["9 nov 2026 · 08:15","Laura Méndez","Docente","Planeación","Envió una planeación a coordinación","Pre-ciencias · Transition · Periodo 1"],
       ["9 nov 2026 · 07:58","Laura Méndez","Docente","Ingreso","Ingresó a la plataforma","Panel Docente"],
@@ -84,7 +91,9 @@ class Component extends DCLogic {
       ["8 nov 2026 · 15:31","Diego Herrera","Docente","Observador","Registró una anotación en el observador","Samuel · Transition · Situación de convivencia Tipo III"],
       ["8 nov 2026 · 11:12","Laura Méndez","Docente","Asistente","Pregunta sin respuesta en el asistente","¿Puedo llevar a mi grupo a una salida pedagógica?"],
       ["7 nov 2026 · 09:03","Julián Castro","Docente","Datos personales","Aceptó el aviso de tratamiento de datos","Versión 2026-11"],
-      ["7 nov 2026 · 07:10","—","Sin sesión","Ingreso","Intento de ingreso fallido","Cuenta no registrada"]
+      ["7 nov 2026 · 07:10","—","Sin sesión","Ingreso","Intento de ingreso fallido","Cuenta no registrada"],
+      ["2 nov 2026 · 09:30","Administrador GNS","Administración","Usuarios y roles","Cambió el rol","Elena Ravassa: docente → coordinación"],
+      ["2 nov 2026 · 08:40","Administrador GNS","Administración","Usuarios y roles","Creó un usuario","Valeria Montenueva · docente"]
     ];
     return { filas: F.map(function (x) { return { f: x[0], u: x[1], r: x[2], t: x[3], a: x[4], d: x[5] }; }) };
   }

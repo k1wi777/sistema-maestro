@@ -15,6 +15,9 @@
 </helmet>
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
   <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"></path></symbol>
@@ -31,20 +34,19 @@
   <symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol>
 </svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
     <nav class="menu menu-adm" aria-label="Coordinación académica">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
-      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
       <div class="menu-titulo" style="margin-top:12px">Gestión</div>
       <button type="button"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
-      <button type="button"><svg class="i"><use href="#i-grados"></use></svg>Grados y áreas</button>
       <button type="button"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
     <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
     <button type="button" class="priv-link">Tratamiento de datos personales</button>
   </aside>
   <main>
@@ -53,12 +55,12 @@
         <div class="encabezado"><div>
           <div class="eyebrow">Coordinación académica</div>
           <h1>Formatos</h1>
-          <p>Revisa las planeaciones, los diarios de campo (F-PA-05) y las anotaciones del observador: devuélvelos con observaciones o apruébalos con tu firma.</p>
+          <p>Revisa las planeaciones, los diarios de campo (F-PA-05) y las anotaciones del observador de tus grados, y consulta los del resto del colegio.</p>
         </div></div>
         <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">
-          <a class="lg-rol" href="Co-planeaciones.dc.html" style="text-decoration:none"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-plan"></use></svg></span><span><b role="heading" aria-level="2">Planeaciones</b><small>Revisa, ajusta, aprueba o devuelve las planeaciones.</small></span><span class="estado e-enviada">4 pendientes</span></a>
-          <a class="lg-rol" href="Co-diarios.dc.html" style="text-decoration:none"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-form"></use></svg></span><span><b role="heading" aria-level="2">Diarios de campo</b><small>Revisa el diario de cada grupo y día.</small></span><span class="estado e-enviada">3 pendientes</span></a>
-          <a class="lg-rol" href="Co-formatos.dc.html" style="text-decoration:none"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-ojo"></use></svg></span><span><b role="heading" aria-level="2">Observadores</b><small>Revisa las anotaciones del observador.</small></span><span class="estado e-enviada">3 pendientes</span></a>
+          <a class="lg-rol" href="Co-planeaciones.dc.html" style="text-decoration:none"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-plan"></use></svg></span><span><b role="heading" aria-level="2">Planeaciones</b><small>Revisa, ajusta, aprueba o devuelve las planeaciones.</small></span><span class="estado e-enviada">4 pendientes en tus grados</span></a>
+          <a class="lg-rol" href="Co-diarios.dc.html" style="text-decoration:none"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-form"></use></svg></span><span><b role="heading" aria-level="2">Diarios de campo</b><small>Revisa el diario de cada grupo y día.</small></span><span class="estado e-enviada">3 pendientes en tus grados</span></a>
+          <a class="lg-rol" href="Co-formatos.dc.html" style="text-decoration:none"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-ojo"></use></svg></span><span><b role="heading" aria-level="2">Observadores</b><small>Revisa las anotaciones del observador.</small></span><span class="estado e-enviada">3 pendientes en tus grados</span></a>
         </div>
 
         <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al abrir Observadores</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
@@ -66,7 +68,8 @@
         <div class="encabezado"><div><a class="btn lin sm" href="Co-formatos.dc.html" style="text-decoration:none"><svg class="i" aria-hidden="true"><use href="#i-volver"></use></svg>Formatos</a>
           <h1 style="margin-top:10px">Observadores</h1>
           <p>Anotaciones del observador del estudiante enviadas a coordinación, con su estado de revisión.</p></div></div>
-        <div class="co-kpis"><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-form"></use></svg></span><b>3</b><span>Registrada</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><b>5</b><span>Revisada</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg></span><b>1</b><span>Con observaciones</span></div></div>
+        <div class="subtabs" role="group" aria-label="Alcance de la bandeja"><button type="button" class="chip" aria-pressed="true">Mis grados · Kinder y Transition</button><button type="button" class="chip" aria-pressed="false">Todo el colegio</button></div>
+        <div class="co-kpis"><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-form"></use></svg></span><b>3</b><span>Registrada en tus grados</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><b>5</b><span>Revisada en tus grados</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg></span><b>1</b><span>Con observaciones en tus grados</span></div></div>
         <div class="bloque"><div class="co-filtros"><label>Estado<select><option>Todos</option><option>Registrada</option><option>Revisada</option><option>Con observaciones</option></select></label><label>Buscar<input type="search" placeholder="Docente, estudiante, grado o asunto"></label></div>
           <p class="hint" style="margin:-4px 0 8px">Las situaciones de convivencia Tipo III y Tipo II aparecen primero.</p>
           <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Anotaciones del observador</caption><thead><tr><th>Docente</th><th>Estudiante · grado</th><th>Detalle</th><th>Fecha</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
@@ -74,6 +77,20 @@
             <tr><td><b>Laura Méndez</b></td><td>Tomás · Transition</td><td><span class="co-tag rojo" style="margin:0">Tipo II</span> Situación de convivencia Tipo II</td><td>5 nov 2026</td><td><span class="estado e-observaciones">Con observaciones</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
             <tr><td><b>Andrés Ruiz</b></td><td>Matías · Kinder</td><td>Situación de convivencia Tipo I</td><td>6 nov 2026</td><td><span class="estado e-enviada">Registrada</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
             <tr><td><b>Laura Méndez</b></td><td>Isabella · Transition</td><td>Reconocimiento positivo</td><td>4 nov 2026</td><td><span class="estado e-enviada">Registrada</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr><td><b>Camila Torres</b></td><td>Emma · Kinder</td><td>Desempeño académico</td><td>28 oct 2026</td><td><span class="estado e-revisada">Revisada</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
+          </tbody></table></div></div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al ver todo el colegio</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+        <div class="encabezado"><div><a class="btn lin sm" href="Co-formatos.dc.html" style="text-decoration:none"><svg class="i" aria-hidden="true"><use href="#i-volver"></use></svg>Formatos</a>
+          <h1 style="margin-top:10px">Observadores</h1>
+          <p>Las anotaciones de tus grados las revisas; las de los demás grados solo las consultas.</p></div></div>
+        <div class="subtabs" role="group" aria-label="Alcance de la bandeja"><button type="button" class="chip" aria-pressed="false">Mis grados · Kinder y Transition</button><button type="button" class="chip" aria-pressed="true">Todo el colegio</button></div>
+        <div class="bloque"><div class="co-filtros"><label>Estado<select><option>Todos</option><option>Registrada</option><option>Revisada</option><option>Con observaciones</option></select></label><label>Grado<select><option>Todos los grados</option><option>Red</option><option>Blue</option><option>Purple</option><option>Green</option><option>Garden</option><option>Kinder</option><option>Transition</option><option>First Grade</option></select></label><label>Buscar<input type="search" placeholder="Docente, estudiante, grado o asunto"></label></div>
+          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Anotaciones del observador de todo el colegio</caption><thead><tr><th>Docente</th><th>Estudiante · grado</th><th>Detalle</th><th>Fecha</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+            <tr><td><b>Diego Herrera</b></td><td>Samuel · Transition</td><td><span class="co-tag rojo" style="margin:0">Tipo III</span> Situación de convivencia Tipo III</td><td>8 nov 2026</td><td><span class="estado e-enviada">Registrada</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr><td><b>Valeria Montenueva</b></td><td>Renata · Red<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Revisa: Elena Ravassa</small></td><td>Reconocimiento positivo</td><td>9 nov 2026</td><td><span class="estado e-enviada">Registrada</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
+            <tr><td><b>Laura Méndez</b></td><td>Tomás · Transition</td><td><span class="co-tag rojo" style="margin:0">Tipo II</span> Situación de convivencia Tipo II</td><td>5 nov 2026</td><td><span class="estado e-observaciones">Con observaciones</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
+            <tr><td><b>Andrés Ruiz</b></td><td>Matías · Kinder</td><td>Situación de convivencia Tipo I</td><td>6 nov 2026</td><td><span class="estado e-enviada">Registrada</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
             <tr><td><b>Camila Torres</b></td><td>Emma · Kinder</td><td>Desempeño académico</td><td>28 oct 2026</td><td><span class="estado e-revisada">Revisada</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
           </tbody></table></div></div>
 
@@ -100,7 +117,7 @@
   </main>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2700}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3860}}'>
 class Component extends DCLogic {
   renderVals() { return {}; }
 }
