@@ -55,6 +55,8 @@ export interface TeacherAssignmentRepository extends ReadRepository<
     schoolYear: string,
   ): Promise<boolean>;
   findActiveByTeacher(teacherId: string, schoolYear: string): Promise<TeacherAssignment[]>;
+  /** Asignaciones activas del docente en todos los años (cambio de rol). */
+  findAllActiveByTeacher(teacherId: string): Promise<TeacherAssignment[]>;
   /** Asignaciones activas de todos los docentes en el año, sin paginar. */
   findActiveByYear(schoolYear: string): Promise<TeacherAssignment[]>;
   /**

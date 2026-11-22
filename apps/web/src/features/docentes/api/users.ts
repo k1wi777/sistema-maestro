@@ -72,6 +72,14 @@ export async function updateUser(id: string, input: UpdateUserInput): Promise<Ap
   return parseResult(result, userSchema);
 }
 
+/** Cambia el rol (solo administración): retira asignaciones o grados y cierra las sesiones. */
+export async function changeUserRole(id: string, role: UserRole): Promise<ApiResult<User>> {
+  const result = await callApi(() =>
+    api.PUT('/users/{id}/role', { params: { path: { id } }, body: { role } }),
+  );
+  return parseResult(result, userSchema);
+}
+
 /** Activa o desactiva una cuenta: nunca se borra. */
 export async function setUserStatus(id: string, status: UserStatus): Promise<ApiResult<User>> {
   const result = await callApi(() =>

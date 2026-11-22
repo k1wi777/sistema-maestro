@@ -20,6 +20,7 @@ import {
 
 import { setUserStatus, type UserFilters } from '../api/users';
 import { useUserList } from '../hooks/use-users';
+import { deactivationWarning } from '../model/role-change';
 import styles from './users-panel.module.css';
 import { UserFormDialog } from './user-form-dialog';
 
@@ -34,10 +35,13 @@ const STATUS_OPTIONS = [
 
 function StatusDialog({
   user,
+  warning,
   onDone,
   onClose,
 }: {
   user: User;
+  /** Aviso extra al desactivar (grados sin revisión), si lo hay. */
+  warning: string | null;
   onDone: () => void;
   onClose: () => void;
 }) {
@@ -66,7 +70,7 @@ function StatusDialog({
       title={deactivating ? 'Desactivar usuario' : 'Activar usuario'}
       description={
         deactivating
-          ? `${user.fullName} ya no podrá ingresar a la plataforma. Sus registros se conservan y puedes activarlo de nuevo.`
+          ? `${user.fullName} ya no podrá ingresar a la plataforma. Sus registros se conservan y puedes activarlo de nuevo.${warning ? ` ${warning}` : ''}`
           : `${user.fullName} podrá volver a ingresar a la plataforma.`
       }
       onClose={onClose}
@@ -97,7 +101,19 @@ function StatusDialog({
 type Editing = { kind: 'form'; user: User | null } | { kind: 'status'; user: User } | null;
 
 /** Usuarios y roles: solo se monta para administración. Nada se borra: se desactiva. */
-export function UsersPanel({ onChanged }: { onChanged: () => void }) {
+export function UsersPanel({
+  currentUserId,
+  consequences,
+  coordinatedGrades,
+  onChanged,
+}: {
+  /** Persona en sesión: su fila no ofrece cambiar el rol ni el estado. */
+  currentUserId: string;
+  consequences: (user: User, to: UserRole) => string[];
+  /** Nombres de los grados que coordina una persona. */
+  coordinatedGrades: (userId: string) => string[];
+  onChanged: () => void;
+}) {
   const [filters, setFilters] = useState<UserFilters>({});
   const [searchText, setSearchText] = useState('');
   const [editing, setEditing] = useState<Editing>(null);
@@ -135,26 +151,29 @@ export function UsersPanel({ onChanged }: { onChanged: () => void }) {
     {
       key: 'actions',
       header: 'Acciones',
-      render: (user) => (
-        <span className={styles.actions}>
-          <Button
-            context={`usuario ${user.fullName}`}
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing({ kind: 'form', user })}
-          >
-            Editar
-          </Button>
-          <Button
-            context={`usuario ${user.fullName}`}
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing({ kind: 'status', user })}
-          >
-            {user.status === UserStatus.Active ? 'Desactivar' : 'Activar'}
-          </Button>
-        </span>
-      ),
+      render: (user) =>
+        user.id === currentUserId ? (
+          <span className={styles.hint}>Es tu cuenta</span>
+        ) : (
+          <span className={styles.actions}>
+            <Button
+              context={`usuario ${user.fullName}`}
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing({ kind: 'form', user })}
+            >
+              Editar
+            </Button>
+            <Button
+              context={`usuario ${user.fullName}`}
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing({ kind: 'status', user })}
+            >
+              {user.status === UserStatus.Active ? 'Desactivar' : 'Activar'}
+            </Button>
+          </span>
+        ),
     },
   ];
 
@@ -244,12 +263,22 @@ export function UsersPanel({ onChanged }: { onChanged: () => void }) {
         <UserFormDialog
           key={editing.user?.id ?? 'new'}
           user={editing.user}
+          consequences={consequences}
           onSaved={done}
           onClose={() => setEditing(null)}
         />
       ) : null}
       {editing?.kind === 'status' ? (
-        <StatusDialog user={editing.user} onDone={done} onClose={() => setEditing(null)} />
+        <StatusDialog
+          user={editing.user}
+          warning={
+            editing.user.role === UserRole.Coordinator && editing.user.status === UserStatus.Active
+              ? deactivationWarning(coordinatedGrades(editing.user.id))
+              : null
+          }
+          onDone={done}
+          onClose={() => setEditing(null)}
+        />
       ) : null}
     </Card>
   );

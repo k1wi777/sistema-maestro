@@ -109,8 +109,11 @@ export interface JournalChanges {
 /** Quién consulta una lista: sus grupos y diarios, o la bandeja de revisión. */
 export type JournalVisibility =
   | { kind: 'mine'; userId: string; groupIds: string[] }
-  /** `coordinatorId` nulo: administración (todos los diarios, también los En curso). */
-  | { kind: 'review'; coordinatorId: string | null };
+  /**
+   * Bandeja de revisión. `coordinatorId` limita a los grados de esa coordinadora (nulo: todo el
+   * colegio); `submittedOnly` excluye los «En curso» (todo el personal salvo administración).
+   */
+  | { kind: 'review'; coordinatorId: string | null; submittedOnly: boolean };
 
 export type JournalListFilters = FieldJournalFilters & { visibility: JournalVisibility };
 
@@ -197,6 +200,20 @@ export interface FieldJournalRepository {
   findAnnotations(journalId: string, viewerId: string): Promise<AnnotationRow[]>;
   /** Una anotación del diario en cualquier estado (el servicio decide quién la ve). */
   findAnnotation(journalId: string, annotationId: string): Promise<AnnotationRow | null>;
+  /** Una anotación por su id, sin saber de qué diario es (el servicio decide quién la ve). */
+  findAnnotationById(annotationId: string): Promise<AnnotationRow | null>;
+  /** Todas las anotaciones del diario, de cualquier docente y estado. */
+  countAnnotations(journalId: string): Promise<number>;
+  /**
+   * Borra la anotación solo si sigue en borrador sin enviar y su diario En curso; `false` (sin
+   * borrar nada) si otra petición ya la movió. Único borrado real de anotaciones del diario.
+   */
+  deleteDraftAnnotation(annotationId: string): Promise<boolean>;
+  /**
+   * Borra el diario solo si sigue En curso, nunca se envió y no tiene anotaciones (la última se
+   * acaba de descartar). Único borrado real de diarios.
+   */
+  deleteEmptyJournal(journalId: string): Promise<boolean>;
   contributions(journalId: string): Promise<ContributionRow[]>;
   insertAnnotation(journalId: string, annotation: NewAnnotation): Promise<void>;
   updateAnnotation(annotationId: string, content: AnnotationContent): Promise<void>;

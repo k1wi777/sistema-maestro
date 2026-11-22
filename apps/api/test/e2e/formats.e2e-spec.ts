@@ -247,8 +247,8 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
   });
 
   it('la bitácora registra el recorrido sin nombres de estudiantes ni textos', async () => {
-    const teacherRows = await world.auditRowsOf(coordinator, teacher.id);
-    const coordinatorRows = await world.auditRowsOf(coordinator, coordinator.id);
+    const teacherRows = await world.auditRowsOf(teacher.id);
+    const coordinatorRows = await world.auditRowsOf(coordinator.id);
 
     const journals = teacherRows.filter((row) => row.type === AuditLogType.FieldJournal);
     const notes = teacherRows.filter((row) => row.type === AuditLogType.ObserverNote);
@@ -262,11 +262,11 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
     expect(reviews.every((row) => row.role === UserRole.Coordinator)).toBe(true);
 
     world.expectNoSensitiveData(JSON.stringify([...teacherRows, ...coordinatorRows]), MARKERS);
-    world.expectNoSensitiveData(await world.auditCsvOf(coordinator, teacher.id), MARKERS);
-    world.expectNoSensitiveData(await world.auditCsvOf(coordinator, coordinator.id), MARKERS);
+    world.expectNoSensitiveData(await world.auditCsvOf(teacher.id), MARKERS);
+    world.expectNoSensitiveData(await world.auditCsvOf(coordinator.id), MARKERS);
     // El detalle trae los datos antes/después tal como se guardaron: los textos ya están ocultos.
     for (const row of [...journals, ...notes, ...reviews]) {
-      const detail = await coordinator.call('get', `/audit-log/${row.id}`).expect(200);
+      const detail = await world.admin.call('get', `/audit-log/${row.id}`).expect(200);
       world.expectNoSensitiveData(detail.text, MARKERS);
     }
   });

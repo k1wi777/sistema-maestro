@@ -2,8 +2,10 @@ import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common
 import { AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
+import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
+import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   CreateTeacherAssignmentDto,
   TeacherAssignmentDto,
@@ -22,7 +24,7 @@ const AUDIT = {
 };
 
 @Controller('teacher-assignments')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TeacherAssignmentsController {
   constructor(private readonly assignments: TeacherAssignmentsService) {}
 
@@ -35,21 +37,29 @@ export class TeacherAssignmentsController {
   @Post()
   @Audited({ ...AUDIT, action: 'Crear asignación docente' })
   @ZodResponse({ status: 201, type: TeacherAssignmentDto })
-  create(@Body() body: CreateTeacherAssignmentDto) {
-    return this.assignments.create(body);
+  create(@CurrentUser() user: RequestUser, @Body() body: CreateTeacherAssignmentDto) {
+    return this.assignments.create(user, body);
   }
 
   @Patch(':id')
   @Audited({ ...AUDIT, action: 'Editar la dirección de grupo de una asignación docente' })
   @ZodResponse({ status: 200, type: TeacherAssignmentDto })
-  update(@Param() { id }: IdParamDto, @Body() body: UpdateTeacherAssignmentDto) {
-    return this.assignments.update(id, body);
+  update(
+    @CurrentUser() user: RequestUser,
+    @Param() { id }: IdParamDto,
+    @Body() body: UpdateTeacherAssignmentDto,
+  ) {
+    return this.assignments.update(user, id, body);
   }
 
   @Patch(':id/status')
   @Audited({ ...AUDIT, action: 'Cambiar el estado de una asignación docente' })
   @ZodResponse({ status: 200, type: TeacherAssignmentDto })
-  setStatus(@Param() { id }: IdParamDto, @Body() { status }: UpdateTeacherAssignmentStatusDto) {
-    return this.assignments.setStatus(id, status);
+  setStatus(
+    @CurrentUser() user: RequestUser,
+    @Param() { id }: IdParamDto,
+    @Body() { status }: UpdateTeacherAssignmentStatusDto,
+  ) {
+    return this.assignments.setStatus(user, id, status);
   }
 }

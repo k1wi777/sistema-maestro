@@ -6,7 +6,7 @@ import { openAs, type ActorPage } from './support/browser';
 // Revisión de accesibilidad (FE-42): cada pantalla principal pasa por axe-core en tema claro y
 // oscuro (falla con lo grave y con la estructura de encabezados) y se muestra a 375 y 768 px sin
 // desplazamiento horizontal. Julián Casaverde y una segunda sesión de Elena Ravassa son actores
-// propios. Solo se escribe una cosa: la partida del Desafío de Julián; el diálogo de devolución se
+// propios, igual que una sesión de administración. Solo se escribe una cosa: la partida del Desafío de Julián; el diálogo de devolución se
 // abre y se cancela.
 const DESKTOP = { width: 1280, height: 720 };
 const NARROW_WIDTHS = [375, 768];
@@ -111,6 +111,85 @@ test.describe('Accesibilidad: vista docente', () => {
     await expectAccessible(page, 'docente · confirmación de envío del diario');
     await dialog.getByRole('button', { name: 'Seguir esperando' }).click();
     await expect(dialog).toBeHidden();
+  });
+
+  test('descartar borrador: los tres diálogos y el selector de tema', async () => {
+    const { page } = teacher;
+    const discardDialog = page.getByRole('dialog', { name: 'Descartar borrador' });
+
+    // Diario: Julián tiene un borrador propio en el diario demo en curso de Red 1.
+    await page.goto('/docente/formatos/diario');
+    await page.getByRole('link', { name: /^Abrir diario de Red 1 del 2026-11-09/ }).click();
+    await settled(page);
+    await page.getByRole('button', { name: /^Descartar borrador/ }).click();
+    await expect(discardDialog).toBeVisible();
+    await expectAccessible(page, 'docente · descartar anotación del diario');
+    await discardDialog.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(discardDialog).toBeHidden();
+
+    // Planeación y observador: se crea un borrador, se revisa el diálogo y se descarta (queda como estaba).
+    await page.goto('/docente/formatos/planeacion/nueva');
+    await page
+      .getByRole('combobox', { name: 'Grado', exact: true })
+      .selectOption({ label: 'Transition' });
+    await page
+      .getByRole('combobox', { name: 'Periodo', exact: true })
+      .selectOption({ label: 'Periodo 1' });
+    await page.getByLabel('Proyecto o tema').fill('Borrador de accesibilidad');
+    await page.getByRole('button', { name: 'Crear y continuar' }).click();
+    await settled(page);
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    await expect(discardDialog).toBeVisible();
+    await expectAccessible(page, 'docente · descartar planeación');
+    await discardDialog.getByRole('button', { name: 'Descartar borrador' }).click();
+    await expect(page).toHaveURL(/aviso=descartado/);
+
+    await page.goto('/docente/formatos/observador/nueva');
+    await page.getByLabel('Grado').selectOption({ label: 'Transition · Preescolar alto (KTF)' });
+    await page.getByLabel('Estudiante (nombre de pila)').fill('Acacio');
+    await page.getByLabel('Tipo de anotación').selectOption({ label: 'Reconocimiento positivo' });
+    await page.getByLabel('Comportamiento específico').fill('Borrador de accesibilidad');
+    await page.getByRole('button', { name: 'Guardar anotación' }).click();
+    await settled(page);
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    await expect(discardDialog).toBeVisible();
+    await expectAccessible(page, 'docente · descartar anotación del observador');
+    await discardDialog.getByRole('button', { name: 'Descartar borrador' }).click();
+    await expect(page).toHaveURL(/aviso=descartado/);
+  });
+
+  test('selector de tema: grupo de opción única con tres iconos, un solo selector visible', async () => {
+    const { page } = teacher;
+    const group = page.getByRole('radiogroup', { name: 'Tema de la plataforma' });
+    await page.goto('/docente/formatos');
+    await settled(page);
+
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 720 });
+      await expect(group).toHaveCount(1);
+      await expect(group).toBeVisible();
+      await expect(group.getByRole('radio')).toHaveText(['Claro', 'Oscuro', 'Sistema']);
+      await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
+      await expectNoHorizontalScroll(page, `selector de tema a ${width} px`);
+    }
+
+    await group.getByRole('radio', { name: 'Claro' }).click();
+    await expect(group.getByRole('radio', { name: 'Claro' })).toBeChecked();
+    await page.keyboard.press('ArrowRight');
+    await expect(group.getByRole('radio', { name: 'Oscuro' })).toBeChecked();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.keyboard.press('End');
+    await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
+    await page.keyboard.press('Home');
+    await expect(group.getByRole('radio', { name: 'Claro' })).toBeChecked();
+    await expectAccessible(page, 'docente · selector de tema a 375 px', ['light']);
+
+    await page.setViewportSize(DESKTOP);
+    await expectAccessible(page, 'docente · selector de tema');
+    await group.getByRole('radio', { name: 'Sistema' }).click();
+    await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
   });
 
   test('observador: lista y una anotación', async () => {
@@ -220,7 +299,7 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await audit(page, 'coordinación · vista previa con video');
   });
 
-  test('docentes, planes, módulo, avance, bitácora y asistente', async () => {
+  test('docentes (solo sus grupos), planes, módulo, avance y asistente', async () => {
     const { page } = coordinator;
     await visit(page, '/coordinacion/docentes', 'coordinación · docentes');
     await page
@@ -231,19 +310,6 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await audit(page, 'coordinación · diálogo de asignaciones');
     await page.getByRole('dialog').getByRole('button', { name: 'Cerrar', exact: true }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
-    await visit(page, '/coordinacion/grados-y-areas', 'coordinación · grados y grupos');
-    await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
-    await expect(page.getByRole('dialog', { name: 'Nuevo grado' })).toBeVisible();
-    await audit(page, 'coordinación · diálogo de nuevo grado');
-    await page
-      .getByRole('dialog', { name: 'Nuevo grado' })
-      .getByRole('button', { name: 'Cancelar', exact: true })
-      .click();
-    await expect(page.getByRole('dialog')).toBeHidden();
-    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
-    await audit(page, 'coordinación · áreas');
-    await page.getByRole('tab', { name: 'Coordinadoras', exact: true }).click();
-    await audit(page, 'coordinación · coordinadoras');
     await visit(page, '/coordinacion/planes', 'coordinación · planes');
     await openFirst(
       page,
@@ -251,7 +317,79 @@ test.describe('Accesibilidad: vista de coordinación', () => {
       'coordinación · módulo',
     );
     await visit(page, '/coordinacion/avance', 'coordinación · avance');
-    await visit(page, '/coordinacion/bitacora', 'coordinación · bitácora');
     await visit(page, '/coordinacion/asistente', 'coordinación · asistente');
+  });
+
+  test('formatos: «Todo el colegio» y una planeación ajena en solo consulta', async () => {
+    const { page } = coordinator;
+    await visit(
+      page,
+      '/coordinacion/formatos/planeaciones?vista=colegio',
+      'coordinación · todo el colegio',
+    );
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Ver\b/ }),
+      'coordinación · planeación en solo consulta',
+    );
+    await expect(page.getByText('Solo consulta').first()).toBeVisible();
+  });
+});
+
+test.describe('Accesibilidad: vista de administración', () => {
+  let admin: ActorPage;
+
+  test.beforeAll(async ({ browser }) => {
+    admin = await openAs(browser, ACTORS.accessibilityAdmin);
+  });
+
+  test.afterAll(async () => {
+    await admin.context.close();
+  });
+
+  test('formatos: hub, bandejas y una planeación en solo consulta', async () => {
+    const { page } = admin;
+    await visit(page, '/administracion/formatos', 'administración · formatos (hub)');
+    await expect(page.getByText('Todos los grados · Solo consulta').first()).toBeVisible();
+    await visit(page, '/administracion/formatos/planeaciones', 'administración · planeaciones');
+    await openFirst(
+      page,
+      page.getByRole('link', { name: /^Ver\b/ }),
+      'administración · planeación en solo consulta',
+    );
+    await expect(page.getByText('Solo consulta').first()).toBeVisible();
+    await visit(page, '/administracion/formatos/diario', 'administración · diarios de campo');
+    await visit(page, '/administracion/formatos/observador', 'administración · observadores');
+  });
+
+  test('docentes: asignaciones y usuarios y roles, bitácora y grados y áreas', async () => {
+    const { page } = admin;
+    await visit(page, '/administracion/docentes', 'administración · docentes (asignaciones)');
+    await page.getByRole('tab', { name: 'Usuarios y roles', exact: true }).click();
+    await expect(page.getByText('Es tu cuenta')).toBeVisible();
+    await audit(page, 'administración · usuarios y roles');
+    await page.getByRole('button', { name: 'Nuevo usuario', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo usuario' })).toBeVisible();
+    await audit(page, 'administración · diálogo de nuevo usuario');
+    await page
+      .getByRole('dialog', { name: 'Nuevo usuario' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+
+    await visit(page, '/administracion/bitacora', 'administración · bitácora');
+    await visit(page, '/administracion/grados-y-areas', 'administración · grados y grupos');
+    await page.getByRole('button', { name: 'Nuevo grado', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo grado' })).toBeVisible();
+    await audit(page, 'administración · diálogo de nuevo grado');
+    await page
+      .getByRole('dialog', { name: 'Nuevo grado' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page.getByRole('tab', { name: 'Áreas', exact: true }).click();
+    await audit(page, 'administración · áreas');
+    await page.getByRole('tab', { name: 'Coordinadoras', exact: true }).click();
+    await audit(page, 'administración · coordinadoras');
   });
 });

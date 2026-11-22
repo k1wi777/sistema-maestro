@@ -4,6 +4,7 @@ import type { PlanTracking, TrainingPlanSummary } from '@gns/shared';
 import { useMemo, useState } from 'react';
 
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { useView } from '@/shared/shell';
 import { Button, Card, Notice, PageContainer, PageHeader, Select, TextInput } from '@/shared/ui';
 
 import { usePlanTracking, useTrackingExport, useTrackingPlans } from '../hooks/use-plan-tracking';
@@ -111,6 +112,7 @@ function PlanTrackingView({ planId }: { planId: string }) {
 }
 
 function TrackingBody({ plans }: { plans: TrainingPlanSummary[] }) {
+  const view = useView();
   const { params, update } = useQueryParams();
   const options = useMemo(() => {
     const areas = new Map<string, string>();
@@ -129,7 +131,7 @@ function TrackingBody({ plans }: { plans: TrainingPlanSummary[] }) {
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={view.title}
         title="Avance en la formación"
         description="Progreso de cada docente por plan y módulo. Descarga el seguimiento cuando lo necesites."
         actions={

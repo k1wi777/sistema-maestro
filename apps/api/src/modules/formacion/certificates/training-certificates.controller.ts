@@ -3,14 +3,14 @@ import { UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import { CertificateListDto, CertificateListQueryDto, SignedUrlDto } from '../dto/training.dto';
 import { CertificatesService } from './certificates.service';
 
 /** Certificados de los docentes vistos por coordinación (con las mismas reglas de generación). */
 @Controller('training-certificates')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TrainingCertificatesController {
   constructor(private readonly certificates: CertificatesService) {}
 

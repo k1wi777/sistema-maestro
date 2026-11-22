@@ -97,4 +97,30 @@ describe('complianceRows', () => {
     expect(complianceRows(COMPLIANCE, 'p2').map((row) => row.teacherName)).toEqual(['Ana Demo']);
     expect(complianceRows(COMPLIANCE, 'p3')).toEqual([]);
   });
+
+  it('con grados solo cuenta las asignaciones de esos grados («en tus grados»)', () => {
+    const first = item('pendiente', 'Segundo', 'Arts');
+    const second = item('entregado', 'Tercero', 'Math');
+    const compliance: LessonPlanCompliance = {
+      ...COMPLIANCE,
+      teachers: [
+        {
+          teacher: { id: UUID_C, fullName: 'Ana Demo' },
+          deliveredCount: 1,
+          pendingCount: 1,
+          items: [
+            { ...first, grade: { ...first.grade, id: UUID_B } },
+            { ...second, grade: { ...second.grade, id: UUID_D } },
+          ],
+        },
+      ],
+    };
+
+    const mine = complianceRows(compliance, 'p1', new Set([UUID_B]));
+
+    expect(mine).toHaveLength(1);
+    expect(mine[0]).toMatchObject({ delivered: 0, total: 1, pending: ['Segundo · Arts'] });
+    expect(complianceRows(compliance, 'p1', new Set([UUID_A]))).toEqual([]);
+    expect(complianceRows(compliance, 'p1')[0]).toMatchObject({ total: 2 });
+  });
 });

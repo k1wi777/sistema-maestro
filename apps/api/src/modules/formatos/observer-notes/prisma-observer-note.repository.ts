@@ -10,6 +10,7 @@ import {
 } from '@gns/shared';
 import type { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
+import { gradeCoordinatorWhere } from '../../../shared/records/coordinator-filter';
 import type { TransactionClient } from '../../../shared/database/transaction-context';
 import {
   PrismaReadRepository,
@@ -129,6 +130,13 @@ export class PrismaObserverNoteRepository
       .$queryRaw`SELECT id FROM observador_anotacion WHERE id = ${id}::uuid FOR UPDATE`;
   }
 
+  async deleteDraft(id: string): Promise<boolean> {
+    const { count } = await this.prisma.db.observerNote.deleteMany({
+      where: { id, status: RecordStatus.Draft },
+    });
+    return count === 1;
+  }
+
   /**
    * `priority` pone primero los tipo II y III: el segmento prioritario y el resto se cuentan y
    * se pagina cada uno con su ventana (`splitPriorityWindow`). Otros órdenes usan la base.
@@ -203,6 +211,7 @@ export class PrismaObserverNoteRepository
       teacherId: filters.teacherId,
       status: filters.status,
       gradeId: filters.gradeId,
+      grade: gradeCoordinatorWhere(filters.coordinatorId),
       type: filters.type,
       date: hasRange
         ? {

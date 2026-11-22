@@ -10,6 +10,8 @@ import type { GradeRepository } from './grade/grade.repository';
 import { GradesService } from './grade/grades.service';
 import type { GroupRepository } from './group/group.repository';
 import { GroupsService } from './group/groups.service';
+import type { AuditLogService } from '../../auditoria/audit-log.service';
+import type { UserRoleChangeEffects } from '../../identidad/users/user-role-change-effects';
 import type { LevelsService } from './level/levels.service';
 
 const NOW = new Date('2026-11-09T00:00:00Z');
@@ -21,6 +23,7 @@ const grade = (overrides: Partial<Grade> = {}): Grade => ({
   sortOrder: 1,
   active: true,
   coordinatorId: null,
+  coordinator: null,
   createdAt: NOW,
   updatedAt: NOW,
   ...overrides,
@@ -99,8 +102,61 @@ describe('GradesService', () => {
         ),
       ),
     } as unknown as UsersService;
-    return { service: new GradesService(repository, counts, levels(), users), repository, counts };
+    const audit = { record: jest.fn(() => Promise.resolve()) };
+    const effects = { register: jest.fn() };
+    const service = new GradesService(
+      repository,
+      counts,
+      levels(),
+      users,
+      audit as unknown as AuditLogService,
+      effects as unknown as UserRoleChangeEffects,
+    );
+    return { service, repository, counts, audit, effects };
   }
+
+  it('al dejar de ser coordinadora, sus grados quedan sin coordinadora y se deja constancia', async () => {
+    const actor = { id: 'admin-1', role: UserRole.Administrator, sessionId: 's' };
+    for (const to of [UserRole.Teacher, UserRole.Administrator]) {
+      const { service, repository, audit } = setup();
+      await service.onRoleChange({ userId: 'coord-1', from: UserRole.Coordinator, to, actor });
+
+      expect(repository.setCoordinatorGrades).toHaveBeenCalledWith('coord-1', []);
+      expect(audit.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'Dejó grados sin coordinadora por cambio de rol',
+          entityId: 'coord-1',
+        }),
+      );
+    }
+  });
+
+  it('no toca los grados si quien cambia de rol no era coordinadora o no tenía grados', async () => {
+    const actor = { id: 'admin-1', role: UserRole.Administrator, sessionId: 's' };
+    const { service, repository, audit } = setup();
+    await service.onRoleChange({
+      userId: 'u',
+      from: UserRole.Teacher,
+      to: UserRole.Coordinator,
+      actor,
+    });
+    repository.findIdsByCoordinator.mockResolvedValueOnce([]);
+    await service.onRoleChange({
+      userId: 'u',
+      from: UserRole.Coordinator,
+      to: UserRole.Teacher,
+      actor,
+    });
+
+    expect(repository.setCoordinatorGrades).not.toHaveBeenCalled();
+    expect(audit.record).not.toHaveBeenCalled();
+  });
+
+  it('se registra como efecto del cambio de rol al iniciar', () => {
+    const { service, effects } = setup();
+    service.onModuleInit();
+    expect(effects.register).toHaveBeenCalledWith(service);
+  });
 
   it('borra un grado sin uso y rechaza con 409 catalogo_en_uso el que está en uso', async () => {
     const free = setup();

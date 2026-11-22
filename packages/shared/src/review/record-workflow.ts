@@ -9,6 +9,8 @@ export const RecordOperation = {
   Approve: 'aprobar',
   Return: 'devolver',
   Void: 'anular',
+  /** Borrado real de un borrador que nunca se envió; solo el dueño. */
+  Discard: 'descartar',
 } as const;
 export type RecordOperation = (typeof RecordOperation)[keyof typeof RecordOperation];
 
@@ -22,19 +24,20 @@ export type RecordActor = (typeof RecordActor)[keyof typeof RecordActor];
 export interface RecordTransition {
   /** Estados desde los que se permite la operación. */
   from: readonly RecordStatus[];
-  /** Estado resultante; `null` si la operación no lo cambia. */
+  /** Estado resultante; `null` si la operación no lo cambia (en `descartar` la fila desaparece). */
   to: RecordStatus | null;
 }
 
 const { Draft, Submitted, ChangesRequested, Reviewed, Voided } = RecordStatus;
 
 const EDITABLE: readonly RecordStatus[] = [Draft, ChangesRequested];
-const ANY_BUT_VOIDED: readonly RecordStatus[] = [Draft, Submitted, ChangesRequested, Reviewed];
+const VOIDABLE_BY_REVIEWER: readonly RecordStatus[] = [Submitted, ChangesRequested, Reviewed];
 
 /**
  * Máquina de estados común de los registros pedagógicos. Un coordinador que es dueño de
  * su registro tiene ambos papeles (la autorrevisión se impide aparte). `revisada` solo
- * admite anular por coordinación y `anulado` es terminal.
+ * admite anular por coordinación y `anulado` es terminal. Anular es solo para lo enviado:
+ * un borrador nunca enviado se descarta (borrado real), no se anula.
  */
 const WORKFLOW: Record<RecordOperation, Partial<Record<RecordActor, RecordTransition>>> = {
   [RecordOperation.Create]: { owner: { from: [], to: Draft } },
@@ -43,9 +46,10 @@ const WORKFLOW: Record<RecordOperation, Partial<Record<RecordActor, RecordTransi
   [RecordOperation.Approve]: { reviewer: { from: [Submitted], to: Reviewed } },
   [RecordOperation.Return]: { reviewer: { from: [Submitted], to: ChangesRequested } },
   [RecordOperation.Void]: {
-    owner: { from: [Draft, Submitted, ChangesRequested], to: Voided },
-    reviewer: { from: ANY_BUT_VOIDED, to: Voided },
+    owner: { from: [Submitted, ChangesRequested], to: Voided },
+    reviewer: { from: VOIDABLE_BY_REVIEWER, to: Voided },
   },
+  [RecordOperation.Discard]: { owner: { from: [Draft], to: null } },
 };
 
 /** Transición permitida a `actor` para `operation`, o `null` si ese papel no puede hacerla. */

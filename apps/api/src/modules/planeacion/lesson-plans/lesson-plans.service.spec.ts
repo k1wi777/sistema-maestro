@@ -28,6 +28,8 @@ const YEAR = '2026-2027';
 const owner: RequestUser = { id: 'owner', role: UserRole.Teacher, sessionId: 's1' };
 const stranger: RequestUser = { id: 'stranger', role: UserRole.Teacher, sessionId: 's2' };
 const coordinator: RequestUser = { id: 'coord', role: UserRole.Coordinator, sessionId: 's3' };
+const otherCoordinator: RequestUser = { id: 'other', role: UserRole.Coordinator, sessionId: 's4' };
+const admin: RequestUser = { id: 'admin', role: UserRole.Administrator, sessionId: 's5' };
 const UUID_PERIOD = '3f2b8c1e-5d4a-4b7e-9a1c-2d6e8f0a1b3c';
 
 function plan(overrides: Partial<LessonPlan> = {}): LessonPlan {
@@ -68,6 +70,8 @@ interface Options {
   /** Id del nivel del grado; las áreas del catálogo se relacionan por él. */
   levelId?: string;
   gradeActive?: boolean;
+  /** Coordinadora del grado de la planeación; por defecto `coord`. */
+  coordinatorId?: string | null;
 }
 
 function setup(options: Options = {}) {
@@ -82,6 +86,7 @@ function setup(options: Options = {}) {
     create: jest.fn(() => Promise.resolve(plan())),
     updateIfStatus: jest.fn(() => Promise.resolve(true)),
     lock: jest.fn(() => Promise.resolve()),
+    deleteDraft: jest.fn(() => Promise.resolve(true)),
     countDelivered: jest.fn(() => Promise.resolve([])),
   } satisfies LessonPlanRepository;
   const reviewRepository = {
@@ -123,6 +128,12 @@ function setup(options: Options = {}) {
     updatedAt: NOW,
   })) as Area[];
   const grades = {
+    find: jest.fn(() =>
+      Promise.resolve({
+        id: 'g-1',
+        coordinatorId: options.coordinatorId === undefined ? 'coord' : options.coordinatorId,
+      }),
+    ),
     list: jest.fn(() =>
       Promise.resolve({
         items: options.gradeActive === false ? [] : [{ id: 'g-1' }],
@@ -160,6 +171,7 @@ function setup(options: Options = {}) {
     periods as unknown as AcademicPeriodsService,
     schoolYears as unknown as SchoolYearsService,
     new ReviewsService(reviewRepository),
+    grades as unknown as GradesService,
   );
   return { service, repository, reviews, periods, areas };
 }
@@ -514,7 +526,7 @@ describe('LessonPlansService.submit', () => {
 });
 
 describe('LessonPlansService.voidPlan', () => {
-  it.each([RecordStatus.Draft, RecordStatus.Submitted, RecordStatus.ChangesRequested])(
+  it.each([RecordStatus.Submitted, RecordStatus.ChangesRequested])(
     'el dueño anula desde %s',
     async (status) => {
       const { service, repository } = setup({ stored: plan({ status }) });
@@ -526,6 +538,17 @@ describe('LessonPlansService.voidPlan', () => {
       });
     },
   );
+
+  it('un borrador no se anula (409 «se descarta») ni por el dueño ni por coordinación', async () => {
+    for (const user of [owner, coordinator]) {
+      const { service, repository } = setup({ stored: plan({ status: RecordStatus.Draft }) });
+
+      await expect(service.voidPlan(user, 'plan-1')).rejects.toThrow(
+        'La planeación está en borrador: se descarta en lugar de anularse',
+      );
+      expect(repository.updateIfStatus).not.toHaveBeenCalled();
+    }
+  });
 
   it('el dueño no anula una revisada (409), pero coordinación sí', async () => {
     const reviewed = plan({ status: RecordStatus.Reviewed });
@@ -546,6 +569,56 @@ describe('LessonPlansService.voidPlan', () => {
         setup({ stored: voided }).service.voidPlan(user, 'plan-1'),
       ).rejects.toBeInstanceOf(ConflictException);
     }
+  });
+});
+
+describe('LessonPlansService: alcance por grado', () => {
+  const submitted = plan({ status: RecordStatus.Submitted });
+
+  it('administración y otra coordinadora consultan pero no deciden ni anulan (403)', async () => {
+    for (const user of [admin, otherCoordinator]) {
+      const { service, repository } = setup({ stored: submitted });
+
+      await expect(service.get(user, 'plan-1')).resolves.toBeDefined();
+      for (const call of [
+        () => service.approve(user, 'plan-1', {}),
+        () => service.returnPlan(user, 'plan-1', { comment: 'x' }),
+        () => service.voidPlan(user, 'plan-1'),
+      ]) {
+        await expect(call()).rejects.toBeInstanceOf(ForbiddenException);
+      }
+      expect(repository.updateIfStatus).not.toHaveBeenCalled();
+    }
+  });
+
+  it('un grado sin coordinadora no lo revisa nadie, ni administración (403)', async () => {
+    for (const user of [coordinator, admin]) {
+      const { service } = setup({ stored: submitted, coordinatorId: null });
+
+      await expect(service.approve(user, 'plan-1', {})).rejects.toBeInstanceOf(ForbiddenException);
+    }
+  });
+
+  it('la coordinadora del grado decide y el filtro por coordinadora se ignora para un docente', async () => {
+    const { service, repository } = setup({ stored: submitted });
+    await service.approve(coordinator, 'plan-1', {});
+    expect(repository.updateIfStatus).toHaveBeenCalled();
+
+    const query = {
+      page: 1,
+      pageSize: 20,
+      sort: { field: 'updatedAt' as const, order: 'desc' as const },
+    };
+    await service.list(owner, { ...query, filters: { coordinatorId: 'coord' } });
+    const [sent] = repository.findPage.mock.calls.at(-1) as unknown as [
+      { filters: { teacherId?: string; coordinatorId?: string } },
+    ];
+    expect(sent.filters.teacherId).toBe('owner');
+    expect(sent.filters.coordinatorId).toBeUndefined();
+    await service.list(admin, { ...query, filters: { coordinatorId: 'none' } });
+    expect(repository.findPage).toHaveBeenLastCalledWith(
+      expect.objectContaining({ filters: { coordinatorId: 'none' } }),
+    );
   });
 });
 
@@ -637,5 +710,79 @@ describe('LessonPlansService: aprobar y devolver', () => {
     expect(repository.lock).not.toHaveBeenCalled();
     expect(repository.updateIfStatus).not.toHaveBeenCalled();
     expect(reviews).toEqual([]);
+  });
+});
+
+describe('LessonPlansService.discard (404 → 403 → 409)', () => {
+  it('el autor descarta su borrador: bloquea la fila y borra', async () => {
+    const { service, repository } = setup();
+
+    await service.discard(owner, 'plan-1');
+
+    expect(repository.lock).toHaveBeenCalledWith('plan-1');
+    expect(repository.deleteDraft).toHaveBeenCalledWith('plan-1');
+  });
+
+  it('otro docente recibe 404 y no borra nada', async () => {
+    const { service, repository } = setup();
+
+    await expect(service.discard(stranger, 'plan-1')).rejects.toBeInstanceOf(NotFoundException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('coordinación y administración reciben 403 porque ven la planeación pero no son su autor', async () => {
+    for (const user of [coordinator, admin]) {
+      const { service, repository } = setup();
+
+      await expect(service.discard(user, 'plan-1')).rejects.toBeInstanceOf(ForbiddenException);
+      expect(repository.deleteDraft).not.toHaveBeenCalled();
+    }
+  });
+
+  it('una planeación inexistente responde 404', async () => {
+    const { service } = setup({ stored: null });
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it.each([
+    RecordStatus.Submitted,
+    RecordStatus.ChangesRequested,
+    RecordStatus.Reviewed,
+    RecordStatus.Voided,
+  ])('una planeación %s responde 409 y no borra', async (status) => {
+    const { service, repository } = setup({ stored: plan({ status }) });
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(ConflictException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('un borrador que ya se envió alguna vez responde 409', async () => {
+    const { service, repository } = setup({ stored: plan({ submittedAt: NOW }) });
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(ConflictException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('si otra petición la movió justo antes de borrar (0 filas), responde 409', async () => {
+    const { service, repository } = setup();
+    repository.deleteDraft.mockResolvedValueOnce(false);
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('el estado para la bitácora del descarte tiene solo catálogo, sin textos libres', async () => {
+    const { service } = setup();
+
+    const snapshot = await service.findDiscardSnapshot('plan-1');
+
+    expect(snapshot).toEqual({
+      id: 'plan-1',
+      status: RecordStatus.Draft,
+      grade: '7°',
+      areas: ['Física'],
+    });
+    expect(JSON.stringify(snapshot)).not.toContain('Tema');
+    expect(JSON.stringify(snapshot)).not.toContain('Trabaja');
   });
 });

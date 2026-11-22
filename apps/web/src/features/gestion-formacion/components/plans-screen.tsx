@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { useView } from '@/shared/shell';
 import { Button, Notice, PageContainer, PageHeader, Select } from '@/shared/ui';
 
 import {
@@ -22,7 +23,7 @@ import {
   pickPlanOption,
 } from '../model/plan-catalog';
 import { ModuleActionDialog } from './module-action-dialog';
-import { EDITOR_PATH, ModuleRow } from './module-row';
+import { ModuleRow } from './module-row';
 import { NewModuleDialog } from './new-module-dialog';
 import styles from './plans-screen.module.css';
 
@@ -38,6 +39,7 @@ function PlansView({
   catalog: PlansCatalog;
   reloadCatalog: () => void;
 }) {
+  const shell = useView();
   const router = useRouter();
   const { params, update } = useQueryParams();
   const options = useMemo(
@@ -78,7 +80,7 @@ function PlansView({
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={shell.title}
         title="Planes de formación"
         description="Organiza los planes por área en partes y módulos, y decide qué se publica."
         actions={
@@ -193,7 +195,7 @@ function PlansView({
           onPartial={reloadCatalog}
           onCreated={(created) => {
             setCreating(false);
-            router.push(`${EDITOR_PATH}/${created.moduleId}`);
+            router.push(`${shell.path}/planes/modulos/${created.moduleId}`);
           }}
         />
       ) : null}

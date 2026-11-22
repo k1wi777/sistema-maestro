@@ -5,7 +5,14 @@ import { JournalHistoryKind, type FieldJournal, type JournalAnnotation } from '@
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading } from '@/shared/data';
 import { formatDateTime, formatTime, formatWeekdayDate } from '@/shared/format/dates';
-import { ANNOTATION_STATUS_INFO, JOURNAL_STATUS_INFO } from '@/shared/records';
+import {
+  ANNOTATION_STATUS_INFO,
+  JOURNAL_STATUS_INFO,
+  canReviewGrade,
+  consultNotice,
+  type GradeCoordinator,
+} from '@/shared/records';
+import { useSession } from '@/shared/session';
 import {
   Button,
   ButtonLink,
@@ -20,11 +27,9 @@ import {
 
 import { useJournalReview, useJournalReviewData } from '../hooks/use-journal-review';
 import { observationCountLabel, queuePosition } from '../model/journal-review';
-import { JOURNAL_INBOX_PATH } from '../model/paths';
+import { useRevisionPaths } from '../hooks/use-revision-paths';
 import styles from './format-review.module.css';
 import historyStyles from './review-history.module.css';
-
-const BACK_HREF = JOURNAL_INBOX_PATH;
 
 const HISTORY_TEXT: Record<string, (actor: string, detail: string | null) => string> = {
   [JournalHistoryKind.Opened]: (actor) => `${actor} abrió el diario`,
@@ -41,6 +46,7 @@ const HISTORY_TEXT: Record<string, (actor: string, detail: string | null) => str
 };
 
 function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
+  const BACK_HREF = useRevisionPaths().journals;
   if (error.statusCode === 404 || error.statusCode === 403) {
     return (
       <Notice tone="warning" title="No encontramos este diario">
@@ -115,18 +121,28 @@ function AnnotationSection({
 function JournalReviewView({
   journal,
   queue,
+  coordinator,
   refresh,
 }: {
   journal: FieldJournal;
   queue: string[];
+  coordinator: GradeCoordinator | null;
   refresh: () => Promise<ApiError | null>;
 }) {
+  const BACK_HREF = useRevisionPaths().journals;
+  const { state: session } = useSession();
+  const user = session.status === 'authenticated' ? session.user : null;
+  // Fuera de los grados de la persona (o administración) el diario es solo para consulta.
+  const consultText = canReviewGrade(user, coordinator)
+    ? null
+    : consultNotice(user, coordinator, journal.grade.name, 'este diario');
   const review = useJournalReview({ journal, queue, refresh });
   const info = JOURNAL_STATUS_INFO[journal.status];
   const position = queuePosition(queue, journal.id);
   const sent = journal.annotations.filter((annotation) => annotation.status !== 'borrador');
-  const reasonBlocked =
-    !journal.viewer.canReview && journal.status !== 'enviado'
+  const reasonBlocked = consultText
+    ? null
+    : !journal.viewer.canReview && journal.status !== 'enviado'
       ? `Este diario está ${info.label.toLowerCase()}: solo se revisan los enviados.`
       : !journal.viewer.canReview
         ? 'Participaste en este diario o lo enviaste: otra persona de coordinación debe revisarlo.'
@@ -215,6 +231,11 @@ function JournalReviewView({
                   <p className={styles.noticeText}>{review.notice.text}</p>
                 </Notice>
               ) : null}
+              {consultText ? (
+                <Notice tone="info" title="Solo consulta">
+                  {consultText}
+                </Notice>
+              ) : null}
               {reasonBlocked ? <Notice tone="info">{reasonBlocked}</Notice> : null}
               {journal.signature ? (
                 <p className={styles.signature}>
@@ -296,7 +317,12 @@ function JournalReviewView({
 
 /** Revisión de un diario de campo completo (`/coordinacion/formatos/diario/[id]`). */
 export function JournalReviewScreen({ id }: { id: string }) {
-  const remote = useJournalReviewData(id);
+  const { state: session } = useSession();
+  const coordinatorId =
+    session.status === 'authenticated' && session.user.role === 'coordinador'
+      ? session.user.id
+      : undefined;
+  const remote = useJournalReviewData(id, coordinatorId);
   if (remote.state.status === 'loading') {
     return (
       <PageContainer>
@@ -316,6 +342,7 @@ export function JournalReviewScreen({ id }: { id: string }) {
       key={id}
       journal={remote.state.data.journal}
       queue={remote.state.data.queue}
+      coordinator={remote.state.data.coordinator}
       refresh={remote.refresh}
     />
   );

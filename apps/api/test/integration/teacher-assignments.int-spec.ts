@@ -45,6 +45,7 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
   let admin: Cookies;
   let adminId: string;
   let coordinator: Cookies;
+  let coordinatorId: string;
   let teacherUser: TestUser;
   let teacher: Cookies;
   let releaseSchoolYear: () => Promise<void>;
@@ -58,7 +59,9 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
     const adminUser = await createTestUser(app, { role: UserRole.Administrator });
     adminId = adminUser.id;
     admin = await signIn(app, adminUser);
-    coordinator = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
+    const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
+    coordinatorId = coordinatorUser.id;
+    coordinator = await signIn(app, coordinatorUser);
     teacherUser = await createTestUser(app);
     teacher = await signIn(app, teacherUser);
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
@@ -72,12 +75,18 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
   const as = (cookies: Cookies, method: Method, path: string) =>
     asUser(app, method, path, cookies, 'access');
 
-  async function createGradeAndArea() {
+  /** Grado nuevo cuya coordinadora es `coordinator` (asigna solo en los grupos de sus grados, #115). */
+  async function createGradeAndArea(coordinatorOf: string | null = coordinatorId) {
     const level = await prisma.educationLevel.create({
       data: { name: `Nivel ${unique()}`, sortOrder: 1 },
     });
     const grade = await prisma.grade.create({
-      data: { name: `Grado ${unique()}`, levelId: level.id, sortOrder: 1 },
+      data: {
+        name: `Grado ${unique()}`,
+        levelId: level.id,
+        sortOrder: 1,
+        coordinatorId: coordinatorOf,
+      },
     });
     const group = await prisma.group.create({
       data: { gradeId: grade.id, name: `Grupo ${unique()}` },
@@ -619,10 +628,53 @@ describe('años lectivos, asignaciones docentes y mis asignaciones', () => {
       expect(JSON.stringify(mine)).not.toContain('assignmentId');
     });
 
-    it('sin asignaciones devuelve la lista vacía, también para un administrador', async () => {
-      const res = await as(admin, 'get', '/me/assignments').expect(200);
+    it('sin asignaciones devuelve la lista vacía; solo es del docente (administración, 403)', async () => {
+      const empty = await signIn(app, await createTestUser(app));
+      const res = await as(empty, 'get', '/me/assignments').expect(200);
 
       expect(res.body).toEqual({ schoolYear: currentCode, grades: [] });
+      await as(admin, 'get', '/me/assignments').expect(403);
+      await as(coordinator, 'get', '/me/assignments').expect(403);
+    });
+
+    it('la coordinadora asigna, edita y retira solo en los grupos de sus grados (403 en otro caso); administración, en cualquiera (Q3)', async () => {
+      const own = await createGradeAndArea();
+      const foreign = await createGradeAndArea(null);
+      const created = (
+        await as(coordinator, 'post', '/teacher-assignments')
+          .send(body(teacherUser.id, own.group.id, own.area.id))
+          .expect(201)
+      ).body as AssignmentBody;
+
+      const outside = await as(coordinator, 'post', '/teacher-assignments')
+        .send(body(teacherUser.id, foreign.group.id, foreign.area.id))
+        .expect(403);
+      expect(apiErrorBodySchema.parse(outside.body).code).toBe('sin_permiso');
+      const adminCreated = (
+        await as(admin, 'post', '/teacher-assignments')
+          .send(body(teacherUser.id, foreign.group.id, foreign.area.id))
+          .expect(201)
+      ).body as AssignmentBody;
+      // Editar y retirar una asignación de otro grado: 403 sin cambiarla.
+      await as(coordinator, 'patch', `/teacher-assignments/${adminCreated.id}`)
+        .send({ isHomeroomTeacher: true })
+        .expect(403);
+      await as(coordinator, 'patch', `/teacher-assignments/${adminCreated.id}/status`)
+        .send({ status: 'retirada' })
+        .expect(403);
+      expect(
+        await prisma.teacherAssignment.findUniqueOrThrow({ where: { id: adminCreated.id } }),
+      ).toMatchObject({ status: 'activa', isHomeroomTeacher: false });
+      // En su grado sí; el listado es de todo el colegio para ambos roles.
+      await as(coordinator, 'patch', `/teacher-assignments/${created.id}/status`)
+        .send({ status: 'retirada' })
+        .expect(200);
+      await as(admin, 'patch', `/teacher-assignments/${adminCreated.id}/status`)
+        .send({ status: 'retirada' })
+        .expect(200);
+      const listed = (await as(coordinator, 'get', '/teacher-assignments?pageSize=100').expect(200))
+        .body as PageBody;
+      expect(listed.items.map((item) => item.id)).toContain(adminCreated.id);
     });
 
     it('no deja fila de bitácora si la escritura falla (R16)', async () => {

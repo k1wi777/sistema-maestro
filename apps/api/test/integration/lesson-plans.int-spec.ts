@@ -1,5 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import { apiErrorBodySchema, ApiErrorCode, RecordStatus, UserRole } from '@gns/shared';
+import { apiErrorBodySchema, ApiErrorCode, DigitalTool, RecordStatus, UserRole } from '@gns/shared';
 import { PrismaService } from '../../src/shared/database/prisma.service';
 import { createTestApp } from './support/create-test-app';
 import {
@@ -47,10 +47,16 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
     teacherUser = await createTestUser(app);
     teacher = await signIn(app, teacherUser);
     other = await signIn(app, await createTestUser(app));
-    coordinator = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
+    const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
+    coordinator = await signIn(app, coordinatorUser);
     admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
     secondary = await planning.gradeAndArea('Bachillerato');
     await planning.assign(teacherUser.id, secondary.gradeId, secondary.areaId);
+    // Anular como revisora es de la coordinadora del grado (#115).
+    await prisma.grade.update({
+      where: { id: secondary.gradeId },
+      data: { coordinatorId: coordinatorUser.id },
+    });
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -495,8 +501,9 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
   });
 
   describe('anular (R6)', () => {
-    it('el dueño anula un borrador con motivo: no se borra y la bitácora guarda el motivo', async () => {
+    it('el dueño anula una enviada con motivo: no se borra y la bitácora guarda el motivo', async () => {
       const created = await plan();
+      await forceStatus(app, created.id, RecordStatus.Submitted);
 
       const res = await as(teacher, 'post', `/lesson-plans/${created.id}/void`)
         .send({ reason: '  Planeación duplicada  ' })
@@ -544,17 +551,36 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
       });
     });
 
-    it('coordinación anula desde cualquier estado salvo anulado; una anulada no cambia (409)', async () => {
+    it('un borrador no se anula, ni por el dueño ni por coordinación: 409 «se descarta»', async () => {
       const created = await plan();
+
+      for (const cookies of [teacher, coordinator]) {
+        const res = await as(cookies, 'post', `/lesson-plans/${created.id}/void`)
+          .send({ reason: 'Intento de anular' })
+          .expect(409);
+        expect(errorOf(res.body).message).toContain('se descarta en lugar de anularse');
+      }
+      expect(
+        (await prisma.lessonPlan.findUniqueOrThrow({ where: { id: created.id } })).status,
+      ).toBe('borrador');
+    });
+
+    it('la coordinadora del grado anula lo enviado; una anulada no cambia (409)', async () => {
+      const created = await plan();
+      await forceStatus(app, created.id, RecordStatus.Submitted);
       await as(coordinator, 'post', `/lesson-plans/${created.id}/void`)
         .send({ reason: 'Motivo uno' })
         .expect(200);
 
-      for (const cookies of [teacher, coordinator, admin]) {
+      for (const cookies of [teacher, coordinator]) {
         await as(cookies, 'post', `/lesson-plans/${created.id}/void`)
           .send({ reason: 'Otra vez' })
           .expect(409);
       }
+      // Administración consulta pero no anula (la ruta es de docente y coordinación).
+      await as(admin, 'post', `/lesson-plans/${created.id}/void`)
+        .send({ reason: 'Otra vez' })
+        .expect(403);
       expect(
         (await auditRows(app, created.id)).filter((r) => r.action.startsWith('Anuló')),
       ).toHaveLength(1);
@@ -582,6 +608,95 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
       await as(other, 'post', `/lesson-plans/${created.id}/void`)
         .send({ reason: 'Intento ajeno' })
         .expect(404);
+    });
+  });
+
+  describe('descartar un borrador (#117)', () => {
+    const discard = (cookies: Cookies, id: string) => as(cookies, 'delete', `/lesson-plans/${id}`);
+
+    it('el autor descarta su borrador con áreas y enlaces: 204, desaparece y la bitácora no guarda contenido', async () => {
+      const created = await plan({ topic: 'Tema secreto del borrador' });
+      await as(teacher, 'post', `/lesson-plans/${created.id}/resources`)
+        .send({
+          tool: DigitalTool.Canva,
+          name: 'Presentación',
+          url: 'https://www.canva.com/design/abc',
+        })
+        .expect(201);
+
+      await discard(teacher, created.id).expect(204);
+
+      await as(teacher, 'get', `/lesson-plans/${created.id}`).expect(404);
+      await as(coordinator, 'get', `/lesson-plans/${created.id}`).expect(404);
+      expect(await prisma.lessonPlan.count({ where: { id: created.id } })).toBe(0);
+      expect(await prisma.lessonPlanArea.count({ where: { lessonPlanId: created.id } })).toBe(0);
+      expect(await prisma.lessonPlanResource.count({ where: { lessonPlanId: created.id } })).toBe(
+        0,
+      );
+      const row = (await auditRows(app, created.id)).at(-1);
+      expect(row).toMatchObject({
+        action: 'Descartó un borrador',
+        type: 'planeacion',
+        role: 'docente',
+        userId: teacherUser.id,
+      });
+      expect(row?.detail).toBe(
+        `${created.grade.name} · ${created.areas.map((area) => area.name).join(', ')}`,
+      );
+      expect(JSON.stringify([row?.detail, row?.dataBefore, row?.dataAfter])).not.toContain(
+        'Tema secreto',
+      );
+    });
+
+    it('deja de aparecer en la lista del docente y en la de coordinación', async () => {
+      const created = await plan();
+      await discard(teacher, created.id).expect(204);
+
+      for (const cookies of [teacher, coordinator]) {
+        const res = await as(cookies, 'get', '/lesson-plans?pageSize=100').expect(200);
+        expect((res.body as PageBody).items.map((item) => item.id)).not.toContain(created.id);
+      }
+    });
+
+    it('otro docente recibe 404; coordinación y administración, 403; nada se borra', async () => {
+      const created = await plan();
+
+      await discard(other, created.id).expect(404);
+      await discard(coordinator, created.id).expect(403);
+      await discard(admin, created.id).expect(403);
+      expect(await prisma.lessonPlan.count({ where: { id: created.id } })).toBe(1);
+    });
+
+    it.each([
+      RecordStatus.Submitted,
+      RecordStatus.ChangesRequested,
+      RecordStatus.Reviewed,
+      RecordStatus.Voided,
+    ])('una planeación %s responde 409 y no se borra', async (status) => {
+      const created = await plan();
+      await forceStatus(app, created.id, status);
+
+      const res = await discard(teacher, created.id).expect(409);
+
+      expect(errorOf(res.body).code).toBe(ApiErrorCode.Conflict);
+      expect(await prisma.lessonPlan.count({ where: { id: created.id } })).toBe(1);
+    });
+
+    it('un borrador que ya se envió alguna vez no se descarta (409)', async () => {
+      const created = await plan();
+      await prisma.lessonPlan.update({
+        where: { id: created.id },
+        data: { submittedAt: new Date() },
+      });
+
+      await discard(teacher, created.id).expect(409);
+      expect(await prisma.lessonPlan.count({ where: { id: created.id } })).toBe(1);
+    });
+
+    it('descartar dos veces seguidas: la segunda responde 404', async () => {
+      const created = await plan();
+      await discard(teacher, created.id).expect(204);
+      await discard(teacher, created.id).expect(404);
     });
   });
 

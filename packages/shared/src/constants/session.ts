@@ -10,6 +10,7 @@ export const SessionRevocationReason = {
   Deactivation: 'desactivacion',
   PasswordChange: 'contrasena',
   TokenReuse: 'reutilizacion',
+  RoleChange: 'cambio_rol',
 } as const;
 export type SessionRevocationReason =
   (typeof SessionRevocationReason)[keyof typeof SessionRevocationReason];

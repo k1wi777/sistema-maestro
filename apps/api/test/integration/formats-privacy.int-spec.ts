@@ -24,6 +24,7 @@ describe('privacidad del diario y el observador (BE-6)', () => {
   let teacher: Cookies;
   let other: Cookies;
   let coord: Cookies;
+  let coordId: string;
   let logLines: string[];
 
   const post = (cookies: Cookies, path: string) => call(app, cookies, 'post', path);
@@ -59,7 +60,9 @@ describe('privacidad del diario y el observador (BE-6)', () => {
     teacherUser = await createTestUser(app);
     teacher = await signIn(app, teacherUser);
     other = await signIn(app, await createTestUser(app));
-    coord = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
+    const coordUser = await createTestUser(app, { role: UserRole.Coordinator });
+    coordId = coordUser.id;
+    coord = await signIn(app, coordUser);
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -107,7 +110,8 @@ describe('privacidad del diario y el observador (BE-6)', () => {
 
   describe('bitácora sin datos de menores (R18, R22)', () => {
     it('el observador: nombre, descripción, versión, estrategias, acciones y seguimiento quedan como [oculto]', async () => {
-      const { gradeId } = await freshGrade(planning, []);
+      // `coord` revisa y anula como coordinadora del grado (#115).
+      const { gradeId } = await freshGrade(planning, [], coordId);
       const secrets = [
         'desc',
         'version',
@@ -156,6 +160,28 @@ describe('privacidad del diario y el observador (BE-6)', () => {
       expect(rows[1]?.dataBefore).toMatchObject({ description: '[oculto]', type: 'positiva' });
       expect(rows[1]?.dataAfter).toMatchObject({ description: '[oculto]', type: 'tipo_ii' });
       expect(rows[3]?.dataAfter).toMatchObject({ type: 'tipo_iii', status: 'revisada' });
+    });
+  });
+
+  describe('descartar un borrador del observador (#117)', () => {
+    it('la fila de bitácora del descarte no trae nombre, textos ni el contenido del borrador', async () => {
+      const { gradeId } = await freshGrade(planning, [], coordId);
+      const description = marker('descarte');
+      const created = await createNote(app, teacher, {
+        gradeId,
+        studentFirstName: STUDENT_A,
+        description,
+        followUp: marker('seguimiento-descarte'),
+      });
+
+      await call(app, teacher, 'delete', `/observer-notes/${created.id}`).expect(204);
+
+      const rows = await auditRows(app, created.id);
+      expect(rows.at(-1)).toMatchObject({ action: 'Descartó un borrador', type: 'observador' });
+      expect(await auditText(created.id, true)).not.toContain(run);
+      expect(await auditText(created.id, true)).not.toContain(STUDENT_A);
+      expect(rows.at(-1)?.dataBefore).toMatchObject({ status: 'borrador' });
+      expect(rows.at(-1)?.dataAfter).toBeNull();
     });
   });
 

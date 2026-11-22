@@ -10,7 +10,7 @@ import { ApiErrorCode, UserRole } from '@gns/shared';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { ApiCodedException } from '../../../core/http/api-coded.exception';
 import type { ConsentService } from '../consent/consent.service';
-import { AllowWithoutConsent, Public, RequireRole } from './access.decorators';
+import { AllowWithoutConsent, Public, Roles } from './access.decorators';
 import { AccessGuard } from './access.guard';
 
 class UndeclaredController {
@@ -22,7 +22,7 @@ class PublicController {
   list(): void {}
 }
 
-@RequireRole(UserRole.Administrator)
+@Roles(UserRole.Administrator)
 class AdminController {
   list(): void {}
 
@@ -31,13 +31,13 @@ class AdminController {
 }
 
 class MixedController {
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Coordinator)
   review(): void {}
 
-  @RequireRole(UserRole.Teacher)
+  @Roles(UserRole.Teacher, UserRole.Coordinator, UserRole.Administrator)
   anyRole(): void {}
 
-  @RequireRole(UserRole.Teacher)
+  @Roles(UserRole.Teacher)
   @AllowWithoutConsent()
   profile(): void {}
 }
@@ -140,15 +140,33 @@ describe('AccessGuard', () => {
 
   it.each([
     [UserRole.Coordinator, MixedController, 'review'],
-    [UserRole.Administrator, MixedController, 'review'],
     [UserRole.Teacher, MixedController, 'anyRole'],
     [UserRole.Coordinator, MixedController, 'anyRole'],
+    [UserRole.Administrator, MixedController, 'anyRole'],
     [UserRole.Administrator, AdminController, 'list'],
-  ])('lets %s through %s.%s by the role hierarchy', async (role, controller, handler) => {
+  ])(
+    'lets %s through %s.%s when the role is in the declared set',
+    async (role, controller, handler) => {
+      const { guard } = setup(true);
+
+      await expect(guard.canActivate(contextFor(controller, handler, user(role)))).resolves.toBe(
+        true,
+      );
+    },
+  );
+
+  it('has no hierarchy: a higher role does not inherit a lower role endpoint', async () => {
     const { guard } = setup(true);
 
-    await expect(guard.canActivate(contextFor(controller, handler, user(role)))).resolves.toBe(
-      true,
-    );
+    // `profile` solo declara docente: ni coordinación ni administración entran.
+    for (const role of [UserRole.Coordinator, UserRole.Administrator]) {
+      await expect(
+        guard.canActivate(contextFor(MixedController, 'profile', user(role))),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    }
+    // `review` solo declara coordinación: administración tampoco entra.
+    await expect(
+      guard.canActivate(contextFor(MixedController, 'review', user(UserRole.Administrator))),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });

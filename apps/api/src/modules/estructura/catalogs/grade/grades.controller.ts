@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiNoContentResponse } from '@nestjs/swagger';
-import { AuditLogType, UserRole } from '@gns/shared';
+import { ALL_ROLES, AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../../core/audit/audited.decorator';
 import { IdParamDto } from '../../../../shared/http/id-param.dto';
-import { RequireRole } from '../../../identidad/auth/access.decorators';
+import { Roles } from '../../../identidad/auth/access.decorators';
 import {
   CreateGradeDto,
   GradeDto,
@@ -22,14 +22,14 @@ export class GradesController {
   constructor(private readonly grades: GradesService) {}
 
   @Get()
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @ZodResponse({ status: 200, type: GradePageDto })
   list(@Query() query: GradeListQueryDto) {
     return this.grades.list(query);
   }
 
   @Post()
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Crear grado' })
   @ZodResponse({ status: 201, type: GradeDto })
   create(@Body() body: CreateGradeDto) {
@@ -38,7 +38,7 @@ export class GradesController {
 
   // Activar o desactivar va aquí con `{ active }`: el antes y después de la bitácora muestra el cambio.
   @Patch(':id')
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Editar grado' })
   @ZodResponse({ status: 200, type: GradeDto })
   update(@Param() { id }: IdParamDto, @Body() body: UpdateGradeDto) {
@@ -48,7 +48,7 @@ export class GradesController {
   @Delete(':id')
   @HttpCode(204)
   @ApiNoContentResponse({ description: 'Borrado' })
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Borrar grado' })
   remove(@Param() { id }: IdParamDto) {
     return this.grades.remove(id);

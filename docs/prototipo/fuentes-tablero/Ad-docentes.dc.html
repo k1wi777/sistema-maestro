@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Docentes y asignaciones · usuarios y roles</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="/_blob/96a8aca7488a806fa407e0e907b1f7a9">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
+  <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
+  <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"></path></symbol>
+  <symbol id="i-gente" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><circle cx="17" cy="9" r="2.5"></circle><path d="M17 14c2.5 0 4 1.8 4 4.5"></path></symbol>
+  <symbol id="i-bitacora" viewBox="0 0 24 24"><path d="M12 8v4l3 2"></path><circle cx="12" cy="12" r="9"></circle></symbol>
+  <symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol>
+  <symbol id="i-grafica" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></symbol>
+  <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 17l-5-5 5-5M5 12h11"></path></symbol>
+  <symbol id="i-volver" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></symbol>
+  <symbol id="i-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></symbol>
+  <symbol id="i-comentario" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></symbol>
+  <symbol id="i-guardar" viewBox="0 0 24 24"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M7 3v5h8V3M7 21v-7h10v7"></path></symbol>
+</svg>
+  <aside>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Administración</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
+    <nav class="menu menu-adm" aria-label="Administración">
+      <div class="menu-titulo">Seguimiento</div>
+      <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
+      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
+      <div class="menu-titulo" style="margin-top:12px">Gestión</div>
+      <button type="button" aria-current="page"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
+      <button type="button"><svg class="i"><use href="#i-grados"></use></svg>Grados y áreas</button>
+      <button type="button"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
+      <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
+      <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
+    </nav>
+    <div class="quien"><span class="av">AG</span><span><b>Administrador GNS</b><br>Administración</span></div>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
+    <button type="button" class="priv-link">Tratamiento de datos personales</button>
+  </aside>
+  <main>
+    <div class="cont">
+      <section>
+        <div class="encabezado"><div>
+          <div class="eyebrow">Administración</div>
+          <h1>Docentes y asignaciones</h1>
+          <p>Asignaciones de los docentes en el año lectivo vigente y usuarios y roles de la plataforma.</p>
+        </div></div>
+        <div class="pl-tabs" role="group" aria-label="Docentes y asignaciones">
+          <button type="button" class="pl-tab" aria-pressed="false">Asignaciones</button>
+          <button type="button" class="pl-tab" aria-pressed="true">Usuarios y roles</button>
+        </div>
+        <div class="bloque"><div class="bloque-h"><h2>Usuarios y roles</h2><button type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-mas"></use></svg>Nuevo usuario</button></div>
+          <p class="hint" style="margin:-6px 0 10px">Solo administración crea usuarios y asigna roles: nadie se registra solo. Un usuario no se borra, se desactiva.</p>
+          <div class="co-filtros"><label>Buscar<input type="search" placeholder="Nombre o correo"></label><label>Rol<select><option>Todos los roles</option><option>Docente</option><option>Coordinación</option><option>Administración</option></select></label><label>Estado<select><option>Todos los estados</option><option>Activo</option><option>Inactivo</option></select></label><button type="button" class="btn sec sm" style="align-self:end">Buscar</button></div>
+          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Usuarios de la plataforma</caption><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Creado</th><th>Acciones</th></tr></thead><tbody>
+            <tr><td><b>Administrador GNS</b></td><td>administrador@demo.gns.test</td><td><span class="co-tag rojo" style="margin:0">Administración</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><span class="hint">Es tu cuenta</span></td></tr>
+            <tr><td><b>Marcela Rojas</b></td><td>marcela.rojas@demo.gns.test</td><td><span class="co-tag" style="margin:0">Coordinación</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Marcela Rojas">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Marcela Rojas">Desactivar</button></td></tr>
+            <tr><td><b>Elena Ravassa</b></td><td>elena.ravassa@demo.gns.test</td><td><span class="co-tag" style="margin:0">Coordinación</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Elena Ravassa">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Elena Ravassa">Desactivar</button></td></tr>
+            <tr><td><b>Andrés Ruiz</b></td><td>andres.ruiz@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Andrés Ruiz">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Andrés Ruiz">Desactivar</button></td></tr>
+            <tr><td><b>Camila Torres</b></td><td>camila.torres@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Camila Torres">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Camila Torres">Desactivar</button></td></tr>
+            <tr><td><b>Daniela Fontalba</b></td><td>daniela.fontalba@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Daniela Fontalba">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Daniela Fontalba">Desactivar</button></td></tr>
+            <tr><td><b>Diego Herrera</b></td><td>diego.herrera@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Diego Herrera">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Diego Herrera">Desactivar</button></td></tr>
+            <tr><td><b>Julián Casaverde</b></td><td>julian.casaverde@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Julián Casaverde">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Julián Casaverde">Desactivar</button></td></tr>
+            <tr><td><b>Julián Castro</b></td><td>julian.castro@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Julián Castro">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Julián Castro">Desactivar</button></td></tr>
+            <tr><td><b>Laura Méndez</b></td><td>laura.mendez@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Laura Méndez">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Laura Méndez">Desactivar</button></td></tr>
+            <tr><td><b>Sofía Marquesina</b></td><td>sofia.marquesina@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>1 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Sofía Marquesina">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Sofía Marquesina">Desactivar</button></td></tr>
+            <tr><td><b>Valeria Montenueva</b></td><td>valeria.montenueva@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-revisada">Activo</span></td><td>2 nov 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Valeria Montenueva">Editar</button> <button type="button" class="btn sec sm" aria-label="Desactivar a Valeria Montenueva">Desactivar</button></td></tr>
+            <tr><td><b>Sara Gómez</b></td><td>sara.gomez@demo.gns.test</td><td><span class="co-tag" style="margin:0">Docente</span></td><td><span class="estado e-borrador">Inactivo</span></td><td>15 ago 2026</td><td style="white-space:nowrap"><button type="button" class="btn lin sm" aria-label="Editar a Sara Gómez">Editar</button> <button type="button" class="btn sec sm" aria-label="Activar a Sara Gómez">Activar</button></td></tr>
+          </tbody></table></div></div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al crear un usuario</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+
+        <div class="bloque" role="dialog" aria-label="Nuevo usuario" style="max-width:520px">
+          <div class="bloque-h"><h2>Nuevo usuario</h2></div>
+          <p style="margin:0 0 12px">El usuario podrá ingresar con su correo y la contraseña inicial que le entregues.</p>
+          <div class="g" style="grid-template-columns:1fr"><label>Nombre completo<input maxlength="120" placeholder="Nombre y apellidos"></label><label>Correo institucional<input type="email" maxlength="160" placeholder="nombre@demo.gns.test"></label><label>Rol<select><option>Selecciona un rol</option><option>Docente</option><option>Coordinación</option><option>Administración</option></select></label><label>Contraseña inicial<input type="password" autocomplete="new-password"><span class="hint" style="font-weight:400">Entre 12 y 128 caracteres. No se vuelve a mostrar.</span></label></div>
+          <div class="acciones-f"><button type="button" class="btn lin sm">Cancelar</button><button type="button" class="btn sm">Crear usuario</button></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al cambiar el rol</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+
+        <div class="bloque" role="dialog" aria-label="Editar usuario" style="max-width:520px">
+          <div class="bloque-h"><h2>Editar usuario</h2></div>
+          <p style="margin:0 0 12px">Cambia el nombre, el correo o el rol. La contraseña no se muestra ni se cambia aquí.</p>
+          <div class="g" style="grid-template-columns:1fr"><label>Nombre completo<input maxlength="120" value="Daniela Fontalba"></label><label>Correo institucional<input type="email" maxlength="160" value="daniela.fontalba@demo.gns.test"></label><label>Rol<select><option>Docente</option><option selected>Coordinación</option><option>Administración</option></select></label></div>
+          <div class="obs" style="margin:12px 0 0"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg><div><b>Qué pasa al cambiar el rol</b><span>Al pasar a coordinación, Daniela Fontalba deja de ser docente: se retiran sus asignaciones en Transition 2 y deja de ser directora de Transition 2, que quedará sin director(a). Sus registros se conservan. Asígnale grados en Grados y áreas para que pueda revisar.</span></div></div>
+          <div class="acciones-f"><button type="button" class="btn lin sm">Cancelar</button><button type="button" class="btn sm">Guardar cambios</button></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al desactivar</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+
+        <div class="bloque" role="dialog" aria-label="Desactivar usuario" style="max-width:520px">
+          <div class="bloque-h"><h2>Desactivar usuario</h2></div>
+          <p style="margin:0 0 12px">Elena Ravassa ya no podrá ingresar a la plataforma. Sus registros se conservan y puedes activarlo de nuevo. Red, Blue, Purple, Green y Garden no tendrán quién revise mientras esté inactiva.</p>
+          <div class="acciones-f"><button type="button" class="btn lin sm">Cancelar</button><button type="button" class="btn sm" style="background:var(--rojo)">Desactivar</button></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Pestaña Asignaciones</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+
+        <div class="pl-tabs" role="group" aria-label="Docentes y asignaciones">
+          <button type="button" class="pl-tab" aria-pressed="true">Asignaciones</button>
+          <button type="button" class="pl-tab" aria-pressed="false">Usuarios y roles</button>
+        </div>
+        <div class="bloque"><div class="bloque-h"><h2>Asignaciones</h2></div>
+          <p class="hint" style="margin:-6px 0 10px">Año lectivo 2026-2027 · Administración asigna y retira en todos los grupos.</p>
+          <div class="co-filtros"><label>Buscar docente<input type="search" placeholder="Nombre, grado o asignatura"></label></div>
+          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Docentes del año lectivo</caption><thead><tr><th>Docente</th><th>Rol</th><th>Grupos y áreas</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+            <tr><td><b>Andrés Ruiz</b></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Kinder 1:</b> Tecnología e Informática</div><div><b>Transition 1:</b> Tecnología e Informática</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Andrés Ruiz">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Andrés Ruiz">Actividad</a></td></tr>
+            <tr><td><b>Camila Torres</b><br><small class="hint">Directora de Kinder 1</small></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Kinder 1:</b> English (CLIL), Dimensión comunicativa</div><div><b>Transition 1:</b> English (CLIL)</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Camila Torres">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Camila Torres">Actividad</a></td></tr>
+            <tr><td><b>Daniela Fontalba</b><br><small class="hint">Directora de Transition 2</small></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Transition 2:</b> Dimensión cognitiva, Dimensión socioafectiva</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Daniela Fontalba">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Daniela Fontalba">Actividad</a></td></tr>
+            <tr><td><b>Diego Herrera</b></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Transition 1:</b> Lengua Castellana</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Diego Herrera">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Diego Herrera">Actividad</a></td></tr>
+            <tr><td><b>Julián Casaverde</b><br><small class="hint">Director de First Grade 1</small></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>First Grade 1:</b> Lengua Castellana</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Julián Casaverde">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Julián Casaverde">Actividad</a></td></tr>
+            <tr><td><b>Julián Castro</b></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Kinder 1:</b> Música</div><div><b>Transition 1:</b> Música</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Julián Castro">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Julián Castro">Actividad</a></td></tr>
+            <tr><td><b>Laura Méndez</b><br><small class="hint">Directora de Transition 1</small></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Transition 1:</b> Dimensión cognitiva, Pre-ciencias, Dimensión socioafectiva</div><div><b>Transition 2:</b> Pre-ciencias</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Laura Méndez">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Laura Méndez">Actividad</a></td></tr>
+            <tr><td><b>Sofía Marquesina</b></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Kinder 1:</b> Dimensión cognitiva</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Sofía Marquesina">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Sofía Marquesina">Actividad</a></td></tr>
+            <tr><td><b>Valeria Montenueva</b><br><small class="hint">Directora de Red 1</small></td><td><span class="co-tag" style="margin:0">Docente</span></td><td><div><b>Red 1:</b> English (CLIL), Dimensión comunicativa</div></td><td><span class="estado e-revisada">Activo</span></td><td style="white-space:nowrap"><button type="button" class="btn sec sm" aria-label="Asignaciones de Valeria Montenueva">Asignaciones</button> <a class="btn lin sm" href="Ad-bitacora.dc.html" style="text-decoration:none" aria-label="Actividad de Valeria Montenueva">Actividad</a></td></tr>
+          </tbody></table></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":4480}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

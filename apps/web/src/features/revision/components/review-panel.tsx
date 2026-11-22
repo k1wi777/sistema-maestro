@@ -1,6 +1,12 @@
 'use client';
 
-import { RecordStatus, REVIEW_COMMENT_MAX_LENGTH, type LessonPlan } from '@gns/shared';
+import {
+  canTransition,
+  RecordActor,
+  RecordOperation,
+  REVIEW_COMMENT_MAX_LENGTH,
+  type LessonPlan,
+} from '@gns/shared';
 import { useState } from 'react';
 
 import { VoidRecordDialog } from '@/shared/records';
@@ -24,17 +30,19 @@ export function ReviewPanel({ plan, review }: { plan: LessonPlan; review: PlanRe
   const deciding = busy === 'approve' || busy === 'return';
 
   return (
-    <aside className={styles.panel} aria-label="Tu revisión">
-      <Card title="Tu revisión">
+    <aside className={styles.panel} aria-label={review.canReview ? 'Tu revisión' : 'Historial'}>
+      <Card title={review.canReview ? 'Tu revisión' : 'Historial'}>
         <div className={styles.body}>
-          <div className={styles.counts}>
-            <StatusBadge tone={review.observationCount > 0 ? 'warning' : 'neutral'}>
-              {plural(review.observationCount, 'observación', 'observaciones')}
-            </StatusBadge>
-            <StatusBadge tone={review.adjustmentCount > 0 ? 'info' : 'neutral'}>
-              {plural(review.adjustmentCount, 'ajuste', 'ajustes')}
-            </StatusBadge>
-          </div>
+          {review.canReview ? (
+            <div className={styles.counts}>
+              <StatusBadge tone={review.observationCount > 0 ? 'warning' : 'neutral'}>
+                {plural(review.observationCount, 'observación', 'observaciones')}
+              </StatusBadge>
+              <StatusBadge tone={review.adjustmentCount > 0 ? 'info' : 'neutral'}>
+                {plural(review.adjustmentCount, 'ajuste', 'ajustes')}
+              </StatusBadge>
+            </div>
+          ) : null}
 
           {notice ? (
             <Notice tone={notice.tone}>
@@ -116,7 +124,8 @@ export function ReviewPanel({ plan, review }: { plan: LessonPlan; review: PlanRe
             <ReviewHistory lines={review.history} teacher={plan.teacher.fullName} />
           </section>
 
-          {plan.status !== RecordStatus.Voided ? (
+          {review.canReview &&
+          canTransition(RecordOperation.Void, RecordActor.Reviewer, plan.status) ? (
             <Button
               variant="void"
               size="sm"

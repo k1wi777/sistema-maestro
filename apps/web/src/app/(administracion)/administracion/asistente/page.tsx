@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
-import { AcademicStructureScreen } from '@/features/grados-areas';
+import { FaqAdminScreen } from '@/features/asistente';
 import { sectionByHref } from '@/shared/shell';
 
-const HREF = '/coordinacion/grados-y-areas';
+const HREF = '/administracion/asistente';
 
 export const metadata: Metadata = { title: sectionByHref(HREF).section.label };
 
 export default function Page() {
-  return <AcademicStructureScreen />;
+  return <FaqAdminScreen />;
 }

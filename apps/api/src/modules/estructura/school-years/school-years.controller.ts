@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { AuditLogType, UserRole } from '@gns/shared';
+import { ALL_ROLES, AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import {
   CreateSchoolYearDto,
   SchoolYearDto,
@@ -24,21 +24,21 @@ export class SchoolYearsController {
   constructor(private readonly schoolYears: SchoolYearsService) {}
 
   @Get()
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @ZodResponse({ status: 200, type: SchoolYearPageDto })
   list(@Query() query: SchoolYearListQueryDto) {
     return this.schoolYears.list(query);
   }
 
   @Get('current')
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @ZodResponse({ status: 200, type: SchoolYearDto })
   current() {
     return this.schoolYears.requireCurrent();
   }
 
   @Post()
-  @RequireRole(UserRole.Administrator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Registrar año lectivo' })
   @ZodResponse({ status: 201, type: SchoolYearDto })
   create(@Body() body: CreateSchoolYearDto) {
@@ -46,7 +46,7 @@ export class SchoolYearsController {
   }
 
   @Put(':id/current')
-  @RequireRole(UserRole.Administrator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Marcar año lectivo vigente' })
   @ZodResponse({ status: 200, type: SchoolYearDto })
   setCurrent(@Param() { id }: IdParamDto) {

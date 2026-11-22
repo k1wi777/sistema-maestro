@@ -34,7 +34,7 @@ La **Plataforma GNS**: la plataforma web institucional de George Noble School
 pedagógico GNS, los formatos institucionales (diario de campo F-PA-05 y
 observador del estudiante), el plan de formación docente (inducción y planes por
 área, con Desafío GNS y certificados), un asistente de preguntas frecuentes y la
-revisión y auditoría por coordinación académica. Sustituye documentos sueltos,
+revisión por coordinación académica y auditoría por administración. Sustituye documentos sueltos,
 formularios y correos, y deja trazabilidad de cada acción.
 
 Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
@@ -43,8 +43,8 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 ## Para quién
 
 - **Docentes** de todos los niveles (preescolar, primaria y bachillerato): planean, registran formatos, hacen su formación y consultan el asistente.
-- **Coordinación académica**: revisa, ajusta, aprueba o devuelve registros; asigna grados y áreas; crea planes de formación por área; consulta la bitácora. Es el auditor de la plataforma.
-- **Administrador** de la plataforma: crea los usuarios y asigna sus roles (nadie se registra solo).
+- **Coordinación académica**: revisa, ajusta, aprueba o devuelve los registros de **sus grados** (los demás los consulta); asigna docentes solo en los grupos de sus grados; crea planes de formación por área y sigue el avance. Ya no consulta la bitácora.
+- **Administrador** de la plataforma: crea los usuarios y asigna sus roles (nadie se registra solo), gestiona grados, grupos, áreas y la coordinadora de cada grado, y es el único que consulta la bitácora (el auditor de la plataforma). Consulta todos los registros pedagógicos, pero no los revisa.
 
 ## Principios
 
@@ -52,7 +52,7 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 
 - **Privacidad de menores** — De los estudiantes solo se registra el **nombre de pila**. Nunca documentos de identidad, direcciones, teléfonos, datos de salud, diagnósticos ni fotos. Los datos demo usan nombres inventados.
 - **Bitácora inmutable** — La bitácora nunca se borra ni se modifica: es de solo inserción y la base de datos rechaza UPDATE, DELETE y TRUNCATE con triggers. Cada acción relevante queda registrada (fecha, hora, usuario, rol y detalle).
-- **Nada se borra físicamente** — Los registros pedagógicos pasan a estado `anulado` y queda constancia; no se usan DELETE físicos sobre ellos.
+- **Lo enviado nunca se borra** — Los registros pedagógicos enviados pasan a estado `anulado` y queda constancia; no se usan DELETE físicos sobre ellos. La única excepción es el borrador que nunca se envió: su autor lo puede descartar con borrado real, la base rechaza con triggers borrar lo enviado y la bitácora registra el descarte sin su contenido.
 - **Sin IA en esta fase** — Ninguna integración de inteligencia artificial: ni en el asistente (usa preguntas programadas), ni en la planeación, ni en los módulos, ni en el PIAR.
 - **Consentimiento previo** — Sin aceptación vigente del aviso de tratamiento de datos (Ley 1581 de 2012) no se puede usar la plataforma; la aceptación queda registrada con fecha y versión.
 - **Todo pasa por la API** — El frontend nunca habla directamente con la base de datos ni con el almacenamiento de archivos; la API valida permisos y deja constancia en la bitácora.

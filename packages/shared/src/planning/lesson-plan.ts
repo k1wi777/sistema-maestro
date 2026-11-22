@@ -5,6 +5,7 @@ import { RecordStatus } from '../constants/record-status';
 import { CuriocityStage } from '../constants/planning';
 import { createListQuerySchema } from '../list-query/list-query';
 import {
+  coordinatorFilterSchema,
   createApproveReviewSchema,
   createReturnReviewSchema,
   voidRecordSchema,
@@ -165,6 +166,7 @@ export const lessonPlanListQuerySchema = createListQuerySchema({
     /** Incluye toda planeación que tenga esa área entre las suyas. */
     areaId: uuid.optional(),
     teacherId: uuid.optional(),
+    coordinatorId: coordinatorFilterSchema.optional(),
   },
 });
 export interface LessonPlanFilters {
@@ -174,4 +176,6 @@ export interface LessonPlanFilters {
   areaId?: string;
   /** Coordinación filtra por docente; a un docente el servicio lo fuerza a su propio id. */
   teacherId?: string;
+  /** Coordinadora del grado (UUID) o `none` (sin coordinadora); un docente lo ignora. */
+  coordinatorId?: string;
 }

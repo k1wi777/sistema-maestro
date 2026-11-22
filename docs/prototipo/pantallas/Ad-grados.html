@@ -1,20 +1,14 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<title>Coordinación · Grados y áreas</title>
-<script src="./support.js"></script>
-<link rel="stylesheet" href="/_blob/96a8aca7488a806fa407e0e907b1f7a9">
-</head>
-<body>
-<x-dc>
-<helmet>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ad-grados</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
 <style>body{margin:0}</style>
-</helmet>
+<link rel="stylesheet" href="../assets/gns-premium.css"></head><body>
+
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
   <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"></path></symbol>
@@ -29,8 +23,8 @@
   <symbol id="i-guardar" viewBox="0 0 24 24"><path d="M5 3h11l3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M7 3v5h8V3M7 21v-7h10v7"></path></symbol>
 </svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
-    <nav class="menu menu-adm" aria-label="Coordinación académica">
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Administración</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
+    <nav class="menu menu-adm" aria-label="Administración">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
       <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
@@ -41,17 +35,18 @@
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
-    <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <div class="quien"><span class="av">AG</span><span><b>Administrador GNS</b><br>Administración</span></div>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
     <button type="button" class="priv-link">Tratamiento de datos personales</button>
   </aside>
   <main>
     <div class="cont">
       <section>
         <div class="encabezado"><div>
-          <div class="eyebrow">Coordinación académica</div>
+          <div class="eyebrow">Administración</div>
           <h1>Grados y áreas</h1>
-          <p>Organiza los grados, sus grupos y las áreas de cada nivel, y qué grados acompaña cada coordinadora. Pueden hacerlo coordinación y administración; cada cambio queda en la bitácora.</p>
+          <p>Organiza los grados, sus grupos y las áreas de cada nivel, y qué grados acompaña cada coordinadora. Solo administración lo gestiona; cada cambio queda en la bitácora.</p>
         </div></div>
         <div class="pl-tabs" role="group" aria-label="Grados y áreas">
           <button type="button" class="pl-tab" aria-pressed="true">Grados y grupos</button>
@@ -61,15 +56,15 @@
 
         <div class="bloque"><div class="bloque-h"><h2>Grados y grupos</h2><button type="button" class="btn"><svg class="i" aria-hidden="true"><use href="#i-mas"></use></svg>Nuevo grado</button></div>
           <div class="sub-h">Preescolar bajo</div>
-            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Red</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Red 1</span><span class="co-tag" style="margin:0">Red 2</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Red">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Red">Agregar grupo</button></div></div>
+            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Red</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Red 1 · Dir.: Valeria Montenueva</span><span class="co-tag" style="margin:0">Red 2</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Red">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Red">Agregar grupo</button></div></div>
             <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Blue</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Blue 1</span><span class="co-tag" style="margin:0">Blue 2</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Blue">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Blue">Agregar grupo</button></div></div>
             <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Purple</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Purple 1</span><span class="co-tag" style="margin:0">Purple 2</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Purple">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Purple">Agregar grupo</button></div></div>
             <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Green</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Green 1</span><span class="co-tag" style="margin:0">Green 2</span><span class="co-tag" style="margin:0">Green 3</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Green">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Green">Agregar grupo</button></div></div>
             <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Garden</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Garden 1</span><span class="co-tag" style="margin:0">Garden 2</span><span class="co-tag" style="margin:0">Garden 3</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Garden">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Garden">Agregar grupo</button></div></div>
           <div class="sub-h" style="margin-top:14px">Preescolar alto (KTF)</div>
-            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Kinder</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Kinder 1</span><span class="co-tag" style="margin:0">Kinder 2</span><span class="co-tag" style="margin:0">Kinder 3</span><span class="co-tag" style="margin:0">Kinder 4</span><span class="co-tag" style="margin:0">Kinder 5</span><span class="co-tag" style="margin:0">Kinder 6</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Kinder">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Kinder">Agregar grupo</button></div></div>
-            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Transition</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Transition 1 · Dir.: Laura Méndez</span><span class="co-tag" style="margin:0">Transition 2</span><span class="co-tag" style="margin:0">Transition 3</span><span class="co-tag" style="margin:0">Transition 4</span><span class="co-tag" style="margin:0">Transition 5</span><span class="co-tag" style="margin:0">Transition 6 · Sin director(a)</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Transition">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Transition">Agregar grupo</button></div></div>
-            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>First Grade</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"></div><div class="hint" style="margin-top:6px">Agrega al menos un grupo para asignar docentes.</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-borrador">Sin grupos</span><button type="button" class="btn lin sm" aria-label="Editar First Grade">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a First Grade">Agregar grupo</button></div></div>
+            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Kinder</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Kinder 1 · Dir.: Camila Torres</span><span class="co-tag" style="margin:0">Kinder 2</span><span class="co-tag" style="margin:0">Kinder 3</span><span class="co-tag" style="margin:0">Kinder 4</span><span class="co-tag" style="margin:0">Kinder 5</span><span class="co-tag" style="margin:0">Kinder 6</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Kinder">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Kinder">Agregar grupo</button></div></div>
+            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>Transition</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">Transition 1 · Dir.: Laura Méndez</span><span class="co-tag" style="margin:0">Transition 2 · Dir.: Daniela Fontalba</span><span class="co-tag" style="margin:0">Transition 3</span><span class="co-tag" style="margin:0">Transition 4</span><span class="co-tag" style="margin:0">Transition 5</span><span class="co-tag" style="margin:0">Transition 6 · Sin director(a)</span></div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar Transition">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a Transition">Agregar grupo</button></div></div>
+            <div class="co-row" style="grid-template-columns:minmax(0,150px) minmax(0,1fr) auto"><div class="co-info"><b>First Grade</b></div><div><div style="display:flex;flex-wrap:wrap;gap:6px"><span class="co-tag" style="margin:0">First Grade 1 · Dir.: Julián Casaverde</span></div><div class="hint" style="margin-top:6px">Sin coordinadora: sus registros no tienen quién los revise.</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><span class="estado e-revisada">Activo</span><button type="button" class="btn lin sm" aria-label="Editar First Grade">Editar</button><button type="button" class="btn sec sm" aria-label="Agregar grupo a First Grade">Agregar grupo</button></div></div>
           <div class="sub-h" style="margin-top:14px">Primaria</div>
           <button type="button" class="btn lin sm" aria-expanded="false">Ver 4 grados</button>
           <div class="sub-h" style="margin-top:14px">Bachillerato</div>
@@ -95,7 +90,7 @@
             <tr><td><b>Marcela Rojas</b></td><td>Kinder, Transition</td><td><button type="button" class="btn lin sm" aria-label="Editar grados de Marcela Rojas">Editar grados</button></td></tr>
             <tr><td><b>Elena Ravassa</b></td><td>Red, Blue, Purple, Green, Garden</td><td><button type="button" class="btn lin sm" aria-label="Editar grados de Elena Ravassa">Editar grados</button></td></tr>
           </tbody></table></div>
-          <div class="obs" style="margin:12px 0 0"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg><div><b>Grado sin coordinadora</b><span>First Grade no tiene coordinadora: sus diarios solo los verá administración. Cada grado tiene una sola coordinadora.</span></div></div>
+          <div class="obs" style="margin:12px 0 0"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg><div><b>Grado sin coordinadora</b><span>First Grade no tiene coordinadora: nadie revisa sus registros. Cada grado tiene una sola coordinadora.</span></div></div>
         </div>
 
         <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al editar un grado y al editar un área</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
@@ -135,11 +130,4 @@
     </div>
   </main>
 </div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":3420}}'>
-class Component extends DCLogic {
-  renderVals() { return {}; }
-}
-</script>
-</body>
-</html>
+</body></html>

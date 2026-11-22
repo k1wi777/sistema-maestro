@@ -49,6 +49,7 @@ import {
   Star,
   Sun,
   Ticket,
+  Trash2,
   TrendingUp,
   TriangleAlert,
   Upload,
@@ -97,6 +98,7 @@ export const OPEN_STROKE_ICONS = {
   grados: LayoutGrid,
   enviar: Send,
   puntos: Ellipsis,
+  papelera: Trash2,
 } satisfies Record<string, IconComponent>;
 
 export const FILLABLE_ICONS = {

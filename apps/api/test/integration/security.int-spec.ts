@@ -41,8 +41,8 @@ describe('seguridad base', () => {
   });
 
   it('no permite guardar en caché una exportación CSV', async () => {
-    const coordinator = await createTestUser(app, { role: UserRole.Coordinator });
-    const cookies = await signIn(app, coordinator);
+    const administrator = await createTestUser(app, { role: UserRole.Administrator });
+    const cookies = await signIn(app, administrator);
 
     const res = await asUser(app, 'get', '/audit-log/export', cookies, 'access').expect(200);
 

@@ -1,4 +1,5 @@
 import {
+  changeUserRoleSchema,
   createListQuerySchema,
   createPageSchema,
   createUserSchema,
@@ -28,5 +29,6 @@ export class UserPageDto extends createZodDto(createPageSchema(userSchema), { co
 export class UserListQueryDto extends createZodDto(userListQuerySchema) {}
 export class CreateUserDto extends createZodDto(createUserSchema) {}
 export class UpdateUserDto extends createZodDto(updateUserSchema) {}
+export class ChangeUserRoleDto extends createZodDto(changeUserRoleSchema) {}
 export class UpdateUserStatusDto extends createZodDto(updateUserStatusSchema) {}
 export class ResetPasswordDto extends createZodDto(resetPasswordSchema) {}

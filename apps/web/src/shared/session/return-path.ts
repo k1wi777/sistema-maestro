@@ -1,6 +1,7 @@
-import { roleSatisfies, type UserRole } from '@gns/shared';
+import type { UserRole } from '@gns/shared';
 
-import { PROTECTED_ROUTES, homePathFor, isProtectedRoute } from './route-access';
+import { equivalentPath } from './equivalent-path';
+import { homePathFor, isProtectedRoute, roleCanUse } from './route-access';
 import type { SessionState } from './session-state';
 
 export const RETURN_PARAM = 'volver';
@@ -12,9 +13,10 @@ export const SESSION_EXPIRED_REASON = 'sesion-vencida';
 const UNSAFE_CHARACTERS = /[\\\u0000-\u001f\u007f]/;
 
 /**
- * Ruta de retorno segura tras el ingreso: solo una ruta interna protegida cuyo rol mínimo cumple
- * el usuario; cualquier otra cosa (URL externa, `//host`, `/\host`, rutas desconocidas) se ignora
- * y se usa la vista propia del rol, de modo que no hay redirección abierta.
+ * Ruta de retorno segura tras el ingreso: solo una ruta interna protegida de la vista del rol o
+ * su ruta equivalente (coordinación ↔ administración); cualquier otra cosa (URL externa,
+ * `//host`, `/\host`, rutas desconocidas o de otra vista) se ignora y se usa la vista propia
+ * del rol, de modo que no hay redirección abierta.
  */
 export function safeReturnPath(value: string | null | undefined, role: UserRole): string {
   const fallback = homePathFor(role);
@@ -24,11 +26,16 @@ export function safeReturnPath(value: string | null | undefined, role: UserRole)
   if (UNSAFE_CHARACTERS.test(value)) {
     return fallback;
   }
-  const segment = `/${value.slice(1).split(/[/?#]/)[0] ?? ''}`;
-  if (!isProtectedRoute(segment) || !roleSatisfies(role, PROTECTED_ROUTES[segment])) {
+  const path = value.split(/[?#]/)[0] ?? '';
+  const segment = `/${path.slice(1).split('/')[0] ?? ''}`;
+  if (!isProtectedRoute(segment)) {
     return fallback;
   }
-  return value;
+  if (roleCanUse(segment, role)) {
+    return value;
+  }
+  const equivalent = equivalentPath(path, role);
+  return equivalent === null ? fallback : `${equivalent}${value.slice(path.length)}`;
 }
 
 /** Destino de `/ingreso` para quien debe aceptar el aviso de datos estando en `pathname`. */

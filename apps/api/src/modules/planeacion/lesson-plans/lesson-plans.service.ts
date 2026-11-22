@@ -18,8 +18,6 @@ import {
   REVIEW_DECISION_RESULT_STATUS,
   ReviewDecision,
   ReviewRecordType,
-  roleSatisfies,
-  UserRole,
   validateLessonPlanForSubmit,
   type ApiFieldError,
   type ApproveLessonPlanInput,
@@ -36,6 +34,8 @@ import {
 } from '@gns/shared';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
+import { actorsOf, canReviewGrade, isStaff } from '../../../shared/records/review-scope';
+import { GradesService } from '../../estructura/catalogs/grade/grades.service';
 import { SchoolYearsService } from '../../estructura/school-years/school-years.service';
 import { AcademicPeriodsService } from '../../estructura/catalogs/academic-period/academic-periods.service';
 import { LessonPlanOptionsService } from './lesson-plan-options.service';
@@ -58,7 +58,18 @@ const STATUS_LABEL: Record<RecordStatus, string> = {
   [RecordStatus.Voided]: 'anulada',
 };
 
+/** Mensaje de 409 al anular: un borrador se descarta en lugar de anularse. */
+function voidConflictMessage(status: RecordStatus): string {
+  if (status === RecordStatus.Draft) {
+    return 'La planeación está en borrador: se descarta en lugar de anularse';
+  }
+  return status === RecordStatus.Reviewed
+    ? 'La planeación está revisada: solo coordinación puede anularla'
+    : `La planeación está ${STATUS_LABEL[status]} y no se puede anular`;
+}
+
 const NOT_FOUND = 'Planeación no encontrada';
+const OUT_OF_SCOPE = 'Esa planeación no es de un grado que coordines';
 
 const contentOf = (source: LessonPlanContent): LessonPlanContent =>
   Object.fromEntries(
@@ -73,19 +84,23 @@ export class LessonPlansService {
     private readonly periods: AcademicPeriodsService,
     private readonly schoolYears: SchoolYearsService,
     private readonly reviews: ReviewsService,
+    private readonly grades: GradesService,
   ) {}
 
   // ---------- Lectura ----------
 
   /**
-   * Un docente ve solo las suyas; coordinación, todas y con el filtro de docente que pida.
-   * El `teacherId` de la query de un docente se ignora: se sobrescribe con el de la sesión.
+   * Un docente ve solo las suyas; coordinación y administración, todas (consultar no es
+   * revisar) y con los filtros de docente y coordinadora que pidan. En la query de un docente
+   * ambos se ignoran: `teacherId` se sobrescribe con el de la sesión.
    */
   list(
     user: RequestUser,
     query: ListQuery<LessonPlanFilters, LessonPlanSortField>,
   ): Promise<Page<LessonPlan>> {
-    const filters = isReviewer(user) ? query.filters : { ...query.filters, teacherId: user.id };
+    const filters = isStaff(user)
+      ? query.filters
+      : { ...query.filters, teacherId: user.id, coordinatorId: undefined };
     return this.repository.findPage({ ...query, filters });
   }
 
@@ -212,29 +227,65 @@ export class LessonPlansService {
   /** El motivo lo registra la bitácora (`detailFromBody`); aquí solo cambia el estado. */
   async voidPlan(user: RequestUser, id: string): Promise<LessonPlan> {
     const plan = await this.loadVisible(user, id);
-    const actors = [
-      ...(plan.teacher.id === user.id ? [RecordActor.Owner] : []),
-      ...(isReviewer(user) ? [RecordActor.Reviewer] : []),
-    ];
+    const actors = actorsOf(user, plan.teacher.id, await this.coordinatorOf(plan));
     const allowed = actors
       .map((actor) => allowedFrom(RecordOperation.Void, actor))
       .filter((transition) => transition !== null);
     if (allowed.length === 0) {
-      throw new ForbiddenException('No puedes anular esta planeación');
+      throw new ForbiddenException(
+        isStaff(user) ? OUT_OF_SCOPE : 'No puedes anular esta planeación',
+      );
     }
 
     const from = [...new Set(allowed.flatMap((transition) => transition.from))];
     if (!from.includes(plan.status)) {
-      throw new ConflictException(
-        plan.status === RecordStatus.Reviewed
-          ? 'La planeación está revisada: solo coordinación puede anularla'
-          : `La planeación está ${STATUS_LABEL[plan.status]} y no se puede anular`,
-      );
+      throw new ConflictException(voidConflictMessage(plan.status));
     }
     if (!(await this.repository.updateIfStatus(id, from, { status: RecordStatus.Voided }))) {
       await this.failTransition(user, id, 'anular');
     }
     return this.loadVisible(user, id);
+  }
+
+  /**
+   * Borrado real de un borrador que nunca se envió. Orden: 404 (oculta lo ajeno al docente) →
+   * 403 (no es el autor) → 409 (ya no es borrador). La fila se bloquea antes de releer el estado,
+   * así un envío simultáneo espera y el descarte responde 409 en lugar de borrar lo enviado.
+   */
+  async discard(user: RequestUser, id: string): Promise<void> {
+    const visible = await this.loadVisible(user, id);
+    if (visible.teacher.id !== user.id) {
+      throw new ForbiddenException('Solo quien creó la planeación puede descartarla');
+    }
+    await this.repository.lock(id);
+    const plan = await this.loadVisible(user, id);
+    if (
+      !canTransition(RecordOperation.Discard, RecordActor.Owner, plan.status) ||
+      plan.submittedAt
+    ) {
+      throw new ConflictException(
+        `La planeación está ${STATUS_LABEL[plan.status]}: solo se descarta un borrador que nunca se envió`,
+      );
+    }
+    if (!(await this.repository.deleteDraft(id))) {
+      await this.failTransition(user, id, 'descartar');
+    }
+  }
+
+  /**
+   * Para la bitácora del descarte: solo identificadores y catálogo (estado, grado y áreas), sin
+   * textos libres. Sin comprobar visibilidad (no sale por la API).
+   */
+  async findDiscardSnapshot(id: string): Promise<Record<string, unknown> | null> {
+    const plan = await this.repository.findById(id);
+    return plan
+      ? {
+          id: plan.id,
+          status: plan.status,
+          grade: plan.grade.name,
+          areas: plan.areas.map((area) => area.name),
+        }
+      : null;
   }
 
   // ---------- Revisión de coordinación ----------
@@ -248,7 +299,7 @@ export class LessonPlansService {
   }
 
   /**
-   * Orden: 404 → 403 (autorrevisión) → 409 (estado) → 400 (ajustes). La fila se bloquea antes
+   * Orden: 404 → 403 (grado ajeno) → 403 (autorrevisión) → 409 (estado) → 400 (ajustes). La fila se bloquea antes
    * de leer el estado: una segunda decisión simultánea espera, ve `revisada` u `observaciones`
    * y responde 409, y el «antes» de los ajustes es exactamente lo que se reemplaza.
    */
@@ -260,6 +311,9 @@ export class LessonPlansService {
     input: { comment?: string | null; changes?: LessonPlanContent },
   ): Promise<LessonPlan> {
     const visible = await this.loadVisible(user, id);
+    if (!canReviewGrade(user, await this.coordinatorOf(visible))) {
+      throw new ForbiddenException(OUT_OF_SCOPE);
+    }
     this.reviews.assertNotSelfReview(visible.teacher.id, user.id);
 
     await this.repository.lock(id);
@@ -331,10 +385,15 @@ export class LessonPlansService {
 
   private async loadVisible(user: RequestUser, id: string): Promise<LessonPlan> {
     const plan = await this.repository.findById(id);
-    if (!plan || (!isReviewer(user) && plan.teacher.id !== user.id)) {
+    if (!plan || (!isStaff(user) && plan.teacher.id !== user.id)) {
       throw new NotFoundException(NOT_FOUND);
     }
     return plan;
+  }
+
+  /** Coordinadora del grado de la planeación (`null` si el grado no tiene): quien la revisa. */
+  private async coordinatorOf(plan: LessonPlan): Promise<string | null> {
+    return (await this.grades.find(plan.grade.id))?.coordinatorId ?? null;
   }
 
   private transition(operation: RecordOperation, actor: RecordActor) {
@@ -367,8 +426,6 @@ function areaErrors(
       : [{ field: `areaIds.${index}`, reason: 'no está disponible para el grado' }],
   );
 }
-
-const isReviewer = (user: RequestUser): boolean => roleSatisfies(user.role, UserRole.Coordinator);
 
 /**
  * Errores de contenido sobre el valor resultante de la petición (la petición puede traer solo

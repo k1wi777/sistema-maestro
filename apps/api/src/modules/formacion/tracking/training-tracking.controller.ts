@@ -3,7 +3,7 @@ import { ApiOkResponse } from '@nestjs/swagger';
 import { UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import type { RequestUser } from '../../../core/audit/request-user';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   PlanTrackingDto,
@@ -15,7 +15,7 @@ import { TrainingTrackingService } from './training-tracking.service';
 
 /** Seguimiento de la formación (coordinación): lecturas, sin bitácora. */
 @Controller('training-tracking')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TrainingTrackingController {
   constructor(private readonly tracking: TrainingTrackingService) {}
 

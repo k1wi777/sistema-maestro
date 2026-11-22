@@ -1,17 +1,6 @@
-import { RecordActor, RecordStatus, roleSatisfies, UserRole } from '@gns/shared';
-import type { RequestUser } from '../../../core/audit/request-user';
+import { RecordStatus } from '@gns/shared';
 
-/** Coordinación: rol coordinador o superior (incluye administración). */
-export const isReviewer = (user: RequestUser): boolean =>
-  roleSatisfies(user.role, UserRole.Coordinator);
-
-/** Papeles con los que `user` actúa sobre un registro: dueño y/o coordinación. */
-export function actorsOf(user: RequestUser, ownerId: string): RecordActor[] {
-  return [
-    ...(ownerId === user.id ? [RecordActor.Owner] : []),
-    ...(isReviewer(user) ? [RecordActor.Reviewer] : []),
-  ];
-}
+// La regla de quién consulta y quién revisa vive en `shared/records/review-scope.ts`.
 
 /** Cómo se nombra cada estado en los mensajes de conflicto («la hoja», «la anotación»: femenino). */
 export const STATUS_LABEL: Record<RecordStatus, string> = {
@@ -22,9 +11,15 @@ export const STATUS_LABEL: Record<RecordStatus, string> = {
   [RecordStatus.Voided]: 'anulada',
 };
 
-/** Mensaje de 409 al anular: una revisada solo la anula coordinación. */
+/**
+ * Mensaje de 409 al anular: una revisada solo la anula coordinación y un borrador nunca se
+ * anula (se descarta).
+ */
 export function voidConflictMessage(noun: 'hoja' | 'anotación', status: RecordStatus): string {
   const article = noun === 'hoja' ? 'La hoja' : 'La anotación';
+  if (status === RecordStatus.Draft) {
+    return `${article} está en borrador: se descarta en lugar de anularse`;
+  }
   return status === RecordStatus.Reviewed
     ? `${article} está revisada: solo coordinación puede anularla`
     : `${article} está ${STATUS_LABEL[status]} y no se puede anular`;

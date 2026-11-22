@@ -6,6 +6,9 @@
 
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
+  <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
   <symbol id="i-ruta" viewBox="0 0 24 24"><path d="M4 19h4a3 3 0 0 0 0-6H8a3 3 0 0 1 0-6h12"></path><circle cx="20" cy="7" r="1.5"></circle><circle cx="4" cy="19" r="1.5"></circle></symbol>
   <symbol id="i-form" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 14l2 2 4-4"></path></symbol>
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"></path><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"></path></symbol>
@@ -20,20 +23,19 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></symbol>
 </svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cambiar de vista"><svg class="i"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
     <nav class="menu menu-adm" aria-label="Coordinación académica">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
-      <button type="button"><svg class="i"><use href="#i-bitacora"></use></svg>Bitácora de actividad</button>
       <div class="menu-titulo" style="margin-top:12px">Gestión</div>
       <button type="button"><svg class="i"><use href="#i-gente"></use></svg>Docentes y asignaciones</button>
-      <button type="button"><svg class="i"><use href="#i-grados"></use></svg>Grados y áreas</button>
       <button type="button"><svg class="i"><use href="#i-ruta"></use></svg>Planes de formación</button>
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
     <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <button type="button" class="cambiar abajo"><svg class="i"><use href="#i-salir"></use></svg>Cambiar de vista</button>
+    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
+    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
     <button type="button" class="priv-link">Tratamiento de datos personales</button>
   </aside>
   <main>
@@ -45,11 +47,12 @@
           <h1>Diarios de campo</h1>
           <p>Revisa el diario de cada grupo y día con las anotaciones de todos sus docentes: devuélvelo con observaciones o apruébalo con tu firma.</p>
         </div></div>
-        <p class="hint" style="margin:-8px 0 14px">Ves los diarios de tus grados: Kinder y Transition.</p>
+        <p class="hint" style="margin:-8px 0 14px">Revisas los diarios de tus grados: Kinder y Transition. Los de los demás grados los puedes consultar.</p>
+        <div class="subtabs" role="group" aria-label="Alcance de la bandeja"><button type="button" class="chip" aria-pressed="true">Mis grados · Kinder y Transition</button><button type="button" class="chip" aria-pressed="false">Todo el colegio</button></div>
         <div class="co-kpis">
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer;border-color:var(--azul);box-shadow:0 0 0 2px var(--azul-suave)"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-reloj"></use></svg></span><b>3</b><span>Pendientes de revisión</span></button>
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg></span><b>2</b><span>Con observaciones</span></button>
-          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><b>12</b><span>Revisados</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer;border-color:var(--azul);box-shadow:0 0 0 2px var(--azul-suave)"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-reloj"></use></svg></span><b>3</b><span>Pendientes de revisión en tus grados</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg></span><b>2</b><span>Con observaciones en tus grados</span></button>
+          <button type="button" class="co-kpi" style="text-align:left;cursor:pointer"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg></span><b>12</b><span>Revisados en tus grados</span></button>
         </div>
         <div class="bloque"><div class="bloque-h"><h2>Diarios de los grupos</h2></div>
           <div class="co-filtros">
@@ -67,9 +70,27 @@
             <tr><td><b>Transition 1</b></td><td>mié 4 nov</td><td>Laura Méndez</td><td>5 de 5</td><td>4 nov</td><td><span class="estado e-revisada">Revisado</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
           </tbody></table></div></div>
 
+        <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Al ver todo el colegio</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
+        <div class="subtabs" role="group" aria-label="Alcance de la bandeja"><button type="button" class="chip" aria-pressed="false">Mis grados · Kinder y Transition</button><button type="button" class="chip" aria-pressed="true">Todo el colegio</button></div>
+        <div class="bloque"><div class="bloque-h"><h2>Diarios de todo el colegio</h2></div>
+          <div class="co-filtros">
+            <label>Estado<select><option>Todos los estados</option><option selected>Pendiente de revisión</option><option>Con observaciones</option><option>Revisado</option></select></label>
+            <label>Grado<select><option>Todos los grados</option><option>Red</option><option>Blue</option><option>Purple</option><option>Green</option><option>Garden</option><option>Kinder</option><option>Transition</option><option>First Grade</option></select></label>
+            <label>Grupo<select><option>Todos</option><option>Red 1</option><option>Transition 1</option><option>Kinder 1</option><option>First Grade 1</option></select></label>
+            <label style="flex:0 1 160px">Desde<input type="date" value="2026-11-01"></label>
+            <label style="flex:0 1 160px">Hasta<input type="date" value="2026-11-09"></label></div>
+          <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Diarios de todo el colegio</caption><thead><tr><th>Grupo</th><th>Fecha</th><th>Director(a)</th><th>Aportes</th><th>Enviado</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
+            <tr><td><b>Transition 1</b></td><td>lun 9 nov</td><td>Laura Méndez</td><td>4 de 5</td><td>9 nov</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr><td><b>Red 1</b><br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Revisa: Elena Ravassa</small></td><td>lun 9 nov</td><td>Valeria Montenueva</td><td>3 de 3</td><td>9 nov</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
+            <tr><td><b>Kinder 1</b></td><td>lun 9 nov</td><td>Camila Torres</td><td>4 de 4</td><td>9 nov</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr><td><b>First Grade 1</b><br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Sin coordinadora</small></td><td>vie 6 nov</td><td>Julián Casaverde</td><td>2 de 2</td><td>6 nov</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
+            <tr><td><b>Transition 1</b></td><td>vie 6 nov</td><td>Laura Méndez</td><td>5 de 5</td><td>6 nov</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+          </tbody></table></div>
+          <p class="hint" style="margin:8px 0 0">Las cifras de arriba siguen contando solo tus grados.</p></div>
+
         <div style="display:flex;align-items:center;gap:12px;margin:34px 0 18px"><span style="flex:1;height:1px;background:var(--line)"></span><span class="eyebrow" style="color:var(--muted)">Si no tienes grados asignados</span><span style="flex:1;height:1px;background:var(--line)"></span></div>
 
-        <div class="obs"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg><div><b>Sin grados asignados</b><span>Aún no tienes grados asignados. Pídele a administración que te los asigne en Grados y áreas.</span></div></div>
+        <div class="obs"><svg class="i" aria-hidden="true"><use href="#i-comentario"></use></svg><div><b>Sin grados asignados</b><span>Aún no tienes grados asignados: puedes consultar los diarios de todo el colegio, pero no revisarlos. Pídele a administración que te los asigne en Grados y áreas.</span></div></div>
       </section>
     </div>
   </main>

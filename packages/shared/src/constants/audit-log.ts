@@ -10,6 +10,8 @@ export const AuditLogType = {
   DataConsent: 'datos',
   Coordination: 'coordinacion',
   Structure: 'estructura',
+  /** Usuarios y roles: alta, edición, cambio de rol, estado y contraseña (solo administración). */
+  Users: 'usuarios',
 } as const;
 export type AuditLogType = (typeof AuditLogType)[keyof typeof AuditLogType];
 

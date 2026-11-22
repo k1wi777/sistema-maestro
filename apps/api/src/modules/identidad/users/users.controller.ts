@@ -5,9 +5,10 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../auth/access.decorators';
+import { Roles } from '../auth/access.decorators';
 import { CurrentUser } from '../auth/current-user.decorator';
 import {
+  ChangeUserRoleDto,
   CreateUserDto,
   ResetPasswordDto,
   UpdateUserDto,
@@ -19,11 +20,11 @@ import {
 import { UserAuditSnapshot } from './user.audit-snapshot';
 import { UsersService } from './users.service';
 
-// El administrador es parte de coordinación: no se añade un tipo nuevo al CHECK de la bitácora.
-const AUDIT = { type: AuditLogType.Coordination, entity: 'usuario', snapshot: UserAuditSnapshot };
+// «Usuarios y roles»: las filas anteriores a #115 de estas acciones quedaron como `coordinacion`.
+const AUDIT = { type: AuditLogType.Users, entity: 'usuario', snapshot: UserAuditSnapshot };
 
 @Controller('users')
-@RequireRole(UserRole.Administrator)
+@Roles(UserRole.Administrator)
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 
@@ -49,16 +50,23 @@ export class UsersController {
   @Patch(':id')
   @Audited({ ...AUDIT, action: 'Editar usuario' })
   @ZodResponse({ status: 200, type: UserDto })
-  update(
+  update(@Param() { id }: IdParamDto, @Body() body: UpdateUserDto) {
+    return this.users.update(id, body);
+  }
+
+  @Put(':id/role')
+  @Audited({ ...AUDIT, action: 'Cambió el rol' })
+  @ZodResponse({ status: 200, type: UserDto })
+  changeRole(
     @Param() { id }: IdParamDto,
-    @Body() body: UpdateUserDto,
+    @Body() { role }: ChangeUserRoleDto,
     @CurrentUser() actor: RequestUser,
   ) {
-    return this.users.update(id, body, actor);
+    return this.users.changeRole(id, role, actor);
   }
 
   @Patch(':id/status')
-  @Audited({ ...AUDIT, action: 'Cambiar el estado de un usuario' })
+  @Audited({ ...AUDIT, action: 'Cambiar el estado de un usuario', detailFromBody: 'status' })
   @ZodResponse({ status: 200, type: UserDto })
   setStatus(
     @Param() { id }: IdParamDto,

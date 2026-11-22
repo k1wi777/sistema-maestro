@@ -77,6 +77,11 @@ export interface LessonPlanRepository extends ReadRepository<
   ): Promise<boolean>;
   /** Bloquea la fila hasta el fin de la transacción para serializar decisiones y altas de enlaces. */
   lock(id: string): Promise<void>;
+  /**
+   * Borra la planeación con sus áreas y enlaces solo si sigue en borrador y nunca se envió;
+   * `false` (sin borrar nada) si otra petición ya la movió. Es el único borrado real de planeación.
+   */
+  deleteDraft(id: string): Promise<boolean>;
   /** Una sola consulta agrupada por docente, grado, área y periodo del año (cumplimiento). */
   countDelivered(filters: DeliveredFilters): Promise<DeliveredCount[]>;
 }

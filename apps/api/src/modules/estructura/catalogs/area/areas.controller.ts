@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiNoContentResponse } from '@nestjs/swagger';
-import { AuditLogType, UserRole } from '@gns/shared';
+import { ALL_ROLES, AuditLogType, UserRole } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../../core/audit/audited.decorator';
 import { IdParamDto } from '../../../../shared/http/id-param.dto';
-import { RequireRole } from '../../../identidad/auth/access.decorators';
+import { Roles } from '../../../identidad/auth/access.decorators';
 import { AreaAuditSnapshot } from './area.audit-snapshot';
 import { AreasService } from './areas.service';
 import {
@@ -22,14 +22,14 @@ export class AreasController {
   constructor(private readonly areas: AreasService) {}
 
   @Get()
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @ZodResponse({ status: 200, type: AreaPageDto })
   list(@Query() query: AreaListQueryDto) {
     return this.areas.list(query);
   }
 
   @Post()
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Crear área' })
   @ZodResponse({ status: 201, type: AreaDto })
   create(@Body() body: CreateAreaDto) {
@@ -37,7 +37,7 @@ export class AreasController {
   }
 
   @Patch(':id')
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Editar área' })
   @ZodResponse({ status: 200, type: AreaDto })
   update(@Param() { id }: IdParamDto, @Body() body: UpdateAreaDto) {
@@ -47,7 +47,7 @@ export class AreasController {
   @Delete(':id')
   @HttpCode(204)
   @ApiNoContentResponse({ description: 'Borrado' })
-  @RequireRole(UserRole.Coordinator)
+  @Roles(UserRole.Administrator)
   @Audited({ ...AUDIT, action: 'Borrar área' })
   remove(@Param() { id }: IdParamDto) {
     return this.areas.remove(id);

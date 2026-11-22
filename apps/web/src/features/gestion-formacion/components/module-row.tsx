@@ -12,13 +12,12 @@ import {
   type ActionMenuItem,
   type RecordTone,
 } from '@/shared/ui';
+import { useView } from '@/shared/shell';
 
 import { MODULE_STATUS_INFO, moduleTitleWithNumber } from '../model/labels';
 import { MODULE_ACTION_LABEL, moduleActions, type ModuleActionId } from '../model/module-actions';
 import { contentSummary, trackingText } from '../model/module-outline';
 import styles from './module-row.module.css';
-
-export const EDITOR_PATH = '/coordinacion/planes/modulos';
 
 const TONE: Record<TrainingModuleStatus, RecordTone> = {
   [TrainingModuleStatus.Draft]: 'warning',
@@ -51,8 +50,9 @@ export function ModuleRow({
 }: ModuleRowProps) {
   const router = useRouter();
   const info = MODULE_STATUS_INFO[module.status];
-  const editHref = `${EDITOR_PATH}/${module.id}`;
-  const trackingHref = `/coordinacion/avance?plan=${planId}&modulo=${module.id}`;
+  const { path } = useView();
+  const editHref = `${path}/planes/modulos/${module.id}`;
+  const trackingHref = `${path}/avance?plan=${planId}&modulo=${module.id}`;
   const actions = moduleActions(module.status);
   const name = moduleTitleWithNumber(module);
 

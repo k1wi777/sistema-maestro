@@ -31,6 +31,11 @@ export interface UserRepository extends ReadRepository<User, UserFilters, UserSo
   findByEmail(email: string): Promise<User | null>;
   create(input: NewUser): Promise<User>;
   update(id: string, changes: UserChanges): Promise<User>;
+  /**
+   * Bloquea hasta el fin de la transacción las filas de los administradores activos y devuelve
+   * sus ids: serializa cambios que podrían dejar la plataforma sin administración.
+   */
+  lockActiveAdministrators(): Promise<string[]>;
 }
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');

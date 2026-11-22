@@ -48,14 +48,20 @@ export interface ComplianceRow {
   pending: string[];
 }
 
-/** Una fila por docente con asignaciones en el periodo; sin asignaciones no hay fila. */
+/**
+ * Una fila por docente con asignaciones en el periodo; sin asignaciones no hay fila. Con
+ * `gradeIds` solo cuentan las asignaciones de esos grados («Mis grados» de coordinación).
+ */
 export function complianceRows(
   compliance: LessonPlanCompliance,
   periodId: string,
+  gradeIds?: ReadonlySet<string>,
 ): ComplianceRow[] {
   const rows: ComplianceRow[] = [];
   for (const entry of compliance.teachers) {
-    const items = entry.items.filter((item) => item.period.id === periodId);
+    const items = entry.items.filter(
+      (item) => item.period.id === periodId && (!gradeIds || gradeIds.has(item.grade.id)),
+    );
     if (items.length === 0) {
       continue;
     }

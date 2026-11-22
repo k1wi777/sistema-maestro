@@ -156,6 +156,11 @@ a.item:hover {
   display: none;
 }
 
+/* El selector de la barra solo existe en celular; en escritorio vive en el pie del menú. */
+.barTheme {
+  display: none;
+}
+
 .panel {
   order: 3;
   margin-top: auto;
@@ -279,8 +284,27 @@ a.item:hover {
 
   .bar > .brand {
     order: 0;
+    flex: 1;
     padding-inline: 0;
     min-width: 0;
+  }
+
+  /* Falta ancho con tres iconos de tema: el nombre de la vista se recorta con elipsis. */
+  .brandText b,
+  .brandText small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .barTheme {
+    display: flex;
+    flex: none;
+  }
+
+  /* Un solo selector visible: el del panel de la cuenta se oculta en celular. */
+  .theme {
+    display: none;
   }
 
   .toggle {

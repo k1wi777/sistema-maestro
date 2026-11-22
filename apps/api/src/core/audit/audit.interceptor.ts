@@ -81,6 +81,8 @@ export class AuditInterceptor implements NestInterceptor {
     // Se relee de la base dentro de la transacción: la respuesta puede omitir o
     // formatear campos.
     const after = entityId ? await source.load(entityId) : null;
+    // Tras un borrado real (descartar un borrador) no queda estado posterior: el detalle sale del anterior.
+    const described = after ?? before;
     const changes = before && after ? diffFirstLevel(before, after) : { before, after };
     const hide = (data: unknown) =>
       options.redact && data ? redactAuditKeys(normalizeAuditData(data), options.redact) : data;
@@ -95,7 +97,7 @@ export class AuditInterceptor implements NestInterceptor {
         entityId: entityId ?? null,
         detail:
           resolveAuditDetail(options, request.body) ??
-          (after ? (source.describe?.(after) ?? null) : null),
+          (described ? (source.describe?.(described) ?? null) : null),
         dataBefore: hide(changes.before),
         dataAfter: hide(changes.after),
       });

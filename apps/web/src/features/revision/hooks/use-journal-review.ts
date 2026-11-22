@@ -6,7 +6,9 @@ import { useCallback, useRef, useState } from 'react';
 
 import { NETWORK_ERROR_CODE, type ApiError, type ApiResult } from '@/shared/api';
 import { useRemote, type Remote } from '@/shared/data';
+import { coordinatorOfGrade, type GradeCoordinator } from '@/shared/records';
 
+import { listGrades } from '../api/catalogs';
 import { approveJournal, getJournal, listJournals, returnJournal } from '../api/field-journals';
 import {
   buildReturnBody,
@@ -15,33 +17,52 @@ import {
   pendingQueue,
 } from '../model/journal-review';
 import { CONFLICT_MESSAGE, SELF_REVIEW_MESSAGE, sentence } from '../model/messages';
-import { JOURNAL_INBOX_PATH } from '../model/paths';
+import { useRevisionPaths } from './use-revision-paths';
 import type { ReviewNotice } from './use-plan-review';
 
 export interface JournalReviewData {
   journal: FieldJournal;
   /** Ids de los diarios enviados de su alcance, en el orden de la bandeja. */
   queue: string[];
+  /** Coordinadora del grado del diario (quien lo revisa) o `null`. */
+  coordinator: GradeCoordinator | null;
 }
 
-async function loadJournalReview(id: string): Promise<ApiResult<JournalReviewData>> {
-  const [journal, pending] = await Promise.all([
+async function loadJournalReview(
+  id: string,
+  coordinatorId: string | undefined,
+): Promise<ApiResult<JournalReviewData>> {
+  const [journal, pending, grades] = await Promise.all([
     getJournal(id),
-    listJournals({ status: JournalStatus.Submitted, page: 1, pageSize: 100 }),
+    listJournals({ status: JournalStatus.Submitted, coordinatorId, page: 1, pageSize: 100 }),
+    listGrades(),
   ]);
   if (!journal.ok) {
     return journal;
   }
+  if (!grades.ok) {
+    return grades;
+  }
   // Sin la cola el diario se revisa igual: solo faltaría «pasar al siguiente».
   return {
     ok: true,
-    data: { journal: journal.data, queue: pending.ok ? pendingQueue(pending.data.items) : [] },
+    data: {
+      journal: journal.data,
+      queue: pending.ok ? pendingQueue(pending.data.items) : [],
+      coordinator: coordinatorOfGrade(grades.data, journal.data.grade.id),
+    },
   };
 }
 
 /** Un diario con la cola de pendientes de revisión de la persona de coordinación. */
-export function useJournalReviewData(id: string): Remote<JournalReviewData> {
-  return useRemote(() => loadJournalReview(id), `journal-review:${id}`);
+export function useJournalReviewData(
+  id: string,
+  coordinatorId: string | undefined,
+): Remote<JournalReviewData> {
+  return useRemote(
+    () => loadJournalReview(id, coordinatorId),
+    `journal-review:${id}:${coordinatorId ?? ''}`,
+  );
 }
 
 interface UseJournalReviewOptions {
@@ -58,6 +79,7 @@ interface UseJournalReviewOptions {
  */
 export function useJournalReview({ journal, queue, refresh }: UseJournalReviewOptions) {
   const router = useRouter();
+  const paths = useRevisionPaths();
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
   const [observations, setObservations] = useState<Readonly<Record<string, string>>>({});
   const [general, setGeneral] = useState('');
@@ -135,9 +157,9 @@ export function useJournalReview({ journal, queue, refresh }: UseJournalReviewOp
         return;
       }
       const next = nextPending(queue, journal.id);
-      router.push(next ? `${JOURNAL_INBOX_PATH}/${next}` : JOURNAL_INBOX_PATH);
+      router.push(next ? `${paths.journals}/${next}` : paths.journals);
     });
-  }, [canDecide, fail, general, journal.id, queue, router, run]);
+  }, [canDecide, fail, general, journal.id, paths.journals, queue, router, run]);
 
   /** Devuelve con las observaciones escritas; queda firmado con el nombre de quien revisa. */
   const returnWithObservations = useCallback(async () => {

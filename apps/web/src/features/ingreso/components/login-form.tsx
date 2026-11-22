@@ -18,7 +18,7 @@ export interface LoginFormProps {
 /**
  * Formulario de ingreso. Conserva `method="post"` (sin él, un envío previo a la hidratación pondría
  * la contraseña en la URL) y mantiene «Ingresar» deshabilitado hasta hidratar. Al iniciar sesión no
- * navega: `/ingreso` decide el destino (aviso de datos, retorno o selección de vista).
+ * navega: `/ingreso` decide el destino (aviso de datos, retorno o primera sección de la vista del rol).
  */
 export function LoginForm({ loading, sessionEnded }: LoginFormProps) {
   const { signIn } = useSession();

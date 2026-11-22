@@ -1,2 +1,2 @@
-// API pública de la feature «Grados y áreas» de coordinación: la pantalla de `/coordinacion/grados-y-areas`.
+// API pública de la feature «Grados y áreas» de administración: la pantalla de `/administracion/grados-y-areas`.
 export { AcademicStructureScreen } from './components/academic-structure-screen';

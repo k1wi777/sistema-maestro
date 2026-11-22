@@ -67,11 +67,11 @@ const SEED: SeedRow[] = [
 describe('consulta y exportación de la bitácora (BE-9)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
-  let coordUser: TestUser;
+  let adminUser: TestUser;
+  let admin: Cookies;
   let coord: Cookies;
   let teacher: Cookies;
   let teacherUser: TestUser;
-  let admin: Cookies;
   let subjectId: string;
   /** Consecutivos de las filas de `SEED` del sujeto, en el orden de inserción. */
   let seeded: string[];
@@ -115,7 +115,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
     return user.id;
   }
 
-  const get = (path: string, cookies: Cookies = coord) => asUser(app, 'get', path, cookies);
+  const get = (path: string, cookies: Cookies = admin) => asUser(app, 'get', path, cookies);
   const page = async (query: string): Promise<PageBody> =>
     (await get(`/audit-log?${query}`).expect(200)).body as PageBody;
   const ownRows = (userId: string) => prisma.auditLog.count({ where: { userId } });
@@ -123,11 +123,12 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
   beforeAll(async () => {
     app = await createTestApp({ withFailures: false });
     prisma = app.get(PrismaService);
-    coordUser = await createTestUser(app, { role: UserRole.Coordinator });
-    coord = await signIn(app, coordUser);
+    // La bitácora es de administración (#115): coordinación y docente reciben 403.
+    adminUser = await createTestUser(app, { role: UserRole.Administrator });
+    admin = await signIn(app, adminUser);
+    coord = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
     teacherUser = await createTestUser(app, { role: UserRole.Teacher });
     teacher = await signIn(app, teacherUser);
-    admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
     subjectId = await createSubject();
     seeded = await seed(subjectId);
   });
@@ -149,14 +150,20 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
       expect(await ownRows(teacherUser.id)).toBe(before);
     });
 
-    it('coordinación entra en las tres rutas', async () => {
+    it.each(paths)(
+      'GET %s responde 403 a coordinación: la bitácora es de administración',
+      async (path) => {
+        const res = await get(path, coord).expect(403);
+
+        expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Forbidden);
+        expect(res.text).not.toContain('Fila');
+      },
+    );
+
+    it('administración entra en las tres rutas', async () => {
       await get('/audit-log?limit=1').expect(200);
       await get('/audit-log/export?userId=' + randomUUID()).expect(200);
       await get(`/audit-log/${seeded[0]}`).expect(200);
-    });
-
-    it('administración hereda el acceso por la jerarquía de RequireRole', async () => {
-      await get('/audit-log?limit=1', admin).expect(200);
     });
 
     it.each(['post', 'put', 'patch', 'delete'] as const)(
@@ -166,7 +173,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
         const own = await ownRows(subjectId);
 
         for (const path of ['/audit-log', `/audit-log/${seeded[0]}`, '/audit-log/export']) {
-          await asUser(app, method, path, coord).send({}).expect(404);
+          await asUser(app, method, path, admin).send({}).expect(404);
         }
 
         expect(await ownRows(subjectId)).toBe(own);
@@ -365,21 +372,21 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
 
   describe('lecturas sin bitácora (R16)', () => {
     it('listar, ver el detalle y fallar no escriben filas del usuario', async () => {
-      const before = await ownRows(coordUser.id);
+      const before = await ownRows(adminUser.id);
 
       await page(`userId=${subjectId}&limit=2`);
       await get(`/audit-log/${seeded[2]}`).expect(200);
       await get('/audit-log/999999999999999').expect(404);
       await get('/audit-log?limit=0').expect(400);
 
-      expect(await ownRows(coordUser.id)).toBe(before);
+      expect(await ownRows(adminUser.id)).toBe(before);
     });
   });
 
   describe('exportación CSV (R11, R12, R14)', () => {
     const exportRows = () =>
       prisma.auditLog.findMany({
-        where: { userId: coordUser.id, action: 'Exportó la bitácora' },
+        where: { userId: adminUser.id, action: 'Exportó la bitácora' },
         orderBy: { id: 'asc' },
       });
 
@@ -435,7 +442,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
       expect(rows).toHaveLength(before + 1);
       const row = rows.at(-1);
       expect(row).toMatchObject({
-        role: 'coordinador',
+        role: 'administrador',
         type: 'coordinacion',
         entity: 'bitacora',
         entityId: null,
@@ -460,7 +467,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
 
   describe('límite de la exportación (R13)', () => {
     let limited: INestApplication;
-    let limitedCoord: Cookies;
+    let limitedAdmin: Cookies;
 
     beforeAll(async () => {
       const testing = await Test.createTestingModule({ imports: [AppModule] })
@@ -470,7 +477,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
       limited = testing.createNestApplication({ bufferLogs: true });
       configureApp(limited);
       await limited.init();
-      limitedCoord = await signIn(limited, coordUser);
+      limitedAdmin = await signIn(limited, adminUser);
     });
 
     afterAll(async () => {
@@ -478,7 +485,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
     });
 
     const exportRows = () =>
-      prisma.auditLog.count({ where: { userId: coordUser.id, action: 'Exportó la bitácora' } });
+      prisma.auditLog.count({ where: { userId: adminUser.id, action: 'Exportó la bitácora' } });
 
     it('responde 422 exportacion_excede_limite sobre el tope, sin CSV ni registro', async () => {
       const before = await exportRows();
@@ -487,7 +494,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
         limited,
         'get',
         `/audit-log/export?userId=${subjectId}`,
-        limitedCoord,
+        limitedAdmin,
       ).expect(422);
 
       const body = apiErrorBodySchema.parse(res.body);
@@ -504,7 +511,7 @@ describe('consulta y exportación de la bitácora (BE-9)', () => {
         limited,
         'get',
         `/audit-log/export?userId=${subjectId}&type=diario`,
-        limitedCoord,
+        limitedAdmin,
       ).expect(200);
 
       expect(res.text.split('\r\n').filter(Boolean)).toHaveLength(4);

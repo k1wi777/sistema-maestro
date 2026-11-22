@@ -14,6 +14,7 @@ import { usePagedList, useRemote, type PagedList, type Remote } from '@/shared/d
 
 import {
   addAnnotation,
+  discardAnnotation,
   getJournalDay,
   getTodayJournals,
   listFieldJournals,
@@ -96,7 +97,7 @@ export function useJournalEditor({ initial, onConflict }: UseJournalEditorOption
     [onConflict],
   );
 
-  const accept = useCallback((next: FieldJournal): JournalOutcome => {
+  const accept = useCallback((next: FieldJournalDay): JournalOutcome => {
     setJournal(next);
     setSavedAt(new Date());
     return { ok: true };
@@ -144,6 +145,23 @@ export function useJournalEditor({ initial, onConflict }: UseJournalEditorOption
     [run],
   );
 
+  /**
+   * Borra la anotación en borrador y vuelve a pedir el día: si era la única, el diario también se
+   * borró y el día llega sin diario (`id: null`).
+   */
+  const discard = useCallback(
+    async (annotationId: string): Promise<JournalOutcome> => {
+      const result = await discardAnnotation(annotationId);
+      if (!result.ok) {
+        return failure(result.error);
+      }
+      const { group, date } = journalRef.current;
+      const day = await getJournalDay(group.id, date);
+      return day.ok ? accept(day.data) : failure(day.error);
+    },
+    [accept, failure],
+  );
+
   const submit = useCallback(
     (resubmit: boolean) =>
       run(() =>
@@ -159,5 +177,15 @@ export function useJournalEditor({ initial, onConflict }: UseJournalEditorOption
     [run],
   );
 
-  return { journal, savedAt, create, update, markReady, markDraft, submit, voidJournal };
+  return {
+    journal,
+    savedAt,
+    create,
+    update,
+    markReady,
+    markDraft,
+    discard,
+    submit,
+    voidJournal,
+  };
 }

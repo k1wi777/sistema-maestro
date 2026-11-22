@@ -8,6 +8,7 @@ import {
 } from '@gns/shared';
 import type { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
+import { gradeCoordinatorWhere } from '../../../shared/records/coordinator-filter';
 import {
   PrismaReadRepository,
   type ModelDelegate,
@@ -199,6 +200,42 @@ export class PrismaFieldJournalRepository
       include: ANNOTATION_INCLUDE,
     });
     return row ? toAnnotation(row) : null;
+  }
+
+  async findAnnotationById(annotationId: string): Promise<AnnotationRow | null> {
+    const row = await this.prisma.db.fieldJournalAnnotation.findUnique({
+      where: { id: annotationId },
+      include: ANNOTATION_INCLUDE,
+    });
+    return row ? toAnnotation(row) : null;
+  }
+
+  countAnnotations(journalId: string): Promise<number> {
+    return this.prisma.db.fieldJournalAnnotation.count({ where: { journalId } });
+  }
+
+  async deleteDraftAnnotation(annotationId: string): Promise<boolean> {
+    const { count } = await this.prisma.db.fieldJournalAnnotation.deleteMany({
+      where: {
+        id: annotationId,
+        status: AnnotationStatus.Draft,
+        sent: false,
+        journal: { status: JournalStatus.InProgress },
+      },
+    });
+    return count === 1;
+  }
+
+  async deleteEmptyJournal(journalId: string): Promise<boolean> {
+    const { count } = await this.prisma.db.fieldJournal.deleteMany({
+      where: {
+        id: journalId,
+        status: JournalStatus.InProgress,
+        submittedAt: null,
+        annotations: { none: {} },
+      },
+    });
+    return count === 1;
   }
 
   async contributions(journalId: string): Promise<ContributionRow[]> {
@@ -533,13 +570,13 @@ export class PrismaFieldJournalRepository
         ],
       };
     }
-    // La coordinadora recibe el diario solo desde el primer envío; administración ve todos.
-    return visibility.coordinatorId
-      ? {
-          submittedAt: { not: null },
-          group: { grade: { coordinatorId: visibility.coordinatorId } },
-        }
-      : {};
+    // Coordinación recibe el diario solo desde el primer envío; administración ve todos.
+    return {
+      ...(visibility.submittedOnly ? { submittedAt: { not: null } } : {}),
+      ...(visibility.coordinatorId
+        ? { group: { grade: { coordinatorId: visibility.coordinatorId } } }
+        : {}),
+    };
   }
 
   protected toWhere(filters: JournalListFilters): Prisma.FieldJournalWhereInput {
@@ -550,7 +587,13 @@ export class PrismaFieldJournalRepository
         {
           status: rest.status,
           groupId: rest.groupId,
-          group: rest.gradeId ? { gradeId: rest.gradeId } : undefined,
+          group:
+            rest.gradeId || rest.coordinatorId
+              ? {
+                  gradeId: rest.gradeId,
+                  grade: gradeCoordinatorWhere(rest.coordinatorId),
+                }
+              : undefined,
           date: {
             gte: rest.from ? new Date(rest.from) : undefined,
             lte: rest.to ? new Date(rest.to) : undefined,

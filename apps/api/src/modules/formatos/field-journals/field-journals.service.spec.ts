@@ -139,6 +139,30 @@ function makeRepository(roster: GroupRoster) {
     findAnnotation: jest.fn((_journalId: string, annotationId: string) =>
       Promise.resolve(annotations.find((annotation) => annotation.id === annotationId) ?? null),
     ),
+    findAnnotationById: jest.fn((annotationId: string) =>
+      Promise.resolve(annotations.find((annotation) => annotation.id === annotationId) ?? null),
+    ),
+    countAnnotations: jest.fn(() => Promise.resolve(annotations.length)),
+    deleteDraftAnnotation: jest.fn((annotationId: string) => {
+      const index = annotations.findIndex(
+        (annotation) =>
+          annotation.id === annotationId &&
+          annotation.status === AnnotationStatus.Draft &&
+          !annotation.sent,
+      );
+      if (index >= 0 && journal?.status === JournalStatus.InProgress) {
+        annotations.splice(index, 1);
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(false);
+    }),
+    deleteEmptyJournal: jest.fn(() => {
+      if (journal?.status === JournalStatus.InProgress && annotations.length === 0) {
+        journal = null;
+        return Promise.resolve(true);
+      }
+      return Promise.resolve(false);
+    }),
     contributions: jest.fn(() => {
       const byTeacher = new Map<
         string,
@@ -608,14 +632,19 @@ describe('FieldJournalsService · revisión', () => {
     expect(JSON.stringify(resent.history)).not.toContain('Falta contexto');
   });
 
-  it('aprueba con la firma y la aprobación es de la coordinadora del grado o de administración', async () => {
+  it('aprueba con la firma y solo la coordinadora del grado aprueba y administración solo consulta', async () => {
     const { setup, journalId } = await submitted();
     await expect(setup.service.approve(otherCoordinator, journalId, {})).rejects.toBeInstanceOf(
       ForbiddenException,
     );
-    const approved = await setup.service.approve(admin, journalId, { comment: 'Gracias' });
+    // Administración consulta todo pero no decide.
+    await expect(setup.service.approve(admin, journalId, {})).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    await expect(setup.service.get(admin, journalId)).resolves.toBeDefined();
+    const approved = await setup.service.approve(coordinator, journalId, { comment: 'Gracias' });
     expect(approved.status).toBe(JournalStatus.Reviewed);
-    expect(approved.signature?.reviewer.id).toBe(ADMIN);
+    expect(approved.signature?.reviewer.id).toBe(COORD);
     await expect(setup.service.approve(coordinator, journalId, {})).rejects.toBeInstanceOf(
       ConflictException,
     );
@@ -663,6 +692,10 @@ describe('FieldJournalsService · revisión', () => {
     expect(forCoordinator.viewer.canReview).toBe(true);
     // Nunca borradores ajenos: solo las anotaciones listas.
     expect(forCoordinator.annotations).toHaveLength(1);
+    // Coordinación de otro grado consulta todo el colegio (desde el primer envío), sin decidir.
+    const forOther = await setup.service.get(otherCoordinator, journalId);
+    expect(forOther.viewer.canReview).toBe(false);
+    expect((await setup.service.get(admin, journalId)).viewer.canReview).toBe(false);
   });
 });
 
@@ -704,5 +737,103 @@ describe('FieldJournalsService · vista del día', () => {
     const setup = makeRepository(makeRoster());
     const { journalId } = await withAnnotations(setup);
     await expect(setup.service.get(stranger, journalId)).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+describe('FieldJournalsService · descartar anotación (404 → 403 → 409)', () => {
+  it('borra solo esa anotación y conserva las demás y el diario', async () => {
+    const setup = makeRepository(makeRoster());
+    const { journalId } = await withAnnotations(setup);
+    const luisAnnotation = setup.annotations.find((annotation) => annotation.teacherId === LUIS)!;
+
+    await setup.service.discardAnnotation(luis, luisAnnotation.id);
+
+    expect(setup.annotations.map((annotation) => annotation.teacherId)).toEqual([ANA]);
+    expect(setup.repository.lock).toHaveBeenCalledWith(journalId);
+    expect(setup.repository.touch).toHaveBeenCalledWith(journalId);
+    expect(setup.repository.deleteEmptyJournal).not.toHaveBeenCalled();
+    await expect(setup.service.get(ana, journalId)).resolves.toBeDefined();
+  });
+
+  it('si era la única anotación, borra también el diario', async () => {
+    const setup = makeRepository(makeRoster());
+    const created = await setup.service.addAnnotation(ana, input());
+
+    await setup.service.discardAnnotation(ana, setup.annotations[0]!.id);
+
+    expect(setup.annotations).toHaveLength(0);
+    expect(setup.repository.deleteEmptyJournal).toHaveBeenCalledWith(created.id);
+    await expect(setup.service.get(ana, created.id)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('404 si la anotación no existe o es un borrador ajeno; 403 si es una lista de otra persona', async () => {
+    const setup = makeRepository(makeRoster());
+    await withAnnotations(setup);
+    const anaAnnotation = setup.annotations.find((annotation) => annotation.teacherId === ANA)!;
+    const luisAnnotation = setup.annotations.find((annotation) => annotation.teacherId === LUIS)!;
+
+    await expect(setup.service.discardAnnotation(ana, id(999))).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    await expect(setup.service.discardAnnotation(ana, luisAnnotation.id)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    await expect(setup.service.discardAnnotation(luis, anaAnnotation.id)).rejects.toBeInstanceOf(
+      ForbiddenException,
+    );
+    await expect(
+      setup.service.discardAnnotation(stranger, anaAnnotation.id),
+    ).rejects.toBeInstanceOf(NotFoundException);
+    expect(setup.repository.deleteDraftAnnotation).not.toHaveBeenCalled();
+    expect(setup.annotations).toHaveLength(2);
+  });
+
+  it('409 si la anotación ya no es borrador (lista) y no borra nada', async () => {
+    const setup = makeRepository(makeRoster());
+    const { anaAnnotation } = await withAnnotations(setup);
+
+    await expect(setup.service.discardAnnotation(ana, anaAnnotation.id)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(setup.annotations).toHaveLength(2);
+  });
+
+  it('409 si el diario ya se envió, aunque la anotación siga en borrador', async () => {
+    const setup = makeRepository(makeRoster());
+    const { journalId } = await withAnnotations(setup);
+    await setup.service.submit(director, journalId);
+    const luisAnnotation = setup.annotations.find((annotation) => annotation.teacherId === LUIS)!;
+
+    await expect(setup.service.discardAnnotation(luis, luisAnnotation.id)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(setup.repository.deleteDraftAnnotation).not.toHaveBeenCalled();
+  });
+
+  it('409 si otra petición la movió justo antes de borrar (0 filas)', async () => {
+    const setup = makeRepository(makeRoster());
+    await setup.service.addAnnotation(ana, input());
+    setup.repository.deleteDraftAnnotation.mockResolvedValueOnce(false);
+
+    await expect(
+      setup.service.discardAnnotation(ana, setup.annotations[0]!.id),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('el estado de la bitácora trae grupo, fecha y área, sin la descripción', async () => {
+    const setup = makeRepository(makeRoster());
+    await setup.service.addAnnotation(ana, input());
+
+    const snapshot = await setup.service.findAnnotationDiscardSnapshot(setup.annotations[0]!.id);
+
+    expect(snapshot).toMatchObject({
+      group: 'Quinto 1',
+      date: TODAY,
+      area: 'Matemáticas',
+      status: AnnotationStatus.Draft,
+      journalStatus: JournalStatus.InProgress,
+      onlyAnnotation: true,
+    });
+    expect(JSON.stringify(snapshot)).not.toContain('Texto de la anotación');
   });
 });

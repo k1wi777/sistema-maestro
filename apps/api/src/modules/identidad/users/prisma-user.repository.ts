@@ -66,6 +66,12 @@ export class PrismaUserRepository
     return this.toEntity(row);
   }
 
+  async lockActiveAdministrators(): Promise<string[]> {
+    const rows = await this.prisma.db.$queryRaw<{ id: string }[]>`
+      SELECT id FROM usuario WHERE rol = 'administrador' AND estado = 'activo' ORDER BY id FOR UPDATE`;
+    return rows.map((row) => row.id);
+  }
+
   protected get delegate() {
     return this.prisma.db.user;
   }

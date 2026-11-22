@@ -1,6 +1,6 @@
 import { RecordStatus } from '@gns/shared';
 
-import { STATUS_INFO, STATUS_ORDER, canVoid, isEditable } from './status';
+import { STATUS_INFO, STATUS_ORDER, canDiscard, canVoid, isEditable } from './status';
 
 describe('status', () => {
   it('describes every status exactly once', () => {
@@ -20,7 +20,11 @@ describe('status', () => {
     expect(STATUS_ORDER.filter(isEditable)).toEqual(['borrador', 'observaciones']);
   });
 
-  it('lets the owner void drafts, submitted records and records with observations', () => {
-    expect(STATUS_ORDER.filter(canVoid)).toEqual(['borrador', 'enviada', 'observaciones']);
+  it('lets the owner void only submitted records and records with observations', () => {
+    expect(STATUS_ORDER.filter(canVoid)).toEqual(['enviada', 'observaciones']);
+  });
+
+  it('lets the owner discard only drafts', () => {
+    expect(STATUS_ORDER.filter(canDiscard)).toEqual(['borrador']);
   });
 });

@@ -54,6 +54,11 @@ export default defineConfig({
     },
     { name: 'catalog', testMatch: /catalog\.spec\.ts/, dependencies: ['setup'] },
     { name: 'ingreso', testMatch: /ingreso\.spec\.ts/ },
-    { name: 'role', testMatch: /role-protection\.spec\.ts/, dependencies: ['ingreso'] },
+    { name: 'consult', testMatch: /consult\.spec\.ts/, dependencies: ['setup'] },
+    {
+      name: 'role',
+      testMatch: /role-protection\.spec\.ts/,
+      dependencies: ['ingreso', 'setup'],
+    },
   ],
 });
