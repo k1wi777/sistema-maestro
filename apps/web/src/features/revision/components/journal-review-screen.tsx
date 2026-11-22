@@ -5,7 +5,7 @@ import { JournalHistoryKind, type FieldJournal, type JournalAnnotation } from '@
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading } from '@/shared/data';
 import { formatDateTime, formatTime, formatWeekdayDate } from '@/shared/format/dates';
-import { ANNOTATION_STATUS_INFO, JOURNAL_EVENT_INFO, JOURNAL_STATUS_INFO } from '@/shared/records';
+import { ANNOTATION_STATUS_INFO, JOURNAL_STATUS_INFO } from '@/shared/records';
 import {
   Button,
   ButtonLink,
@@ -62,7 +62,6 @@ function AnnotationSection({
   annotation: JournalAnnotation;
   review: ReturnType<typeof useJournalReview>;
 }) {
-  const type = JOURNAL_EVENT_INFO[annotation.eventType];
   const status = ANNOTATION_STATUS_INFO[annotation.status];
   const observing = review.open.has(annotation.id);
   const label = `${annotation.area.name} · ${annotation.teacher.fullName}`;
@@ -72,27 +71,11 @@ function AnnotationSection({
         <strong className={styles.entryDate}>
           {annotation.readyAt ? `${label} · ${formatTime(annotation.readyAt)}` : label}
         </strong>
-        <StatusBadge tone={type.tone}>{type.label}</StatusBadge>
         <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
       </div>
-      {annotation.students.length > 0 ? (
-        <p className={styles.text}>
-          <strong>Estudiantes:</strong> {annotation.students.join(', ')}
-        </p>
-      ) : null}
       <p className={styles.text}>
-        <strong>Descripción:</strong> {annotation.description}
+        <strong>Descripción de eventos:</strong> {annotation.description}
       </p>
-      {annotation.actions ? (
-        <p className={styles.text}>
-          <strong>Acciones:</strong> {annotation.actions}
-        </p>
-      ) : null}
-      {annotation.reflection ? (
-        <p className={styles.text}>
-          <strong>Reflexión:</strong> {annotation.reflection}
-        </p>
-      ) : null}
       {annotation.observation ? (
         <Observation
           title={`Observación para ${annotation.teacher.fullName}`}

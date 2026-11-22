@@ -4,14 +4,12 @@ import {
   JournalStatus,
   isStudentFirstName,
   levelAllowsCuriocity,
-  JournalEventType,
   ObserverNoteType,
   RecordStatus,
   REVIEW_DECISION_RESULT_STATUS,
   ReviewAction,
   ReviewDecision,
   ReviewRecordType,
-  splitStudents,
   TrainingActivityType,
   UserRole,
   UserStatus,
@@ -298,7 +296,7 @@ describe('demo records (R19)', () => {
       expect([inconsistent, voided]).toEqual([0, 0]);
     });
 
-    it('has annotations only from teachers assigned to the group that year, covering the 3 event types and the 3 states', async () => {
+    it('has annotations only from teachers assigned to the group that year, covering the 3 states', async () => {
       const strangers = await count(
         `SELECT count(*) FROM diario_anotacion a JOIN diario_campo d ON d.id = a.diario_id
          WHERE d.id IN ${DEMO_JOURNALS} AND NOT EXISTS (
@@ -307,19 +305,12 @@ describe('demo records (R19)', () => {
            AND ad.anio_lectivo = d.anio_lectivo AND ad.estado = 'activa')`,
         [DEMO_LIKE],
       );
-      const types = await rows(
-        `SELECT DISTINCT tipo_evento FROM diario_anotacion WHERE diario_id IN ${DEMO_JOURNALS}`,
-        [DEMO_LIKE],
-      );
       const states = await rows(
         `SELECT DISTINCT estado FROM diario_anotacion WHERE diario_id IN ${DEMO_JOURNALS}`,
         [DEMO_LIKE],
       );
 
       expect(strangers).toBe(0);
-      expect(types.map((row) => row.tipo_evento).sort()).toEqual(
-        Object.values(JournalEventType).sort(),
-      );
       expect(states.map((row) => row.estado).sort()).toEqual(['borrador', 'lista', 'observada']);
     });
 
@@ -764,20 +755,10 @@ describe('demo privacy (R23)', () => {
       `SELECT estudiante_nombre FROM observador_anotacion WHERE docente_id IN ${DEMO_TEACHERS}`,
       [DEMO_LIKE],
     );
-    const journalEntries = await rows(
-      `SELECT a.estudiantes FROM diario_anotacion a WHERE a.docente_id IN ${DEMO_TEACHERS}`,
-      [DEMO_LIKE],
-    );
 
     expect(notes.length).toBeGreaterThan(0);
     for (const note of notes) {
       expect(isStudentFirstName(String(note.estudiante_nombre))).toBe(true);
-    }
-    for (const entry of journalEntries) {
-      const names = splitStudents(typeof entry.estudiantes === 'string' ? entry.estudiantes : null);
-      for (const name of names) {
-        expect(isStudentFirstName(name)).toBe(true);
-      }
     }
   });
 
@@ -785,8 +766,6 @@ describe('demo privacy (R23)', () => {
     const hidden = new Set([
       'descripcion',
       'acciones',
-      'reflexion',
-      'estudiantes',
       'estudiante_nombre',
       'version_estudiante',
       'estrategias_pedagogicas',

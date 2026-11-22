@@ -5,7 +5,6 @@ import {
   ReviewAction,
   ReviewRecordType,
   type FieldJournalSortField,
-  type JournalEventType,
 } from '@gns/shared';
 import type { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
@@ -78,11 +77,7 @@ const toAnnotation = (row: AnnotationDbRow): AnnotationRow => ({
   teacherName: row.teacher.fullName,
   areaId: row.area.id,
   areaName: row.area.name,
-  eventType: row.eventType as JournalEventType,
-  studentNames: row.studentNames,
   description: row.description,
-  actions: row.actions,
-  reflection: row.reflection,
   status: row.status as AnnotationStatus,
   readyAt: row.readyAt,
   sent: row.sent,
@@ -93,11 +88,7 @@ const toAnnotation = (row: AnnotationDbRow): AnnotationRow => ({
 /** Contenido como columnas de Prisma; `undefined` no se toca. */
 const toAnnotationData = (content: AnnotationContent) => ({
   areaId: content.areaId,
-  eventType: content.eventType,
-  studentNames: content.students,
   description: content.description,
-  actions: content.actions,
-  reflection: content.reflection,
 });
 
 @Injectable()
@@ -253,11 +244,7 @@ export class PrismaFieldJournalRepository
         journalId,
         teacherId: annotation.teacherId,
         areaId: annotation.areaId,
-        eventType: annotation.eventType,
-        studentNames: annotation.students ?? null,
         description: annotation.description,
-        actions: annotation.actions ?? null,
-        reflection: annotation.reflection ?? null,
         status: AnnotationStatus.Draft,
       },
     });
@@ -512,11 +499,7 @@ export class PrismaFieldJournalRepository
         id: annotation.id,
         teacherId: annotation.teacherId,
         areaId: annotation.areaId,
-        eventType: annotation.eventType,
-        studentNames: annotation.studentNames,
         description: annotation.description,
-        actions: annotation.actions,
-        reflection: annotation.reflection,
         status: annotation.status,
         readyAt: annotation.readyAt,
         sent: annotation.sent,

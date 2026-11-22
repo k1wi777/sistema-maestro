@@ -148,18 +148,32 @@ describe('diario de campo colaborativo por grupo y día (#107)', () => {
       expect(fieldsOf(res.body)).toEqual(['groupId']);
     });
 
-    it('la anotación «a mejorar» exige acciones, los datos de menores no se admiten y los campos desconocidos se rechazan', async () => {
+    it('una anotación vale con clase y descripción; los campos retirados del formato y los desconocidos se rechazan con 400 (R2, R3)', async () => {
       const own = await journalWorld(app);
-      const body = annotationBody(own, own.areas.math, { eventType: 'mejorar' });
-      const res = await post(own.ana, '/field-journals/annotations').send(body).expect(400);
-      expect(fieldsOf(res.body)).toEqual(['actions']);
-      await post(own.ana, '/field-journals/annotations')
-        .send({ ...body, actions: 'Repasar', students: ['Pedro Pérez 1023456789'] })
-        .expect(400);
-      await post(own.ana, '/field-journals/annotations')
-        .send({ ...body, actions: 'Repasar', status: 'lista' })
-        .expect(400);
+      const body = annotationBody(own, own.areas.math);
+      for (const removed of [
+        { eventType: 'mejorar' },
+        { students: ['Pedro'] },
+        { actions: 'Repasar' },
+        { reflection: 'Más tiempo' },
+        { status: 'lista' },
+      ]) {
+        await post(own.ana, '/field-journals/annotations')
+          .send({ ...body, ...removed })
+          .expect(400);
+      }
       expect(await prisma.fieldJournal.count({ where: { groupId: own.groupId } })).toBe(0);
+      const created = await post(own.ana, '/field-journals/annotations').send(body).expect(201);
+      const annotation = (created.body as JournalBody).annotations[0]!;
+      expect(Object.keys(annotation)).not.toEqual(
+        expect.arrayContaining(['eventType', 'students', 'actions', 'reflection']),
+      );
+      await patch(
+        own.ana,
+        `/field-journals/${(created.body as JournalBody).id}/annotations/${annotation.id}`,
+      )
+        .send({ eventType: 'grupo' })
+        .expect(400);
     });
   });
 
@@ -197,6 +211,32 @@ describe('diario de campo colaborativo por grupo y día (#107)', () => {
       expect(JSON.stringify(bodies)).not.toContain(secret);
       expect(JSON.stringify(bodies)).not.toContain('Pedro');
       expect(JSON.stringify(bodies)).not.toContain('1023456789');
+    });
+  });
+
+  describe('período del encabezado (R5)', () => {
+    it('trae el período que contiene la fecha del diario, o nulo si ninguno la contiene', async () => {
+      const own = await journalWorld(app);
+      const created = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      expect(created.period).toBeNull();
+      const shift = (days: number) => new Date(Date.parse(TODAY) + days * 86_400_000);
+      try {
+        const period = await prisma.academicPeriod.create({
+          data: { schoolYear: TODAY_YEAR, number: 2, startDate: shift(-30), endDate: shift(30) },
+        });
+        const inside = (await get(own.ana, `/field-journals/${created.id}`).expect(200))
+          .body as JournalBody;
+        expect(inside.period).toEqual({ id: period.id, number: 2 });
+        await prisma.academicPeriod.update({
+          where: { id: period.id },
+          data: { startDate: shift(1), endDate: shift(30) },
+        });
+        const outside = (await get(own.ana, `/field-journals/${created.id}`).expect(200))
+          .body as JournalBody;
+        expect(outside.period).toBeNull();
+      } finally {
+        await prisma.academicPeriod.deleteMany({ where: { schoolYear: TODAY_YEAR } });
+      }
     });
   });
 

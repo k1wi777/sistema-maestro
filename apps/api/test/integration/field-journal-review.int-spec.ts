@@ -237,10 +237,7 @@ describe('revisión del diario de campo por coordinación (#107)', () => {
       app,
       own.ana,
       annotationBody(own, own.areas.math, {
-        description: secret,
-        students: [student],
-        actions: secret,
-        reflection: secret,
+        description: `${student}: ${secret}`,
       }),
     );
     const journalId = created.id!;

@@ -1,16 +1,13 @@
 'use client';
 
 import {
-  JOURNAL_ACTIONS_MAX_LENGTH,
   JOURNAL_DESCRIPTION_MAX_LENGTH,
-  JOURNAL_REFLECTION_MAX_LENGTH,
-  JournalEventType,
   type JournalAnnotation,
   type JournalViewer,
 } from '@gns/shared';
 import { useState } from 'react';
 
-import { Button, Notice, Select, TextArea, TextInput } from '@/shared/ui';
+import { Button, Notice, Select, TextArea } from '@/shared/ui';
 
 import type { CreateAnnotationBody, UpdateAnnotationBody } from '../api/field-journals';
 import type { JournalOutcome } from '../hooks/use-field-journal';
@@ -22,13 +19,10 @@ import {
   type AnnotationErrors,
   type AnnotationFormValues,
 } from '../model/annotation-form';
-import { JOURNAL_EVENT_INFO, JOURNAL_EVENT_ORDER } from '../model/labels';
+import { JOURNAL_FORMAT_NOTES } from '../model/labels';
 import styles from './record-screen.module.css';
 
-const EVENT_OPTIONS = JOURNAL_EVENT_ORDER.map((type) => ({
-  value: type,
-  label: JOURNAL_EVENT_INFO[type].label,
-}));
+const DESCRIPTION_HELP = `Notas del formato: 1. ${JOURNAL_FORMAT_NOTES[0]} 2. ${JOURNAL_FORMAT_NOTES[1]}`;
 
 interface AnnotationFormProps {
   groupId: string;
@@ -118,7 +112,6 @@ export function AnnotationForm({
     setFailure(outcome.message || null);
   }
 
-  const needsActions = values.eventType === JournalEventType.ToImprove;
   const areaOptions = areas.map((area) => ({ value: area.id, label: area.name }));
 
   return (
@@ -131,74 +124,33 @@ export function AnnotationForm({
       aria-label={annotation ? 'Editar anotación' : 'Nueva anotación'}
     >
       <div className={styles.form}>
-        <Select
-          label="Asignatura"
-          required
-          placeholder="Selecciona la asignatura"
-          options={areaOptions}
-          value={values.areaId}
-          error={errors.areaId}
-          onChange={(event) => change({ areaId: event.target.value })}
-        />
-        <Select
-          label="Tipo de evento"
-          required
-          placeholder="Selecciona el tipo de evento"
-          options={EVENT_OPTIONS}
-          value={values.eventType}
-          error={errors.eventType}
-          onChange={(event) =>
-            change({ eventType: event.target.value as AnnotationFormValues['eventType'] })
-          }
-        />
         <div className={styles.full}>
-          <TextInput
-            label="Estudiantes implicados"
-            placeholder="Ej. Sofía, Matías"
-            help="Solo nombres de pila, separados por coma."
-            value={values.students}
-            error={errors.students}
-            onChange={(event) => change({ students: event.target.value })}
+          <Select
+            label="Clase (asignatura)"
+            required
+            placeholder="Selecciona la clase"
+            options={areaOptions}
+            value={values.areaId}
+            error={errors.areaId}
+            onChange={(event) => change({ areaId: event.target.value })}
           />
         </div>
         <div className={styles.full}>
           <TextArea
-            label="Descripción del evento"
+            label="Descripción de eventos"
             required
-            rows={4}
+            rows={5}
             maxLength={JOURNAL_DESCRIPTION_MAX_LENGTH}
-            placeholder="Qué pasó, en qué momento de la clase y cómo respondió el grupo o el estudiante."
+            help={DESCRIPTION_HELP}
+            placeholder="Qué pasó, en qué momento de la clase y quién estuvo implicado (solo nombre de pila)."
             value={values.description}
             error={errors.description}
             onChange={(event) => change({ description: event.target.value })}
           />
         </div>
-        <div className={styles.full}>
-          <TextArea
-            label="Acciones de mejora"
-            required={needsActions}
-            rows={3}
-            maxLength={JOURNAL_ACTIONS_MAX_LENGTH}
-            help={needsActions ? 'Obligatorias en un aspecto por mejorar.' : undefined}
-            placeholder="Qué se hizo o qué se hará: diálogo, compromiso, comunicación con la familia, ajuste en la clase…"
-            value={values.actions}
-            error={errors.actions}
-            onChange={(event) => change({ actions: event.target.value })}
-          />
-        </div>
-        <div className={styles.full}>
-          <TextArea
-            label="Reflexión pedagógica (opcional)"
-            rows={3}
-            maxLength={JOURNAL_REFLECTION_MAX_LENGTH}
-            placeholder="¿Qué aprendí de esta situación? ¿Qué cambiaría en mi práctica?"
-            value={values.reflection}
-            error={errors.reflection}
-            onChange={(event) => change({ reflection: event.target.value })}
-          />
-        </div>
         <p className={`${styles.full} ${styles.hint}`}>
-          No registres documentos de identidad, datos de salud, diagnósticos ni fotos de los niños.
+          Usa solo el nombre de pila del estudiante. No registres documentos de identidad, datos de
+          salud, diagnósticos ni fotos de los niños.
         </p>
         {failure ? (
           <div className={styles.full}>

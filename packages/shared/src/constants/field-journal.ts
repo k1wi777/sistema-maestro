@@ -1,11 +1,3 @@
-/** Tipo de evento de una anotación del diario de campo (`diario_anotacion.tipo_evento`). */
-export const JournalEventType = {
-  Group: 'grupo',
-  Positive: 'positivo',
-  ToImprove: 'mejorar',
-} as const;
-export type JournalEventType = (typeof JournalEventType)[keyof typeof JournalEventType];
-
 /**
  * Estado del diario de un grupo en una fecha (`diario_campo.estado`). Es propio del diario: lo
  * envía el director(a) de grupo y coordinación no ajusta, así que no reutiliza `RecordStatus`.

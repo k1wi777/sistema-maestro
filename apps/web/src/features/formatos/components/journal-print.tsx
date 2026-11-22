@@ -1,122 +1,126 @@
-import { AnnotationStatus, type FieldJournalDay } from '@gns/shared';
+import type { FieldJournalDay } from '@gns/shared';
+import Image from 'next/image';
 
-import { formatDateTime, formatDayWithYear, formatTime } from '@/shared/format/dates';
-import { JOURNAL_STATUS_INFO } from '@/shared/records';
-import { BrandMark } from '@/shared/ui';
-
-import { JOURNAL_EVENT_INFO } from '../model/labels';
-import { missingText } from '../model/journal-text';
+import { JOURNAL_FORMAT_NOTES } from '../model/labels';
+import { buildJournalSheet } from '../model/journal-sheet';
 import styles from './journal-print.module.css';
 
 /**
- * Hoja de impresión del F-PA-05 («Exportar PDF»): existe siempre en la página pero solo se ve al
- * imprimir. Lleva la identidad del colegio, el encabezado del formato, la tabla de anotaciones
- * enviadas (sin borradores), quién no aportó y la revisión, sin controles de la interfaz. La API no
- * genera este PDF (decisión del Work Item).
+ * Hoja de impresión del F-PA-05 («Exportar PDF»): reproduce el Excel institucional (encabezado,
+ * datos generales, tabla FECHA · CLASE · DOCENTE · DESCRIPCIÓN DE EVENTOS, notas y «Revisado por»).
+ * Existe siempre en la página pero solo se ve al imprimir. Es una sola tabla de 11 columnas iguales
+ * para repetir las combinaciones de celdas del Excel; el encabezado va en `thead` y se repite en
+ * cada página; las notas y «Revisado por» van en un segundo `tbody` (un `tfoot` se repetiría en cada
+ * página). «PÁGINA 1 DE 1» es el texto fijo del formato. La API no genera este PDF.
  */
 export function JournalPrint({ journal }: { journal: FieldJournalDay }) {
-  const sent = journal.annotations.filter(
-    (annotation) => annotation.status !== AnnotationStatus.Draft,
-  );
+  const sheet = buildJournalSheet(journal);
   return (
     <article className={styles.sheet} aria-hidden="true">
-      <header className={styles.header}>
-        <BrandMark tagline="Montería · Colombia" />
-        <p className={styles.kind}>Diario de campo · Código F-PA-05 · Versión 2</p>
-      </header>
-
-      <table className={styles.facts}>
-        <tbody>
-          <tr>
-            <th scope="row">Año lectivo</th>
-            <td>{journal.schoolYear}</td>
-            <th scope="row">Nivel</th>
-            <td>{journal.level.name}</td>
-          </tr>
-          <tr>
-            <th scope="row">Grado</th>
-            <td>{journal.grade.name}</td>
-            <th scope="row">Grupo</th>
-            <td>{journal.group.name}</td>
-          </tr>
-          <tr>
-            <th scope="row">Fecha</th>
-            <td>{formatDayWithYear(journal.date)}</td>
-            <th scope="row">Director(a) de grupo</th>
-            <td>{journal.homeroomTeacher?.fullName ?? '—'}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h2 className={styles.heading}>Anotaciones</h2>
-      <table className={styles.entries}>
+      <table className={styles.table}>
+        <colgroup>
+          {Array.from({ length: 11 }, (_, index) => (
+            <col key={index} className={styles.col} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
-            <th scope="col">Docente</th>
-            <th scope="col">Asignatura</th>
-            <th scope="col">Tipo de evento</th>
-            <th scope="col">Estudiantes</th>
-            <th scope="col">Descripción</th>
-            <th scope="col">Acciones de mejora</th>
-            <th scope="col">Reflexión</th>
-            <th scope="col">Hora</th>
+            <td colSpan={2} rowSpan={3} className={`${styles.cell} ${styles.logo}`}>
+              <Image
+                src="/escudo-gns.webp"
+                alt=""
+                width={80}
+                height={80}
+                className={styles.seal}
+                priority
+              />
+            </td>
+            <th colSpan={7} className={`${styles.cell} ${styles.title}`}>
+              GEORGE&apos;S NOBLE SCHOOL
+            </th>
+            <th rowSpan={2} className={`${styles.cell} ${styles.title} ${styles.wrap}`}>
+              CÓDIGO: <span className={styles.nowrap}>F-PA-05</span>
+            </th>
+            <th rowSpan={2} className={`${styles.cell} ${styles.title} ${styles.wrap}`}>
+              VERSIÓN: 2
+            </th>
+          </tr>
+          <tr>
+            <th colSpan={7} rowSpan={2} className={`${styles.cell} ${styles.title}`}>
+              DIARIO DE CAMPO
+            </th>
+          </tr>
+          <tr>
+            <th colSpan={2} className={`${styles.cell} ${styles.title}`}>
+              PÁGINA 1 DE 1
+            </th>
+          </tr>
+          <tr>
+            <th colSpan={11} className={`${styles.cell} ${styles.title} ${styles.wrap}`}>
+              Nota: Este formato tiene la función de dejar registro diario de los eventos relevantes
+              ocurridos en el Aula de Clases.
+            </th>
+          </tr>
+          <tr>
+            <th colSpan={3} className={`${styles.cell} ${styles.fact}`}>
+              AÑO LECTIVO: {sheet.schoolYear}
+            </th>
+            <th colSpan={3} className={`${styles.cell} ${styles.fact}`}>
+              NIVEL: {sheet.level}
+            </th>
+            <th colSpan={2} className={`${styles.cell} ${styles.fact}`}>
+              PERÍODO: {sheet.period}
+            </th>
+            <th colSpan={3} className={`${styles.cell} ${styles.fact}`}>
+              {sheet.gradeCell}
+            </th>
+          </tr>
+          <tr className={styles.columns}>
+            <th scope="col" className={styles.cell}>
+              FECHA
+            </th>
+            <th scope="col" colSpan={2} className={styles.cell}>
+              CLASE
+            </th>
+            <th scope="col" colSpan={2} className={styles.cell}>
+              DOCENTE
+            </th>
+            <th scope="col" colSpan={6} className={styles.cell}>
+              DESCRIPCIÓN DE EVENTOS
+            </th>
           </tr>
         </thead>
         <tbody>
-          {sent.length === 0 ? (
-            <tr>
-              <td colSpan={8}>Sin anotaciones.</td>
+          {sheet.rows.map((row, index) => (
+            <tr key={row.key ?? `blank-${index}`} className={styles.row}>
+              <td className={`${styles.cell} ${styles.date}`}>{row.date}</td>
+              <td colSpan={2} className={`${styles.cell} ${styles.centered}`}>
+                {row.className}
+              </td>
+              <td colSpan={2} className={`${styles.cell} ${styles.centered}`}>
+                {row.teacher}
+              </td>
+              <td colSpan={6} className={`${styles.cell} ${styles.description}`}>
+                {row.description}
+              </td>
             </tr>
-          ) : (
-            sent.map((annotation) => (
-              <tr key={annotation.id}>
-                <td>{annotation.teacher.fullName}</td>
-                <td>{annotation.area.name}</td>
-                <td>{JOURNAL_EVENT_INFO[annotation.eventType].label}</td>
-                <td>{annotation.students.join(', ')}</td>
-                <td>{annotation.description}</td>
-                <td>{annotation.actions ?? ''}</td>
-                <td>{annotation.reflection ?? ''}</td>
-                <td>{annotation.readyAt ? formatTime(annotation.readyAt) : ''}</td>
-              </tr>
-            ))
-          )}
+          ))}
+        </tbody>
+        <tbody className={styles.closing}>
+          <tr className={styles.notesRow}>
+            <td colSpan={11} className={styles.notes}>
+              Notas: 1. {JOURNAL_FORMAT_NOTES[0]} 2. {JOURNAL_FORMAT_NOTES[1]}
+            </td>
+          </tr>
+          <tr>
+            <th className={styles.reviewLabel}>REVISADO POR:</th>
+            <td colSpan={5} className={styles.reviewer}>
+              {sheet.reviewedBy}
+            </td>
+            <td colSpan={5} className={styles.noBorder} />
+          </tr>
         </tbody>
       </table>
-      {journal.missing.length > 0 ? (
-        <p className={styles.comment}>Sin aporte: {missingText(journal.missing)}.</p>
-      ) : null}
-
-      <section className={styles.review}>
-        <h2 className={styles.heading}>Revisión</h2>
-        {journal.signature ? (
-          <p className={styles.signature}>
-            Revisado por:{' '}
-            <b>{`${journal.signature.reviewer.fullName}, ${formatDateTime(journal.signature.date)}`}</b>
-          </p>
-        ) : (
-          <p className={styles.signature}>
-            Revisado por: <b>Pendiente de revisión por coordinación</b>
-          </p>
-        )}
-        {journal.generalObservation ? (
-          <p className={styles.comment}>Observación general: {journal.generalObservation.text}</p>
-        ) : null}
-        {journal.status ? (
-          <p className={styles.state}>Estado: {JOURNAL_STATUS_INFO[journal.status].label}</p>
-        ) : null}
-      </section>
-
-      <footer className={styles.footer}>
-        {[
-          journal.submittedAt
-            ? `Enviado a coordinación el ${formatDateTime(journal.submittedAt)}`
-            : null,
-          'Documento generado desde la Plataforma GNS',
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-      </footer>
     </article>
   );
 }

@@ -6,7 +6,8 @@
  *
  * Los colores literales viven solo en este archivo; los componentes usan var(--…).
  * Fijos de marca (no cambian con el tema): --on-solid #FFFFFF (texto sobre fondos
- * turquí, rojo y azul sólidos); --seal-ring #C8102E (anillo rojo del escudo).
+ * turquí, rojo y azul sólidos); --seal-ring #C8102E (anillo rojo del escudo);
+ * --sheet-ink #000000 y --sheet-head #17365D (hoja impresa del F-PA-05, igual al Excel).
  */
 :root {
   color-scheme: light;
@@ -38,6 +39,8 @@
   --nav: #0f1d3f;
   --on-solid: #ffffff;
   --seal-ring: #c8102e;
+  --sheet-ink: #000000;
+  --sheet-head: #17365d;
 
   /*
    * Desafío GNS: el juego conserva su fondo azul profundo y sus cuatro colores en ambos temas,

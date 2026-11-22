@@ -14,10 +14,7 @@ import {
   ReviewDecision,
   ReviewRecordType,
   UserRole,
-  joinStudents,
-  journalEntryNeedsActions,
-  JOURNAL_ACTIONS_REQUIRED_REASON,
-  splitStudents,
+  type AcademicPeriod,
   type ApiFieldError,
   type ApproveJournalInput,
   type CreateAnnotationInput,
@@ -50,7 +47,6 @@ import { ReviewsService } from '../../planeacion/review/reviews.service';
 import { isReviewer } from '../common/record-rules';
 import {
   FIELD_JOURNAL_REPOSITORY,
-  type AnnotationContent,
   type AnnotationRow,
   type ContributionRow,
   type FieldJournalRecord,
@@ -87,12 +83,6 @@ function joinNames(names: readonly string[]): string {
     return names.join('');
   }
   return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
-}
-
-/** Contenido listo para guardar: la lista de estudiantes pasa a su forma unida. */
-function toStored(input: UpdateAnnotationInput): AnnotationContent {
-  const { students, ...rest } = input;
-  return { ...rest, ...(students === undefined ? {} : { students: joinStudents(students) }) };
 }
 
 type RosterLookup = (groupId: string, schoolYear: string) => Promise<GroupRoster | null>;
@@ -253,14 +243,8 @@ export class FieldJournalsService {
       );
     }
     await this.repository.insertAnnotation(id, {
-      ...toStored({
-        students: input.students,
-        actions: input.actions,
-        reflection: input.reflection,
-      }),
       teacherId: user.id,
       areaId: input.areaId,
-      eventType: input.eventType,
       description: input.description,
     });
     await this.repository.touch(id);
@@ -276,24 +260,15 @@ export class FieldJournalsService {
   ): Promise<FieldJournal> {
     const { context, annotation } = await this.lockOwnAnnotation(user, id, annotationId);
     this.assertEditable(context.base!.status, annotation);
-    const content = toStored(input);
-    const resulting = {
-      eventType: content.eventType ?? annotation.eventType,
-      actions: content.actions === undefined ? annotation.actions : content.actions,
-    };
-    const errors: ApiFieldError[] = journalEntryNeedsActions(resulting.eventType, resulting.actions)
-      ? [{ field: 'actions', reason: JOURNAL_ACTIONS_REQUIRED_REASON }]
-      : [];
-    if (content.areaId) {
+    if (input.areaId) {
       const me = context.roster.teachers.find((teacher) => teacher.id === user.id);
-      if (!me?.areas.some((area) => area.id === content.areaId)) {
-        errors.push({ field: 'areaId', reason: 'no es una de tus asignaturas en ese grupo' });
+      if (!me?.areas.some((area) => area.id === input.areaId)) {
+        throw new RequestValidationException([
+          { field: 'areaId', reason: 'no es una de tus asignaturas en ese grupo' },
+        ]);
       }
     }
-    if (errors.length > 0) {
-      throw new RequestValidationException(errors);
-    }
-    await this.repository.updateAnnotation(annotationId, content);
+    await this.repository.updateAnnotation(annotationId, input);
     await this.repository.touch(id);
     return this.get(user, id);
   }
@@ -681,14 +656,35 @@ export class FieldJournalsService {
 
   /** Inicio del año lectivo: el periodo 1 si tiene fecha; si no, el 1 de enero de su primer año. */
   private async firstDay(schoolYear: string): Promise<string> {
+    const periods = await this.periodsOf(schoolYear);
+    const first = periods.find((period) => period.number === 1)?.startDate;
+    return first ?? `${schoolYear.slice(0, 4)}-01-01`;
+  }
+
+  private async periodsOf(schoolYear: string): Promise<AcademicPeriod[]> {
     const periods = await this.periods.list({
       page: 1,
       pageSize: 10,
       sort: { field: 'number', order: 'asc' },
       filters: { schoolYear },
     });
-    const first = periods.items.find((period) => period.number === 1)?.startDate;
-    return first ?? `${schoolYear.slice(0, 4)}-01-01`;
+    return periods.items;
+  }
+
+  /** Período del año lectivo que contiene la fecha; nulo si ninguno la contiene (fechas nulas no). */
+  private async periodOf(
+    schoolYear: string,
+    date: string,
+  ): Promise<{ id: string; number: number } | null> {
+    const periods = await this.periodsOf(schoolYear);
+    const found = periods.find(
+      (period) =>
+        period.startDate !== null &&
+        period.endDate !== null &&
+        period.startDate <= date &&
+        date <= period.endDate,
+    );
+    return found ? { id: found.id, number: found.number } : null;
   }
 
   // ---------- Composición ----------
@@ -798,6 +794,7 @@ export class FieldJournalsService {
     const contributors = this.contributorList(context);
     const readyContributors = contributors.filter((entry) => entry.ready > 0);
 
+    const period = await this.periodOf(context.schoolYear, context.date);
     const [observations, history, users] = base
       ? await Promise.all([
           this.repository.findObservations(base.id),
@@ -816,11 +813,7 @@ export class FieldJournalsService {
         id: annotation.id,
         teacher: { id: annotation.teacherId, fullName: annotation.teacherName },
         area: { id: annotation.areaId, name: annotation.areaName },
-        eventType: annotation.eventType,
-        students: splitStudents(annotation.studentNames),
         description: annotation.description,
-        actions: annotation.actions,
-        reflection: annotation.reflection,
         status: annotation.status,
         readyAt: annotation.readyAt,
         sent: annotation.sent,
@@ -872,6 +865,7 @@ export class FieldJournalsService {
       createdAt: base?.createdAt ?? null,
       updatedAt: base?.updatedAt ?? null,
       schoolYear: context.schoolYear,
+      period,
       level: roster.level,
       grade: { id: roster.grade.id, name: roster.grade.name },
       group: { id: roster.group.id, name: roster.group.name },

@@ -1,11 +1,5 @@
 // API pública de shared/records: lo común a los registros pedagógicos (planeación, diario y observador).
-export {
-  JOURNAL_EVENT_INFO,
-  JOURNAL_EVENT_ORDER,
-  OBSERVER_TYPE_INFO,
-  OBSERVER_TYPE_ORDER,
-  type LabelInfo,
-} from './format-labels';
+export { OBSERVER_TYPE_INFO, OBSERVER_TYPE_ORDER, type LabelInfo } from './format-labels';
 export {
   ADJUSTABLE_FIELD_LABELS,
   FIELD_BY_COLUMN,

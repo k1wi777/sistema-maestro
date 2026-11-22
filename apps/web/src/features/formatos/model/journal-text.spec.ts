@@ -45,7 +45,7 @@ describe('journal text', () => {
 
   it('titles the PDF with the group and the date and never with students', () => {
     const journal = makeJournalDay({
-      annotations: [makeAnnotation({ students: ['Sofía', 'Matías'] })],
+      annotations: [makeAnnotation({ description: 'Sofía y Matías conversaron en clase.' })],
     });
     const title = journalPrintTitle(journal);
     expect(title).toBe('Diario de campo F-PA-05 – Transition 1 – 2026-11-09');

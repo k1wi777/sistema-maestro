@@ -17,6 +17,7 @@ export interface JournalBody {
   status: string | null;
   date: string;
   schoolYear: string;
+  period: { id: string; number: number } | null;
   group: { id: string; name: string };
   homeroomTeacher: { id: string; fullName: string } | null;
   submittedAt: string | null;
@@ -160,7 +161,6 @@ export const annotationBody = (
   groupId: world.groupId,
   date: TODAY,
   areaId,
-  eventType: 'grupo',
   description: 'Trabajo en equipo durante la clase.',
   ...patch,
 });

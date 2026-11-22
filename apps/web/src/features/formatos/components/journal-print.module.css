@@ -1,119 +1,147 @@
-/* Solo se ve al imprimir; los colores vienen de los tokens, que en impresión son siempre claros. */
+/*
+ * Hoja del F-PA-05 tal como el Excel institucional: una tabla de 11 columnas iguales, Calibri 11 pt,
+ * bordes finos negros y encabezado de columnas azul oscuro con texto blanco. Solo se ve al imprimir.
+ * Los colores fijos de la hoja (--sheet-*) no cambian con el tema.
+ */
 .sheet {
   display: none;
 }
 
 @media print {
+  /* Página con nombre: horizontal y con los márgenes del Excel, sin afectar otras impresiones. */
+  @page fpa05 {
+    size: letter landscape;
+    margin: 0.75in 0.7in;
+  }
+
   .sheet {
     display: block;
-    color: var(--fg);
-    font-size: 10pt;
-    line-height: 1.45;
+    page: fpa05;
+    color: var(--sheet-ink);
+    font-family: Calibri, Carlito, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.25;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: 2px solid var(--red);
-  }
-
-  .kind {
-    margin: 0;
-    color: var(--heading);
-    font-size: 11.5pt;
-    font-weight: var(--weight-bold);
-    text-align: right;
-  }
-
-  .facts {
-    width: 100%;
-    margin: var(--space-4) 0;
-    border-collapse: collapse;
-  }
-
-  .facts th,
-  .facts td {
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--line-strong);
-    text-align: left;
-  }
-
-  .facts th {
-    width: 18%;
-    background: var(--tint);
-    color: var(--muted);
-    font-size: 8.5pt;
-    font-weight: var(--weight-semibold);
-    text-transform: uppercase;
-  }
-
-  .heading {
-    margin: var(--space-4) 0 var(--space-2);
-    color: var(--heading);
-    font-size: 11.5pt;
-  }
-
-  .entries {
+  .table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
   }
 
-  /* El encabezado se repite en cada página y una fila nunca se parte entre dos. */
-  .entries thead {
+  .col {
+    width: calc(100% / 11);
+  }
+
+  /* Los títulos y las filas de columnas se repiten en cada página. */
+  .table thead {
     display: table-header-group;
   }
 
-  .entries tr {
+  .table tr {
     break-inside: avoid;
   }
 
-  .entries th,
-  .entries td {
-    padding: var(--space-1) var(--space-2);
-    border: 1px solid var(--line-strong);
-    text-align: left;
-    vertical-align: top;
-    white-space: pre-wrap;
+  .cell {
+    padding: 2px 4px;
+    border: 1px solid var(--sheet-ink);
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
     overflow-wrap: anywhere;
   }
 
-  .entries th {
-    background: var(--tint);
-    color: var(--heading);
-    font-size: 8.5pt;
+  .logo {
+    padding: 4px;
   }
 
-  .entries td {
-    font-size: 9pt;
+  .seal {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: 54pt;
+    margin: 0 auto;
+    object-fit: contain;
   }
 
-  .review {
-    break-inside: avoid;
+  .title {
+    height: 15pt;
   }
 
-  .signature,
-  .comment,
-  .state {
-    margin: 0 0 var(--space-2);
+  .wrap {
+    white-space: normal;
   }
 
-  .comment {
+  .nowrap {
+    white-space: nowrap;
+  }
+
+  .fact {
+    text-align: left;
+  }
+
+  .columns .cell {
+    background: var(--sheet-head);
+    color: var(--on-solid);
+  }
+
+  /* 7 filas caben en una hoja carta horizontal; crecen si la descripción es más larga. */
+  .row {
+    height: 42pt;
+  }
+
+  .row .cell {
+    font-weight: 400;
+  }
+
+  .date {
+    text-align: right;
+    vertical-align: middle;
+  }
+
+  .centered {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .description {
+    text-align: left;
+    vertical-align: top;
     white-space: pre-wrap;
   }
 
-  .state {
-    color: var(--muted);
+  .notes {
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--sheet-ink);
+    border-left: 1px solid var(--sheet-ink);
+    font-weight: 700;
+    text-align: left;
+    white-space: normal;
   }
 
-  .footer {
-    margin-top: var(--space-5);
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--line-strong);
-    color: var(--muted);
-    font-size: 9pt;
+  .closing .notesRow,
+  .closing tr {
+    break-inside: avoid;
+  }
+
+  .reviewLabel {
+    padding: 2px 0;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+    overflow: visible;
+  }
+
+  .reviewer {
+    padding: 2px 4px 2px 0.3in;
+    border-bottom: 1px solid var(--sheet-ink);
+    font-weight: 400;
+    text-align: left;
+  }
+
+  .noBorder {
+    border: 0;
   }
 }

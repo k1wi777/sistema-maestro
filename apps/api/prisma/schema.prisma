@@ -484,21 +484,17 @@ model FieldJournal {
 // Aporte de un docente al diario. `sent` indica que viajó en algún envío (false tras un envío
 // = «No enviada»).
 model FieldJournalAnnotation {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  journalId    String    @map("diario_id") @db.Uuid
-  teacherId    String    @map("docente_id") @db.Uuid
-  areaId       String    @map("area_id") @db.Uuid
-  eventType    String    @map("tipo_evento") @db.VarChar(10)
-  // Privacidad: solo nombres de pila, sin otros datos de los estudiantes.
-  studentNames String?   @map("estudiantes") @db.VarChar(160)
-  description  String    @map("descripcion") @db.Text
-  actions      String?   @map("acciones") @db.Text
-  reflection   String?   @map("reflexion") @db.Text
-  status       String    @map("estado") @db.VarChar(10)
-  readyAt      DateTime? @map("lista_en") @db.Timestamptz(6)
-  sent         Boolean   @default(false) @map("enviada")
-  createdAt    DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
-  updatedAt    DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journalId   String    @map("diario_id") @db.Uuid
+  teacherId   String    @map("docente_id") @db.Uuid
+  areaId      String    @map("area_id") @db.Uuid
+  // Privacidad: texto libre solo con nombres de pila de los estudiantes.
+  description String    @map("descripcion") @db.Text
+  status      String    @map("estado") @db.VarChar(10)
+  readyAt     DateTime? @map("lista_en") @db.Timestamptz(6)
+  sent        Boolean   @default(false) @map("enviada")
+  createdAt   DateTime  @default(now()) @map("creado_en") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("actualizado_en") @db.Timestamptz(6)
 
   journal      FieldJournal              @relation(fields: [journalId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   teacher      User                      @relation(fields: [teacherId], references: [id], onDelete: NoAction, onUpdate: NoAction)

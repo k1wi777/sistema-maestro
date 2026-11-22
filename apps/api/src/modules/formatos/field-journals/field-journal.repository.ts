@@ -2,29 +2,20 @@ import type {
   AnnotationStatus,
   FieldJournalFilters,
   FieldJournalSortField,
-  JournalEventType,
   JournalStatus,
   ListQuery,
   Page,
 } from '@gns/shared';
 
-/**
- * Contenido de una anotación como se guarda: `students` es la lista ya unida (`joinStudents`).
- * `undefined` no se toca; `null` vacía un campo opcional.
- */
+/** Contenido de una anotación como se guarda (clase y descripción); `undefined` no se toca. */
 export interface AnnotationContent {
   areaId?: string;
-  eventType?: JournalEventType;
-  students?: string | null;
   description?: string;
-  actions?: string | null;
-  reflection?: string | null;
 }
 
 export interface NewAnnotation extends AnnotationContent {
   teacherId: string;
   areaId: string;
-  eventType: JournalEventType;
   description: string;
 }
 
@@ -53,11 +44,7 @@ export interface AnnotationRow {
   teacherName: string;
   areaId: string;
   areaName: string;
-  eventType: JournalEventType;
-  studentNames: string | null;
   description: string;
-  actions: string | null;
-  reflection: string | null;
   status: AnnotationStatus;
   readyAt: Date | null;
   sent: boolean;
@@ -176,11 +163,7 @@ export type FieldJournalRecord = {
     id: string;
     teacherId: string;
     areaId: string;
-    eventType: string;
-    studentNames: string | null;
     description: string;
-    actions: string | null;
-    reflection: string | null;
     status: string;
     readyAt: Date | null;
     sent: boolean;
