@@ -278,8 +278,8 @@ describe('punta a punta · formación, Desafío GNS y certificados', () => {
   });
 
   it('la bitácora registra el recorrido sin URL firmadas, claves de objeto ni tokens', async () => {
-    const teacherRows = await world.auditRowsOf(coordinator, teacher.id);
-    const coordinatorRows = await world.auditRowsOf(coordinator, coordinator.id);
+    const teacherRows = await world.auditRowsOf(teacher.id);
+    const coordinatorRows = await world.auditRowsOf(coordinator.id);
 
     const milestones = teacherRows.filter((row) => row.type === AuditLogType.Training);
     expect(milestones.length).toBeGreaterThanOrEqual(6);
@@ -289,14 +289,14 @@ describe('punta a punta · formación, Desafío GNS y certificados', () => {
 
     const everything = [
       JSON.stringify([...teacherRows, ...coordinatorRows]),
-      await world.auditCsvOf(coordinator, teacher.id),
-      await world.auditCsvOf(coordinator, coordinator.id),
+      await world.auditCsvOf(teacher.id),
+      await world.auditCsvOf(coordinator.id),
     ];
     for (const rows of everything) {
       world.expectNoSensitiveData(rows, [certificate.code]);
     }
     for (const row of milestones) {
-      const detail = await coordinator.call('get', `/audit-log/${row.id}`).expect(200);
+      const detail = await world.admin.call('get', `/audit-log/${row.id}`).expect(200);
       world.expectNoSensitiveData(detail.text, [certificate.code]);
     }
     // Contraste: la URL firmada sí la recibe quien descarga el PDF, pero no la bitácora.

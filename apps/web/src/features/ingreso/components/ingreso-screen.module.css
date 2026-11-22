@@ -155,110 +155,6 @@
   margin: 0;
 }
 
-/* Selección de vista */
-.account {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-}
-
-.avatar {
-  flex: none;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--blue-soft);
-  color: var(--blue);
-  font-weight: var(--weight-bold);
-}
-
-.accountText {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-}
-
-.accountText small {
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
-.accountText b {
-  overflow-wrap: anywhere;
-}
-
-.views {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.view {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: var(--space-4);
-  align-items: center;
-  padding: var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
-  color: var(--fg);
-  text-decoration: none;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-
-.view:hover {
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow-3);
-}
-
-.viewIcon {
-  width: 2.75rem;
-  height: 2.75rem;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--blue-soft);
-  color: var(--blue);
-}
-
-.viewCoordination .viewIcon {
-  background: var(--red-soft);
-  color: var(--red);
-}
-
-.viewText {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.viewName {
-  font-family: var(--font-display-stack);
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-md);
-}
-
-.viewDescription {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.viewArrow {
-  color: var(--muted);
-}
-
 .note {
   margin: 0;
   color: var(--muted);
@@ -298,11 +194,5 @@
   .access {
     align-items: flex-start;
     padding-block: 1.5rem 2.5rem;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .view {
-    transition: none;
   }
 }

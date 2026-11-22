@@ -51,8 +51,23 @@ export const ACTORS = {
     'elena.ravassa.accessibility',
     true,
   ),
-  // Catálogo (`catalog.spec.ts`): sesión propia de Elena para no compartir el token de renovación.
-  catalogCoordinator: actor('elena.ravassa', 'Elena Ravassa', 'elena.ravassa.catalog', true),
+  // Solo consulta y usuarios (`consult.spec.ts`): otra sesión de Elena, que ya aceptó el aviso.
+  consultCoordinator: actor('elena.ravassa', 'Elena Ravassa', 'elena.ravassa.consult', true),
+  // Administración (usuario demo `administracion.gns`): una sesión por archivo para no compartir
+  // el token de renovación; la primera acepta el aviso de datos y las demás ya lo aceptaron.
+  catalogAdmin: actor('administracion.gns', 'Administrador GNS'),
+  accessibilityAdmin: actor(
+    'administracion.gns',
+    'Administrador GNS',
+    'administracion.gns.accessibility',
+    true,
+  ),
+  consultAdmin: actor(
+    'administracion.gns',
+    'Administrador GNS',
+    'administracion.gns.consult',
+    true,
+  ),
   // Ingresa por la interfaz en `ingreso.spec.ts`, que guarda su sesión para `role-protection`.
   signInTeacher: actor('valeria.montenueva', 'Valeria Montenueva'),
 } as const;
@@ -67,7 +82,10 @@ export const SETUP_ACTORS: readonly Actor[] = [
   ACTORS.trainingTeacher,
   ACTORS.accessibilityTeacher,
   ACTORS.accessibilityCoordinator,
-  ACTORS.catalogCoordinator,
+  ACTORS.consultCoordinator,
+  ACTORS.catalogAdmin,
+  ACTORS.accessibilityAdmin,
+  ACTORS.consultAdmin,
 ];
 
 /** Marcador único por ejecución para los textos que escriben los recorridos (R12). */

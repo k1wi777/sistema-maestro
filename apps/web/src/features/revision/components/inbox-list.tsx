@@ -3,7 +3,15 @@ import type { ReactNode } from 'react';
 
 import { LoadError, Loading, type PagedList } from '@/shared/data';
 import { formatDayWithYear } from '@/shared/format/dates';
-import { OBSERVER_TYPE_INFO, STATUS_INFO, STATUS_ORDER } from '@/shared/records';
+import {
+  OBSERVER_TYPE_INFO,
+  STATUS_INFO,
+  STATUS_ORDER,
+  canReviewGrade,
+  coordinatorOfGrade,
+  type CatalogGradeScope,
+  type ReviewUser,
+} from '@/shared/records';
 import {
   Button,
   ButtonLink,
@@ -15,7 +23,7 @@ import {
 } from '@/shared/ui';
 
 import { shortStatusLabel } from '../model/status-label';
-import { OBSERVER_INBOX_PATH } from '../model/paths';
+import { ReviewerText, StatusWithConsult } from './consult-cells';
 import styles from './inbox-list.module.css';
 
 const ALL = 'todas';
@@ -29,43 +37,85 @@ export function statusFromUrl(value: string | null): RecordStatus | undefined {
   return STATUS_ORDER.find((status) => status === value);
 }
 
-function StatusCell({ status }: { status: RecordStatus }) {
-  return <StatusBadge tone={STATUS_INFO[status].tone}>{shortStatusLabel(status)}</StatusBadge>;
+interface NoteColumnsContext {
+  /** Ruta de la bandeja de observadores de la vista (`<vista>/formatos/observador`). */
+  path: string;
+  /** Query para volver a la bandeja con el mismo alcance (`vista=colegio`). */
+  query: string;
+  user: ReviewUser | null;
+  grades: readonly CatalogGradeScope[];
+  /** Muestra la columna «Revisa»: coordinación en «Todo el colegio» y administración. */
+  showReviewer: boolean;
 }
 
-export const NOTE_COLUMNS: DataTableColumn<ObserverNote>[] = [
-  { key: 'teacher', header: 'Docente', render: (note) => note.teacher.fullName },
-  {
-    key: 'student',
-    header: 'Estudiante · grado',
-    render: (note) => `${note.studentFirstName} · ${note.grade.name}`,
-  },
-  {
-    key: 'type',
-    header: 'Tipo',
-    render: (note) => (
-      <StatusBadge tone={OBSERVER_TYPE_INFO[note.type].tone}>
-        {OBSERVER_TYPE_INFO[note.type].label}
-      </StatusBadge>
-    ),
-  },
-  { key: 'date', header: 'Fecha', render: (note) => formatDayWithYear(note.date) },
-  { key: 'status', header: 'Estado', render: (note) => <StatusCell status={note.status} /> },
-  {
-    key: 'action',
-    header: 'Acción',
-    render: (note) => (
-      <ButtonLink
-        context={`anotación de ${note.studentFirstName}`}
-        href={`${OBSERVER_INBOX_PATH}/${note.id}`}
-        variant={note.status === RecordStatus.Submitted ? 'primary' : 'outline'}
-        size="sm"
-      >
-        {note.status === RecordStatus.Submitted ? 'Revisar' : 'Abrir'}
-      </ButtonLink>
-    ),
-  },
-];
+export function noteColumns({
+  path,
+  query,
+  user,
+  grades,
+  showReviewer,
+}: NoteColumnsContext): DataTableColumn<ObserverNote>[] {
+  const coordinatorOf = (note: ObserverNote) => coordinatorOfGrade(grades, note.grade.id);
+  const consults = (note: ObserverNote) => !canReviewGrade(user, coordinatorOf(note));
+  return [
+    { key: 'teacher', header: 'Docente', render: (note) => note.teacher.fullName },
+    {
+      key: 'student',
+      header: 'Estudiante · grado',
+      render: (note) => `${note.studentFirstName} · ${note.grade.name}`,
+    },
+    ...(showReviewer
+      ? [
+          {
+            key: 'reviewer',
+            header: 'Revisa',
+            render: (note: ObserverNote) => <ReviewerText coordinator={coordinatorOf(note)} />,
+          },
+        ]
+      : []),
+    {
+      key: 'type',
+      header: 'Tipo',
+      render: (note) => (
+        <StatusBadge tone={OBSERVER_TYPE_INFO[note.type].tone}>
+          {OBSERVER_TYPE_INFO[note.type].label}
+        </StatusBadge>
+      ),
+    },
+    { key: 'date', header: 'Fecha', render: (note) => formatDayWithYear(note.date) },
+    {
+      key: 'status',
+      header: 'Estado',
+      render: (note) => (
+        <StatusWithConsult
+          consult={consults(note)}
+          badge={
+            <StatusBadge tone={STATUS_INFO[note.status].tone}>
+              {shortStatusLabel(note.status)}
+            </StatusBadge>
+          }
+        />
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Acción',
+      render: (note) => {
+        const review = !consults(note) && note.status === RecordStatus.Submitted;
+        return (
+          <ButtonLink
+            context={`anotación de ${note.studentFirstName}`}
+            href={`${path}/${note.id}${query ? `?${query}` : ''}`}
+            variant={review ? 'primary' : 'outline'}
+            size="sm"
+          >
+            {review ? 'Revisar' : consults(note) ? 'Ver' : 'Abrir'}
+          </ButtonLink>
+        );
+      },
+    },
+  ];
+}
 
 interface InboxListProps<T> {
   list: PagedList<T>;
@@ -79,6 +129,8 @@ interface InboxListProps<T> {
   count: (total: number) => string;
   /** Aviso sobre el orden de la lista. */
   intro?: ReactNode;
+  /** Selector de alcance («Mis grados» / «Todo el colegio») y filtros propios, sobre el de estado. */
+  toolbar?: ReactNode;
 }
 
 /** Filtro por estado y tabla con «Cargar más» comunes a las bandejas de diarios y observadores. */
@@ -93,10 +145,12 @@ export function InboxList<T>({
   loadError,
   count,
   intro,
+  toolbar,
 }: InboxListProps<T>) {
   return (
     <div className={styles.list}>
       {intro}
+      {toolbar}
       <SegmentedFilter
         label="Filtrar por estado"
         options={STATUS_OPTIONS}

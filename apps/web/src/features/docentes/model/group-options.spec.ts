@@ -1,4 +1,4 @@
-import { areasForLevel, groupOptions } from './group-options';
+import { areasForLevel, editableGroupIds, groupOptions } from './group-options';
 
 const levels = [
   { id: 'l-1', name: 'Preescolar alto (KTF)' },
@@ -48,5 +48,21 @@ describe('areasForLevel', () => {
 
     expect(areasForLevel(areas, 'l-1').map((area) => area.id)).toEqual(['a']);
     expect(areasForLevel(areas, 'l-2').map((area) => area.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('editableGroupIds', () => {
+  const groups = [
+    { id: 'gr-1', name: 'Kinder 1', gradeId: 'g-1' },
+    { id: 'gr-2', name: '2° 1', gradeId: 'g-2' },
+  ];
+
+  it('coordinación solo edita los grupos de sus grados', () => {
+    expect([...editableGroupIds(groups, new Set(['g-1']))]).toEqual(['gr-1']);
+    expect([...editableGroupIds(groups, new Set())]).toEqual([]);
+  });
+
+  it('administración (sin restricción) edita todos', () => {
+    expect([...editableGroupIds(groups, null)].sort()).toEqual(['gr-1', 'gr-2']);
   });
 });

@@ -6,17 +6,16 @@ import type { ReactNode } from 'react';
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading } from '@/shared/data';
 import { formatDayWithYear } from '@/shared/format/dates';
-import { OBSERVER_TYPE_INFO, STATUS_INFO } from '@/shared/records';
+import { OBSERVER_TYPE_INFO, STATUS_INFO, type GradeCoordinator } from '@/shared/records';
 import { ButtonLink, Card, Notice, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
 
 import { NOTE_FORMAT, useFormatReview, useFormatReviewData } from '../hooks/use-format-review';
-import { OBSERVER_INBOX_PATH } from '../model/paths';
+import { useRevisionPaths } from '../hooks/use-revision-paths';
 import { FormatReviewPanel } from './format-review-panel';
 import styles from './format-review.module.css';
 
-const BACK_HREF = OBSERVER_INBOX_PATH;
-
 function NotFound({ error, onRetry }: { error: ApiError; onRetry: () => void }) {
+  const BACK_HREF = useRevisionPaths().observers;
   if (error.statusCode === 404) {
     return (
       <Notice tone="warning" title="No encontramos esta anotación">
@@ -42,13 +41,22 @@ function Fact({ label, wide, children }: { label: string; wide?: boolean; childr
 function NoteReview({
   note,
   reviews,
+  coordinator,
   refresh,
 }: {
   note: ObserverNote;
   reviews: Review[];
+  coordinator: GradeCoordinator | null;
   refresh: () => Promise<ApiError | null>;
 }) {
-  const review = useFormatReview({ format: NOTE_FORMAT, record: note, reviews, refresh });
+  const BACK_HREF = useRevisionPaths().observers;
+  const review = useFormatReview({
+    format: NOTE_FORMAT,
+    record: note,
+    reviews,
+    coordinator,
+    refresh,
+  });
   const info = STATUS_INFO[note.status];
   const type = OBSERVER_TYPE_INFO[note.type];
   const convivencia =
@@ -146,6 +154,7 @@ export function ObserverReviewScreen({ id }: { id: string }) {
       key={id}
       note={remote.state.data.record}
       reviews={remote.state.data.reviews}
+      coordinator={remote.state.data.coordinator}
       refresh={remote.refresh}
     />
   );

@@ -5,13 +5,13 @@ import { lessonPlanAreasLabel, type LessonPlan, type Review } from '@gns/shared'
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
 import { formatDateRange, formatDateTime, formatShortDate } from '@/shared/format/dates';
-import { STATUS_INFO } from '@/shared/records';
+import { STATUS_INFO, type GradeCoordinator } from '@/shared/records';
 import { ButtonLink, Card, Notice, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
 
 import { usePlanReview, usePlanReviewData } from '../hooks/use-plan-review';
 import { planSections } from '../model/plan-blocks';
 import { planFiltersFromParams, planFiltersToQuery } from '../model/plan-filters';
-import { PLAN_INBOX_PATH } from '../model/paths';
+import { useRevisionPaths } from '../hooks/use-revision-paths';
 import { ReviewBlock } from './review-block';
 import { ReviewPanel } from './review-panel';
 import styles from './plan-review-screen.module.css';
@@ -64,15 +64,17 @@ function ResourcesList({ plan }: { plan: LessonPlan }) {
 interface PlanReviewProps {
   plan: LessonPlan;
   reviews: Review[];
+  coordinator: GradeCoordinator | null;
   refresh: () => Promise<ApiError | null>;
   backQuery: string;
 }
 
-function PlanReview({ plan, reviews, refresh, backQuery }: PlanReviewProps) {
-  const review = usePlanReview({ plan, reviews, refresh, backQuery });
+function PlanReview({ plan, reviews, coordinator, refresh, backQuery }: PlanReviewProps) {
+  const paths = useRevisionPaths();
+  const review = usePlanReview({ plan, reviews, coordinator, refresh, backQuery });
   const info = STATUS_INFO[plan.status];
   const dates = formatDateRange(plan.dateFrom, plan.dateTo);
-  const backHref = backQuery ? `${PLAN_INBOX_PATH}?${backQuery}` : PLAN_INBOX_PATH;
+  const backHref = backQuery ? `${paths.plans}?${backQuery}` : paths.plans;
   const { resubmission } = review;
 
   return (
@@ -97,6 +99,11 @@ function PlanReview({ plan, reviews, refresh, backQuery }: PlanReviewProps) {
         actions={<StatusBadge tone={info.tone}>{info.label}</StatusBadge>}
       />
 
+      {review.consultText ? (
+        <Notice tone="info" title="Solo consulta" className={styles.notice}>
+          {review.consultText}
+        </Notice>
+      ) : null}
       {review.blockedReason ? (
         <Notice tone="info" className={styles.notice}>
           {review.blockedReason}
@@ -137,9 +144,16 @@ function PlanReview({ plan, reviews, refresh, backQuery }: PlanReviewProps) {
 
 /** Revisión de una planeación (`/coordinacion/formatos/planeaciones/[id]`): el contenido se lee primero. */
 export function PlanReviewScreen({ id }: { id: string }) {
+  const paths = useRevisionPaths();
   const { params } = useQueryParams();
-  const backQuery = planFiltersToQuery(planFiltersFromParams(params));
-  const backHref = backQuery ? `${PLAN_INBOX_PATH}?${backQuery}` : PLAN_INBOX_PATH;
+  // Vuelve a la bandeja con los mismos filtros y el mismo alcance («Todo el colegio»).
+  const backQuery = [
+    planFiltersToQuery(planFiltersFromParams(params)),
+    params.get('vista') === 'colegio' ? 'vista=colegio' : '',
+  ]
+    .filter(Boolean)
+    .join('&');
+  const backHref = backQuery ? `${paths.plans}?${backQuery}` : paths.plans;
   const remote = usePlanReviewData(id);
 
   if (remote.state.status === 'loading') {
@@ -161,6 +175,7 @@ export function PlanReviewScreen({ id }: { id: string }) {
       key={id}
       plan={remote.state.data.plan}
       reviews={remote.state.data.reviews}
+      coordinator={remote.state.data.coordinator}
       refresh={remote.refresh}
       backQuery={backQuery}
     />

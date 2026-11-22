@@ -124,8 +124,9 @@ describe('asistente (BE-8)', () => {
       }
     });
 
-    it('coordinación también puede consultar el asistente', async () => {
-      await asUser(app, 'get', '/assistant/faqs', coord).expect(200);
+    it('el asistente es del docente: coordinación recibe 403 (gestiona las preguntas, no las consulta)', async () => {
+      const res = await asUser(app, 'get', '/assistant/faqs', coord).expect(403);
+      expect((res.body as { code: string }).code).toBe('sin_permiso');
     });
   });
 

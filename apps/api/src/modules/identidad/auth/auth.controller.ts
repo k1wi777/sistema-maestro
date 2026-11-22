@@ -11,11 +11,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiNoContentResponse } from '@nestjs/swagger';
-import { SessionProvider, UserRole } from '@gns/shared';
+import { ALL_ROLES, SessionProvider } from '@gns/shared';
 import { ZodResponse } from 'nestjs-zod';
 import type { RequestUser } from '../../../core/audit/request-user';
 import type { Env } from '../../../core/config/env.validation';
-import { AllowWithoutConsent, Public, RequireRole } from './access.decorators';
+import { AllowWithoutConsent, Public, Roles } from './access.decorators';
 import { AuthService, type SessionResult } from './auth.service';
 import { CurrentUser } from './current-user.decorator';
 import { ChangePasswordDto, CurrentUserDto, LoginDto } from './dto/auth.dto';
@@ -86,7 +86,7 @@ export class AuthController {
   }
 
   @Get('me')
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @AllowWithoutConsent()
   @ZodResponse({ status: 200, type: CurrentUserDto })
   me(@CurrentUser() user: RequestUser) {
@@ -94,7 +94,7 @@ export class AuthController {
   }
 
   @Put('password')
-  @RequireRole(UserRole.Teacher)
+  @Roles(...ALL_ROLES)
   @HttpCode(204)
   @ApiNoContentResponse({ description: 'Contraseña cambiada; las demás sesiones se cerraron' })
   async changePassword(

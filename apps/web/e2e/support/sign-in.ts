@@ -25,16 +25,15 @@ export async function submitCredentials(page: Page, actor: Actor): Promise<void>
 
 /**
  * Ingreso completo por la interfaz: formulario y, como ningún usuario demo tiene aceptación
- * previa, aviso de datos. Termina cuando la sesión ya tiene vista (la del docente o la selección
- * de vista de coordinación).
+ * previa, aviso de datos. Termina cuando la sesión ya está en la vista de su rol (cada rol tiene
+ * una sola: docente, coordinación o administración).
  */
 export async function signInThroughUi(page: Page, actor: Actor): Promise<void> {
   await submitCredentials(page, actor);
   if (!actor.noticeAccepted) {
     await acceptDataNotice(page);
   }
-  const chooser = page.getByRole('navigation', { name: 'Vistas disponibles' });
   await expect
-    .poll(async () => new URL(page.url()).pathname.startsWith('/docente') || chooser.isVisible())
+    .poll(() => /^\/(docente|coordinacion|administracion)(\/|$)/.test(new URL(page.url()).pathname))
     .toBe(true);
 }

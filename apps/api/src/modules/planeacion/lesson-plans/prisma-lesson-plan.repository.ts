@@ -9,6 +9,7 @@ import {
 } from '@gns/shared';
 import { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
+import { gradeCoordinatorWhere } from '../../../shared/records/coordinator-filter';
 import {
   PrismaReadRepository,
   type ModelDelegate,
@@ -200,6 +201,7 @@ export class PrismaLessonPlanRepository
       status: filters.status,
       periodId: filters.periodId,
       gradeId: filters.gradeId,
+      grade: gradeCoordinatorWhere(filters.coordinatorId),
       areas: filters.areaId ? { some: { areaId: filters.areaId } } : undefined,
     };
   }

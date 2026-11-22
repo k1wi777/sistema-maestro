@@ -13,8 +13,15 @@ import { useCallback, useMemo, useReducer, useRef, useState } from 'react';
 
 import { NETWORK_ERROR_CODE, type ApiError, type ApiResult } from '@/shared/api';
 import { useRemote, type Remote } from '@/shared/data';
+import {
+  canReviewGrade,
+  consultNotice,
+  coordinatorOfGrade,
+  type GradeCoordinator,
+} from '@/shared/records';
 import { useSession } from '@/shared/session';
 
+import { listGrades } from '../api/catalogs';
 import {
   approvePlan,
   getPlan,
@@ -46,7 +53,6 @@ import {
   type BlockKey,
   type PlanBlock,
 } from '../model/plan-blocks';
-import { PLAN_INBOX_PATH } from '../model/paths';
 import { nextPendingPlan } from '../model/queue';
 import {
   commentExcess,
@@ -61,21 +67,38 @@ import {
   serializeDraft,
 } from '../model/review-draft';
 import { findResubmission } from '../model/resubmission';
+import { useRevisionPaths } from './use-revision-paths';
 
 export interface PlanWithReviews {
   plan: LessonPlan;
   reviews: Review[];
+  /** Coordinadora del grado de la planeación (quien la revisa) o `null`. */
+  coordinator: GradeCoordinator | null;
 }
 
 async function loadPlan(id: string): Promise<ApiResult<PlanWithReviews>> {
-  const [plan, reviews] = await Promise.all([getPlan(id), listPlanReviews(id)]);
+  const [plan, reviews, grades] = await Promise.all([
+    getPlan(id),
+    listPlanReviews(id),
+    listGrades(),
+  ]);
   if (!plan.ok) {
     return plan;
   }
   if (!reviews.ok) {
     return reviews;
   }
-  return { ok: true, data: { plan: plan.data, reviews: reviews.data } };
+  if (!grades.ok) {
+    return grades;
+  }
+  return {
+    ok: true,
+    data: {
+      plan: plan.data,
+      reviews: reviews.data,
+      coordinator: coordinatorOfGrade(grades.data, plan.data.grade.id),
+    },
+  };
 }
 
 /** Una planeación con su historial de revisión. */
@@ -158,6 +181,7 @@ const QUEUE_SIZE = 20;
 interface UsePlanReviewOptions {
   plan: LessonPlan;
   reviews: Review[];
+  coordinator: GradeCoordinator | null;
   /** Vuelve a pedir la planeación y su historial sin pasar por la carga (conserva lo escrito). */
   refresh: () => Promise<ApiError | null>;
   /** Filtros de la bandeja de la que se vino, como query string. */
@@ -165,11 +189,20 @@ interface UsePlanReviewOptions {
 }
 
 /** Estado y acciones de la revisión de una planeación abierta por coordinación. */
-export function usePlanReview({ plan, reviews, refresh, backQuery }: UsePlanReviewOptions) {
+export function usePlanReview({
+  plan,
+  reviews,
+  coordinator,
+  refresh,
+  backQuery,
+}: UsePlanReviewOptions) {
   const router = useRouter();
+  const paths = useRevisionPaths();
   const { state: session } = useSession();
   const user = session.status === 'authenticated' ? session.user : null;
-  const storageKey = user ? draftKey(user.id, plan.id) : null;
+  // Solo la coordinadora del grado revisa: para el resto es «Solo consulta» y no hay borrador.
+  const canReview = canReviewGrade(user, coordinator);
+  const storageKey = user && canReview ? draftKey(user.id, plan.id) : null;
 
   const [initial] = useState<{ state: ReviewState; notice: ReviewNotice | null }>(() => {
     const restored = storageKey ? restoreDraft(readStorage(storageKey), plan) : null;
@@ -203,8 +236,11 @@ export function usePlanReview({ plan, reviews, refresh, backQuery }: UsePlanRevi
 
   const blocks = useMemo<PlanBlock[]>(() => reviewableBlocks(plan.level.name), [plan.level.name]);
   const own = user !== null && plan.teacher.id === user.id;
-  const canDecide = user !== null && plan.status === RecordStatus.Submitted && !own;
-  const blockedReason = readOnlyReason(plan.status, own);
+  const canDecide = canReview && plan.status === RecordStatus.Submitted && !own;
+  const blockedReason = canReview ? readOnlyReason(plan.status, own) : null;
+  const consultText = canReview
+    ? null
+    : consultNotice(user, coordinator, plan.grade.name, 'esta planeación');
 
   const changes = useMemo(() => buildChanges(plan, state.adjustments), [plan, state.adjustments]);
   const comment = useMemo(
@@ -394,6 +430,7 @@ export function usePlanReview({ plan, reviews, refresh, backQuery }: UsePlanRevi
       clearDraft();
       const queue = await listPlans({
         status: RecordStatus.Submitted,
+        coordinatorId: user.id,
         sortBy: 'submittedAt',
         sortOrder: 'asc',
         page: 1,
@@ -402,12 +439,12 @@ export function usePlanReview({ plan, reviews, refresh, backQuery }: UsePlanRevi
       const next = queue.ok ? nextPendingPlan(queue.data.items, plan.id, user.id) : null;
       const suffix = backQuery ? `?${backQuery}` : '';
       if (next) {
-        router.push(`${PLAN_INBOX_PATH}/${next.id}${suffix}`);
+        router.push(`${paths.plans}/${next.id}${suffix}`);
       } else {
-        router.push(`${PLAN_INBOX_PATH}?status=${RecordStatus.Submitted}&aviso=sin-pendientes`);
+        router.push(`${paths.plans}?status=${RecordStatus.Submitted}&aviso=sin-pendientes`);
       }
     });
-  }, [backQuery, buildBody, canDecide, clearDraft, fail, plan.id, router, run, user]);
+  }, [backQuery, buildBody, canDecide, clearDraft, fail, paths.plans, plan.id, router, run, user]);
 
   /** Devuelve con las observaciones; ya confirmado por quien revisa. */
   const confirmReturn = useCallback(async (): Promise<void> => {
@@ -476,6 +513,8 @@ export function usePlanReview({ plan, reviews, refresh, backQuery }: UsePlanRevi
     blocks,
     state,
     canDecide,
+    canReview,
+    consultText,
     blockedReason,
     own,
     changes,

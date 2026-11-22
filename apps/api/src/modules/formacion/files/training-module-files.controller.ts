@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   ConfirmModuleFileParamsDto,
@@ -28,7 +28,7 @@ const AUDIT = {
  * antes y después con los ids de archivo, nunca URL firmadas ni claves de objeto.
  */
 @Controller('training-modules/:id/files')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class TrainingModuleFilesController {
   constructor(private readonly files: TrainingFilesService) {}
 

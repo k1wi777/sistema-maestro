@@ -1,33 +1,58 @@
 'use client';
 
-import { LoadError } from '@/shared/data';
-import { FormatCard, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
+import Link from 'next/link';
 
-import { usePendingCounts } from '../hooks/use-format-inbox';
-import { pendingLabel, REVIEW_FORMAT_CARDS } from '../model/format-cards';
+import { LoadError } from '@/shared/data';
+import { useView } from '@/shared/shell';
+import { FormatCard, Notice, PageContainer, PageHeader, StatusBadge } from '@/shared/ui';
+
+import { useFormatsOverview } from '../hooks/use-format-inbox';
+import { useInboxViewer } from '../hooks/use-inbox-viewer';
+import { useRevisionPaths } from '../hooks/use-revision-paths';
+import { pendingLabel, reviewFormatCards, totalLabel } from '../model/format-cards';
 import styles from './formats-hub-screen.module.css';
 
-/** Hub de «Formatos» de coordinación: una tarjeta por formato con sus pendientes de revisión. */
+/**
+ * Hub de «Formatos» de coordinación y administración: una tarjeta por formato. Coordinación ve sus
+ * pendientes «en tus grados»; administración consulta, con el total de registros y un aviso por
+ * cada grado sin coordinadora.
+ */
 export function ReviewFormatsHubScreen() {
-  const pending = usePendingCounts();
-  const counts = pending.state.status === 'ready' ? pending.state.data : null;
+  const view = useView();
+  const paths = useRevisionPaths();
+  const viewer = useInboxViewer();
+  const overview = useFormatsOverview(viewer);
+  const data = overview.state.status === 'ready' ? overview.state.data : null;
+  const cards = reviewFormatCards(paths, viewer.isAdministrator);
 
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={view.title}
         title="Formatos"
-        description="Revisa las planeaciones, los diarios de campo (F-PA-05) y las anotaciones del observador: devuélvelos con observaciones o apruébalos con tu firma."
+        description={
+          viewer.isAdministrator
+            ? 'Consulta las planeaciones, los diarios de campo (F-PA-05) y las anotaciones del observador de todo el colegio. La revisión es de la coordinadora de cada grado.'
+            : 'Revisa las planeaciones, los diarios de campo (F-PA-05) y las anotaciones del observador de tus grados, y consulta los del resto del colegio.'
+        }
       />
-      {pending.state.status === 'error' ? (
+      {overview.state.status === 'error' ? (
         <LoadError
-          error={pending.state.error}
-          title="No pudimos contar los pendientes"
-          onRetry={pending.reload}
+          error={overview.state.error}
+          title="No pudimos cargar las cifras"
+          onRetry={overview.reload}
         />
       ) : null}
+      {viewer.isAdministrator
+        ? (data?.uncovered ?? []).map((grade) => (
+            <Notice key={grade.id} tone="warning" title="Grado sin coordinadora">
+              {`${grade.name} no tiene coordinadora: sus registros enviados no tienen quién los revise. Asígnale una en `}
+              <Link href={paths.grades}>Grados y áreas</Link>.
+            </Notice>
+          ))
+        : null}
       <ul className={styles.grid}>
-        {REVIEW_FORMAT_CARDS.map((card) => (
+        {cards.map((card) => (
           <li key={card.id}>
             <FormatCard
               title={card.title}
@@ -35,10 +60,16 @@ export function ReviewFormatsHubScreen() {
               icon={card.icon}
               href={card.href}
               badge={
-                counts ? (
-                  <StatusBadge tone={counts[card.pending] > 0 ? 'warning' : 'neutral'}>
-                    {pendingLabel(counts[card.pending])}
-                  </StatusBadge>
+                data ? (
+                  viewer.isAdministrator ? (
+                    <StatusBadge tone="neutral">
+                      {totalLabel(data.counts[card.pending])}
+                    </StatusBadge>
+                  ) : (
+                    <StatusBadge tone={data.counts[card.pending] > 0 ? 'warning' : 'neutral'}>
+                      {pendingLabel(data.counts[card.pending])}
+                    </StatusBadge>
+                  )
                 ) : null
               }
             />

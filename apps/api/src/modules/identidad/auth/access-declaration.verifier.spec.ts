@@ -2,11 +2,11 @@ import { Controller, Get, Post, type Type } from '@nestjs/common';
 import { DiscoveryModule } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { UserRole } from '@gns/shared';
-import { Public, RequireRole } from './access.decorators';
+import { Public, Roles } from './access.decorators';
 import { AccessDeclarationVerifier } from './access-declaration.verifier';
 
 @Controller('declared')
-@RequireRole(UserRole.Administrator)
+@Roles(UserRole.Administrator)
 class DeclaredController {
   @Get()
   list(): void {}
@@ -15,13 +15,17 @@ class DeclaredController {
   @Public()
   open(): void {}
 
+  @Post('review')
+  @Roles(UserRole.Administrator, UserRole.Teacher)
+  review(): void {}
+
   helper(): void {}
 }
 
 @Controller('mixed')
 class MixedController {
   @Post('a')
-  @RequireRole(UserRole.Teacher)
+  @Roles(UserRole.Teacher, UserRole.Administrator)
   declared(): void {}
 
   @Get('b')
@@ -62,8 +66,10 @@ describe('AccessDeclarationVerifier', () => {
       expect.arrayContaining([
         { method: 'GET', path: '/declared', access: UserRole.Administrator },
         { method: 'GET', path: '/declared/:id', access: 'public' },
+        // Orden fijo, sin importar el orden en que se declararon.
+        { method: 'POST', path: '/declared/review', access: 'docente,administrador' },
       ]),
     );
-    expect(routes).toHaveLength(2);
+    expect(routes).toHaveLength(3);
   });
 });

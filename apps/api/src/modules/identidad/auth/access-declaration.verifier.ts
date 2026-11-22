@@ -1,12 +1,13 @@
 import { Injectable, type OnApplicationBootstrap, RequestMethod, type Type } from '@nestjs/common';
 import { DiscoveryService, MetadataScanner, Reflector } from '@nestjs/core';
 import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants';
+import { ALL_ROLES } from '@gns/shared';
 import { ACCESS_KEY, type AccessRule } from './access.decorators';
 
 export interface RouteAccess {
   method: string;
   path: string;
-  /** `public` o el rol requerido, sin importar si lo declaró el método o la clase. */
+  /** `public` o los roles permitidos en orden fijo (`docente,coordinador,administrador`), sin importar si los declaró el método o la clase. */
   access: string;
   /** `Controlador.método`; `null` si la ruta no tiene declaración. */
   handler: string;
@@ -30,7 +31,7 @@ function joinPath(controllerPath: string, methodPath: string): string {
 
 /**
  * Acceso denegado por defecto: al arrancar recorre todos los controladores y, si algún
- * handler de ruta no declara `@Public()` ni `@RequireRole`, lanza un error que los nombra
+ * handler de ruta no declara `@Public()` ni `@Roles`, lanza un error que los nombra
  * y la API no inicia (tampoco los comandos ni las pruebas que montan `AppModule`).
  */
 @Injectable()
@@ -47,7 +48,7 @@ export class AccessDeclarationVerifier implements OnApplicationBootstrap {
       .map((route) => route.handler);
     if (missing.length > 0) {
       throw new Error(
-        `Endpoints sin declaración de acceso (@Public o @RequireRole):\n${[...new Set(missing)]
+        `Endpoints sin declaración de acceso (@Public o @Roles):\n${[...new Set(missing)]
           .map((name) => `- ${name}`)
           .join('\n')}`,
       );
@@ -86,7 +87,11 @@ export class AccessDeclarationVerifier implements OnApplicationBootstrap {
             routes.push({
               method: RequestMethod[requestMethod],
               path: joinPath(controllerPath, methodPath),
-              access: !rule ? 'sin declaración' : rule.kind === 'public' ? 'public' : rule.role,
+              access: !rule
+                ? 'sin declaración'
+                : rule.kind === 'public'
+                  ? 'public'
+                  : ALL_ROLES.filter((role) => rule.roles.has(role)).join(','),
               handler: `${controller.name}.${name}`,
               declared: rule !== undefined,
             });

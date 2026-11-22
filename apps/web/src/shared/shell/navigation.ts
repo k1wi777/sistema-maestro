@@ -1,4 +1,4 @@
-import type { FillableIconName, IconName } from '@/shared/ui';
+import type { IconName } from '@/shared/ui';
 
 import type { ProtectedRoute } from '../session/route-access';
 
@@ -18,13 +18,10 @@ export interface NavGroup {
   sections: readonly NavSection[];
 }
 
-/** Una de las dos vistas de la plataforma: su título, su tarjeta de selección y su menú. */
+/** Una de las tres vistas de la plataforma (una por rol): su título y su menú. */
 export interface ViewConfig {
   path: ProtectedRoute;
   title: string;
-  /** Texto de la tarjeta en la selección de vista. */
-  description: string;
-  icon: FillableIconName;
   groups: readonly NavGroup[];
 }
 
@@ -32,8 +29,6 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
   '/docente': {
     path: '/docente',
     title: 'Panel Docente',
-    description: 'Planeaciones, formatos y plan de formación',
-    icon: 'plan',
     groups: [
       {
         sections: [
@@ -63,8 +58,6 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
   '/coordinacion': {
     path: '/coordinacion',
     title: 'Coordinación académica',
-    description: 'Revisión, bitácora y planes de formación',
-    icon: 'ojo',
     groups: [
       {
         title: 'Seguimiento',
@@ -74,12 +67,6 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
             label: 'Formatos',
             icon: 'formatos',
             description: 'Revisa planeaciones, diarios de campo y observadores.',
-          },
-          {
-            href: '/coordinacion/bitacora',
-            label: 'Bitácora de actividad',
-            icon: 'bitacora',
-            description: 'Consulta la bitácora de actividad de la plataforma.',
           },
         ],
       },
@@ -91,12 +78,6 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
             label: 'Docentes y asignaciones',
             icon: 'gente',
             description: 'Gestiona los docentes, sus grados, áreas y asignaciones.',
-          },
-          {
-            href: '/coordinacion/grados-y-areas',
-            label: 'Grados y áreas',
-            icon: 'grados',
-            description: 'Organiza grados, grupos, áreas y coordinadoras.',
           },
           {
             href: '/coordinacion/planes',
@@ -112,6 +93,66 @@ export const VIEWS: Record<ProtectedRoute, ViewConfig> = {
           },
           {
             href: '/coordinacion/asistente',
+            label: 'Asistente',
+            icon: 'chat',
+            description:
+              'Gestiona las preguntas frecuentes del asistente y atiende las preguntas sin respuesta.',
+          },
+        ],
+      },
+    ],
+  },
+  '/administracion': {
+    path: '/administracion',
+    title: 'Administración',
+    groups: [
+      {
+        title: 'Seguimiento',
+        sections: [
+          {
+            href: '/administracion/formatos',
+            label: 'Formatos',
+            icon: 'formatos',
+            description:
+              'Consulta las planeaciones, los diarios de campo y los observadores de todo el colegio.',
+          },
+          {
+            href: '/administracion/bitacora',
+            label: 'Bitácora de actividad',
+            icon: 'bitacora',
+            description: 'Consulta la bitácora de actividad de la plataforma.',
+          },
+        ],
+      },
+      {
+        title: 'Gestión',
+        sections: [
+          {
+            href: '/administracion/docentes',
+            label: 'Docentes y asignaciones',
+            icon: 'gente',
+            description: 'Gestiona las asignaciones docentes, los usuarios y sus roles.',
+          },
+          {
+            href: '/administracion/grados-y-areas',
+            label: 'Grados y áreas',
+            icon: 'grados',
+            description: 'Organiza grados, grupos, áreas y coordinadoras.',
+          },
+          {
+            href: '/administracion/planes',
+            label: 'Planes de formación',
+            icon: 'ruta',
+            description: 'Crea y gestiona los planes de formación por área.',
+          },
+          {
+            href: '/administracion/avance',
+            label: 'Avance en la formación',
+            icon: 'grafica',
+            description: 'Sigue el avance de los docentes en su formación.',
+          },
+          {
+            href: '/administracion/asistente',
             label: 'Asistente',
             icon: 'chat',
             description:
@@ -143,7 +184,7 @@ export function sectionByHref(href: string): { view: ViewConfig; section: Linked
   throw new Error(`La ruta ${href} no está en el menú.`);
 }
 
-/** Primera sección con página de una vista: a donde lleva `/docente` o `/coordinacion`. */
+/** Primera sección con página de una vista: a donde lleva la raíz de cada vista. */
 export function firstSectionHref(view: ViewConfig): string {
   const first = sectionsOf(view)[0];
   if (!first) {

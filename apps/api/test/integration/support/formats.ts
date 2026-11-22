@@ -61,22 +61,24 @@ export const createNote = (
 export async function freshGrade(
   planning: Planning,
   teacherIds: string[],
+  coordinatorId: string | null = null,
 ): Promise<{ gradeId: string; areaId: string }> {
-  const target = await planning.gradeAndArea('Primaria');
+  const target = await planning.gradeAndArea('Primaria', coordinatorId);
   for (const id of teacherIds) {
     await planning.assign(id, target.gradeId, target.areaId);
   }
   return target;
 }
 
-/** Anotación del docente ya enviada. */
+/** Anotación del docente ya enviada, en un grado nuevo (con `coordinatorId` como coordinadora). */
 export async function submittedNote(
   app: INestApplication,
   planning: Planning,
   cookies: Cookies,
   body: Record<string, unknown> = {},
+  coordinatorId: string | null = null,
 ): Promise<NoteBody> {
-  const { gradeId } = await freshGrade(planning, []);
+  const { gradeId } = await freshGrade(planning, [], coordinatorId);
   const note = await createNote(app, cookies, { gradeId, ...body });
   await call(app, cookies, 'post', `/observer-notes/${note.id}/submit`).expect(200);
   return note;

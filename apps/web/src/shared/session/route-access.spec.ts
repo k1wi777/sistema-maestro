@@ -1,4 +1,10 @@
-import { availableViews, decideAccess, homePathFor, type AccessDecision } from './route-access';
+import {
+  PROTECTED_ROUTES,
+  decideAccess,
+  homePathFor,
+  roleCanUse,
+  type AccessDecision,
+} from './route-access';
 import {
   applyResolution,
   endSession,
@@ -25,33 +31,38 @@ const auth = (
 });
 
 describe('decideAccess', () => {
-  const cases: [string, SessionState, 'docente' | 'coordinador', AccessDecision][] = [
-    ['cargando', { status: 'loading' }, 'docente', 'loading'],
-    ['API caída', { status: 'unavailable' }, 'docente', 'unavailable'],
-    ['sin sesión', { status: 'anonymous' }, 'docente', 'redirect-login'],
-    ['sesión terminada', { status: 'ended' }, 'coordinador', 'redirect-login'],
-    ['docente en docente', auth('docente'), 'docente', 'allowed'],
-    ['docente en coordinación', auth('docente'), 'coordinador', 'forbidden'],
-    ['coordinador en docente', auth('coordinador'), 'docente', 'allowed'],
-    ['coordinador en coordinación', auth('coordinador'), 'coordinador', 'allowed'],
-    ['administrador en docente', auth('administrador'), 'docente', 'allowed'],
-    ['administrador en coordinación', auth('administrador'), 'coordinador', 'allowed'],
-    ['aviso pendiente', auth('docente', 'pending'), 'docente', 'consent-pending'],
-    ['rol insuficiente y aviso pendiente', auth('docente', 'pending'), 'coordinador', 'forbidden'],
+  const teacher = PROTECTED_ROUTES['/docente'];
+  const coordination = PROTECTED_ROUTES['/coordinacion'];
+  const administration = PROTECTED_ROUTES['/administracion'];
+  const cases: [string, SessionState, readonly string[], AccessDecision][] = [
+    ['cargando', { status: 'loading' }, teacher, 'loading'],
+    ['API caída', { status: 'unavailable' }, teacher, 'unavailable'],
+    ['sin sesión', { status: 'anonymous' }, teacher, 'redirect-login'],
+    ['sesión terminada', { status: 'ended' }, coordination, 'redirect-login'],
+    ['docente en docente', auth('docente'), teacher, 'allowed'],
+    ['docente en coordinación', auth('docente'), coordination, 'forbidden'],
+    ['docente en administración', auth('docente'), administration, 'forbidden'],
+    // Sin jerarquía: ni coordinación ni administración entran en la vista docente.
+    ['coordinador en docente', auth('coordinador'), teacher, 'forbidden'],
+    ['coordinador en coordinación', auth('coordinador'), coordination, 'allowed'],
+    ['coordinador en administración', auth('coordinador'), administration, 'forbidden'],
+    ['administrador en docente', auth('administrador'), teacher, 'forbidden'],
+    ['administrador en coordinación', auth('administrador'), coordination, 'forbidden'],
+    ['administrador en administración', auth('administrador'), administration, 'allowed'],
+    ['aviso pendiente', auth('docente', 'pending'), teacher, 'consent-pending'],
+    ['rol fuera y aviso pendiente', auth('docente', 'pending'), coordination, 'forbidden'],
   ];
-  it.each(cases)('%s', (_label, state, required, expected) => {
-    expect(decideAccess(state, required)).toBe(expected);
+  it.each(cases)('%s', (_label, state, allowed, expected) => {
+    expect(decideAccess(state, allowed as never)).toBe(expected);
   });
 });
 
-describe('availableViews', () => {
-  it('el docente solo alcanza su vista', () => {
-    expect(availableViews('docente')).toEqual(['/docente']);
-  });
-
-  it('coordinación y administración alcanzan las dos vistas', () => {
-    expect(availableViews('coordinador')).toEqual(['/docente', '/coordinacion']);
-    expect(availableViews('administrador')).toEqual(['/docente', '/coordinacion']);
+describe('roleCanUse', () => {
+  it('cada vista admite solo el rol propio', () => {
+    expect(roleCanUse('/docente', 'docente')).toBe(true);
+    expect(roleCanUse('/docente', 'coordinador')).toBe(false);
+    expect(roleCanUse('/coordinacion', 'administrador')).toBe(false);
+    expect(roleCanUse('/administracion', 'administrador')).toBe(true);
   });
 });
 
@@ -59,7 +70,7 @@ describe('homePathFor', () => {
   it('asigna la vista propia de cada rol', () => {
     expect(homePathFor('docente')).toBe('/docente');
     expect(homePathFor('coordinador')).toBe('/coordinacion');
-    expect(homePathFor('administrador')).toBe('/coordinacion');
+    expect(homePathFor('administrador')).toBe('/administracion');
   });
 });
 

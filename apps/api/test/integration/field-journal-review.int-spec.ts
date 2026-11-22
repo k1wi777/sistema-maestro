@@ -69,15 +69,37 @@ describe('revisión del diario de campo por coordinación (#107)', () => {
     // Nunca borradores ajenos: solo la anotación lista.
     expect(seen.annotations).toHaveLength(1);
     expect(seen.viewer).toMatchObject({ canReview: true, canSubmit: false, canAnnotate: false });
-    const inbox = (await get(own.coordinator, '/field-journals?scope=review').expect(200))
-      .body as Page;
+    const inbox = (
+      await get(
+        own.coordinator,
+        `/field-journals?scope=review&coordinatorId=${own.coordinator.user.id}`,
+      ).expect(200)
+    ).body as Page;
     expect(inbox.items.map((item) => item.id)).toEqual([journalId]);
-    // Otra coordinadora (de otro grado) no lo ve ni lo revisa.
-    await get(own.otherCoordinator, `/field-journals/${journalId}`).expect(404);
+    // Otra coordinadora (de otro grado) lo consulta, pero no lo revisa (#115).
+    const forOther = await detail(own.otherCoordinator, journalId);
+    expect(forOther.viewer).toMatchObject({ canReview: false });
     await post(own.otherCoordinator, `/field-journals/${journalId}/approve`).send({}).expect(403);
-    const empty = (await get(own.otherCoordinator, '/field-journals?scope=review').expect(200))
+    expect((await detail(own.admin, journalId)).viewer.canReview).toBe(false);
+    // «Mis grados» es el filtro por coordinadora: la otra no tiene este grado.
+    const theirs = (
+      await get(
+        own.otherCoordinator,
+        `/field-journals?scope=review&coordinatorId=${own.otherCoordinator.user.id}`,
+      ).expect(200)
+    ).body as Page;
+    expect(theirs.items.map((item) => item.id)).not.toContain(journalId);
+    const mine = (
+      await get(
+        own.coordinator,
+        `/field-journals?scope=review&coordinatorId=${own.coordinator.user.id}`,
+      ).expect(200)
+    ).body as Page;
+    expect(mine.items.map((item) => item.id)).toContain(journalId);
+    // Todo el colegio: la otra coordinadora ve el diario enviado en la bandeja.
+    const everything = (await get(own.otherCoordinator, '/field-journals?scope=review').expect(200))
       .body as Page;
-    expect(empty.totalItems).toBe(0);
+    expect(everything.items.map((item) => item.id)).toContain(journalId);
   });
 
   it('las cifras y el alcance de revisión de la coordinadora y de administración (R21)', async () => {
@@ -210,22 +232,32 @@ describe('revisión del diario de campo por coordinación (#107)', () => {
   it('403 de autorrevisión al director(a) y a los autores de anotaciones enviadas (R15)', async () => {
     const own = await journalWorld(app);
     const { journalId } = await submittedJournal(app, own);
-    // Administración que, además, dirige el grupo o anotó en él.
+    // Coordinadora del grado que, además, dirige el grupo o anotó en él.
     for (const teacher of [own.director, own.ana]) {
-      await prisma.user.update({ where: { id: teacher.user.id }, data: { role: 'administrador' } });
+      await prisma.user.update({ where: { id: teacher.user.id }, data: { role: 'coordinador' } });
+      await prisma.grade.update({
+        where: { id: own.gradeId },
+        data: { coordinatorId: teacher.user.id },
+      });
       const res = await post(teacher, `/field-journals/${journalId}/approve`).send({}).expect(403);
       expect(apiErrorBodySchema.parse(res.body).code).toBe('autorrevision_no_permitida');
       await prisma.user.update({ where: { id: teacher.user.id }, data: { role: 'docente' } });
     }
-    expect((await detail(own.admin, journalId)).viewer.canReview).toBe(true);
-    await post(own.admin, `/field-journals/${journalId}/approve`).send({}).expect(200);
+    await prisma.grade.update({
+      where: { id: own.gradeId },
+      data: { coordinatorId: own.coordinator.user.id },
+    });
+    expect((await detail(own.coordinator, journalId)).viewer.canReview).toBe(true);
+    expect((await detail(own.admin, journalId)).viewer.canReview).toBe(false);
+    await post(own.admin, `/field-journals/${journalId}/approve`).send({}).expect(403);
+    await post(own.coordinator, `/field-journals/${journalId}/approve`).send({}).expect(200);
   });
 
   it('un docente no revisa, y un diario sin enviar no se aprueba (409), tampoco la coordinadora', async () => {
     const own = await journalWorld(app);
     const { journalId } = await startedJournal(app, own);
     await post(own.ana, `/field-journals/${journalId}/approve`).send({}).expect(403);
-    await post(own.admin, `/field-journals/${journalId}/approve`).send({}).expect(409);
+    await post(own.admin, `/field-journals/${journalId}/approve`).send({}).expect(403);
     await post(own.coordinator, `/field-journals/${journalId}/approve`).send({}).expect(409);
   });
 
@@ -283,12 +315,24 @@ describe('revisión del diario de campo por coordinación (#107)', () => {
     ).toContain(secret);
   });
 
-  it('administración revisa un diario de un grado sin coordinadora (P4)', async () => {
+  it('un diario de un grado sin coordinadora lo consultan coordinación y administración, pero no lo revisa nadie (P4)', async () => {
     const own = await journalWorld(app);
     await prisma.grade.update({ where: { id: own.gradeId }, data: { coordinatorId: null } });
     const { journalId } = await submittedJournal(app, own);
-    await get(own.coordinator, `/field-journals/${journalId}`).expect(404);
+    expect((await detail(own.coordinator, journalId)).viewer.canReview).toBe(false);
+    expect((await detail(own.admin, journalId)).viewer.canReview).toBe(false);
     await post(own.coordinator, `/field-journals/${journalId}/approve`).send({}).expect(403);
-    await post(own.admin, `/field-journals/${journalId}/approve`).send({}).expect(200);
+    await post(own.admin, `/field-journals/${journalId}/approve`).send({}).expect(403);
+    const withoutCoordinator = (
+      await get(own.admin, '/field-journals?scope=review&coordinatorId=none').expect(200)
+    ).body as Page;
+    expect(withoutCoordinator.items.map((item) => item.id)).toContain(journalId);
+    const assigned = (
+      await get(
+        own.admin,
+        `/field-journals?scope=review&coordinatorId=${own.otherCoordinator.user.id}`,
+      ).expect(200)
+    ).body as Page;
+    expect(assigned.items.map((item) => item.id)).not.toContain(journalId);
   });
 });

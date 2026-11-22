@@ -109,8 +109,11 @@ export interface JournalChanges {
 /** Quién consulta una lista: sus grupos y diarios, o la bandeja de revisión. */
 export type JournalVisibility =
   | { kind: 'mine'; userId: string; groupIds: string[] }
-  /** `coordinatorId` nulo: administración (todos los diarios, también los En curso). */
-  | { kind: 'review'; coordinatorId: string | null };
+  /**
+   * Bandeja de revisión. `coordinatorId` limita a los grados de esa coordinadora (nulo: todo el
+   * colegio); `submittedOnly` excluye los «En curso» (todo el personal salvo administración).
+   */
+  | { kind: 'review'; coordinatorId: string | null; submittedOnly: boolean };
 
 export type JournalListFilters = FieldJournalFilters & { visibility: JournalVisibility };
 

@@ -34,7 +34,7 @@ La **Plataforma GNS**: la plataforma web institucional de George Noble School
 pedagógico GNS, los formatos institucionales (diario de campo F-PA-05 y
 observador del estudiante), el plan de formación docente (inducción y planes por
 área, con Desafío GNS y certificados), un asistente de preguntas frecuentes y la
-revisión y auditoría por coordinación académica. Sustituye documentos sueltos,
+revisión por coordinación académica y auditoría por administración. Sustituye documentos sueltos,
 formularios y correos, y deja trazabilidad de cada acción.
 
 Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
@@ -43,8 +43,8 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 ## Para quién
 
 - **Docentes** de todos los niveles (preescolar, primaria y bachillerato): planean, registran formatos, hacen su formación y consultan el asistente.
-- **Coordinación académica**: revisa, ajusta, aprueba o devuelve registros; asigna grados y áreas; crea planes de formación por área; consulta la bitácora. Es el auditor de la plataforma.
-- **Administrador** de la plataforma: crea los usuarios y asigna sus roles (nadie se registra solo).
+- **Coordinación académica**: revisa, ajusta, aprueba o devuelve los registros de **sus grados** (los demás los consulta); asigna docentes solo en los grupos de sus grados; crea planes de formación por área y sigue el avance. Ya no consulta la bitácora.
+- **Administrador** de la plataforma: crea los usuarios y asigna sus roles (nadie se registra solo), gestiona grados, grupos, áreas y la coordinadora de cada grado, y es el único que consulta la bitácora (el auditor de la plataforma). Consulta todos los registros pedagógicos, pero no los revisa.
 
 ## Principios
 

@@ -43,8 +43,11 @@ export function FormatReviewPanel({
   const article = noun === 'hoja' ? 'la hoja' : 'la anotación';
 
   return (
-    <aside className={styles.panel} aria-label="Revisión de coordinación">
-      <Card title="Revisión de coordinación">
+    <aside
+      className={styles.panel}
+      aria-label={review.canReview ? 'Revisión de coordinación' : 'Historial'}
+    >
+      <Card title={review.canReview ? 'Revisión de coordinación' : 'Historial'}>
         <div className={styles.body}>
           {notice ? (
             <Notice tone={notice.tone}>
@@ -59,6 +62,11 @@ export function FormatReviewPanel({
                   Volver a {backLabel}
                 </ButtonLink>
               ) : null}
+            </Notice>
+          ) : null}
+          {review.consultText ? (
+            <Notice tone="info" title="Solo consulta">
+              {review.consultText}
             </Notice>
           ) : null}
           {!canDecide && review.blockedReason ? (
@@ -112,7 +120,7 @@ export function FormatReviewPanel({
             <ReviewHistory lines={review.history} teacher={teacher} signed />
           </section>
 
-          {status !== RecordStatus.Voided ? (
+          {review.canReview && status !== RecordStatus.Voided ? (
             <Button
               variant="void"
               size="sm"

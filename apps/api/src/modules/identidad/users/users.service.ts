@@ -1,6 +1,7 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import {
   SessionRevocationReason,
+  UserRole,
   UserStatus,
   type CreateUserInput,
   type ListQuery,
@@ -15,6 +16,7 @@ import {
 } from '../../../shared/database/transaction-runner';
 import { SessionsService } from '../auth/sessions.service';
 import { CredentialsService } from '../credentials/credentials.service';
+import { UserRoleChangeEffects } from './user-role-change-effects';
 import {
   USER_REPOSITORY,
   type UserFilters,
@@ -23,6 +25,7 @@ import {
 } from './user.repository';
 
 const EMAIL_TAKEN_MESSAGE = 'Ya existe un usuario con ese correo institucional';
+const LAST_ADMIN_MESSAGE = 'Debe quedar al menos un administrador activo';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +34,7 @@ export class UsersService {
     @Inject(TRANSACTION_RUNNER) private readonly transactions: TransactionRunner,
     private readonly credentials: CredentialsService,
     private readonly sessions: SessionsService,
+    private readonly roleEffects: UserRoleChangeEffects,
   ) {}
 
   list(query: ListQuery<UserFilters, UserSortField>): Promise<Page<User>> {
@@ -71,11 +75,9 @@ export class UsersService {
     });
   }
 
-  async update(id: string, input: UpdateUserInput, actor: RequestUser): Promise<User> {
+  /** Nombre y correo; el rol tiene su propio camino (`changeRole`). */
+  async update(id: string, input: UpdateUserInput): Promise<User> {
     const current = await this.get(id);
-    if (id === actor.id && input.role !== undefined && input.role !== current.role) {
-      throw new ConflictException('No puedes cambiar tu propio rol');
-    }
     if (input.email !== undefined && input.email !== current.email) {
       const owner = await this.repository.findByEmail(input.email);
       if (owner && owner.id !== id) {
@@ -85,13 +87,48 @@ export class UsersService {
     return this.repository.update(id, input);
   }
 
-  /** Al desactivar, revoca todas las sesiones del usuario. */
+  /**
+   * Cambia el rol con sus consecuencias en una sola transacción: bloquea a los administradores
+   * activos (409 si el usuario es el último o si es la propia cuenta), actualiza el rol, ejecuta
+   * los efectos registrados (retirar asignaciones, dejar grados sin coordinadora) y revoca las
+   * sesiones del usuario. Los registros pedagógicos del usuario no se tocan.
+   */
+  async changeRole(id: string, role: UserRole, actor: RequestUser): Promise<User> {
+    const current = await this.get(id);
+    if (id === actor.id && role !== current.role) {
+      throw new ConflictException('No puedes cambiar tu propio rol');
+    }
+    if (current.role === role) {
+      return current;
+    }
+    return this.transactions.run(async () => {
+      if (current.role === UserRole.Administrator && current.status === UserStatus.Active) {
+        await this.requireAnotherActiveAdministrator(id);
+      }
+      const user = await this.repository.update(id, { role });
+      await this.roleEffects.run({ userId: id, from: current.role, to: role, actor });
+      await this.sessions.revokeAllForUser(id, SessionRevocationReason.RoleChange);
+      return user;
+    });
+  }
+
+  /**
+   * Al desactivar, revoca todas las sesiones del usuario. No toca sus grados ni asignaciones.
+   * Nadie se desactiva a sí mismo y siempre queda un administrador activo.
+   */
   async setStatus(id: string, status: UserStatus, actor: RequestUser): Promise<User> {
     const current = await this.get(id);
     if (id === actor.id && status === UserStatus.Inactive) {
       throw new ConflictException('No puedes desactivarte a ti mismo');
     }
     return this.transactions.run(async () => {
+      if (
+        status === UserStatus.Inactive &&
+        current.status === UserStatus.Active &&
+        current.role === UserRole.Administrator
+      ) {
+        await this.requireAnotherActiveAdministrator(id);
+      }
       const user =
         current.status === status ? current : await this.repository.update(id, { status });
       if (status === UserStatus.Inactive) {
@@ -99,6 +136,14 @@ export class UsersService {
       }
       return user;
     });
+  }
+
+  /** Con las filas de los administradores activos bloqueadas, exige que quede otro además de `id`. */
+  private async requireAnotherActiveAdministrator(id: string): Promise<void> {
+    const administrators = await this.repository.lockActiveAdministrators();
+    if (!administrators.some((adminId) => adminId !== id)) {
+      throw new ConflictException(LAST_ADMIN_MESSAGE);
+    }
   }
 
   /** Reemplaza la contraseña y revoca todas las sesiones del usuario. */

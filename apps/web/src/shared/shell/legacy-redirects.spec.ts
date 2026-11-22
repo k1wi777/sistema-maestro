@@ -6,8 +6,14 @@ import { LEGACY_REDIRECTS, nextRedirects } from './legacy-redirects';
 // apps/web/src/shared/shell → apps/web/src/app
 const APP = join(__dirname, '..', '..', 'app');
 
-const pageFile = (href: string) =>
-  join(APP, href.startsWith('/docente') ? '(docente)' : '(coordinacion)', href, 'page.tsx');
+const pageFile = (href: string) => {
+  const group = href.startsWith('/docente')
+    ? '(docente)'
+    : href.startsWith('/administracion')
+      ? '(administracion)'
+      : '(coordinacion)';
+  return join(APP, group, href, 'page.tsx');
+};
 
 const pathOf = (url: string) => url.split('?')[0] ?? url;
 
@@ -25,6 +31,8 @@ describe('redirecciones de rutas anteriores', () => {
         '/coordinacion/formatos?tipo=observador',
         '/coordinacion/formatos?tipo=diario',
         '/coordinacion/formatos?estado=enviada',
+        '/coordinacion/bitacora',
+        '/coordinacion/grados-y-areas',
       ]),
     );
   });
@@ -47,7 +55,12 @@ describe('redirecciones de rutas anteriores', () => {
     const sources = new Set(LEGACY_REDIRECTS.map((rule) => rule.source.replace('/:path*', '')));
     for (const rule of LEGACY_REDIRECTS) {
       const destination = rule.destination.replace('/:path*', '');
-      const old = ['/docente/planeacion', '/coordinacion/planeaciones'];
+      const old = [
+        '/docente/planeacion',
+        '/coordinacion/planeaciones',
+        '/coordinacion/bitacora',
+        '/coordinacion/grados-y-areas',
+      ];
       expect(old).not.toContain(destination);
       // Las reglas con consulta salen de /…/formatos, que no es destino de ninguna regla.
       expect(sources.has(destination) && rule.has === undefined).toBe(false);

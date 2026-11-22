@@ -13,6 +13,7 @@ import {
   TextInput,
   type SelectOption,
 } from '@/shared/ui';
+import { useView } from '@/shared/shell';
 
 import { useAssignedTeachers, useAuditExport, useAuditLog } from '../hooks/use-audit-log';
 import {
@@ -39,6 +40,7 @@ const ROLE_OPTIONS: SelectOption[] = [
 
 /** Bitácora de actividad: solo lectura, con filtros en la URL, detalle y exportación a CSV. */
 export function AuditLogScreen() {
+  const view = useView();
   const { params, update } = useQueryParams();
   const filters = auditFiltersFromParams(params);
   const rangeError = dateRangeError(filters);
@@ -62,7 +64,7 @@ export function AuditLogScreen() {
   return (
     <PageContainer>
       <PageHeader
-        context="Coordinación académica"
+        context={view.title}
         title="Bitácora de actividad"
         description="Cada ingreso, registro y revisión de la plataforma, con fecha, hora y usuario. Solo lectura."
         actions={

@@ -79,6 +79,8 @@ export const gradeSchema = z.object({
   sortOrder: z.number().int(),
   active: z.boolean(),
   coordinatorId: z.uuid().nullable(),
+  /** Coordinadora del grado (id y nombre) o `null` si no tiene. */
+  coordinator: z.object({ id: z.uuid(), fullName: z.string() }).nullable(),
   ...timestamps,
 });
 export type Grade = z.output<typeof gradeSchema>;

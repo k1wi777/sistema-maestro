@@ -271,12 +271,12 @@ describe('ruta y módulo del docente (BE-7)', () => {
     expect(theirs.state).toBe('en_curso');
   });
 
-  it('exige el aviso de datos aceptado y el rol docente o superior', async () => {
+  it('exige el aviso de datos aceptado y el rol docente (coordinación no tiene ruta de formación)', async () => {
     const withoutConsent = await signIn(app, await createTestUser(app, { consent: false }));
 
     const res = await call(app, withoutConsent, 'get', '/me/training/route').expect(403);
 
     expect((res.body as { code: string }).code).toBe(ApiErrorCode.ConsentRequired);
-    await call(app, coord, 'get', '/me/training/route').expect(200);
+    await call(app, coord, 'get', '/me/training/route').expect(403);
   });
 });

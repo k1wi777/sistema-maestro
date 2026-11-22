@@ -1,7 +1,16 @@
-import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+  type OnModuleInit,
+} from '@nestjs/common';
 import {
   ASSIGNABLE_ROLES,
+  AuditLogType,
   TeacherAssignmentStatus,
+  UserRole,
   UserStatus,
   type CreateTeacherAssignmentInput,
   type ListQuery,
@@ -12,11 +21,18 @@ import {
   type TeacherAssignmentSortField,
   type UpdateTeacherAssignmentInput,
 } from '@gns/shared';
+import type { RequestUser } from '../../../core/audit/request-user';
 import { RequestValidationException } from '../../../core/http/request-validation.exception';
 import {
   TRANSACTION_RUNNER,
   type TransactionRunner,
 } from '../../../shared/database/transaction-runner';
+import { AuditLogService } from '../../auditoria/audit-log.service';
+import {
+  UserRoleChangeEffects,
+  type UserRoleChange,
+  type UserRoleChangeEffect,
+} from '../../identidad/users/user-role-change-effects';
 import { UsersService } from '../../identidad/users/users.service';
 import { AreasService } from '../catalogs/area/areas.service';
 import { GradesService } from '../catalogs/grade/grades.service';
@@ -34,7 +50,7 @@ const homeroomTakenMessage = (groupName: string, teacherName: string) =>
   `${groupName} ya tiene director(a) de grupo: ${teacherName}`;
 
 @Injectable()
-export class TeacherAssignmentsService {
+export class TeacherAssignmentsService implements UserRoleChangeEffect, OnModuleInit {
   constructor(
     @Inject(TEACHER_ASSIGNMENT_REPOSITORY)
     private readonly repository: TeacherAssignmentRepository,
@@ -44,7 +60,13 @@ export class TeacherAssignmentsService {
     private readonly grades: GradesService,
     private readonly areas: AreasService,
     private readonly schoolYears: SchoolYearsService,
+    private readonly audit: AuditLogService,
+    private readonly roleEffects: UserRoleChangeEffects,
   ) {}
+
+  onModuleInit(): void {
+    this.roleEffects.register(this);
+  }
 
   /** Sin `schoolYear` en el filtro, el vigente (409 si no hay ninguno). */
   async list(
@@ -58,7 +80,8 @@ export class TeacherAssignmentsService {
     return this.repository.findById(id);
   }
 
-  async create(input: CreateTeacherAssignmentInput): Promise<TeacherAssignment> {
+  async create(user: RequestUser, input: CreateTeacherAssignmentInput): Promise<TeacherAssignment> {
+    await this.requireInScope(user, input.groupId);
     await this.requireAssignableTeacher(input.teacherId);
     await this.requireOpenGroupAndArea(input.groupId, input.areaId);
     const schoolYear = await this.resolveSchoolYear(input.schoolYear);
@@ -92,8 +115,13 @@ export class TeacherAssignmentsService {
   }
 
   /** Solo la dirección de grupo: cambiar docente, grupo, área o año es retirar y crear otra. */
-  async update(id: string, input: UpdateTeacherAssignmentInput): Promise<TeacherAssignment> {
+  async update(
+    user: RequestUser,
+    id: string,
+    input: UpdateTeacherAssignmentInput,
+  ): Promise<TeacherAssignment> {
     const current = await this.get(id);
+    await this.requireInScope(user, current.group.id);
     if (current.isHomeroomTeacher === input.isHomeroomTeacher) {
       return current;
     }
@@ -107,8 +135,13 @@ export class TeacherAssignmentsService {
   }
 
   /** Retirar conserva el registro; repetir el estado actual es idempotente. */
-  async setStatus(id: string, status: TeacherAssignmentStatus): Promise<TeacherAssignment> {
+  async setStatus(
+    user: RequestUser,
+    id: string,
+    status: TeacherAssignmentStatus,
+  ): Promise<TeacherAssignment> {
     const current = await this.get(id);
+    await this.requireInScope(user, current.group.id);
     if (current.status === status) {
       return current;
     }
@@ -124,6 +157,42 @@ export class TeacherAssignmentsService {
         await this.requireFreeHomeroom(current.group.id, current.schoolYear, id);
       }
       return this.repository.update(id, { status });
+    });
+  }
+
+  /**
+   * Efecto de un cambio de rol (#115): quien deja de ser docente pierde sus asignaciones activas
+   * de todos los años y, con ellas, la dirección de grupo; no se traslada a nadie ni se borra
+   * nada. Cada retiro queda en la bitácora con los grupos y áreas por nombre.
+   */
+  async onRoleChange({ userId, from, to, actor }: UserRoleChange): Promise<void> {
+    if (from !== UserRole.Teacher || to === UserRole.Teacher) {
+      return;
+    }
+    const active = await this.repository.findAllActiveByTeacher(userId);
+    if (active.length === 0) {
+      return;
+    }
+    for (const assignment of active) {
+      await this.repository.update(assignment.id, {
+        status: TeacherAssignmentStatus.Withdrawn,
+        isHomeroomTeacher: false,
+      });
+    }
+    const detail = active
+      .map(
+        (item) =>
+          `${item.group.name} · ${item.area.name} (${item.schoolYear})${item.isHomeroomTeacher ? ' · dirección de grupo' : ''}`,
+      )
+      .join('; ');
+    await this.audit.record({
+      userId: actor.id,
+      role: actor.role,
+      type: AuditLogType.Users,
+      action: 'Retiró asignaciones por cambio de rol',
+      entity: 'usuario',
+      entityId: userId,
+      detail,
     });
   }
 
@@ -166,6 +235,22 @@ export class TeacherAssignmentsService {
       throw new NotFoundException('Asignación no encontrada');
     }
     return assignment;
+  }
+
+  /**
+   * La coordinadora asigna, edita y retira solo en los grupos de sus grados (403 en otro caso);
+   * administración, en cualquiera. Un grupo inexistente no se juzga aquí: lo rechaza la
+   * validación del grupo (400) o la búsqueda de la asignación (404).
+   */
+  private async requireInScope(user: RequestUser, groupId: string): Promise<void> {
+    if (user.role !== UserRole.Coordinator) {
+      return;
+    }
+    const group = await this.groups.find(groupId);
+    const grade = group ? await this.grades.find(group.gradeId) : null;
+    if (grade && grade.coordinatorId !== user.id) {
+      throw new ForbiddenException('Solo asignas en los grupos de tus grados');
+    }
   }
 
   private async requireAssignableTeacher(teacherId: string): Promise<void> {

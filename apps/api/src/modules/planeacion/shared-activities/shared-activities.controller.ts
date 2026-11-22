@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import {
   CreateSharedActivityDto,
@@ -19,11 +19,11 @@ import { SHARED_ACTIVITY_AUDIT } from './shared-activity.audit-snapshot';
 import { SharedActivitiesService } from './shared-activities.service';
 
 /**
- * Repositorio de actividades de la comunidad. El rol mínimo es docente; la autoría la decide
+ * Repositorio de actividades de la comunidad. Los roles se declaran en cada ruta; la autoría la decide
  * el servicio (solo el autor edita y retira).
  */
 @Controller('shared-activities')
-@RequireRole(UserRole.Teacher)
+@Roles(UserRole.Teacher)
 export class SharedActivitiesController {
   constructor(private readonly activities: SharedActivitiesService) {}
 

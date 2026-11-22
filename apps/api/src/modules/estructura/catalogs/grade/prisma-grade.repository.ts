@@ -6,11 +6,22 @@ import type {
   GradeSortField,
   UpdateGradeInput,
 } from '@gns/shared';
-import type { Grade as GradeRow, Prisma } from '../../../../generated/prisma/client';
+import type { Prisma } from '../../../../generated/prisma/client';
 import { PrismaService } from '../../../../shared/database/prisma.service';
-import { PrismaReadRepository } from '../../../../shared/repository/prisma-read.repository';
+import {
+  PrismaReadRepository,
+  type ModelDelegate,
+} from '../../../../shared/repository/prisma-read.repository';
 import { isForeignKeyViolation } from '../../../../shared/database/prisma-error.mapper';
 import type { GradeRepository } from './grade.repository';
+
+// El nombre de la coordinadora sale con el grado: la web lo muestra en «Revisa: …» y no necesita
+// otro endpoint (no incluye el correo).
+const INCLUDE = {
+  coordinator: { select: { id: true, fullName: true } },
+} satisfies Prisma.GradeInclude;
+
+type GradeRow = Prisma.GradeGetPayload<{ include: typeof INCLUDE }>;
 
 @Injectable()
 export class PrismaGradeRepository
@@ -28,16 +39,18 @@ export class PrismaGradeRepository
   }
 
   async findByName(name: string): Promise<Grade | null> {
-    const row = await this.prisma.db.grade.findUnique({ where: { name } });
+    const row = await this.prisma.db.grade.findUnique({ where: { name }, include: INCLUDE });
     return row ? this.toEntity(row) : null;
   }
 
   async create(input: CreateGradeInput): Promise<Grade> {
-    return this.toEntity(await this.prisma.db.grade.create({ data: input }));
+    return this.toEntity(await this.prisma.db.grade.create({ data: input, include: INCLUDE }));
   }
 
   async update(id: string, changes: UpdateGradeInput): Promise<Grade> {
-    return this.toEntity(await this.prisma.db.grade.update({ where: { id }, data: changes }));
+    return this.toEntity(
+      await this.prisma.db.grade.update({ where: { id }, data: changes, include: INCLUDE }),
+    );
   }
 
   async delete(id: string): Promise<boolean> {
@@ -82,8 +95,14 @@ export class PrismaGradeRepository
     });
   }
 
-  protected get delegate() {
-    return this.prisma.db.grade;
+  // `ModelDelegate` no admite `include`: se envuelve el delegado para fijarlo en las lecturas.
+  protected get delegate(): ModelDelegate<GradeRow, Prisma.GradeWhereInput> {
+    const model = this.prisma.db.grade;
+    return {
+      findMany: (args) => model.findMany({ ...args, include: INCLUDE }),
+      count: (args) => model.count(args),
+      findUnique: (args) => model.findUnique({ ...args, include: INCLUDE }),
+    };
   }
 
   protected toWhere(filters: GradeFilters): Prisma.GradeWhereInput {
@@ -98,6 +117,7 @@ export class PrismaGradeRepository
       sortOrder: row.sortOrder,
       active: row.active,
       coordinatorId: row.coordinatorId,
+      coordinator: row.coordinator,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

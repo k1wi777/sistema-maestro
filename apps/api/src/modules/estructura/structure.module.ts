@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../shared/database/database.module';
+import { AuditModule } from '../auditoria/audit.module';
 import { IdentityModule } from '../identidad/identity.module';
 import { AcademicStructureController } from './academic-structure/academic-structure.controller';
 import { ACADEMIC_STRUCTURE_REPOSITORY } from './academic-structure/academic-structure.repository';
@@ -50,7 +51,7 @@ import { SchoolYearsService } from './school-years/school-years.service';
  * asignaciones docentes. Usa `UsersService` (exportado por identidad) para validar al docente.
  */
 @Module({
-  imports: [DatabaseModule, IdentityModule],
+  imports: [DatabaseModule, AuditModule, IdentityModule],
   controllers: [
     LevelsController,
     GradesController,

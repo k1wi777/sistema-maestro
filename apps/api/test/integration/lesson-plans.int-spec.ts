@@ -47,10 +47,16 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
     teacherUser = await createTestUser(app);
     teacher = await signIn(app, teacherUser);
     other = await signIn(app, await createTestUser(app));
-    coordinator = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
+    const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
+    coordinator = await signIn(app, coordinatorUser);
     admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
     secondary = await planning.gradeAndArea('Bachillerato');
     await planning.assign(teacherUser.id, secondary.gradeId, secondary.areaId);
+    // Anular como revisora es de la coordinadora del grado (#115).
+    await prisma.grade.update({
+      where: { id: secondary.gradeId },
+      data: { coordinatorId: coordinatorUser.id },
+    });
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -544,17 +550,21 @@ describe('planeaciones: crear, ver, editar y anular (BE-51)', () => {
       });
     });
 
-    it('coordinación anula desde cualquier estado salvo anulado; una anulada no cambia (409)', async () => {
+    it('la coordinadora del grado anula desde cualquier estado salvo anulado; una anulada no cambia (409)', async () => {
       const created = await plan();
       await as(coordinator, 'post', `/lesson-plans/${created.id}/void`)
         .send({ reason: 'Motivo uno' })
         .expect(200);
 
-      for (const cookies of [teacher, coordinator, admin]) {
+      for (const cookies of [teacher, coordinator]) {
         await as(cookies, 'post', `/lesson-plans/${created.id}/void`)
           .send({ reason: 'Otra vez' })
           .expect(409);
       }
+      // Administración consulta pero no anula (la ruta es de docente y coordinación).
+      await as(admin, 'post', `/lesson-plans/${created.id}/void`)
+        .send({ reason: 'Otra vez' })
+        .expect(403);
       expect(
         (await auditRows(app, created.id)).filter((r) => r.action.startsWith('Anuló')),
       ).toHaveLength(1);

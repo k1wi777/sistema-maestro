@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import { FaqAuditSnapshot } from './faq.audit-snapshot';
 import {
@@ -25,7 +25,7 @@ const AUDIT = {
 
 /** Preguntas activas para cualquier rol (R1): sin palabras clave ni autoría. */
 @Controller('assistant/faqs')
-@RequireRole(UserRole.Teacher)
+@Roles(UserRole.Teacher)
 export class AssistantFaqsController {
   constructor(private readonly faqs: FaqsService) {}
 
@@ -37,11 +37,11 @@ export class AssistantFaqsController {
 }
 
 /**
- * Gestión de preguntas frecuentes (coordinación; administración hereda por jerarquía). No hay
+ * Gestión de preguntas frecuentes (coordinación y administración). No hay
  * ruta que borre: una pregunta se desactiva con `isActive` (R7).
  */
 @Controller('faqs')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class FaqsController {
   constructor(private readonly faqs: FaqsService) {}
 

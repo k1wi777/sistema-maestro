@@ -1,5 +1,6 @@
 /**
- * Redirecciones de las rutas anteriores a «Planeación y PIAR como formatos». Tabla pura (sin
+ * Redirecciones de rutas anteriores («Planeación y PIAR como formatos» y la bitácora y «Grados y
+ * áreas» que pasaron a administración). Tabla pura (sin
  * importaciones) para que `next.config.ts` la use y Jest la compruebe. Los enlaces internos de la
  * web ya apuntan a las rutas nuevas; esto solo protege enlaces guardados.
  */
@@ -77,6 +78,31 @@ export const LEGACY_REDIRECTS: readonly LegacyRedirect[] = [
     destination: '/coordinacion/formatos/diario',
     example: '/coordinacion/formatos?estado=enviada',
     exampleTarget: '/coordinacion/formatos/diario',
+  },
+  // Roles sin jerarquía (#115): la bitácora y «Grados y áreas» pasaron de coordinación a administración.
+  {
+    source: '/coordinacion/bitacora',
+    destination: '/administracion/bitacora',
+    example: '/coordinacion/bitacora',
+    exampleTarget: '/administracion/bitacora',
+  },
+  {
+    source: '/coordinacion/bitacora/:path*',
+    destination: '/administracion/bitacora/:path*',
+    example: '/coordinacion/bitacora/abc',
+    exampleTarget: '/administracion/bitacora',
+  },
+  {
+    source: '/coordinacion/grados-y-areas',
+    destination: '/administracion/grados-y-areas',
+    example: '/coordinacion/grados-y-areas',
+    exampleTarget: '/administracion/grados-y-areas',
+  },
+  {
+    source: '/coordinacion/grados-y-areas/:path*',
+    destination: '/administracion/grados-y-areas/:path*',
+    example: '/coordinacion/grados-y-areas/abc',
+    exampleTarget: '/administracion/grados-y-areas',
   },
 ];
 

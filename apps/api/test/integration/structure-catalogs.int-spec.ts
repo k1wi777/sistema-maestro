@@ -381,12 +381,12 @@ describe('catálogos académicos', () => {
       const grade = await createGrade(level.id);
       return { level, grade };
     }
-    async function createGroup(gradeId: string, name = `Grupo ${unique()}`, cookies = coordinator) {
+    async function createGroup(gradeId: string, name = `Grupo ${unique()}`, cookies = admin) {
       const res = await as(cookies, 'post', '/groups').send({ gradeId, name }).expect(201);
       return res.body as Item;
     }
     async function createArea(levelIds: string[], name = `Área ${unique()}`) {
-      const res = await as(coordinator, 'post', '/areas')
+      const res = await as(admin, 'post', '/areas')
         .send({ name, type: 'asignatura', levelIds })
         .expect(201);
       return res.body as Item;
@@ -400,7 +400,7 @@ describe('catálogos académicos', () => {
       });
     }
 
-    it('un docente recibe 403 en todas las escrituras y en la lectura de la página; coordinación y administración, 2xx (R1)', async () => {
+    it('docente y coordinación reciben 403 en todas las escrituras y en la lectura de la página; solo administración, 2xx (R1)', async () => {
       const { level, grade } = await levelWithGrade();
       const group = await createGroup(grade.id);
       const area = await createArea([level.id]);
@@ -419,16 +419,18 @@ describe('catálogos académicos', () => {
         ['get', '/academic-structure'],
       ];
 
-      for (const [method, path, body] of attempts) {
-        const res = await as(teacher, method, path).send(body);
-        expect([method, path, res.status]).toEqual([method, path, 403]);
+      for (const cookies of [teacher, coordinator]) {
+        for (const [method, path, body] of attempts) {
+          const res = await as(cookies, method, path).send(body);
+          expect([method, path, res.status]).toEqual([method, path, 403]);
+        }
       }
       expect(await prisma.group.count({ where: { id: group.id } })).toBe(1);
 
       await as(admin, 'post', '/groups')
         .send({ gradeId: grade.id, name: `A ${unique()}` })
         .expect(201);
-      await as(coordinator, 'get', '/academic-structure').expect(200);
+      await as(admin, 'get', '/academic-structure').expect(200);
       await as(admin, 'get', '/academic-structure').expect(200);
     });
 
@@ -439,18 +441,18 @@ describe('catálogos académicos', () => {
 
       // El mismo nombre en otro grado sí se admite.
       await createGroup(other.id, 'Kinder 1');
-      const duplicate = await as(coordinator, 'post', '/groups')
+      const duplicate = await as(admin, 'post', '/groups')
         .send({ gradeId: grade.id, name: 'Kinder 1' })
         .expect(409);
       expect(apiErrorBodySchema.parse(duplicate.body).code).toBe('conflicto');
-      const missing = await as(coordinator, 'post', '/groups')
+      const missing = await as(admin, 'post', '/groups')
         .send({ gradeId: randomUUID(), name: 'Z' })
         .expect(400);
       expect(apiErrorBodySchema.parse(missing.body).errors?.[0]?.field).toBe('gradeId');
-      await as(coordinator, 'patch', `/groups/${group.id}`).send({}).expect(400);
-      await as(coordinator, 'patch', `/groups/${group.id}`).send({ gradeId: other.id }).expect(400);
+      await as(admin, 'patch', `/groups/${group.id}`).send({}).expect(400);
+      await as(admin, 'patch', `/groups/${group.id}`).send({ gradeId: other.id }).expect(400);
 
-      await as(coordinator, 'patch', `/groups/${group.id}`).send({ active: false }).expect(200);
+      await as(admin, 'patch', `/groups/${group.id}`).send({ active: false }).expect(200);
       const inactive = await as(teacher, 'get', `/groups?gradeId=${grade.id}&active=false`).expect(
         200,
       );
@@ -468,20 +470,20 @@ describe('catálogos académicos', () => {
       const area = await createArea([level.id]);
       await assignTo(used.id, area.id);
 
-      await as(coordinator, 'delete', `/groups/${free.id}`).expect(204);
+      await as(admin, 'delete', `/groups/${free.id}`).expect(204);
       expect(await prisma.group.count({ where: { id: free.id } })).toBe(0);
 
-      const res = await as(coordinator, 'delete', `/groups/${used.id}`).expect(409);
+      const res = await as(admin, 'delete', `/groups/${used.id}`).expect(409);
       expect(apiErrorBodySchema.parse(res.body)).toMatchObject({ code: 'catalogo_en_uso' });
       expect(apiErrorBodySchema.parse(res.body).message).toContain('1 registro');
       expect(await prisma.group.count({ where: { id: used.id } })).toBe(1);
-      await as(coordinator, 'delete', `/groups/${randomUUID()}`).expect(404);
+      await as(admin, 'delete', `/groups/${randomUUID()}`).expect(404);
     });
 
     it('borra un grado sin uso con sus grupos y rechaza el que está en uso sin borrar nada (R2, R3)', async () => {
       const { level, grade } = await levelWithGrade();
       const group = await createGroup(grade.id);
-      await as(coordinator, 'delete', `/grades/${grade.id}`).expect(204);
+      await as(admin, 'delete', `/grades/${grade.id}`).expect(204);
       expect(await prisma.grade.count({ where: { id: grade.id } })).toBe(0);
       expect(await prisma.group.count({ where: { id: group.id } })).toBe(0);
 
@@ -490,7 +492,7 @@ describe('catálogos académicos', () => {
       await createGroup(usedGrade.id);
       const area = await createArea([level.id]);
       await assignTo(usedGroup.id, area.id);
-      const res = await as(coordinator, 'delete', `/grades/${usedGrade.id}`).expect(409);
+      const res = await as(admin, 'delete', `/grades/${usedGrade.id}`).expect(409);
       expect(apiErrorBodySchema.parse(res.body).code).toBe('catalogo_en_uso');
       expect(await prisma.group.count({ where: { gradeId: usedGrade.id } })).toBe(2);
 
@@ -508,7 +510,7 @@ describe('catálogos académicos', () => {
           status: 'anulado',
         },
       });
-      await as(coordinator, 'delete', `/grades/${noted.id}`).expect(409);
+      await as(admin, 'delete', `/grades/${noted.id}`).expect(409);
     });
 
     it('un área se borra con su relación con los niveles si no está en uso; en uso, 409 (R2, R3)', async () => {
@@ -517,11 +519,11 @@ describe('catálogos académicos', () => {
       const used = await createArea([level.id]);
       await assignTo(await createGroup(grade.id).then((g) => g.id), used.id);
 
-      await as(coordinator, 'delete', `/areas/${free.id}`).expect(204);
+      await as(admin, 'delete', `/areas/${free.id}`).expect(204);
       expect(await prisma.area.count({ where: { id: free.id } })).toBe(0);
       expect(await prisma.areaLevel.count({ where: { areaId: free.id } })).toBe(0);
 
-      const res = await as(coordinator, 'delete', `/areas/${used.id}`).expect(409);
+      const res = await as(admin, 'delete', `/areas/${used.id}`).expect(409);
       expect(apiErrorBodySchema.parse(res.body).code).toBe('catalogo_en_uso');
       expect(await prisma.areaLevel.count({ where: { areaId: used.id } })).toBe(1);
     });
@@ -533,13 +535,13 @@ describe('catálogos académicos', () => {
       const area = await createArea([level.id]);
       await assignTo((await createGroup(grade.id)).id, area.id);
 
-      await as(coordinator, 'patch', `/grades/${grade.id}`).send({ levelId: other.id }).expect(409);
+      await as(admin, 'patch', `/grades/${grade.id}`).send({ levelId: other.id }).expect(409);
       expect((await prisma.grade.findUniqueOrThrow({ where: { id: grade.id } })).levelId).toBe(
         level.id,
       );
-      await as(coordinator, 'patch', `/grades/${free.id}`).send({ levelId: other.id }).expect(200);
+      await as(admin, 'patch', `/grades/${free.id}`).send({ levelId: other.id }).expect(200);
       // Renombrar o desactivar un grado en uso sí se puede.
-      await as(coordinator, 'patch', `/grades/${grade.id}`)
+      await as(admin, 'patch', `/grades/${grade.id}`)
         .send({ name: `Grado ${unique()}`, active: false })
         .expect(200);
     });
@@ -548,17 +550,17 @@ describe('catálogos académicos', () => {
       const level = await createLevel();
       const other = await createLevel();
 
-      await as(coordinator, 'post', '/areas')
+      await as(admin, 'post', '/areas')
         .send({ name: `Área ${unique()}`, type: 'asignatura', levelIds: [] })
         .expect(400);
-      const unknown = await as(coordinator, 'post', '/areas')
+      const unknown = await as(admin, 'post', '/areas')
         .send({ name: `Área ${unique()}`, type: 'asignatura', levelIds: [level.id, randomUUID()] })
         .expect(400);
       expect(apiErrorBodySchema.parse(unknown.body).errors?.[0]?.field).toBe('levelIds.1');
 
       const area = await createArea([level.id]);
-      await as(coordinator, 'patch', `/areas/${area.id}`).send({ levelIds: [] }).expect(400);
-      const edited = await as(coordinator, 'patch', `/areas/${area.id}`)
+      await as(admin, 'patch', `/areas/${area.id}`).send({ levelIds: [] }).expect(400);
+      const edited = await as(admin, 'patch', `/areas/${area.id}`)
         .send({ levelIds: [other.id], active: false })
         .expect(200);
       expect(edited.body).toMatchObject({ levelIds: [other.id], active: false });
@@ -566,6 +568,29 @@ describe('catálogos académicos', () => {
         200,
       );
       expect((byLevel.body as PageBody).items.map((a) => a.id)).toEqual([area.id]);
+    });
+
+    it('el catálogo de grados informa la coordinadora de cada grado (id y nombre) o su ausencia, a los tres roles (R8)', async () => {
+      const level = await createLevel();
+      const [withCoordinator, without] = [await createGrade(level.id), await createGrade(level.id)];
+      const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
+      await as(admin, 'put', `/coordinators/${coordinatorUser.id}/grades`)
+        .send({ gradeIds: [withCoordinator.id] })
+        .expect(200);
+
+      for (const cookies of [teacher, coordinator, admin]) {
+        const res = await as(cookies, 'get', `/grades?levelId=${level.id}&pageSize=100`).expect(
+          200,
+        );
+        const items = (res.body as { items: (Item & { coordinator: unknown })[] }).items;
+        const byId = new Map(items.map((item) => [item.id, item]));
+        expect(byId.get(withCoordinator.id)).toMatchObject({
+          coordinatorId: coordinatorUser.id,
+          coordinator: { id: coordinatorUser.id, fullName: expect.any(String) as string },
+        });
+        expect(JSON.stringify(byId.get(withCoordinator.id))).not.toContain('@');
+        expect(byId.get(without.id)).toMatchObject({ coordinatorId: null, coordinator: null });
+      }
     });
 
     it('coordinadoras: cada grado tiene a lo sumo una; reasignar quita el grado a la anterior y se puede dejar sin coordinadora (R6)', async () => {
@@ -580,7 +605,7 @@ describe('catálogos académicos', () => {
         await createTestUser(app, { role: UserRole.Coordinator }),
       ];
       const put = (id: string, gradeIds: string[]) =>
-        as(coordinator, 'put', `/coordinators/${id}/grades`).send({ gradeIds });
+        as(admin, 'put', `/coordinators/${id}/grades`).send({ gradeIds });
 
       const initial = await put(ana.id, [first.id, second.id]).expect(200);
       expect((initial.body as { gradeIds: string[] }).gradeIds.sort()).toEqual(
@@ -621,7 +646,7 @@ describe('catálogos académicos', () => {
       const live = await createTestUser(app, { role: UserRole.Coordinator });
       const before = await prisma.auditLog.count({ where: { entity: 'coordinacion_grado' } });
       const put = (id: string, gradeIds: string[]) =>
-        as(coordinator, 'put', `/coordinators/${id}/grades`).send({ gradeIds });
+        as(admin, 'put', `/coordinators/${id}/grades`).send({ gradeIds });
 
       await put(randomUUID(), []).expect(404);
       await put(aTeacher.id, [grade.id]).expect(400);
@@ -643,11 +668,11 @@ describe('catálogos académicos', () => {
       const area = await createArea([level.id]);
       await assignTo(group.id, area.id);
       const coord = await createTestUser(app, { role: UserRole.Coordinator });
-      await as(coordinator, 'put', `/coordinators/${coord.id}/grades`)
+      await as(admin, 'put', `/coordinators/${coord.id}/grades`)
         .send({ gradeIds: [grade.id] })
         .expect(200);
 
-      const res = await as(coordinator, 'get', '/academic-structure').expect(200);
+      const res = await as(admin, 'get', '/academic-structure').expect(200);
       const body = res.body as {
         levels: {
           id: string;
@@ -683,9 +708,9 @@ describe('catálogos académicos', () => {
       const { level, grade } = await levelWithGrade();
       const group = await createGroup(grade.id);
       const area = await createArea([level.id]);
-      await as(coordinator, 'patch', `/groups/${group.id}`).send({ active: false }).expect(200);
-      await as(coordinator, 'patch', `/areas/${area.id}`).send({ active: false }).expect(200);
-      await as(coordinator, 'delete', `/groups/${group.id}`).expect(204);
+      await as(admin, 'patch', `/groups/${group.id}`).send({ active: false }).expect(200);
+      await as(admin, 'patch', `/areas/${area.id}`).send({ active: false }).expect(200);
+      await as(admin, 'delete', `/groups/${group.id}`).expect(204);
 
       const groupRows = await auditRows('grupo', group.id);
       expect(groupRows.map((row) => row.action)).toEqual([
@@ -705,10 +730,8 @@ describe('catálogos académicos', () => {
       await assignTo(used.id, area.id);
       const count = () => prisma.auditLog.count({ where: { entity: 'grupo' } });
       const before = await count();
-      await as(coordinator, 'delete', `/groups/${used.id}`).expect(409);
-      await as(coordinator, 'post', '/groups')
-        .send({ gradeId: grade.id, name: used.name })
-        .expect(409);
+      await as(admin, 'delete', `/groups/${used.id}`).expect(409);
+      await as(admin, 'post', '/groups').send({ gradeId: grade.id, name: used.name }).expect(409);
       expect(await count()).toBe(before);
     });
   });

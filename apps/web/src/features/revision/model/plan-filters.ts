@@ -7,6 +7,8 @@ export interface PlanFilters {
   areaId?: string;
   periodId?: string;
   teacherId?: string;
+  /** Filtro de administración: coordinadora del grado (UUID) o `none` (sin coordinadora). */
+  coordinatorId?: string;
 }
 
 /** Estados de la franja de indicadores, en el orden en que se muestran. */
@@ -23,6 +25,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 const asId = (value: string | null): string | undefined =>
   value !== null && UUID.test(value) ? value : undefined;
 
+const asCoordinator = (value: string | null): string | undefined =>
+  value === 'none' ? value : asId(value);
+
 /** Lee los filtros de la URL; un valor que no es un estado o un id válido se ignora. */
 export function planFiltersFromParams(params: {
   get: (name: string) => string | null;
@@ -34,6 +39,7 @@ export function planFiltersFromParams(params: {
     areaId: asId(params.get('areaId')),
     periodId: asId(params.get('periodId')),
     teacherId: asId(params.get('teacherId')),
+    coordinatorId: asCoordinator(params.get('coordinatorId')),
   };
 }
 
@@ -50,6 +56,7 @@ export function planFiltersKey(filters: PlanFilters): string {
     filters.areaId,
     filters.periodId,
     filters.teacherId,
+    filters.coordinatorId,
   ]);
 }
 
@@ -67,6 +74,7 @@ export function planFiltersToQuery(filters: PlanFilters): string {
     ['areaId', filters.areaId],
     ['periodId', filters.periodId],
     ['teacherId', filters.teacherId],
+    ['coordinatorId', filters.coordinatorId],
   ];
   for (const [key, value] of entries) {
     if (value) {

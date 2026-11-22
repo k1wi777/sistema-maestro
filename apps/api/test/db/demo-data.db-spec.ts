@@ -62,7 +62,7 @@ beforeEach(async () => {
 const DEMO_TEACHERS = `(SELECT id FROM usuario WHERE correo_institucional LIKE $1 AND rol = 'docente')`;
 
 describe('demo users and assignments (R18)', () => {
-  it('has coordinators and teachers, at least one inactive', async () => {
+  it('has an administrator, coordinators and teachers, at least one inactive', async () => {
     const users = await rows(
       `SELECT rol, estado, count(*)::int AS total FROM usuario WHERE correo_institucional LIKE $1
        GROUP BY rol, estado`,
@@ -76,7 +76,8 @@ describe('demo users and assignments (R18)', () => {
     expect(total(UserRole.Coordinator)).toBeGreaterThanOrEqual(2);
     expect(total(UserRole.Teacher)).toBeGreaterThanOrEqual(5);
     expect(total(UserRole.Teacher, UserStatus.Inactive)).toBeGreaterThanOrEqual(1);
-    expect(total(UserRole.Administrator)).toBe(0);
+    // El usuario de administración del demo (Q1) hace el recorrido manual y la suite de navegador.
+    expect(total(UserRole.Administrator, UserStatus.Active)).toBe(1);
   });
 
   it('assigns teachers in the four levels, with homeroom directions', async () => {

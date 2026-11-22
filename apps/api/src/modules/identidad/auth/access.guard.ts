@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { roleSatisfies } from '@gns/shared';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { ConsentRequiredException } from '../consent/consent-required.exception';
 import { ConsentService } from '../consent/consent.service';
@@ -16,7 +15,7 @@ import { ACCESS_KEY, ALLOW_WITHOUT_CONSENT_KEY, type AccessRule } from './access
 /**
  * Decide el acceso a cada endpoint, siempre en este orden: sin declaración (403), público
  * (permite), sin sesión (401), aviso de datos sin aceptar (403 `consentimiento_requerido`)
- * y rol insuficiente (403 `sin_permiso`). El orden vive en una sola función para que no
+ * y rol fuera del conjunto declarado (403 `sin_permiso`). El orden vive en una sola función para que no
  * dependa del orden de registro de varios guards.
  */
 @Injectable()
@@ -57,7 +56,7 @@ export class AccessGuard implements CanActivate {
     if (!allowWithoutConsent && !(await this.consent.hasAcceptedCurrent(user.id))) {
       throw new ConsentRequiredException();
     }
-    if (!roleSatisfies(user.role, rule.role)) {
+    if (!rule.roles.has(user.role)) {
       throw new ForbiddenException();
     }
     return true;

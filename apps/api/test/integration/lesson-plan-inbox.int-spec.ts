@@ -211,6 +211,36 @@ describe('bandeja de coordinación: listado de planeaciones (BE-55)', () => {
     expect(all.totalItems).toBe(5);
   });
 
+  it('filtra por la coordinadora del grado, incluido «none» (sin coordinadora), y un docente lo ignora (R7)', async () => {
+    const coordinatorUser = await createTestUser(app, { role: UserRole.Coordinator });
+    const teacherC = await createTestUser(app);
+    const own = await planning.gradeAndArea('Primaria', coordinatorUser.id);
+    const orphan = await planning.gradeAndArea('Primaria', null);
+    const inOwn = await createPlan(teacherC.id, own, planning.periods[1], Submitted, new Date());
+    const inOrphan = await createPlan(
+      teacherC.id,
+      orphan,
+      planning.periods[1],
+      Submitted,
+      new Date(),
+    );
+    const mine = `teacherId=${teacherC.id}&pageSize=100`;
+
+    for (const cookies of [coordinator, admin]) {
+      expect(idsOf(await list(cookies, `${mine}&coordinatorId=${coordinatorUser.id}`))).toEqual([
+        inOwn,
+      ]);
+      expect(idsOf(await list(cookies, `${mine}&coordinatorId=none`))).toEqual([inOrphan]);
+      expect(new Set(idsOf(await list(cookies, mine)))).toEqual(new Set([inOwn, inOrphan]));
+    }
+    // Un docente ve solo lo suyo y el filtro no cambia su visibilidad.
+    const sessionC = await signIn(app, teacherC);
+    expect(new Set(idsOf(await list(sessionC, `${mine}&coordinatorId=none`)))).toEqual(
+      new Set([inOwn, inOrphan]),
+    );
+    await list(coordinator, 'coordinatorId=no-es-un-uuid', 400);
+  });
+
   it('una planeación con varias áreas aparece al filtrar por cualquiera de ellas, una sola vez (#99)', async () => {
     const teacherE = await createTestUser(app);
     const created = await prisma.lessonPlan.create({

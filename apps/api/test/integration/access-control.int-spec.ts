@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { Controller, Get, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { apiErrorBodySchema, ApiErrorCode, roleSatisfies, UserRole } from '@gns/shared';
+import { apiErrorBodySchema, ApiErrorCode, UserRole } from '@gns/shared';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { configureApp } from '../../src/core/bootstrap/configure-app';
@@ -14,8 +14,8 @@ type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 interface ExpectedRoute {
   method: Method;
   path: string;
-  /** `public` o el rol mínimo. */
-  access: 'public' | UserRole;
+  /** `public` o el conjunto exacto de roles permitidos (sin jerarquía). */
+  access: 'public' | UserRole[];
 }
 
 const PUBLIC = 'public' as const;
@@ -23,160 +23,172 @@ const TEACHER = UserRole.Teacher;
 const COORD = UserRole.Coordinator;
 const ADMIN = UserRole.Administrator;
 
+const T_ONLY = [TEACHER];
+const C_ONLY = [COORD];
+const A_ONLY = [ADMIN];
+const CA = [COORD, ADMIN];
+const TC = [TEACHER, COORD];
+const TCA = [TEACHER, COORD, ADMIN];
+
+/** Mismo formato (orden fijo) que `AccessDeclarationVerifier.listRoutes()`. */
+const accessLabel = (access: 'public' | UserRole[]) =>
+  access === PUBLIC ? 'public' : TCA.filter((role) => access.includes(role)).join(',');
+
 // Matriz esperada de TODAS las rutas (incluidas las de prueba). Una ruta nueva, o una cuyo
 // acceso cambia, hace fallar la prueba de inventario hasta que se actualice aquí (R6).
 const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'post', path: '/auth/login', access: PUBLIC },
   { method: 'post', path: '/auth/refresh', access: PUBLIC },
   { method: 'post', path: '/auth/logout', access: PUBLIC },
-  { method: 'get', path: '/auth/me', access: TEACHER },
-  { method: 'put', path: '/auth/password', access: TEACHER },
-  { method: 'get', path: '/consent', access: TEACHER },
-  { method: 'post', path: '/consent', access: TEACHER },
-  { method: 'get', path: '/users', access: ADMIN },
-  { method: 'get', path: '/users/:id', access: ADMIN },
-  { method: 'post', path: '/users', access: ADMIN },
-  { method: 'patch', path: '/users/:id', access: ADMIN },
-  { method: 'patch', path: '/users/:id/status', access: ADMIN },
-  { method: 'put', path: '/users/:id/password', access: ADMIN },
-  { method: 'get', path: '/levels', access: TEACHER },
-  { method: 'post', path: '/levels', access: ADMIN },
-  { method: 'patch', path: '/levels/:id', access: ADMIN },
-  { method: 'get', path: '/grades', access: TEACHER },
-  { method: 'post', path: '/grades', access: COORD },
-  { method: 'patch', path: '/grades/:id', access: COORD },
-  { method: 'delete', path: '/grades/:id', access: COORD },
-  { method: 'get', path: '/groups', access: TEACHER },
-  { method: 'post', path: '/groups', access: COORD },
-  { method: 'patch', path: '/groups/:id', access: COORD },
-  { method: 'delete', path: '/groups/:id', access: COORD },
-  { method: 'get', path: '/academic-structure', access: COORD },
-  { method: 'put', path: '/coordinators/:id/grades', access: COORD },
-  { method: 'get', path: '/areas', access: TEACHER },
-  { method: 'post', path: '/areas', access: COORD },
-  { method: 'patch', path: '/areas/:id', access: COORD },
-  { method: 'delete', path: '/areas/:id', access: COORD },
-  { method: 'get', path: '/academic-periods', access: TEACHER },
-  { method: 'post', path: '/academic-periods', access: ADMIN },
-  { method: 'patch', path: '/academic-periods/:id', access: ADMIN },
-  { method: 'get', path: '/teacher-assignments', access: COORD },
-  { method: 'post', path: '/teacher-assignments', access: COORD },
-  { method: 'patch', path: '/teacher-assignments/:id', access: COORD },
-  { method: 'patch', path: '/teacher-assignments/:id/status', access: COORD },
-  { method: 'get', path: '/me/assignments', access: TEACHER },
-  { method: 'get', path: '/school-years', access: TEACHER },
-  { method: 'get', path: '/school-years/current', access: TEACHER },
-  { method: 'post', path: '/school-years', access: ADMIN },
-  { method: 'put', path: '/school-years/:id/current', access: ADMIN },
-  { method: 'get', path: '/lesson-plans', access: TEACHER },
-  { method: 'get', path: '/lesson-plans/options', access: TEACHER },
-  { method: 'get', path: '/lesson-plans/:id', access: TEACHER },
-  { method: 'post', path: '/lesson-plans', access: TEACHER },
-  { method: 'patch', path: '/lesson-plans/:id', access: TEACHER },
-  { method: 'post', path: '/lesson-plans/:id/submit', access: TEACHER },
-  { method: 'post', path: '/lesson-plans/:id/void', access: TEACHER },
-  { method: 'post', path: '/lesson-plans/:id/resources', access: TEACHER },
-  { method: 'delete', path: '/lesson-plans/:id/resources/:resourceId', access: TEACHER },
-  { method: 'post', path: '/lesson-plans/:id/approve', access: COORD },
-  { method: 'post', path: '/lesson-plans/:id/return', access: COORD },
-  { method: 'get', path: '/lesson-plans/:id/reviews', access: TEACHER },
-  { method: 'get', path: '/lesson-plan-compliance', access: COORD },
-  { method: 'get', path: '/field-journals', access: TEACHER },
-  { method: 'get', path: '/field-journals/today', access: TEACHER },
-  { method: 'get', path: '/field-journals/review-scope', access: COORD },
-  { method: 'get', path: '/field-journals/day', access: TEACHER },
-  { method: 'get', path: '/field-journals/:id', access: TEACHER },
-  { method: 'post', path: '/field-journals/annotations', access: TEACHER },
-  { method: 'patch', path: '/field-journals/:id/annotations/:annotationId', access: TEACHER },
-  { method: 'post', path: '/field-journals/:id/annotations/:annotationId/ready', access: TEACHER },
-  { method: 'post', path: '/field-journals/:id/annotations/:annotationId/draft', access: TEACHER },
-  { method: 'post', path: '/field-journals/:id/submit', access: TEACHER },
-  { method: 'post', path: '/field-journals/:id/resubmit', access: TEACHER },
-  { method: 'post', path: '/field-journals/:id/void', access: TEACHER },
-  { method: 'post', path: '/field-journals/:id/approve', access: COORD },
-  { method: 'post', path: '/field-journals/:id/return', access: COORD },
-  { method: 'get', path: '/observer-notes', access: TEACHER },
-  { method: 'get', path: '/observer-notes/:id', access: TEACHER },
-  { method: 'post', path: '/observer-notes', access: TEACHER },
-  { method: 'patch', path: '/observer-notes/:id', access: TEACHER },
-  { method: 'post', path: '/observer-notes/:id/submit', access: TEACHER },
-  { method: 'post', path: '/observer-notes/:id/void', access: TEACHER },
-  { method: 'post', path: '/observer-notes/:id/approve', access: COORD },
-  { method: 'post', path: '/observer-notes/:id/return', access: COORD },
-  { method: 'get', path: '/observer-notes/:id/reviews', access: TEACHER },
-  { method: 'get', path: '/shared-activities', access: TEACHER },
-  { method: 'get', path: '/shared-activities/learning-corners', access: TEACHER },
-  { method: 'get', path: '/shared-activities/:id', access: TEACHER },
-  { method: 'post', path: '/shared-activities', access: TEACHER },
-  { method: 'patch', path: '/shared-activities/:id', access: TEACHER },
-  { method: 'delete', path: '/shared-activities/:id', access: TEACHER },
-  { method: 'put', path: '/shared-activities/:id/favorite', access: TEACHER },
-  { method: 'delete', path: '/shared-activities/:id/favorite', access: TEACHER },
-  { method: 'get', path: '/training-plans', access: COORD },
-  { method: 'post', path: '/training-plans', access: COORD },
-  { method: 'patch', path: '/training-plans/:id', access: COORD },
-  { method: 'get', path: '/training-plans/:id/sections', access: COORD },
-  { method: 'post', path: '/training-plans/:id/sections', access: COORD },
-  { method: 'put', path: '/training-plans/:id/section-order', access: COORD },
-  { method: 'patch', path: '/training-sections/:id', access: COORD },
-  { method: 'delete', path: '/training-sections/:id', access: COORD },
-  { method: 'post', path: '/training-sections/:id/modules', access: COORD },
-  { method: 'put', path: '/training-sections/:id/module-order', access: COORD },
-  { method: 'get', path: '/training-modules/:id', access: COORD },
-  { method: 'patch', path: '/training-modules/:id', access: COORD },
-  { method: 'post', path: '/training-modules/:id/publish', access: COORD },
-  { method: 'post', path: '/training-modules/:id/withdraw', access: COORD },
-  { method: 'post', path: '/training-modules/:id/restore', access: COORD },
-  { method: 'post', path: '/training-modules/:id/slides', access: COORD },
-  { method: 'patch', path: '/training-modules/:id/slides/:slideId', access: COORD },
-  { method: 'delete', path: '/training-modules/:id/slides/:slideId', access: COORD },
-  { method: 'put', path: '/training-modules/:id/slide-order', access: COORD },
-  { method: 'post', path: '/training-modules/:id/questions', access: COORD },
-  { method: 'put', path: '/training-modules/:id/questions/:questionId', access: COORD },
-  { method: 'delete', path: '/training-modules/:id/questions/:questionId', access: COORD },
-  { method: 'put', path: '/training-modules/:id/question-order', access: COORD },
-  { method: 'post', path: '/training-modules/:id/activities', access: COORD },
-  { method: 'patch', path: '/training-modules/:id/activities/:activityId', access: COORD },
-  { method: 'post', path: '/training-modules/:id/activities/:activityId/withdraw', access: COORD },
-  { method: 'post', path: '/training-modules/:id/activities/:activityId/restore', access: COORD },
-  { method: 'put', path: '/training-modules/:id/activity-order', access: COORD },
-  { method: 'get', path: '/me/training/route', access: TEACHER },
-  { method: 'post', path: '/me/training/modules/:moduleId/files/:purpose/url', access: TEACHER },
-  { method: 'get', path: '/me/training/certificates', access: TEACHER },
-  { method: 'post', path: '/me/training/certificates/:id/download', access: TEACHER },
-  { method: 'post', path: '/training-modules/:id/files', access: COORD },
-  { method: 'post', path: '/training-modules/:id/files/:fileId/confirm', access: COORD },
-  { method: 'delete', path: '/training-modules/:id/files/:purpose', access: COORD },
-  { method: 'post', path: '/training-modules/:id/files/:purpose/url', access: COORD },
-  { method: 'get', path: '/training-certificates', access: COORD },
-  { method: 'post', path: '/training-certificates/:id/download', access: COORD },
+  { method: 'get', path: '/auth/me', access: TCA },
+  { method: 'put', path: '/auth/password', access: TCA },
+  { method: 'get', path: '/consent', access: TCA },
+  { method: 'post', path: '/consent', access: TCA },
+  { method: 'get', path: '/users', access: A_ONLY },
+  { method: 'get', path: '/users/:id', access: A_ONLY },
+  { method: 'post', path: '/users', access: A_ONLY },
+  { method: 'patch', path: '/users/:id', access: A_ONLY },
+  { method: 'patch', path: '/users/:id/status', access: A_ONLY },
+  { method: 'put', path: '/users/:id/password', access: A_ONLY },
+  { method: 'put', path: '/users/:id/role', access: A_ONLY },
+  { method: 'get', path: '/levels', access: TCA },
+  { method: 'post', path: '/levels', access: A_ONLY },
+  { method: 'patch', path: '/levels/:id', access: A_ONLY },
+  { method: 'get', path: '/grades', access: TCA },
+  { method: 'post', path: '/grades', access: A_ONLY },
+  { method: 'patch', path: '/grades/:id', access: A_ONLY },
+  { method: 'delete', path: '/grades/:id', access: A_ONLY },
+  { method: 'get', path: '/groups', access: TCA },
+  { method: 'post', path: '/groups', access: A_ONLY },
+  { method: 'patch', path: '/groups/:id', access: A_ONLY },
+  { method: 'delete', path: '/groups/:id', access: A_ONLY },
+  { method: 'get', path: '/academic-structure', access: A_ONLY },
+  { method: 'put', path: '/coordinators/:id/grades', access: A_ONLY },
+  { method: 'get', path: '/areas', access: TCA },
+  { method: 'post', path: '/areas', access: A_ONLY },
+  { method: 'patch', path: '/areas/:id', access: A_ONLY },
+  { method: 'delete', path: '/areas/:id', access: A_ONLY },
+  { method: 'get', path: '/academic-periods', access: TCA },
+  { method: 'post', path: '/academic-periods', access: A_ONLY },
+  { method: 'patch', path: '/academic-periods/:id', access: A_ONLY },
+  { method: 'get', path: '/teacher-assignments', access: CA },
+  { method: 'post', path: '/teacher-assignments', access: CA },
+  { method: 'patch', path: '/teacher-assignments/:id', access: CA },
+  { method: 'patch', path: '/teacher-assignments/:id/status', access: CA },
+  { method: 'get', path: '/me/assignments', access: T_ONLY },
+  { method: 'get', path: '/school-years', access: TCA },
+  { method: 'get', path: '/school-years/current', access: TCA },
+  { method: 'post', path: '/school-years', access: A_ONLY },
+  { method: 'put', path: '/school-years/:id/current', access: A_ONLY },
+  { method: 'get', path: '/lesson-plans', access: TCA },
+  { method: 'get', path: '/lesson-plans/options', access: T_ONLY },
+  { method: 'get', path: '/lesson-plans/:id', access: TCA },
+  { method: 'post', path: '/lesson-plans', access: T_ONLY },
+  { method: 'patch', path: '/lesson-plans/:id', access: T_ONLY },
+  { method: 'post', path: '/lesson-plans/:id/submit', access: T_ONLY },
+  { method: 'post', path: '/lesson-plans/:id/void', access: TC },
+  { method: 'post', path: '/lesson-plans/:id/resources', access: T_ONLY },
+  { method: 'delete', path: '/lesson-plans/:id/resources/:resourceId', access: T_ONLY },
+  { method: 'post', path: '/lesson-plans/:id/approve', access: C_ONLY },
+  { method: 'post', path: '/lesson-plans/:id/return', access: C_ONLY },
+  { method: 'get', path: '/lesson-plans/:id/reviews', access: TCA },
+  { method: 'get', path: '/lesson-plan-compliance', access: CA },
+  { method: 'get', path: '/field-journals', access: TCA },
+  { method: 'get', path: '/field-journals/today', access: T_ONLY },
+  { method: 'get', path: '/field-journals/review-scope', access: CA },
+  { method: 'get', path: '/field-journals/day', access: T_ONLY },
+  { method: 'get', path: '/field-journals/:id', access: TCA },
+  { method: 'post', path: '/field-journals/annotations', access: T_ONLY },
+  { method: 'patch', path: '/field-journals/:id/annotations/:annotationId', access: T_ONLY },
+  { method: 'post', path: '/field-journals/:id/annotations/:annotationId/ready', access: T_ONLY },
+  { method: 'post', path: '/field-journals/:id/annotations/:annotationId/draft', access: T_ONLY },
+  { method: 'post', path: '/field-journals/:id/submit', access: T_ONLY },
+  { method: 'post', path: '/field-journals/:id/resubmit', access: T_ONLY },
+  { method: 'post', path: '/field-journals/:id/void', access: T_ONLY },
+  { method: 'post', path: '/field-journals/:id/approve', access: C_ONLY },
+  { method: 'post', path: '/field-journals/:id/return', access: C_ONLY },
+  { method: 'get', path: '/observer-notes', access: TCA },
+  { method: 'get', path: '/observer-notes/:id', access: TCA },
+  { method: 'post', path: '/observer-notes', access: T_ONLY },
+  { method: 'patch', path: '/observer-notes/:id', access: T_ONLY },
+  { method: 'post', path: '/observer-notes/:id/submit', access: T_ONLY },
+  { method: 'post', path: '/observer-notes/:id/void', access: TC },
+  { method: 'post', path: '/observer-notes/:id/approve', access: C_ONLY },
+  { method: 'post', path: '/observer-notes/:id/return', access: C_ONLY },
+  { method: 'get', path: '/observer-notes/:id/reviews', access: TCA },
+  { method: 'get', path: '/shared-activities', access: T_ONLY },
+  { method: 'get', path: '/shared-activities/learning-corners', access: T_ONLY },
+  { method: 'get', path: '/shared-activities/:id', access: T_ONLY },
+  { method: 'post', path: '/shared-activities', access: T_ONLY },
+  { method: 'patch', path: '/shared-activities/:id', access: T_ONLY },
+  { method: 'delete', path: '/shared-activities/:id', access: T_ONLY },
+  { method: 'put', path: '/shared-activities/:id/favorite', access: T_ONLY },
+  { method: 'delete', path: '/shared-activities/:id/favorite', access: T_ONLY },
+  { method: 'get', path: '/training-plans', access: CA },
+  { method: 'post', path: '/training-plans', access: CA },
+  { method: 'patch', path: '/training-plans/:id', access: CA },
+  { method: 'get', path: '/training-plans/:id/sections', access: CA },
+  { method: 'post', path: '/training-plans/:id/sections', access: CA },
+  { method: 'put', path: '/training-plans/:id/section-order', access: CA },
+  { method: 'patch', path: '/training-sections/:id', access: CA },
+  { method: 'delete', path: '/training-sections/:id', access: CA },
+  { method: 'post', path: '/training-sections/:id/modules', access: CA },
+  { method: 'put', path: '/training-sections/:id/module-order', access: CA },
+  { method: 'get', path: '/training-modules/:id', access: CA },
+  { method: 'patch', path: '/training-modules/:id', access: CA },
+  { method: 'post', path: '/training-modules/:id/publish', access: CA },
+  { method: 'post', path: '/training-modules/:id/withdraw', access: CA },
+  { method: 'post', path: '/training-modules/:id/restore', access: CA },
+  { method: 'post', path: '/training-modules/:id/slides', access: CA },
+  { method: 'patch', path: '/training-modules/:id/slides/:slideId', access: CA },
+  { method: 'delete', path: '/training-modules/:id/slides/:slideId', access: CA },
+  { method: 'put', path: '/training-modules/:id/slide-order', access: CA },
+  { method: 'post', path: '/training-modules/:id/questions', access: CA },
+  { method: 'put', path: '/training-modules/:id/questions/:questionId', access: CA },
+  { method: 'delete', path: '/training-modules/:id/questions/:questionId', access: CA },
+  { method: 'put', path: '/training-modules/:id/question-order', access: CA },
+  { method: 'post', path: '/training-modules/:id/activities', access: CA },
+  { method: 'patch', path: '/training-modules/:id/activities/:activityId', access: CA },
+  { method: 'post', path: '/training-modules/:id/activities/:activityId/withdraw', access: CA },
+  { method: 'post', path: '/training-modules/:id/activities/:activityId/restore', access: CA },
+  { method: 'put', path: '/training-modules/:id/activity-order', access: CA },
+  { method: 'get', path: '/me/training/route', access: T_ONLY },
+  { method: 'post', path: '/me/training/modules/:moduleId/files/:purpose/url', access: T_ONLY },
+  { method: 'get', path: '/me/training/certificates', access: T_ONLY },
+  { method: 'post', path: '/me/training/certificates/:id/download', access: T_ONLY },
+  { method: 'post', path: '/training-modules/:id/files', access: CA },
+  { method: 'post', path: '/training-modules/:id/files/:fileId/confirm', access: CA },
+  { method: 'delete', path: '/training-modules/:id/files/:purpose', access: CA },
+  { method: 'post', path: '/training-modules/:id/files/:purpose/url', access: CA },
+  { method: 'get', path: '/training-certificates', access: CA },
+  { method: 'post', path: '/training-certificates/:id/download', access: CA },
   { method: 'get', path: '/certificates/verify/:code', access: PUBLIC },
-  { method: 'get', path: '/assistant/faqs', access: TEACHER },
-  { method: 'post', path: '/assistant/queries', access: TEACHER },
-  { method: 'get', path: '/faqs', access: COORD },
-  { method: 'get', path: '/faqs/:id', access: COORD },
-  { method: 'post', path: '/faqs', access: COORD },
-  { method: 'patch', path: '/faqs/:id', access: COORD },
-  { method: 'get', path: '/unanswered-questions', access: COORD },
-  { method: 'get', path: '/unanswered-questions/:id', access: COORD },
-  { method: 'post', path: '/unanswered-questions/:id/discard', access: COORD },
-  { method: 'get', path: '/audit-log', access: COORD },
-  { method: 'get', path: '/audit-log/export', access: COORD },
-  { method: 'get', path: '/audit-log/:id', access: COORD },
-  { method: 'get', path: '/training-tracking/plans/:planId', access: COORD },
-  { method: 'get', path: '/training-tracking/plans/:planId/export', access: COORD },
-  { method: 'get', path: '/training-tracking/teachers/:teacherId', access: COORD },
-  { method: 'get', path: '/me/training/modules/:moduleId', access: TEACHER },
-  { method: 'post', path: '/me/training/modules/:moduleId/video-viewed', access: TEACHER },
-  { method: 'post', path: '/me/training/modules/:moduleId/presentation-viewed', access: TEACHER },
-  { method: 'post', path: '/me/training/modules/:moduleId/challenge', access: TEACHER },
-  { method: 'post', path: '/me/training/modules/:moduleId/challenge/answer', access: TEACHER },
-  { method: 'post', path: '/me/training/modules/:moduleId/challenge/next', access: TEACHER },
-  { method: 'post', path: '/me/training/activities/:activityId/stamps', access: TEACHER },
-  { method: 'post', path: '/me/training/activities/:activityId/use', access: TEACHER },
-  { method: 'post', path: '/me/training/activities/:activityId/game', access: TEACHER },
-  { method: 'post', path: '/me/training/activities/:activityId/game/answer', access: TEACHER },
-  { method: 'post', path: '/me/training/activities/:activityId/game/next', access: TEACHER },
+  { method: 'get', path: '/assistant/faqs', access: T_ONLY },
+  { method: 'post', path: '/assistant/queries', access: T_ONLY },
+  { method: 'get', path: '/faqs', access: CA },
+  { method: 'get', path: '/faqs/:id', access: CA },
+  { method: 'post', path: '/faqs', access: CA },
+  { method: 'patch', path: '/faqs/:id', access: CA },
+  { method: 'get', path: '/unanswered-questions', access: CA },
+  { method: 'get', path: '/unanswered-questions/:id', access: CA },
+  { method: 'post', path: '/unanswered-questions/:id/discard', access: CA },
+  { method: 'get', path: '/audit-log', access: A_ONLY },
+  { method: 'get', path: '/audit-log/export', access: A_ONLY },
+  { method: 'get', path: '/audit-log/:id', access: A_ONLY },
+  { method: 'get', path: '/training-tracking/plans/:planId', access: CA },
+  { method: 'get', path: '/training-tracking/plans/:planId/export', access: CA },
+  { method: 'get', path: '/training-tracking/teachers/:teacherId', access: CA },
+  { method: 'get', path: '/me/training/modules/:moduleId', access: T_ONLY },
+  { method: 'post', path: '/me/training/modules/:moduleId/video-viewed', access: T_ONLY },
+  { method: 'post', path: '/me/training/modules/:moduleId/presentation-viewed', access: T_ONLY },
+  { method: 'post', path: '/me/training/modules/:moduleId/challenge', access: T_ONLY },
+  { method: 'post', path: '/me/training/modules/:moduleId/challenge/answer', access: T_ONLY },
+  { method: 'post', path: '/me/training/modules/:moduleId/challenge/next', access: T_ONLY },
+  { method: 'post', path: '/me/training/activities/:activityId/stamps', access: T_ONLY },
+  { method: 'post', path: '/me/training/activities/:activityId/use', access: T_ONLY },
+  { method: 'post', path: '/me/training/activities/:activityId/game', access: T_ONLY },
+  { method: 'post', path: '/me/training/activities/:activityId/game/answer', access: T_ONLY },
+  { method: 'post', path: '/me/training/activities/:activityId/game/next', access: T_ONLY },
   // Solo pruebas: públicos a propósito.
   { method: 'get', path: '/faq-example', access: PUBLIC },
   { method: 'get', path: '/faq-example/:id', access: PUBLIC },
@@ -192,14 +204,6 @@ const EXPECTED_ROUTES: ExpectedRoute[] = [
   { method: 'post', path: '/failures/audited-secret', access: PUBLIC },
   { method: 'post', path: '/failures/audited-big', access: PUBLIC },
 ];
-
-// De menor a mayor jerarquía.
-const ROLE_ORDER = [TEACHER, COORD, ADMIN];
-
-function boundaryRoles(minimum: UserRole): UserRole[] {
-  const index = ROLE_ORDER.indexOf(minimum);
-  return index > 0 ? [ROLE_ORDER[index - 1] as UserRole, minimum] : [minimum];
-}
 
 const label = ({ method, path }: { method: string; path: string }) =>
   `${method.toUpperCase()} ${path}`;
@@ -225,44 +229,46 @@ describe('control de acceso por rol', () => {
       .listRoutes()
       .map(({ method, path, access }) => `${label({ method, path })} -> ${access}`)
       .sort();
-    const expected = EXPECTED_ROUTES.map((route) => `${label(route)} -> ${route.access}`).sort();
+    const expected = EXPECTED_ROUTES.map(
+      (route) => `${label(route)} -> ${accessLabel(route.access)}`,
+    ).sort();
 
     expect(actual).toEqual(expected);
   });
 
-  describe.each(EXPECTED_ROUTES.filter((route) => route.access !== PUBLIC))(
-    '$method $path (rol mínimo $access)',
-    (route) => {
-      const path = route.path
-        .replace(':id', randomUUID())
-        .replace(':resourceId', randomUUID())
-        .replace(':entryId', randomUUID());
-      const call = (cookies?: Cookies) =>
-        cookies
-          ? asUser(app, route.method, path, cookies, 'access').send({})
-          : request(serverOf(app))[route.method](path).send({});
+  describe.each(
+    EXPECTED_ROUTES.filter(
+      (route): route is ExpectedRoute & { access: UserRole[] } => route.access !== PUBLIC,
+    ),
+  )('$method $path', (route) => {
+    const path = route.path
+      .replace(':id', randomUUID())
+      .replace(':resourceId', randomUUID())
+      .replace(':entryId', randomUUID());
+    const call = (cookies?: Cookies) =>
+      cookies
+        ? asUser(app, route.method, path, cookies, 'access').send({})
+        : request(serverOf(app))[route.method](path).send({});
 
-      it('responde 401 no_autenticado sin sesión (R3)', async () => {
-        const res = await call().expect(401);
+    it('responde 401 no_autenticado sin sesión (R3)', async () => {
+      const res = await call().expect(401);
 
-        expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Unauthenticated);
-      });
+      expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Unauthenticated);
+    });
 
-      // Solo la frontera: el rol mínimo pasa y el inmediatamente inferior (si existe) recibe 403.
-      // Los roles por encima del mínimo heredan por jerarquía, que prueba `access.guard.spec.ts`.
-      it.each(boundaryRoles(route.access as UserRole))('con el rol %s', async (role) => {
-        const res = await call(sessions.get(role));
+    // Los tres roles en cada ruta: los del conjunto pasan el guard y el resto recibe 403.
+    it.each(TCA)('con el rol %s', async (role) => {
+      const res = await call(sessions.get(role));
 
-        if (roleSatisfies(role, route.access as UserRole)) {
-          // Pasa el guard: lo que responda el endpoint (400 por el cuerpo vacío, 404...) no es 401 ni 403.
-          expect([401, 403]).not.toContain(res.status);
-        } else {
-          expect(res.status).toBe(403);
-          expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Forbidden);
-        }
-      });
-    },
-  );
+      if (route.access.includes(role)) {
+        // Pasa el guard: lo que responda el endpoint (400 por el cuerpo vacío, 404...) no es 401 ni 403.
+        expect([401, 403]).not.toContain(res.status);
+      } else {
+        expect(res.status).toBe(403);
+        expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.Forbidden);
+      }
+    });
+  });
 
   it('deja pasar los endpoints públicos sin sesión', async () => {
     await request(serverOf(app)).post('/auth/logout').expect(204);

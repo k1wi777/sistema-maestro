@@ -76,25 +76,32 @@ export function validateCreate(values: UserFormValues): CreateResult {
 }
 
 export type UpdateResult =
-  { ok: true; input: UpdateUserInput } | { ok: false; errors: UserFormErrors; unchanged: boolean };
+  | {
+      ok: true;
+      /** Nombre y correo cambiados (`PATCH`); `null` si solo cambia el rol. */
+      input: UpdateUserInput | null;
+      /** Rol nuevo (`PUT /users/:id/role`, con aviso de consecuencias); `null` si no cambia. */
+      role: UserRole | null;
+    }
+  | { ok: false; errors: UserFormErrors; unchanged: boolean };
 
-/** Valida la edición y envía solo los campos que cambiaron. */
+/** Valida la edición: nombre y correo cambiados por un lado y el rol, si cambia, por otro. */
 export function validateUpdate(values: UserFormValues, original: User): UpdateResult {
   const changes: Record<string, string> = {};
+  const role = values.role !== '' && values.role !== original.role ? values.role : null;
   if (values.fullName.trim() !== original.fullName) {
     changes.fullName = values.fullName;
   }
   if (values.email.trim().toLowerCase() !== original.email) {
     changes.email = values.email;
   }
-  if (values.role !== '' && values.role !== original.role) {
-    changes.role = values.role;
-  }
   if (Object.keys(changes).length === 0) {
-    return { ok: false, errors: {}, unchanged: true };
+    return role === null
+      ? { ok: false, errors: {}, unchanged: true }
+      : { ok: true, input: null, role };
   }
   const parsed = updateUserSchema.safeParse(changes);
   return parsed.success
-    ? { ok: true, input: parsed.data }
+    ? { ok: true, input: parsed.data, role }
     : { ok: false, errors: errorsOf(parsed.error), unchanged: false };
 }

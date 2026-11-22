@@ -8,6 +8,7 @@ import {
 } from '@gns/shared';
 import type { Prisma } from '../../../generated/prisma/client';
 import { PrismaService } from '../../../shared/database/prisma.service';
+import { gradeCoordinatorWhere } from '../../../shared/records/coordinator-filter';
 import {
   PrismaReadRepository,
   type ModelDelegate,
@@ -533,13 +534,13 @@ export class PrismaFieldJournalRepository
         ],
       };
     }
-    // La coordinadora recibe el diario solo desde el primer envío; administración ve todos.
-    return visibility.coordinatorId
-      ? {
-          submittedAt: { not: null },
-          group: { grade: { coordinatorId: visibility.coordinatorId } },
-        }
-      : {};
+    // Coordinación recibe el diario solo desde el primer envío; administración ve todos.
+    return {
+      ...(visibility.submittedOnly ? { submittedAt: { not: null } } : {}),
+      ...(visibility.coordinatorId
+        ? { group: { grade: { coordinatorId: visibility.coordinatorId } } }
+        : {}),
+    };
   }
 
   protected toWhere(filters: JournalListFilters): Prisma.FieldJournalWhereInput {
@@ -550,7 +551,13 @@ export class PrismaFieldJournalRepository
         {
           status: rest.status,
           groupId: rest.groupId,
-          group: rest.gradeId ? { gradeId: rest.gradeId } : undefined,
+          group:
+            rest.gradeId || rest.coordinatorId
+              ? {
+                  gradeId: rest.gradeId,
+                  grade: gradeCoordinatorWhere(rest.coordinatorId),
+                }
+              : undefined,
           date: {
             gte: rest.from ? new Date(rest.from) : undefined,
             lte: rest.to ? new Date(rest.to) : undefined,

@@ -1,17 +1,6 @@
-import { RecordActor, RecordStatus, roleSatisfies, UserRole } from '@gns/shared';
-import type { RequestUser } from '../../../core/audit/request-user';
+import { RecordStatus } from '@gns/shared';
 
-/** Coordinación: rol coordinador o superior (incluye administración). */
-export const isReviewer = (user: RequestUser): boolean =>
-  roleSatisfies(user.role, UserRole.Coordinator);
-
-/** Papeles con los que `user` actúa sobre un registro: dueño y/o coordinación. */
-export function actorsOf(user: RequestUser, ownerId: string): RecordActor[] {
-  return [
-    ...(ownerId === user.id ? [RecordActor.Owner] : []),
-    ...(isReviewer(user) ? [RecordActor.Reviewer] : []),
-  ];
-}
+// La regla de quién consulta y quién revisa vive en `shared/records/review-scope.ts`.
 
 /** Cómo se nombra cada estado en los mensajes de conflicto («la hoja», «la anotación»: femenino). */
 export const STATUS_LABEL: Record<RecordStatus, string> = {

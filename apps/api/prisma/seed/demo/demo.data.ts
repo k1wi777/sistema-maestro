@@ -36,6 +36,7 @@ const user = (key: string, name: string, role: UserRole, status: UserStatus = Us
 
 // Nombres inventados: no sustituir por nombres de personas reales.
 export const DEMO_USERS: readonly DemoUser[] = [
+  user('administracion.gns', 'Administrador GNS', UserRole.Administrator),
   user('elena.ravassa', 'Elena Ravassa', UserRole.Coordinator),
   user('tomas.aldaverde', 'Tomás Aldaverde', UserRole.Coordinator),
   user('valeria.montenueva', 'Valeria Montenueva', UserRole.Teacher),
@@ -74,7 +75,7 @@ export const DEMO_GROUPS: readonly { grade: string; name: string }[] = [
 /**
  * Coordinadora de cada grado en el demo: Elena, preescolar bajo y primaria; Tomás, preescolar alto
  * (Kinder y Transition) y bachillerato. First Grade queda sin coordinadora, como en el tablero,
- * para mostrar el aviso y que solo administración revise sus diarios.
+ * para mostrar el aviso: sus registros enviados no los revisa nadie.
  */
 export const DEMO_COORDINATOR_GRADES: readonly {
   coordinator: string;
@@ -553,7 +554,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
     submissions: [],
   },
   {
-    // Grado sin coordinadora: solo administración lo revisa.
+    // Grado sin coordinadora: nadie lo revisa (administración solo consulta).
     key: 'j7',
     grade: 'First Grade',
     group: 'First Grade 1',

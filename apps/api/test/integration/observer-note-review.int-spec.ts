@@ -26,7 +26,6 @@ describe('revisión y anulación del observador (BE-64)', () => {
   let coordUser: TestUser;
   let coordA: Cookies;
   let coordB: Cookies;
-  let adminUser: TestUser;
   let admin: Cookies;
 
   const post = (cookies: Cookies, path: string) => call(app, cookies, 'post', path);
@@ -38,7 +37,7 @@ describe('revisión y anulación del observador (BE-64)', () => {
     post(cookies, `/observer-notes/${id}/void`).send({ reason });
   const stored = (id: string) => prisma.observerNote.findUniqueOrThrow({ where: { id } });
   const submitted = (extra: Record<string, unknown> = {}) =>
-    submittedNote(app, planning, teacher, extra);
+    submittedNote(app, planning, teacher, extra, coordUser.id);
 
   beforeAll(async () => {
     release = await holdSchoolYearLock('shared');
@@ -50,8 +49,7 @@ describe('revisión y anulación del observador (BE-64)', () => {
     coordUser = await createTestUser(app, { role: UserRole.Coordinator });
     coordA = await signIn(app, coordUser);
     coordB = await signIn(app, await createTestUser(app, { role: UserRole.Coordinator }));
-    adminUser = await createTestUser(app, { role: UserRole.Administrator });
-    admin = await signIn(app, adminUser);
+    admin = await signIn(app, await createTestUser(app, { role: UserRole.Administrator }));
   }, SCHOOL_YEAR_LOCK_TIMEOUT_MS);
 
   afterAll(async () => {
@@ -85,22 +83,44 @@ describe('revisión y anulación del observador (BE-64)', () => {
       });
     });
 
-    it('el administrador también revisa; devolver exige comentario y deja observaciones', async () => {
+    it('devolver exige comentario y deja observaciones', async () => {
       const created = await submitted();
-      await giveBack(admin, created.id, {}).expect(400);
+      await giveBack(coordA, created.id, {}).expect(400);
 
-      const res = await giveBack(admin, created.id, { comment: 'Precisa la situación' }).expect(
+      const res = await giveBack(coordA, created.id, { comment: 'Precisa la situación' }).expect(
         200,
       );
 
       expect((res.body as NoteBody).status).toBe(RecordStatus.ChangesRequested);
       expect((await reviewRows(app, created.id))[0]).toMatchObject({
         action: 'observaciones',
-        reviewerId: adminUser.id,
+        reviewerId: coordUser.id,
       });
       expect((await auditRows(app, created.id)).at(-1)).toMatchObject({
         action: 'Dejó observaciones en una anotación del observador',
       });
+    });
+
+    it('la coordinadora de otro grado y administración consultan pero reciben 403 al decidir o anular; un grado sin coordinadora, 403 para todos', async () => {
+      const created = await submitted();
+
+      for (const cookies of [coordB, admin]) {
+        for (const res of [
+          await approve(cookies, created.id),
+          await giveBack(cookies, created.id, { comment: 'x' }),
+          await voidNote(cookies, created.id),
+        ]) {
+          expect(res.status).toBe(403);
+        }
+        await call(app, cookies, 'get', `/observer-notes/${created.id}`).expect(200);
+      }
+      expect((await stored(created.id)).status).toBe(RecordStatus.Submitted);
+      expect(await reviewRows(app, created.id)).toHaveLength(0);
+
+      const orphan = await submittedNote(app, planning, teacher);
+      await approve(coordA, orphan.id).expect(403);
+      await approve(admin, orphan.id).expect(403);
+      expect((await stored(orphan.id)).status).toBe(RecordStatus.Submitted);
     });
 
     it('un docente no revisa (403); una anotación no enviada responde 409 sin modificarla', async () => {
@@ -109,33 +129,34 @@ describe('revisión y anulación del observador (BE-64)', () => {
       await giveBack(teacher, created.id, { comment: 'x' }).expect(403);
 
       const draft = await createNote(app, teacher, {
-        gradeId: (await freshGrade(planning, [])).gradeId,
+        gradeId: (await freshGrade(planning, [], coordUser.id)).gradeId,
       });
       await approve(coordA, draft.id).expect(409);
       expect((await stored(draft.id)).status).toBe(RecordStatus.Draft);
 
       await approve(coordA, created.id).expect(200);
-      await giveBack(coordB, created.id, { comment: 'x' }).expect(409);
+      await giveBack(coordA, created.id, { comment: 'x' }).expect(409);
       expect(await reviewRows(app, created.id)).toHaveLength(1);
     });
 
-    it('un coordinador o administrador dueño no puede revisar su propia anotación', async () => {
-      for (const [cookies, reviewer] of [
-        [coordA, coordB],
-        [admin, coordA],
-      ] as const) {
-        const own = await submittedNote(app, planning, cookies);
+    it('una coordinadora que fue dueña de la anotación no puede revisarla (403 autorrevision_no_permitida)', async () => {
+      // Quien antes era docente y hoy coordina el grado no revisa lo que ella misma envió.
+      const formerUser = await createTestUser(app);
+      const former = await signIn(app, formerUser);
+      const own = await submittedNote(app, planning, former, {}, formerUser.id);
+      await prisma.user.update({
+        where: { id: formerUser.id },
+        data: { role: UserRole.Coordinator },
+      });
 
-        for (const res of [
-          await approve(cookies, own.id).expect(403),
-          await giveBack(cookies, own.id, { comment: 'x' }).expect(403),
-        ]) {
-          expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.SelfReviewForbidden);
-        }
-        expect((await stored(own.id)).status).toBe(RecordStatus.Submitted);
-        expect(await reviewRows(app, own.id)).toHaveLength(0);
-        await approve(reviewer, own.id).expect(200);
+      for (const res of [
+        await approve(former, own.id).expect(403),
+        await giveBack(former, own.id, { comment: 'x' }).expect(403),
+      ]) {
+        expect(apiErrorBodySchema.parse(res.body).code).toBe(ApiErrorCode.SelfReviewForbidden);
       }
+      expect((await stored(own.id)).status).toBe(RecordStatus.Submitted);
+      expect(await reviewRows(app, own.id)).toHaveLength(0);
     });
 
     it('dos decisiones simultáneas producen una sola y un 409', async () => {
@@ -143,7 +164,7 @@ describe('revisión y anulación del observador (BE-64)', () => {
 
       const results = await Promise.all([
         approve(coordA, created.id, { comment: 'A' }),
-        giveBack(coordB, created.id, { comment: 'B' }),
+        giveBack(coordA, created.id, { comment: 'B' }),
       ]);
 
       expect(results.map((res) => res.status).sort()).toEqual([200, 409]);
@@ -187,7 +208,7 @@ describe('revisión y anulación del observador (BE-64)', () => {
         familia_informada: { antes: false, despues: true },
       });
 
-      for (const cookies of [teacher, coordB]) {
+      for (const cookies of [teacher, coordB, admin]) {
         const history = (
           await call(app, cookies, 'get', `/observer-notes/${created.id}/reviews`).expect(200)
         ).body as ReviewBody[];
@@ -238,14 +259,14 @@ describe('revisión y anulación del observador (BE-64)', () => {
       await voidNote(teacher, draft.id).expect(200);
     });
 
-    it('revisada solo la anula coordinación; anulada no se anula de nuevo; un tercero no la ve', async () => {
+    it('revisada solo la anula la coordinadora del grado; anulada no se anula de nuevo; un tercero no la ve', async () => {
       const created = await submitted();
       await approve(coordA, created.id).expect(200);
 
       await voidNote(teacher, created.id).expect(409);
       await voidNote(other, created.id).expect(404);
-      await voidNote(coordB, created.id, 'Revisada por equivocación').expect(200);
-      await voidNote(coordB, created.id).expect(409);
+      await voidNote(coordA, created.id, 'Revisada por equivocación').expect(200);
+      await voidNote(coordA, created.id).expect(409);
       expect((await stored(created.id)).status).toBe(RecordStatus.Voided);
     });
 

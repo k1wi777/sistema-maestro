@@ -49,13 +49,17 @@ export const createUserSchema = z
   .strict();
 export type CreateUserInput = z.output<typeof createUserSchema>;
 
-// Sin defaults: un PATCH vacío no debe reponer valores.
+// Sin defaults: un PATCH vacío no debe reponer valores. El rol tiene su propio endpoint
+// (`PUT /users/:id/role`): cambiarlo tiene consecuencias y su propia fila en la bitácora.
 export const updateUserSchema = z
-  .object({ fullName: fullNameSchema, email: emailSchema, role: roleSchema })
+  .object({ fullName: fullNameSchema, email: emailSchema })
   .partial()
   .strict()
   .refine((value) => Object.keys(value).length > 0, { error: 'debe incluir al menos un campo' });
 export type UpdateUserInput = z.output<typeof updateUserSchema>;
+
+export const changeUserRoleSchema = z.object({ role: roleSchema }).strict();
+export type ChangeUserRoleInput = z.output<typeof changeUserRoleSchema>;
 
 export const updateUserStatusSchema = z.object({ status: statusSchema }).strict();
 export type UpdateUserStatusInput = z.output<typeof updateUserStatusSchema>;

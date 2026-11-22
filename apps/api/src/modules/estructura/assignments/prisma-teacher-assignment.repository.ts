@@ -115,6 +115,15 @@ export class PrismaTeacherAssignmentRepository
     return rows.map((row) => this.toEntity(row));
   }
 
+  async findAllActiveByTeacher(teacherId: string): Promise<TeacherAssignment[]> {
+    const rows = await this.prisma.db.teacherAssignment.findMany({
+      where: { teacherId, status: TeacherAssignmentStatus.Active },
+      include: INCLUDE,
+      orderBy: [{ schoolYear: 'asc' }, { id: 'asc' }],
+    });
+    return rows.map((row) => this.toEntity(row));
+  }
+
   async findActiveByYear(schoolYear: string): Promise<TeacherAssignment[]> {
     const rows = await this.prisma.db.teacherAssignment.findMany({
       where: { schoolYear, status: TeacherAssignmentStatus.Active },

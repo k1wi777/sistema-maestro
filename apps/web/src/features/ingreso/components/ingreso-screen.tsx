@@ -10,19 +10,24 @@ import {
   REASON_PARAM,
   RETURN_PARAM,
   SESSION_EXPIRED_REASON,
-  availableViews,
+  homePathFor,
   safeReturnPath,
   useSession,
   type SessionState,
 } from '@/shared/session';
+import { VIEWS, firstSectionHref } from '@/shared/shell';
 
 import { ingresoView } from '../ingreso-view';
 import { ConsentDialog } from './consent-dialog';
 import styles from './ingreso-screen.module.css';
 import { LoginForm } from './login-form';
-import { ViewChooser } from './view-chooser';
 
-const RULES = { safeReturnPath, availableViews };
+const RULES = {
+  safeReturnPath,
+  homePath: homePathFor,
+  homeSection: (role: Parameters<typeof homePathFor>[0]) =>
+    firstSectionHref(VIEWS[homePathFor(role)]),
+};
 
 /** Panel de marca del tablero: escudo, nombre, lema y texto institucional. */
 function BrandPanel({ compact }: { compact: boolean }) {
@@ -131,7 +136,7 @@ export function IngresoFallback() {
   );
 }
 
-/** Ingreso: formulario, aviso de datos o selección de vista según la sesión (`ingresoView`). */
+/** Ingreso: formulario, aviso de datos o navegación a la vista del rol según la sesión (`ingresoView`). */
 export function IngresoScreen() {
   const { state } = useSession();
   const router = useRouter();
@@ -153,9 +158,6 @@ export function IngresoScreen() {
     <IngresoFrame consent={consent} overlay={consent ? <ConsentDialog /> : null}>
       {current.kind === 'form' ? (
         <LoginForm loading={current.busy} sessionEnded={sessionEnded} />
-      ) : null}
-      {current.kind === 'chooser' && state.status === 'authenticated' ? (
-        <ViewChooser user={state.user} />
       ) : null}
       {current.kind === 'navigate' ? (
         <p role="status" aria-busy="true">

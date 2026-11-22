@@ -4,7 +4,7 @@ import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
 import { IdParamDto } from '../../../shared/http/id-param.dto';
-import { RequireRole } from '../../identidad/auth/access.decorators';
+import { Roles } from '../../identidad/auth/access.decorators';
 import { CurrentUser } from '../../identidad/auth/current-user.decorator';
 import { UnansweredQuestionAuditSnapshot } from './unanswered.audit-snapshot';
 import {
@@ -15,11 +15,11 @@ import {
 import { UnansweredService } from './unanswered.service';
 
 /**
- * Preguntas sin respuesta (coordinación; administración hereda por jerarquía). Solo coordinación
+ * Preguntas sin respuesta (coordinación y administración). Solo coordinación
  * ve quién preguntó. No hay ruta que borre: descartar cierra la pregunta y retira su texto.
  */
 @Controller('unanswered-questions')
-@RequireRole(UserRole.Coordinator)
+@Roles(UserRole.Coordinator, UserRole.Administrator)
 export class UnansweredController {
   constructor(private readonly unanswered: UnansweredService) {}
 
