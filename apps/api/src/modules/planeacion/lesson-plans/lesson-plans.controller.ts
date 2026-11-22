@@ -1,5 +1,6 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ALL_ROLES, UserRole } from '@gns/shared';
+import { ApiNoContentResponse } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 import { Audited } from '../../../core/audit/audited.decorator';
 import type { RequestUser } from '../../../core/audit/request-user';
@@ -15,7 +16,7 @@ import {
   UpdateLessonPlanDto,
   VoidLessonPlanDto,
 } from './dto/lesson-plan.dto';
-import { LESSON_PLAN_AUDIT } from './lesson-plan.audit-snapshot';
+import { LESSON_PLAN_AUDIT, LessonPlanDiscardSnapshot } from './lesson-plan.audit-snapshot';
 import { LessonPlansService } from './lesson-plans.service';
 
 /**
@@ -90,5 +91,20 @@ export class LessonPlansController {
     @Body() _body: VoidLessonPlanDto,
   ) {
     return this.lessonPlans.voidPlan(user, id);
+  }
+
+  /** Borrado real de un borrador propio que nunca se envió; lo enviado solo se anula. */
+  @Delete(':id')
+  @Roles(UserRole.Teacher)
+  @HttpCode(204)
+  @Audited({
+    type: LESSON_PLAN_AUDIT.type,
+    entity: LESSON_PLAN_AUDIT.entity,
+    snapshot: LessonPlanDiscardSnapshot,
+    action: 'Descartó un borrador',
+  })
+  @ApiNoContentResponse({ description: 'Borrador descartado' })
+  discard(@CurrentUser() user: RequestUser, @Param() { id }: IdParamDto) {
+    return this.lessonPlans.discard(user, id);
   }
 }

@@ -73,6 +73,11 @@ export interface ObserverNoteRepository extends ReadRepository<
   ): Promise<boolean>;
   /** Bloquea la fila hasta el fin de la transacción para serializar decisiones y envíos. */
   lock(id: string): Promise<void>;
+  /**
+   * Borra la anotación solo si sigue en borrador (nunca se envió: ninguna transición vuelve a
+   * `borrador`); `false` si otra petición ya la movió. Es el único borrado real de anotaciones.
+   */
+  deleteDraft(id: string): Promise<boolean>;
 }
 
 export const OBSERVER_NOTE_REPOSITORY = Symbol('OBSERVER_NOTE_REPOSITORY');

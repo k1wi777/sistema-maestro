@@ -86,6 +86,7 @@ function setup(options: Options = {}) {
     create: jest.fn(() => Promise.resolve(plan())),
     updateIfStatus: jest.fn(() => Promise.resolve(true)),
     lock: jest.fn(() => Promise.resolve()),
+    deleteDraft: jest.fn(() => Promise.resolve(true)),
     countDelivered: jest.fn(() => Promise.resolve([])),
   } satisfies LessonPlanRepository;
   const reviewRepository = {
@@ -525,7 +526,7 @@ describe('LessonPlansService.submit', () => {
 });
 
 describe('LessonPlansService.voidPlan', () => {
-  it.each([RecordStatus.Draft, RecordStatus.Submitted, RecordStatus.ChangesRequested])(
+  it.each([RecordStatus.Submitted, RecordStatus.ChangesRequested])(
     'el dueño anula desde %s',
     async (status) => {
       const { service, repository } = setup({ stored: plan({ status }) });
@@ -537,6 +538,17 @@ describe('LessonPlansService.voidPlan', () => {
       });
     },
   );
+
+  it('un borrador no se anula (409 «se descarta») ni por el dueño ni por coordinación', async () => {
+    for (const user of [owner, coordinator]) {
+      const { service, repository } = setup({ stored: plan({ status: RecordStatus.Draft }) });
+
+      await expect(service.voidPlan(user, 'plan-1')).rejects.toThrow(
+        'La planeación está en borrador: se descarta en lugar de anularse',
+      );
+      expect(repository.updateIfStatus).not.toHaveBeenCalled();
+    }
+  });
 
   it('el dueño no anula una revisada (409), pero coordinación sí', async () => {
     const reviewed = plan({ status: RecordStatus.Reviewed });
@@ -698,5 +710,79 @@ describe('LessonPlansService: aprobar y devolver', () => {
     expect(repository.lock).not.toHaveBeenCalled();
     expect(repository.updateIfStatus).not.toHaveBeenCalled();
     expect(reviews).toEqual([]);
+  });
+});
+
+describe('LessonPlansService.discard (404 → 403 → 409)', () => {
+  it('el autor descarta su borrador: bloquea la fila y borra', async () => {
+    const { service, repository } = setup();
+
+    await service.discard(owner, 'plan-1');
+
+    expect(repository.lock).toHaveBeenCalledWith('plan-1');
+    expect(repository.deleteDraft).toHaveBeenCalledWith('plan-1');
+  });
+
+  it('otro docente recibe 404 y no borra nada', async () => {
+    const { service, repository } = setup();
+
+    await expect(service.discard(stranger, 'plan-1')).rejects.toBeInstanceOf(NotFoundException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('coordinación y administración reciben 403 porque ven la planeación pero no son su autor', async () => {
+    for (const user of [coordinator, admin]) {
+      const { service, repository } = setup();
+
+      await expect(service.discard(user, 'plan-1')).rejects.toBeInstanceOf(ForbiddenException);
+      expect(repository.deleteDraft).not.toHaveBeenCalled();
+    }
+  });
+
+  it('una planeación inexistente responde 404', async () => {
+    const { service } = setup({ stored: null });
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it.each([
+    RecordStatus.Submitted,
+    RecordStatus.ChangesRequested,
+    RecordStatus.Reviewed,
+    RecordStatus.Voided,
+  ])('una planeación %s responde 409 y no borra', async (status) => {
+    const { service, repository } = setup({ stored: plan({ status }) });
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(ConflictException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('un borrador que ya se envió alguna vez responde 409', async () => {
+    const { service, repository } = setup({ stored: plan({ submittedAt: NOW }) });
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(ConflictException);
+    expect(repository.deleteDraft).not.toHaveBeenCalled();
+  });
+
+  it('si otra petición la movió justo antes de borrar (0 filas), responde 409', async () => {
+    const { service, repository } = setup();
+    repository.deleteDraft.mockResolvedValueOnce(false);
+
+    await expect(service.discard(owner, 'plan-1')).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('el estado para la bitácora del descarte tiene solo catálogo, sin textos libres', async () => {
+    const { service } = setup();
+
+    const snapshot = await service.findDiscardSnapshot('plan-1');
+
+    expect(snapshot).toEqual({
+      id: 'plan-1',
+      status: RecordStatus.Draft,
+      grade: '7°',
+      areas: ['Física'],
+    });
+    expect(JSON.stringify(snapshot)).not.toContain('Tema');
+    expect(JSON.stringify(snapshot)).not.toContain('Trabaja');
   });
 });

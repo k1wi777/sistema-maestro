@@ -408,6 +408,118 @@ describe('diario de campo colaborativo por grupo y día (#107)', () => {
     });
   });
 
+  describe('descartar una anotación en borrador (#117)', () => {
+    const discard = (who: Actor, annotationId: string) =>
+      call(app, who.cookies, 'delete', `/field-journals/annotations/${annotationId}`);
+
+    it('borra solo esa anotación y conserva el diario y las demás; la bitácora no guarda textos', async () => {
+      const own = await journalWorld(app);
+      const first = await addAnnotation(app, own.ana, {
+        ...annotationBody(own, own.areas.math),
+        description: 'Texto reservado sobre Zaphod',
+      });
+      const journalId = first.id!;
+      const second = await addAnnotation(app, own.luis, annotationBody(own, own.areas.art));
+      const luisAnnotation = annotationOf(second, own.luis.user.id);
+
+      await discard(own.luis, luisAnnotation.id).expect(204);
+
+      expect(await prisma.fieldJournalAnnotation.count({ where: { journalId } })).toBe(1);
+      const remaining = (await get(own.ana, `/field-journals/${journalId}`).expect(200))
+        .body as JournalBody;
+      expect(remaining.annotations.map((a) => a.teacher.id)).toEqual([own.ana.user.id]);
+      const row = (await auditRows(app, luisAnnotation.id)).at(-1);
+      expect(row).toMatchObject({
+        action: 'Descartó un borrador',
+        type: 'diario',
+        role: 'docente',
+        userId: own.luis.user.id,
+        detail: expect.stringContaining('Arte') as string,
+      });
+      expect(JSON.stringify([row?.detail, row?.dataBefore, row?.dataAfter])).not.toMatch(
+        /Trabajo en equipo|Zaphod/,
+      );
+    });
+
+    it('si era la única anotación borra también el diario: el día vuelve a estar sin diario', async () => {
+      const own = await journalWorld(app);
+      const created = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      const annotation = annotationOf(created, own.ana.user.id);
+
+      await discard(own.ana, annotation.id).expect(204);
+
+      expect(await prisma.fieldJournal.count({ where: { id: created.id! } })).toBe(0);
+      await get(own.ana, `/field-journals/${created.id}`).expect(404);
+      const day = await get(
+        own.ana,
+        `/field-journals/day?groupId=${own.groupId}&date=${TODAY}`,
+      ).expect(200);
+      expect((day.body as { id: string | null }).id).toBeNull();
+      const mine = (await get(own.ana, '/field-journals?scope=mine&pageSize=100').expect(200))
+        .body as Page;
+      expect(mine.items.map((item) => item.id)).not.toContain(created.id);
+      await discard(own.ana, annotation.id).expect(404);
+    });
+
+    it('una anotación lista de otra persona: 403; un borrador ajeno o de un extraño: 404; coordinación y administración: 403', async () => {
+      const own = await journalWorld(app);
+      const { journalId, anaAnnotationId } = await startedJournal(app, own);
+      const luisDraft = (
+        (await get(own.luis, `/field-journals/${journalId}`).expect(200)).body as JournalBody
+      ).annotations.find((a) => a.teacher.id === own.luis.user.id)!;
+
+      await discard(own.luis, anaAnnotationId).expect(403);
+      await discard(own.ana, luisDraft.id).expect(404);
+      await discard(own.stranger, anaAnnotationId).expect(404);
+      await discard(own.coordinator, luisDraft.id).expect(403);
+      await discard(own.admin, luisDraft.id).expect(403);
+      expect(await prisma.fieldJournalAnnotation.count({ where: { journalId } })).toBe(2);
+    });
+
+    it('una anotación lista responde 409 y no se borra', async () => {
+      const own = await journalWorld(app);
+      const { journalId, anaAnnotationId } = await startedJournal(app, own);
+
+      const res = await discard(own.ana, anaAnnotationId).expect(409);
+
+      expect(errorOf(res.body).code).toBeDefined();
+      expect(await prisma.fieldJournalAnnotation.count({ where: { journalId } })).toBe(2);
+    });
+
+    it('tras enviar el diario, el borrador de otra persona ya no se descarta (409)', async () => {
+      const own = await journalWorld(app);
+      const { journalId } = await startedJournal(app, own);
+      await post(own.director, `/field-journals/${journalId}/submit`).expect(200);
+      const luisDraft = await prisma.fieldJournalAnnotation.findFirstOrThrow({
+        where: { journalId, teacherId: own.luis.user.id },
+      });
+
+      await discard(own.luis, luisDraft.id).expect(409);
+      expect(await prisma.fieldJournalAnnotation.count({ where: { id: luisDraft.id } })).toBe(1);
+    });
+
+    it('un descarte y un envío simultáneos se serializan: el diario enviado nunca pierde lo enviado', async () => {
+      const own = await journalWorld(app);
+      const { journalId } = await startedJournal(app, own);
+      const luisDraft = await prisma.fieldJournalAnnotation.findFirstOrThrow({
+        where: { journalId, teacherId: own.luis.user.id },
+      });
+
+      const [removed, submit] = await Promise.all([
+        discard(own.luis, luisDraft.id),
+        post(own.director, `/field-journals/${journalId}/submit`),
+      ]);
+
+      expect(submit.status).toBe(200);
+      expect([204, 409]).toContain(removed.status);
+      expect(
+        await prisma.fieldJournalAnnotation.count({
+          where: { journalId, status: 'lista', sent: true },
+        }),
+      ).toBe(1);
+    });
+  });
+
   describe('listas y bloque «Hoy» (R20)', () => {
     it('la lista «mine» trae los diarios de sus grupos con n de m, filtra y pagina; «today» devuelve el de hoy', async () => {
       const own = await journalWorld(app);

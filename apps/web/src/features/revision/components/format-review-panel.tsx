@@ -1,6 +1,12 @@
 'use client';
 
-import { RecordStatus, REVIEW_COMMENT_MAX_LENGTH } from '@gns/shared';
+import {
+  canTransition,
+  RecordActor,
+  RecordOperation,
+  REVIEW_COMMENT_MAX_LENGTH,
+  type RecordStatus,
+} from '@gns/shared';
 import { useState } from 'react';
 
 import { VoidRecordDialog } from '@/shared/records';
@@ -120,7 +126,7 @@ export function FormatReviewPanel({
             <ReviewHistory lines={review.history} teacher={teacher} signed />
           </section>
 
-          {review.canReview && status !== RecordStatus.Voided ? (
+          {review.canReview && canTransition(RecordOperation.Void, RecordActor.Reviewer, status) ? (
             <Button
               variant="void"
               size="sm"

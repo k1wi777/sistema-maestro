@@ -160,6 +160,16 @@ export class PrismaLessonPlanRepository
     await this.prisma.db.$queryRaw`SELECT id FROM planeacion WHERE id = ${id}::uuid FOR UPDATE`;
   }
 
+  async deleteDraft(id: string): Promise<boolean> {
+    // Las FK son NO ACTION: primero los dependientes, con el mismo filtro de borrador que la
+    // planeación para no tocar nada si ya no lo es (el trigger de la base protege el resto).
+    const draft = { id, status: RecordStatus.Draft, submittedAt: null };
+    await this.prisma.db.lessonPlanArea.deleteMany({ where: { lessonPlan: draft } });
+    await this.prisma.db.lessonPlanResource.deleteMany({ where: { lessonPlan: draft } });
+    const { count } = await this.prisma.db.lessonPlan.deleteMany({ where: draft });
+    return count === 1;
+  }
+
   // `groupBy` no agrupa por campos de otra tabla: se une `planeacion_area` en SQL parametrizado,
   // así una planeación con varias áreas cuenta una vez en cada una.
   async countDelivered(filters: DeliveredFilters): Promise<DeliveredCount[]> {

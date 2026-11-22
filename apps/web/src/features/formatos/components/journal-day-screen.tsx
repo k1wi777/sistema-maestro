@@ -12,7 +12,12 @@ import { useCallback, useMemo, useState } from 'react';
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading } from '@/shared/data';
 import { formatDateTime, formatTime, formatWeekdayDate } from '@/shared/format/dates';
-import { JOURNAL_STATUS_INFO, VoidRecordDialog, printWithTitle } from '@/shared/records';
+import {
+  DiscardDraftDialog,
+  JOURNAL_STATUS_INFO,
+  VoidRecordDialog,
+  printWithTitle,
+} from '@/shared/records';
 import {
   ActionBar,
   ActionMenu,
@@ -107,6 +112,7 @@ function DayScreen({ initial, groupId, date, notice, onConflict }: DayScreenProp
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [voidOpen, setVoidOpen] = useState(false);
+  const [discarding, setDiscarding] = useState<JournalAnnotation | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
 
@@ -161,12 +167,44 @@ function DayScreen({ initial, groupId, date, notice, onConflict }: DayScreenProp
       ? `Guardado · ${formatTime(savedAt)}`
       : 'Tus borradores solo los ves tú';
 
+  /** Solo un borrador propio de un diario que nunca se envió (misma regla que la API). */
+  const canDiscardAnnotation = (annotation: JournalAnnotation): boolean =>
+    annotation.isMine &&
+    annotation.status === AnnotationStatus.Draft &&
+    status === JournalStatus.InProgress;
+
+  async function handleDiscard(): Promise<string | null> {
+    if (!discarding) {
+      return null;
+    }
+    const outcome = await editor.discard(discarding.id);
+    if (!outcome.ok) {
+      return outcome.message;
+    }
+    setDiscarding(null);
+    setEditingId(null);
+    setSuccess('Borrador descartado.');
+    window.scrollTo({ top: 0 });
+    return null;
+  }
+
   const annotationActions = (annotation: JournalAnnotation) => {
     if (!annotation.isMine || !canEditAnnotation(annotation)) {
       return undefined;
     }
     return (
       <>
+        {canDiscardAnnotation(annotation) ? (
+          <Button
+            variant="outline"
+            size="sm"
+            startIcon="papelera"
+            context={`anotación de ${annotation.area.name}`}
+            onClick={() => setDiscarding(annotation)}
+          >
+            Descartar borrador
+          </Button>
+        ) : null}
         <Button
           variant="outline"
           size="sm"
@@ -303,6 +341,9 @@ function DayScreen({ initial, groupId, date, notice, onConflict }: DayScreenProp
                 Tus borradores solo los ves tú. Los demás docentes y el director(a) ven tu anotación
                 cuando la marcas como lista. La descripción debe incluir al estudiante implicado
                 (solo nombre de pila).
+                {mine.some(canDiscardAnnotation)
+                  ? ' Solo puedes descartar una anotación en borrador de un diario que aún no se ha enviado.'
+                  : ''}
               </p>
               {mine.length > 0 ? (
                 <ul className={journal.entries}>
@@ -461,6 +502,13 @@ function DayScreen({ initial, groupId, date, notice, onConflict }: DayScreenProp
           error={submitError}
           onClose={() => setSubmitOpen(false)}
           onConfirm={() => void handleSubmit()}
+        />
+      ) : null}
+      {discarding ? (
+        <DiscardDraftDialog
+          description={`Se borrará tu anotación en borrador de ${discarding.area.name} y no podrás recuperarla. Nadie más la ha visto.`}
+          onClose={() => setDiscarding(null)}
+          onConfirm={handleDiscard}
         />
       ) : null}
       {voidOpen ? (

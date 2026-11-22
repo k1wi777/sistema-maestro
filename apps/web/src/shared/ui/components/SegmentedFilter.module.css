@@ -45,7 +45,19 @@
   color: var(--muted);
 }
 
+/* Solo iconos (selector de tema): 44 × 36 px como el tablero. */
+.iconOnly .option {
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.25rem;
+  padding: 0 var(--space-2);
+}
+
 @media (pointer: coarse) {
+  .iconOnly .option {
+    min-height: 2.75rem;
+  }
+
   .option {
     min-height: 2.75rem;
   }

@@ -58,6 +58,16 @@ const STATUS_LABEL: Record<RecordStatus, string> = {
   [RecordStatus.Voided]: 'anulada',
 };
 
+/** Mensaje de 409 al anular: un borrador se descarta en lugar de anularse. */
+function voidConflictMessage(status: RecordStatus): string {
+  if (status === RecordStatus.Draft) {
+    return 'La planeación está en borrador: se descarta en lugar de anularse';
+  }
+  return status === RecordStatus.Reviewed
+    ? 'La planeación está revisada: solo coordinación puede anularla'
+    : `La planeación está ${STATUS_LABEL[status]} y no se puede anular`;
+}
+
 const NOT_FOUND = 'Planeación no encontrada';
 const OUT_OF_SCOPE = 'Esa planeación no es de un grado que coordines';
 
@@ -229,16 +239,53 @@ export class LessonPlansService {
 
     const from = [...new Set(allowed.flatMap((transition) => transition.from))];
     if (!from.includes(plan.status)) {
-      throw new ConflictException(
-        plan.status === RecordStatus.Reviewed
-          ? 'La planeación está revisada: solo coordinación puede anularla'
-          : `La planeación está ${STATUS_LABEL[plan.status]} y no se puede anular`,
-      );
+      throw new ConflictException(voidConflictMessage(plan.status));
     }
     if (!(await this.repository.updateIfStatus(id, from, { status: RecordStatus.Voided }))) {
       await this.failTransition(user, id, 'anular');
     }
     return this.loadVisible(user, id);
+  }
+
+  /**
+   * Borrado real de un borrador que nunca se envió. Orden: 404 (oculta lo ajeno al docente) →
+   * 403 (no es el autor) → 409 (ya no es borrador). La fila se bloquea antes de releer el estado,
+   * así un envío simultáneo espera y el descarte responde 409 en lugar de borrar lo enviado.
+   */
+  async discard(user: RequestUser, id: string): Promise<void> {
+    const visible = await this.loadVisible(user, id);
+    if (visible.teacher.id !== user.id) {
+      throw new ForbiddenException('Solo quien creó la planeación puede descartarla');
+    }
+    await this.repository.lock(id);
+    const plan = await this.loadVisible(user, id);
+    if (
+      !canTransition(RecordOperation.Discard, RecordActor.Owner, plan.status) ||
+      plan.submittedAt
+    ) {
+      throw new ConflictException(
+        `La planeación está ${STATUS_LABEL[plan.status]}: solo se descarta un borrador que nunca se envió`,
+      );
+    }
+    if (!(await this.repository.deleteDraft(id))) {
+      await this.failTransition(user, id, 'descartar');
+    }
+  }
+
+  /**
+   * Para la bitácora del descarte: solo identificadores y catálogo (estado, grado y áreas), sin
+   * textos libres. Sin comprobar visibilidad (no sale por la API).
+   */
+  async findDiscardSnapshot(id: string): Promise<Record<string, unknown> | null> {
+    const plan = await this.repository.findById(id);
+    return plan
+      ? {
+          id: plan.id,
+          status: plan.status,
+          grade: plan.grade.name,
+          areas: plan.areas.map((area) => area.name),
+        }
+      : null;
   }
 
   // ---------- Revisión de coordinación ----------

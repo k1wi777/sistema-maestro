@@ -113,6 +113,85 @@ test.describe('Accesibilidad: vista docente', () => {
     await expect(dialog).toBeHidden();
   });
 
+  test('descartar borrador: los tres diálogos y el selector de tema', async () => {
+    const { page } = teacher;
+    const discardDialog = page.getByRole('dialog', { name: 'Descartar borrador' });
+
+    // Diario: Julián tiene un borrador propio en el diario demo en curso de Red 1.
+    await page.goto('/docente/formatos/diario');
+    await page.getByRole('link', { name: /^Abrir diario de Red 1 del 2026-11-09/ }).click();
+    await settled(page);
+    await page.getByRole('button', { name: /^Descartar borrador/ }).click();
+    await expect(discardDialog).toBeVisible();
+    await expectAccessible(page, 'docente · descartar anotación del diario');
+    await discardDialog.getByRole('button', { name: 'Cancelar' }).click();
+    await expect(discardDialog).toBeHidden();
+
+    // Planeación y observador: se crea un borrador, se revisa el diálogo y se descarta (queda como estaba).
+    await page.goto('/docente/formatos/planeacion/nueva');
+    await page
+      .getByRole('combobox', { name: 'Grado', exact: true })
+      .selectOption({ label: 'Transition' });
+    await page
+      .getByRole('combobox', { name: 'Periodo', exact: true })
+      .selectOption({ label: 'Periodo 1' });
+    await page.getByLabel('Proyecto o tema').fill('Borrador de accesibilidad');
+    await page.getByRole('button', { name: 'Crear y continuar' }).click();
+    await settled(page);
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    await expect(discardDialog).toBeVisible();
+    await expectAccessible(page, 'docente · descartar planeación');
+    await discardDialog.getByRole('button', { name: 'Descartar borrador' }).click();
+    await expect(page).toHaveURL(/aviso=descartado/);
+
+    await page.goto('/docente/formatos/observador/nueva');
+    await page.getByLabel('Grado').selectOption({ label: 'Transition · Preescolar alto (KTF)' });
+    await page.getByLabel('Estudiante (nombre de pila)').fill('Acacio');
+    await page.getByLabel('Tipo de anotación').selectOption({ label: 'Reconocimiento positivo' });
+    await page.getByLabel('Comportamiento específico').fill('Borrador de accesibilidad');
+    await page.getByRole('button', { name: 'Guardar anotación' }).click();
+    await settled(page);
+    await page.getByRole('button', { name: 'Más acciones' }).click();
+    await page.getByRole('menuitem', { name: 'Descartar borrador' }).click();
+    await expect(discardDialog).toBeVisible();
+    await expectAccessible(page, 'docente · descartar anotación del observador');
+    await discardDialog.getByRole('button', { name: 'Descartar borrador' }).click();
+    await expect(page).toHaveURL(/aviso=descartado/);
+  });
+
+  test('selector de tema: grupo de opción única con tres iconos, un solo selector visible', async () => {
+    const { page } = teacher;
+    const group = page.getByRole('radiogroup', { name: 'Tema de la plataforma' });
+    await page.goto('/docente/formatos');
+    await settled(page);
+
+    for (const width of [1280, 375]) {
+      await page.setViewportSize({ width, height: 720 });
+      await expect(group).toHaveCount(1);
+      await expect(group).toBeVisible();
+      await expect(group.getByRole('radio')).toHaveText(['Claro', 'Oscuro', 'Sistema']);
+      await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
+      await expectNoHorizontalScroll(page, `selector de tema a ${width} px`);
+    }
+
+    await group.getByRole('radio', { name: 'Claro' }).click();
+    await expect(group.getByRole('radio', { name: 'Claro' })).toBeChecked();
+    await page.keyboard.press('ArrowRight');
+    await expect(group.getByRole('radio', { name: 'Oscuro' })).toBeChecked();
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await page.keyboard.press('End');
+    await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
+    await page.keyboard.press('Home');
+    await expect(group.getByRole('radio', { name: 'Claro' })).toBeChecked();
+    await expectAccessible(page, 'docente · selector de tema a 375 px', ['light']);
+
+    await page.setViewportSize(DESKTOP);
+    await expectAccessible(page, 'docente · selector de tema');
+    await group.getByRole('radio', { name: 'Sistema' }).click();
+    await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
+  });
+
   test('observador: lista y una anotación', async () => {
     const { page } = teacher;
     await visit(page, '/docente/formatos/observador', 'docente · observador (lista)');

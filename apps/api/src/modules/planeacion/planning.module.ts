@@ -4,7 +4,10 @@ import { StructureModule } from '../estructura/structure.module';
 import { LessonPlanComplianceController } from './compliance/lesson-plan-compliance.controller';
 import { LessonPlanComplianceService } from './compliance/lesson-plan-compliance.service';
 import { LessonPlanOptionsService } from './lesson-plans/lesson-plan-options.service';
-import { LessonPlanAuditSnapshot } from './lesson-plans/lesson-plan.audit-snapshot';
+import {
+  LessonPlanAuditSnapshot,
+  LessonPlanDiscardSnapshot,
+} from './lesson-plans/lesson-plan.audit-snapshot';
 import { LessonPlanReviewController } from './lesson-plans/lesson-plan-review.controller';
 import { LESSON_PLAN_REPOSITORY } from './lesson-plans/lesson-plan.repository';
 import { LessonPlansController } from './lesson-plans/lesson-plans.controller';
@@ -49,6 +52,7 @@ import { SHARED_ACTIVITY_REPOSITORY } from './shared-activities/shared-activity.
     LessonPlanOptionsService,
     LessonPlansService,
     LessonPlanAuditSnapshot,
+    LessonPlanDiscardSnapshot,
     { provide: LESSON_PLAN_REPOSITORY, useClass: PrismaLessonPlanRepository },
     LessonPlanResourcesService,
     LessonPlanResourcesAuditSnapshot,

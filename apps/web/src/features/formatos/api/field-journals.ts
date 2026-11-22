@@ -96,6 +96,14 @@ export async function markAnnotationDraft(
   return parseResult(result, fieldJournalSchema);
 }
 
+/** Borrado real de una anotación propia en borrador de un diario En curso (204 sin cuerpo). */
+export async function discardAnnotation(annotationId: string): Promise<ApiResult<undefined>> {
+  const result = await callApi(() =>
+    api.DELETE('/field-journals/annotations/{id}', { params: { path: { id: annotationId } } }),
+  );
+  return result.ok ? { ok: true, data: undefined } : result;
+}
+
 export async function submitFieldJournal(id: string): Promise<ApiResult<FieldJournal>> {
   const result = await callApi(() =>
     api.POST('/field-journals/{id}/submit', { params: { path: { id } } }),

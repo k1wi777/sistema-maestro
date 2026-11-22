@@ -2,13 +2,19 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '../../shared/database/database.module';
 import { StructureModule } from '../estructura/structure.module';
 import { PlanningModule } from '../planeacion/planning.module';
-import { FieldJournalAuditSnapshot } from './field-journals/field-journal.audit-snapshot';
+import {
+  FieldJournalAuditSnapshot,
+  JournalAnnotationDiscardSnapshot,
+} from './field-journals/field-journal.audit-snapshot';
 import { FIELD_JOURNAL_REPOSITORY } from './field-journals/field-journal.repository';
 import { FieldJournalReviewController } from './field-journals/field-journal-review.controller';
 import { FieldJournalsController } from './field-journals/field-journals.controller';
 import { FieldJournalsService } from './field-journals/field-journals.service';
 import { PrismaFieldJournalRepository } from './field-journals/prisma-field-journal.repository';
-import { ObserverNoteAuditSnapshot } from './observer-notes/observer-note.audit-snapshot';
+import {
+  ObserverNoteAuditSnapshot,
+  ObserverNoteDiscardSnapshot,
+} from './observer-notes/observer-note.audit-snapshot';
 import { OBSERVER_NOTE_REPOSITORY } from './observer-notes/observer-note.repository';
 import { ObserverNoteReviewController } from './observer-notes/observer-note-review.controller';
 import { ObserverNotesController } from './observer-notes/observer-notes.controller';
@@ -31,9 +37,11 @@ import { PrismaObserverNoteRepository } from './observer-notes/prisma-observer-n
   providers: [
     FieldJournalsService,
     FieldJournalAuditSnapshot,
+    JournalAnnotationDiscardSnapshot,
     { provide: FIELD_JOURNAL_REPOSITORY, useClass: PrismaFieldJournalRepository },
     ObserverNotesService,
     ObserverNoteAuditSnapshot,
+    ObserverNoteDiscardSnapshot,
     { provide: OBSERVER_NOTE_REPOSITORY, useClass: PrismaObserverNoteRepository },
   ],
 })

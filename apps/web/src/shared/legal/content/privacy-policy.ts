@@ -101,7 +101,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: 'Bitácora de actividad',
       blocks: [
         paragraph(
-          'Cada acción relevante queda en una bitácora con la fecha, la hora, el usuario, su rol y el detalle. La bitácora es de solo inserción: no se modifica ni se borra, y administración la consulta como auditora de la plataforma. Los registros pedagógicos tampoco se borran: pasan a estado «anulado» y queda constancia.',
+          'Cada acción relevante queda en una bitácora con la fecha, la hora, el usuario, su rol y el detalle. La bitácora es de solo inserción: no se modifica ni se borra, y administración la consulta como auditora de la plataforma. Los registros pedagógicos enviados no se borran: pasan a estado «anulado» y queda constancia. Un borrador que nunca se envió lo puede descartar quien lo escribió; se borra y la bitácora registra el descarte sin su contenido.',
         ),
       ],
     },

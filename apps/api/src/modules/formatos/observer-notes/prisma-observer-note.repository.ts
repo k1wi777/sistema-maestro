@@ -130,6 +130,13 @@ export class PrismaObserverNoteRepository
       .$queryRaw`SELECT id FROM observador_anotacion WHERE id = ${id}::uuid FOR UPDATE`;
   }
 
+  async deleteDraft(id: string): Promise<boolean> {
+    const { count } = await this.prisma.db.observerNote.deleteMany({
+      where: { id, status: RecordStatus.Draft },
+    });
+    return count === 1;
+  }
+
   /**
    * `priority` pone primero los tipo II y III: el segmento prioritario y el resto se cuentan y
    * se pagina cada uno con su ventana (`splitPriorityWindow`). Otros órdenes usan la base.

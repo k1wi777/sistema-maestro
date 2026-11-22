@@ -11,9 +11,15 @@ export const STATUS_LABEL: Record<RecordStatus, string> = {
   [RecordStatus.Voided]: 'anulada',
 };
 
-/** Mensaje de 409 al anular: una revisada solo la anula coordinación. */
+/**
+ * Mensaje de 409 al anular: una revisada solo la anula coordinación y un borrador nunca se
+ * anula (se descarta).
+ */
 export function voidConflictMessage(noun: 'hoja' | 'anotación', status: RecordStatus): string {
   const article = noun === 'hoja' ? 'La hoja' : 'La anotación';
+  if (status === RecordStatus.Draft) {
+    return `${article} está en borrador: se descarta en lugar de anularse`;
+  }
   return status === RecordStatus.Reviewed
     ? `${article} está revisada: solo coordinación puede anularla`
     : `${article} está ${STATUS_LABEL[status]} y no se puede anular`;

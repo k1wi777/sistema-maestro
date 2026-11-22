@@ -52,7 +52,7 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 
 - **Privacidad de menores** — De los estudiantes solo se registra el **nombre de pila**. Nunca documentos de identidad, direcciones, teléfonos, datos de salud, diagnósticos ni fotos. Los datos demo usan nombres inventados.
 - **Bitácora inmutable** — La bitácora nunca se borra ni se modifica: es de solo inserción y la base de datos rechaza UPDATE, DELETE y TRUNCATE con triggers. Cada acción relevante queda registrada (fecha, hora, usuario, rol y detalle).
-- **Nada se borra físicamente** — Los registros pedagógicos pasan a estado `anulado` y queda constancia; no se usan DELETE físicos sobre ellos.
+- **Lo enviado nunca se borra** — Los registros pedagógicos enviados pasan a estado `anulado` y queda constancia; no se usan DELETE físicos sobre ellos. La única excepción es el borrador que nunca se envió: su autor lo puede descartar con borrado real, la base rechaza con triggers borrar lo enviado y la bitácora registra el descarte sin su contenido.
 - **Sin IA en esta fase** — Ninguna integración de inteligencia artificial: ni en el asistente (usa preguntas programadas), ni en la planeación, ni en los módulos, ni en el PIAR.
 - **Consentimiento previo** — Sin aceptación vigente del aviso de tratamiento de datos (Ley 1581 de 2012) no se puede usar la plataforma; la aceptación queda registrada con fecha y versión.
 - **Todo pasa por la API** — El frontend nunca habla directamente con la base de datos ni con el almacenamiento de archivos; la API valida permisos y deja constancia en la bitácora.

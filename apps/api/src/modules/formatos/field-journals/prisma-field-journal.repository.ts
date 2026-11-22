@@ -202,6 +202,42 @@ export class PrismaFieldJournalRepository
     return row ? toAnnotation(row) : null;
   }
 
+  async findAnnotationById(annotationId: string): Promise<AnnotationRow | null> {
+    const row = await this.prisma.db.fieldJournalAnnotation.findUnique({
+      where: { id: annotationId },
+      include: ANNOTATION_INCLUDE,
+    });
+    return row ? toAnnotation(row) : null;
+  }
+
+  countAnnotations(journalId: string): Promise<number> {
+    return this.prisma.db.fieldJournalAnnotation.count({ where: { journalId } });
+  }
+
+  async deleteDraftAnnotation(annotationId: string): Promise<boolean> {
+    const { count } = await this.prisma.db.fieldJournalAnnotation.deleteMany({
+      where: {
+        id: annotationId,
+        status: AnnotationStatus.Draft,
+        sent: false,
+        journal: { status: JournalStatus.InProgress },
+      },
+    });
+    return count === 1;
+  }
+
+  async deleteEmptyJournal(journalId: string): Promise<boolean> {
+    const { count } = await this.prisma.db.fieldJournal.deleteMany({
+      where: {
+        id: journalId,
+        status: JournalStatus.InProgress,
+        submittedAt: null,
+        annotations: { none: {} },
+      },
+    });
+    return count === 1;
+  }
+
   async contributions(journalId: string): Promise<ContributionRow[]> {
     const rows = await this.prisma.db.fieldJournalAnnotation.findMany({
       where: { journalId },
