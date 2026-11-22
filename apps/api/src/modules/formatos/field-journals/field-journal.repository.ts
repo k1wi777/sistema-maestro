@@ -182,14 +182,17 @@ export interface FieldJournalRepository {
   ): Promise<{ id: string; status: JournalStatus; schoolYear: string } | null>;
   /**
    * `INSERT … ON CONFLICT (grupo, fecha) DO NOTHING` y después `SELECT … FOR UPDATE`: dos altas
-   * simultáneas comparten el diario, que queda bloqueado hasta el fin de la transacción.
+   * simultáneas comparten el diario, que queda bloqueado hasta el fin de la transacción. Si el
+   * diario desaparece entre las dos sentencias (descarte concurrente de su última anotación), repite
+   * el par hasta un máximo de intentos. `created` indica que esta llamada insertó el diario; `null`,
+   * que tras los intentos no hay diario que bloquear (carrera con un descarte).
    */
   openOrCreate(input: {
     groupId: string;
     date: string;
     schoolYear: string;
     createdById: string;
-  }): Promise<{ id: string; status: JournalStatus }>;
+  }): Promise<{ id: string; status: JournalStatus; created: boolean } | null>;
   /** Bloquea la fila hasta el fin de la transacción: serializa envío, ediciones y decisiones. */
   lock(id: string): Promise<void>;
   updateJournal(id: string, changes: JournalChanges): Promise<void>;

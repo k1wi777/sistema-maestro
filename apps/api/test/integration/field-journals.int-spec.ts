@@ -17,6 +17,7 @@ import {
   type JournalBody,
   type JournalWorld,
 } from './support/journal';
+import { discardJournalDuringRequest } from './support/journal-discard-race';
 import { auditRows } from './support/planning';
 import { holdSchoolYearLock, SCHOOL_YEAR_LOCK_TIMEOUT_MS } from './support/school-year-lock';
 
@@ -517,6 +518,43 @@ describe('diario de campo colaborativo por grupo y día (#107)', () => {
           where: { journalId, status: 'lista', sent: true },
         }),
       ).toBe(1);
+    });
+  });
+
+  describe('alta que compite con el descarte de la última anotación', () => {
+    it('crea un diario nuevo en la misma operación: 201, una sola anotación, bitácora sobre el diario nuevo', async () => {
+      const own = await journalWorld(app);
+      const first = await addAnnotation(app, own.ana, annotationBody(own, own.areas.math));
+      const oldId = first.id!;
+
+      const res = await discardJournalDuringRequest(oldId, async () =>
+        call(app, own.luis.cookies, 'post', '/field-journals/annotations').send(
+          annotationBody(own, own.areas.art),
+        ),
+      );
+
+      expect(res.status).toBe(201);
+      const body = res.body as JournalBody;
+      expect(body.id).not.toBe(oldId);
+      expect(await prisma.fieldJournal.count({ where: { id: oldId } })).toBe(0);
+      const journals = await prisma.fieldJournal.findMany({
+        where: { groupId: own.groupId, date: new Date(TODAY) },
+      });
+      expect(journals).toHaveLength(1);
+      expect(journals[0]).toMatchObject({
+        id: body.id,
+        status: 'en_curso',
+        createdById: own.luis.user.id,
+      });
+      const annotations = await prisma.fieldJournalAnnotation.findMany({
+        where: { journalId: body.id! },
+      });
+      expect(annotations).toHaveLength(1);
+      expect(annotations[0]).toMatchObject({ teacherId: own.luis.user.id, status: 'borrador' });
+      const rows = await auditRows(app, body.id!);
+      expect(
+        rows.filter((row) => row.action === 'Agregó una anotación al diario de campo'),
+      ).toHaveLength(1);
     });
   });
 
