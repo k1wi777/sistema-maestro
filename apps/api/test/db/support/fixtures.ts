@@ -181,7 +181,6 @@ export async function insertFieldJournalAnnotation(
     diario_id: await idOf(insertFieldJournal(client)),
     docente_id: await idOf(insertUser(client)),
     area_id: await idOf(insertArea(client)),
-    tipo_evento: 'grupo',
     descripcion: 'Evento de prueba',
     estado: 'borrador',
     lista_en: new Date(),

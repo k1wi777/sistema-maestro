@@ -81,3 +81,16 @@ export function formatShortWeekday(date: string): string {
     .replace(/\./g, '');
   return `${weekday} ${formatDay(date)}`;
 }
+
+/** Fecha de calendario `AAAA-MM-DD` como `dd/mm/aaaa` (formato de los formatos institucionales). */
+export function formatNumericDay(date: string): string {
+  const [year, month, day] = date.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+/** Instante como `dd/mm/aaaa` en hora de Colombia. */
+export function formatNumericDate(instant: Date): string {
+  return formatNumericDay(
+    new Intl.DateTimeFormat('en-CA', { timeZone: TIME_ZONE }).format(instant),
+  );
+}

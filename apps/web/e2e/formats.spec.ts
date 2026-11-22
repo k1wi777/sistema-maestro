@@ -66,10 +66,16 @@ test.describe('Formatos: diario de campo y observador', () => {
     journalPath = new URL(page.url()).pathname;
 
     const form = page.getByRole('form', { name: 'Nueva anotación' });
-    await form.getByLabel('Asignatura').selectOption({ label: 'Matemáticas' });
-    await form.getByLabel('Tipo de evento').selectOption({ label: 'Aspecto positivo' });
-    await form.getByLabel('Estudiantes implicados').fill(FIRST_NAMES.positive);
-    await form.getByLabel('Descripción del evento').fill(`${FIRST_NAMES.positive}: ${POSITIVE}`);
+    // El formulario es el del F-PA-05: solo la clase y la descripción de eventos, con las notas del formato.
+    await expect(form.getByLabel('Tipo de evento')).toHaveCount(0);
+    await expect(form.getByLabel('Estudiantes implicados')).toHaveCount(0);
+    await expect(form.getByLabel('Acciones de mejora')).toHaveCount(0);
+    await expect(form.getByLabel('Reflexión pedagógica (opcional)')).toHaveCount(0);
+    await form.getByLabel('Clase (asignatura)').selectOption({ label: 'Matemáticas' });
+    await expect(form.getByLabel('Descripción de eventos')).toHaveAccessibleDescription(
+      /La descripción del evento debe incluir el estudiante implicado\..*Definir las acciones en caso de registrar aspectos por mejorar\./,
+    );
+    await form.getByLabel('Descripción de eventos').fill(`${FIRST_NAMES.positive}: ${POSITIVE}`);
     await form.getByRole('button', { name: 'Guardar borrador' }).click();
 
     const card = page.getByRole('article', { name: 'Anotación de Matemáticas' });
@@ -152,7 +158,7 @@ test.describe('Formatos: diario de campo y observador', () => {
     await expect(card.getByText(/^Por corregir/)).toBeVisible();
     await card.getByRole('button', { name: /^Editar/ }).click();
     const form = page.getByRole('form', { name: 'Editar anotación' });
-    await form.getByLabel('Descripción del evento').fill(`${FIRST_NAMES.positive}: ${CORRECTED}`);
+    await form.getByLabel('Descripción de eventos').fill(`${FIRST_NAMES.positive}: ${CORRECTED}`);
     await form.getByRole('button', { name: 'Marcar como lista' }).click();
     await expect(page.getByRole('article', { name: 'Anotación de Matemáticas' })).toContainText(
       CORRECTED,
@@ -183,6 +189,30 @@ test.describe('Formatos: diario de campo y observador', () => {
     await expect(
       page.getByRole('link', { name: /^Diarios de campo\b.*1 pendiente\b/ }),
     ).toBeVisible();
+  });
+
+  test('la hoja impresa del diario revisado reproduce el formato F-PA-05', async () => {
+    const { page } = teacher;
+    await page.goto(journalPath);
+    await expect(page.getByRole('heading', { level: 1, name: /^7° 1 · / })).toBeVisible();
+    await page.emulateMedia({ media: 'print' });
+    const sheet = page.getByRole('article', { includeHidden: true }).filter({
+      has: page.getByRole('columnheader', { name: 'DESCRIPCIÓN DE EVENTOS', includeHidden: true }),
+    });
+    await expect(sheet).toBeVisible();
+    for (const title of ['FECHA', 'CLASE', 'DOCENTE', 'DESCRIPCIÓN DE EVENTOS']) {
+      await expect(
+        sheet.getByRole('columnheader', { name: title, exact: true, includeHidden: true }),
+      ).toBeVisible();
+    }
+    await expect(
+      sheet.getByRole('columnheader', { name: /^GRADO: 7° 1$/, includeHidden: true }),
+    ).toBeVisible();
+    await expect(sheet).toContainText('CÓDIGO: F-PA-05');
+    await expect(sheet).toContainText(CORRECTED);
+    await expect(sheet).toContainText('REVISADO POR:');
+    await expect(sheet).toContainText(ACTORS.formatsCoordinator.name);
+    await page.emulateMedia({ media: 'screen' });
   });
 
   test('coordinación revisa y aprueba la anotación del observador', async () => {

@@ -3,6 +3,8 @@ import {
   formatDateTime,
   formatDay,
   formatDayWithYear,
+  formatNumericDate,
+  formatNumericDay,
   formatShortDate,
   formatTime,
   todayInColombia,
@@ -37,5 +39,10 @@ describe('dates', () => {
     // 03:30 UTC del 8 de noviembre sigue siendo el 7 en Bogotá.
     expect(todayInColombia(new Date('2026-11-08T03:30:00Z'))).toBe('2026-11-07');
     expect(todayInColombia(new Date('2026-11-08T15:00:00Z'))).toBe('2026-11-08');
+  });
+
+  it('writes numeric dates as dd/mm/aaaa, in Colombian time for instants', () => {
+    expect(formatNumericDay('2026-11-09')).toBe('09/11/2026');
+    expect(formatNumericDate(new Date('2026-11-10T03:30:00Z'))).toBe('09/11/2026');
   });
 });

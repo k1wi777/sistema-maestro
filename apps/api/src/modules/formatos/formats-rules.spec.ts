@@ -4,7 +4,6 @@ import {
   createAnnotationSchema,
   createObserverNoteSchema,
   isStudentFirstName,
-  journalStudentsSchema,
   observerNoteListQuerySchema,
   RecordActor,
   RecordOperation,
@@ -57,43 +56,27 @@ describe('nombre de pila de estudiantes', () => {
   });
 });
 
-describe('lista de estudiantes de una entrada', () => {
-  it('acepta hasta 12 distintos', () => {
-    const names = Array.from({ length: 12 }, (_, i) => `Ab${'cdefghijklmn'[i]}`);
-    expect(journalStudentsSchema.safeParse(names).success).toBe(true);
-    expect(journalStudentsSchema.safeParse([...names, 'Zzz']).success).toBe(false);
-  });
-
-  it('rechaza repetidos sin distinguir mayúsculas', () => {
-    expect(journalStudentsSchema.safeParse(['Sofía', 'sofía']).success).toBe(false);
-  });
-
-  it('rechaza una lista unida de más de 160 caracteres', () => {
-    const names = Array.from({ length: 10 }, (_, i) => `${'A'.repeat(15)}${'bcdefghijk'[i]}`);
-    expect(journalStudentsSchema.safeParse(names).success).toBe(false);
-  });
-});
-
 describe('esquemas del diario', () => {
   const annotation = {
     groupId: UUID,
     date: '2031-03-10',
     areaId: UUID,
-    eventType: 'grupo',
     description: 'x',
   };
 
-  it('una anotación «a mejorar» exige acciones', () => {
-    const result = createAnnotationSchema.safeParse({ ...annotation, eventType: 'mejorar' });
-    expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.path).toEqual(['actions']);
-    expect(
-      createAnnotationSchema.safeParse({
-        ...annotation,
-        eventType: 'mejorar',
-        actions: 'Practicar',
-      }).success,
-    ).toBe(true);
+  it('una anotación vale con clase y descripción y rechaza los campos retirados del formato', () => {
+    expect(createAnnotationSchema.safeParse(annotation).success).toBe(true);
+    for (const removed of [
+      { eventType: 'mejorar' },
+      { students: ['Sofía'] },
+      { actions: 'Practicar' },
+      { reflection: 'Más tiempo' },
+    ]) {
+      expect(createAnnotationSchema.safeParse({ ...annotation, ...removed }).success).toBe(false);
+      expect(updateAnnotationSchema.safeParse({ description: 'x', ...removed }).success).toBe(
+        false,
+      );
+    }
   });
 
   it('rechaza campos desconocidos, fechas inválidas y no admite ediciones vacías', () => {
@@ -103,9 +86,6 @@ describe('esquemas del diario', () => {
     expect(createAnnotationSchema.safeParse({ ...annotation, date: '10/03/2031' }).success).toBe(
       false,
     );
-    expect(
-      createAnnotationSchema.safeParse({ ...annotation, students: ['Sofía 123'] }).success,
-    ).toBe(false);
     expect(updateAnnotationSchema.safeParse({}).success).toBe(false);
     expect(updateAnnotationSchema.safeParse({ description: 'nuevo' }).success).toBe(true);
   });

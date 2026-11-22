@@ -47,8 +47,8 @@ describe('diario de campo colaborativo (#107)', () => {
       await expectSqlError(
         db.client,
         CHECK_VIOLATION,
-        `INSERT INTO diario_anotacion (diario_id, docente_id, area_id, tipo_evento, descripcion, estado)
-         VALUES ($1, $2, $3, 'grupo', 'Texto', $4)`,
+        `INSERT INTO diario_anotacion (diario_id, docente_id, area_id, descripcion, estado)
+         VALUES ($1, $2, $3, 'Texto', $4)`,
         [
           (await insertFieldJournal(db.client)).id,
           (await insertUser(db.client)).id,

@@ -2,7 +2,6 @@ import {
   AUDIT_UNKNOWN_ROLE,
   AnnotationStatus,
   AuditLogType,
-  JournalEventType,
   JournalStatus,
   ObserverNoteType,
   RecordStatus,
@@ -315,11 +314,8 @@ export interface DemoAnnotation {
   key?: string;
   teacher: string;
   area: string;
-  eventType: JournalEventType;
-  students: string;
+  /** Descripción de eventos: nombra al estudiante implicado (solo nombre de pila) y, si hay algo por mejorar, las acciones. */
   description: string;
-  actions: string;
-  reflection: string;
   status: AnnotationStatus;
   /** Hora en que se marcó lista; nula en un borrador. */
   readyAt: string | null;
@@ -357,8 +353,6 @@ export interface DemoJournal {
 const annotation = (
   teacher: string,
   area: string,
-  eventType: JournalEventType,
-  students: string,
   description: string,
   status: AnnotationStatus,
   readyAt: string | null,
@@ -366,11 +360,7 @@ const annotation = (
 ): DemoAnnotation => ({
   teacher,
   area,
-  eventType,
-  students,
   description,
-  actions: 'Se conversó con el grupo y se acordó una estrategia para la siguiente sesión.',
-  reflection: 'Conviene sostener la rutina y observar cómo evoluciona en las próximas semanas.',
   status,
   readyAt,
   ...extra,
@@ -394,17 +384,13 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         VALERIA,
         'Dimensión cognitiva',
-        JournalEventType.Group,
-        'Samuel, Alma',
-        'El grupo organizó la cocina de juguete sin ayuda y se turnó los roles.',
+        'Samuel y Alma organizaron con el grupo la cocina de juguete sin ayuda y se turnaron los roles.',
         AnnotationStatus.Ready,
         '2026-11-09T10:05:00-05:00',
       ),
       annotation(
         JULIAN,
         'English (CLIL)',
-        JournalEventType.Positive,
-        'Alma',
         'Alma repitió con buena pronunciación los colores en inglés.',
         AnnotationStatus.Draft,
         null,
@@ -425,9 +411,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         VALERIA,
         'Dimensión cognitiva',
-        JournalEventType.Group,
-        'Lucas, Emma',
-        'El grupo armó rompecabezas por equipos y se ayudó a encontrar las piezas.',
+        'Lucas y Emma lideraron el armado de rompecabezas por equipos y ayudaron a encontrar las piezas.',
         AnnotationStatus.Ready,
         '2026-11-09T09:50:00-05:00',
       ),
@@ -447,9 +431,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         ANDRES,
         'Física',
-        JournalEventType.ToImprove,
-        'Dante, Emilia',
-        'Dos estudiantes se distrajeron durante el laboratorio de movimiento.',
+        'Dante y Emilia se distrajeron durante el laboratorio de movimiento. Acciones: se les asignó un rol en el montaje y se hará seguimiento en la próxima práctica.',
         AnnotationStatus.Ready,
         '2026-11-04T14:10:00-05:00',
         SENT,
@@ -479,22 +461,19 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         SOFIA,
         'Matemáticas',
-        JournalEventType.ToImprove,
-        'Renata',
-        'Renata tuvo dificultad con las tablas del seis durante el juego de la tienda.',
+        'Renata tuvo dificultad con las tablas del seis durante el juego de la tienda. Acciones: repasarlas con material concreto.',
         AnnotationStatus.Observed,
         '2026-10-28T11:20:00-05:00',
         {
           key: 'a1',
           sent: true,
-          observation: 'Detallar las acciones tomadas frente a la dificultad de Renata.',
+          observation:
+            'Precisar cómo se hará el seguimiento del avance de Renata en las próximas clases.',
         },
       ),
       annotation(
         SOFIA,
         'Ciencias Naturales',
-        JournalEventType.Positive,
-        'Mateo',
         'Mateo explicó con sus palabras el ciclo del agua a sus compañeros.',
         AnnotationStatus.Ready,
         '2026-10-28T13:45:00-05:00',
@@ -526,9 +505,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         VALERIA,
         'Dimensión cognitiva',
-        JournalEventType.Group,
-        'Lucas, Emma',
-        'El grupo clasificó las semillas por tamaño y color trabajando en parejas.',
+        'Lucas y Emma clasificaron con el grupo las semillas por tamaño y color trabajando en parejas.',
         AnnotationStatus.Ready,
         '2026-10-20T09:30:00-05:00',
         SENT,
@@ -536,8 +513,6 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         JULIAN,
         'Pre-ciencias',
-        JournalEventType.Positive,
-        'Emma',
         'Emma propuso una hipótesis sobre por qué crecen más las plantas con luz.',
         AnnotationStatus.Ready,
         '2026-10-20T10:15:00-05:00',
@@ -570,9 +545,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         VALERIA,
         'Dimensión comunicativa',
-        JournalEventType.Group,
-        'Samuel',
-        'Anotación abierta en la fecha equivocada.',
+        'Anotación abierta en la fecha equivocada (Samuel).',
         AnnotationStatus.Draft,
         null,
       ),
@@ -592,9 +565,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         JULIAN,
         'English (CLIL)',
-        JournalEventType.Group,
-        'Dante, Alma',
-        'El grupo completó la actividad de vocabulario de la granja con entusiasmo.',
+        'Dante y Alma completaron con entusiasmo la actividad de vocabulario de la granja.',
         AnnotationStatus.Ready,
         '2026-10-22T11:40:00-05:00',
         SENT,
@@ -624,9 +595,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         SOFIA,
         'Matemáticas',
-        JournalEventType.Group,
-        'Renata, Mateo',
-        'El grupo resolvió problemas de fracciones con material concreto sin ayuda.',
+        'Renata y Mateo resolvieron problemas de fracciones con material concreto sin ayuda.',
         AnnotationStatus.Ready,
         '2026-11-05T10:20:00-05:00',
         SENT,
@@ -656,9 +625,7 @@ export const DEMO_JOURNALS: readonly DemoJournal[] = [
       annotation(
         VALERIA,
         'Dimensión socioafectiva',
-        JournalEventType.Positive,
-        'Alma, Samuel',
-        'Resolvieron solos un desacuerdo con el material y se pidieron disculpas.',
+        'Alma y Samuel resolvieron solos un desacuerdo con el material y se pidieron disculpas.',
         AnnotationStatus.Ready,
         '2026-11-06T10:30:00-05:00',
       ),

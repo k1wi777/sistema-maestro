@@ -31,12 +31,12 @@ export class FieldJournalAuditSnapshot implements AuditSnapshotSource {
 
 /**
  * Opciones de `@Audited` comunes a toda escritura del diario (también las de coordinación).
- * `redact` oculta nombres de estudiantes y textos libres: la bitácora es inmutable y no debe
+ * `redact` oculta los textos libres (pueden nombrar estudiantes): la bitácora es inmutable y no debe
  * retener datos de menores; el contenido vive en el diario, sus anotaciones y observaciones.
  */
 export const FIELD_JOURNAL_AUDIT = {
   type: AuditLogType.FieldJournal,
   entity: 'diario_campo',
   snapshot: FieldJournalAuditSnapshot,
-  redact: ['studentNames', 'description', 'actions', 'reflection', 'text', 'comment'],
+  redact: ['description', 'text', 'comment'],
 };

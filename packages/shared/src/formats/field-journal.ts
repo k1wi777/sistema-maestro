@@ -3,28 +3,15 @@ import { isoDateTimeSchema } from '../api/iso-date-time';
 import {
   AnnotationStatus,
   ContributionStatus,
-  JournalEventType,
   JournalHistoryKind,
   JournalStatus,
 } from '../constants/field-journal';
 import { createListQuerySchema, createPageSchema } from '../list-query/list-query';
 import { REVIEW_COMMENT_MAX_LENGTH, voidRecordSchema } from '../review/review';
-import { journalStudentsSchema } from './student-first-name';
 
 export const JOURNAL_DESCRIPTION_MAX_LENGTH = 1500;
-export const JOURNAL_ACTIONS_MAX_LENGTH = 1000;
-export const JOURNAL_REFLECTION_MAX_LENGTH = 1000;
 export const JOURNAL_OBSERVATIONS_MAX = 200;
 export const JOURNAL_OBSERVATION_MAX_LENGTH = 1000;
-
-/** Regla del prototipo: una anotación «a mejorar» exige acciones. */
-export function journalEntryNeedsActions(
-  eventType: string | null | undefined,
-  actions: string | null | undefined,
-): boolean {
-  return eventType === JournalEventType.ToImprove && !actions;
-}
-export const JOURNAL_ACTIONS_REQUIRED_REASON = 'es obligatorio cuando el evento es «a mejorar»';
 
 const uuid = z.uuid({ error: 'debe ser un UUID' });
 const day = z.iso.date({ error: 'debe ser una fecha AAAA-MM-DD' });
@@ -38,22 +25,9 @@ const annotationStatusSchema = z.enum(
 const contributionStatusSchema = z.enum(
   Object.values(ContributionStatus) as [ContributionStatus, ...ContributionStatus[]],
 );
-const eventTypeSchema = z.enum(
-  Object.values(JournalEventType) as [JournalEventType, ...JournalEventType[]],
-  { error: 'tipo de evento no permitido' },
-);
 const historyKindSchema = z.enum(
   Object.values(JournalHistoryKind) as [JournalHistoryKind, ...JournalHistoryKind[]],
 );
-
-const optionalText = (maxLength: number) =>
-  z
-    .string({ error: 'debe ser texto' })
-    .trim()
-    .max(maxLength, `debe tener como máximo ${maxLength} caracteres`)
-    .nullable()
-    .transform((value) => value || null)
-    .optional();
 
 const requiredText = (maxLength: number) =>
   z
@@ -67,39 +41,28 @@ const named = z.object({ id: z.uuid(), name: z.string() });
 
 // ---------- Entradas ----------
 
-/** Contenido de una anotación tal como lo edita su autor. */
+/** Contenido de una anotación tal como lo edita su autor: clase y descripción de eventos (F-PA-05). */
 const annotationContentShape = {
   areaId: uuid.optional(),
-  eventType: eventTypeSchema.optional(),
-  students: journalStudentsSchema.optional(),
   description: requiredText(JOURNAL_DESCRIPTION_MAX_LENGTH).optional(),
-  actions: optionalText(JOURNAL_ACTIONS_MAX_LENGTH),
-  reflection: optionalText(JOURNAL_REFLECTION_MAX_LENGTH),
 };
 
-/** Alta: crea el diario del grupo y la fecha si aún no existe (con la primera anotación). */
+/**
+ * Alta: crea el diario del grupo y la fecha si aún no existe (con la primera anotación).
+ * `.strict()` rechaza con 400 cualquier otro campo (tipo de evento, estudiantes, acciones…).
+ */
 export const createAnnotationSchema = z
   .object({
     ...annotationContentShape,
     groupId: uuid,
     date: day,
     areaId: uuid,
-    eventType: eventTypeSchema,
     description: requiredText(JOURNAL_DESCRIPTION_MAX_LENGTH),
   })
-  .strict()
-  .superRefine((value, context) => {
-    if (journalEntryNeedsActions(value.eventType, value.actions)) {
-      context.addIssue({
-        code: 'custom',
-        path: ['actions'],
-        message: JOURNAL_ACTIONS_REQUIRED_REASON,
-      });
-    }
-  });
+  .strict();
 export type CreateAnnotationInput = z.output<typeof createAnnotationSchema>;
 
-/** PATCH parcial: `null` vacía los opcionales; la regla de «a mejorar» la aplica el servicio. */
+/** PATCH parcial: al menos un campo de los dos. */
 export const updateAnnotationSchema = z
   .object(annotationContentShape)
   .strict()
@@ -184,11 +147,7 @@ export const journalAnnotationSchema = z.object({
   id: z.uuid(),
   teacher: person,
   area: named,
-  eventType: eventTypeSchema,
-  students: z.array(z.string()),
   description: z.string(),
-  actions: z.string().nullable(),
-  reflection: z.string().nullable(),
   status: annotationStatusSchema,
   readyAt: isoDateTimeSchema.nullable(),
   /** Viajó en algún envío; falso en un borrador que quedó fuera («No enviada»). */
@@ -227,6 +186,8 @@ export type JournalHistoryItem = z.output<typeof historyItemSchema>;
 
 const headerShape = {
   schoolYear: z.string(),
+  /** Período académico que contiene la fecha del diario; nulo si ninguno la contiene. */
+  period: z.object({ id: z.uuid(), number: z.number().int() }).nullable(),
   level: named,
   grade: named,
   group: groupRef,

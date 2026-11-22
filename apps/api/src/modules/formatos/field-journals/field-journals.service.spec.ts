@@ -180,11 +180,7 @@ function makeRepository(roster: GroupRoster) {
         teacherName: NAMES[input.teacherId] ?? 'X',
         areaId: input.areaId,
         areaName: areaNames[input.areaId] ?? 'Área',
-        eventType: input.eventType,
-        studentNames: input.students ?? null,
         description: input.description,
-        actions: input.actions ?? null,
-        reflection: input.reflection ?? null,
         status: AnnotationStatus.Draft,
         readyAt: null,
         sent: false,
@@ -305,7 +301,6 @@ const input = (patch: Record<string, unknown> = {}) => ({
   groupId: GROUP,
   date: TODAY,
   areaId: MATH,
-  eventType: 'grupo' as const,
   description: 'Texto de la anotación',
   ...patch,
 });
@@ -380,6 +375,25 @@ describe('FieldJournalsService · alta de anotaciones', () => {
     }
   });
 
+  it('el encabezado trae el período que contiene la fecha, o nulo si ninguno la contiene', async () => {
+    const setup = makeRepository(makeRoster());
+    const { journalId } = await withAnnotations(setup);
+    const periodList = (items: object[]) =>
+      ({ items, page: 1, pageSize: 10, totalItems: items.length, totalPages: 1 }) as never;
+    setup.periods.list.mockResolvedValue(
+      periodList([
+        { id: id(71), number: 1, startDate: '2000-01-01', endDate: '2000-03-31' },
+        { id: id(72), number: 2, startDate: '2000-04-01', endDate: '2099-12-31' },
+        { id: id(73), number: 3, startDate: null, endDate: null },
+      ]),
+    );
+    expect((await setup.service.get(ana, journalId)).period).toEqual({ id: id(72), number: 2 });
+    setup.periods.list.mockResolvedValue(
+      periodList([{ id: id(71), number: 1, startDate: '2000-01-01', endDate: '2000-03-31' }]),
+    );
+    expect((await setup.service.get(ana, journalId)).period).toBeNull();
+  });
+
   it('400 en `areaId` si no es una de sus asignaturas en el grupo', async () => {
     const setup = makeRepository(makeRoster());
     await expect(setup.service.addAnnotation(luis, input({ areaId: MATH }))).rejects.toMatchObject({
@@ -433,20 +447,6 @@ describe('FieldJournalsService · anotaciones propias', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
     const detail = await setup.service.get(ana, journalId);
     expect(detail.annotations.map((annotation) => annotation.teacher.id)).toEqual([ANA]);
-  });
-
-  it('la regla de «a mejorar» se aplica sobre el valor resultante', async () => {
-    const setup = makeRepository(makeRoster());
-    const { journalId, anaAnnotation } = await withAnnotations(setup);
-    await expect(
-      setup.service.updateAnnotation(ana, journalId, anaAnnotation.id, { eventType: 'mejorar' }),
-    ).rejects.toMatchObject({ fieldErrors: [{ field: 'actions' }] });
-    await expect(
-      setup.service.updateAnnotation(ana, journalId, anaAnnotation.id, {
-        eventType: 'mejorar',
-        actions: 'Repasar',
-      }),
-    ).resolves.toBeDefined();
   });
 
   it('con el diario enviado, todo es 409', async () => {

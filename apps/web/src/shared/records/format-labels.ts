@@ -1,4 +1,4 @@
-import { JournalEventType, ObserverNoteType } from '@gns/shared';
+import { ObserverNoteType } from '@gns/shared';
 
 import type { RecordTone } from '@/shared/ui';
 
@@ -6,19 +6,6 @@ export interface LabelInfo {
   label: string;
   tone: RecordTone;
 }
-
-/** Tipos de evento del diario de campo con las etiquetas y los tonos del tablero. */
-export const JOURNAL_EVENT_INFO: Record<JournalEventType, LabelInfo> = {
-  [JournalEventType.Group]: { label: 'Observación del grupo', tone: 'info' },
-  [JournalEventType.Positive]: { label: 'Aspecto positivo', tone: 'success' },
-  [JournalEventType.ToImprove]: { label: 'Aspecto por mejorar', tone: 'warning' },
-};
-
-export const JOURNAL_EVENT_ORDER: readonly JournalEventType[] = [
-  JournalEventType.Group,
-  JournalEventType.Positive,
-  JournalEventType.ToImprove,
-];
 
 /** Tipos de anotación del observador con las etiquetas del tablero. */
 export const OBSERVER_TYPE_INFO: Record<ObserverNoteType, LabelInfo> = {

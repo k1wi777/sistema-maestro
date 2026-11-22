@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import {
   AuditLogType,
-  JournalEventType,
   JournalStatus,
   ObserverNoteType,
   RecordStatus,
@@ -33,9 +32,9 @@ const STUDENT_A = 'Xiomaro';
 const STUDENT_B = 'Tabarna';
 const OBSERVED_STUDENT = 'Quirino';
 const marker = randomBytes(4).toString('hex');
-const DESCRIPTION = `Descripcion-${marker}`;
-const ACTIONS = `Acciones-${marker}`;
-const REFLECTION = `Reflexion-${marker}`;
+// La descripción del diario nombra al estudiante implicado (F-PA-05) y, si hay algo por mejorar, las acciones.
+const DESCRIPTION = `Descripcion-${marker}: ${STUDENT_A} y ${STUDENT_B} trabajaron en equipo.`;
+const IMPROVE_DESCRIPTION = `Mejorar-${marker}: ${STUDENT_A} llegó tarde. Acciones: hablar con la familia.`;
 const NOTE_TEXT = `Anotacion-${marker}`;
 const OBSERVATION = `Observacion-${marker}`;
 const CORRECTED = `Corregida-${marker}`;
@@ -43,8 +42,7 @@ const FAMILY_DATA = `Familiar-${marker}`;
 const NAMES = [STUDENT_A, STUDENT_B, OBSERVED_STUDENT];
 const MARKERS = [
   DESCRIPTION,
-  ACTIONS,
-  REFLECTION,
+  IMPROVE_DESCRIPTION,
   NOTE_TEXT,
   OBSERVATION,
   CORRECTED,
@@ -97,8 +95,6 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
         groupId,
         date,
         areaId: mathId,
-        eventType: JournalEventType.Group,
-        students: [STUDENT_A, STUDENT_B],
         description: DESCRIPTION,
       })
       .expect(201);
@@ -115,11 +111,7 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
         groupId,
         date,
         areaId: physicsId,
-        eventType: JournalEventType.ToImprove,
-        students: [STUDENT_A],
-        description: DESCRIPTION,
-        actions: ACTIONS,
-        reflection: REFLECTION,
+        description: IMPROVE_DESCRIPTION,
       })
       .expect(201);
     const mine = (own.body as FieldJournal).annotations.find((annotation) => annotation.isMine);
@@ -136,14 +128,14 @@ describe('punta a punta · diario de campo y observador del estudiante', () => {
     expect(submitted.expectedCount).toBe(2);
   });
 
-  it('un nombre que no es de pila se rechaza sin repetirlo en el error', async () => {
+  it('los campos retirados del formato (estudiantes, tipo de evento…) se rechazan sin repetirlos en el error', async () => {
     const res = await participant
       .call('post', '/field-journals/annotations')
       .send({
         groupId,
         date: todayInBogota(),
         areaId: mathId,
-        eventType: JournalEventType.Group,
+        eventType: 'grupo',
         students: [`${STUDENT_A} Apellido Segundo`],
         description: DESCRIPTION,
       })

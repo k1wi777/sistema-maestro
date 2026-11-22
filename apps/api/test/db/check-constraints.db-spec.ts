@@ -4,7 +4,6 @@ import {
   AuditLogType,
   ChallengeQuestionType,
   AnnotationStatus,
-  JournalEventType,
   JournalStatus,
   ObserverNoteType,
   RecordStatus,
@@ -127,14 +126,6 @@ const CASES: CheckCase[] = [
     allowed: Object.values(JournalStatus),
     rejected: ['borrador', 'enviada', 'revisada'],
     insert: insertFieldJournal,
-    updatable: true,
-  },
-  {
-    table: 'diario_anotacion',
-    column: 'tipo_evento',
-    allowed: Object.values(JournalEventType),
-    rejected: ['negativo'],
-    insert: insertFieldJournalAnnotation,
     updatable: true,
   },
   {

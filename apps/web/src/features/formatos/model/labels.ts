@@ -1,8 +1,6 @@
 import { ObserverNoteType } from '@gns/shared';
 
 export {
-  JOURNAL_EVENT_INFO,
-  JOURNAL_EVENT_ORDER,
   OBSERVER_TYPE_INFO,
   OBSERVER_TYPE_ORDER,
   type LabelInfo,
@@ -12,3 +10,9 @@ export {
 export function requiresConvivenciaRoute(type: ObserverNoteType | ''): boolean {
   return type === ObserverNoteType.TypeII || type === ObserverNoteType.TypeIII;
 }
+
+/** Notas del formato F-PA-05: el formulario las muestra como ayuda y la hoja impresa las reproduce. */
+export const JOURNAL_FORMAT_NOTES = [
+  'La descripción del evento debe incluir el estudiante implicado.',
+  'Definir las acciones en caso de registrar aspectos por mejorar.',
+] as const;

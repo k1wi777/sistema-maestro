@@ -3,7 +3,6 @@ import {
   buildCreateAnnotation,
   emptyAnnotationValues,
   mapAnnotationApiErrors,
-  parseStudents,
   valuesFromAnnotation,
 } from './annotation-form';
 import { makeAnnotation } from './test-fixtures';
@@ -13,44 +12,31 @@ const AREA = '33333333-3333-4333-8333-333333333333';
 
 const filled = () => ({
   ...emptyAnnotationValues(AREA),
-  eventType: 'grupo' as const,
-  students: 'Sofía, Matías',
-  description: 'Trabajaron en equipo.',
+  description: 'Sofía y Matías trabajaron en equipo.',
 });
 
 describe('annotation form', () => {
-  it('parses first names separated by comma or semicolon', () => {
-    expect(parseStudents('Sofía, Matías; Ana')).toEqual(['Sofía', 'Matías', 'Ana']);
-    expect(parseStudents('  ')).toEqual([]);
-  });
-
-  it('builds the creation body with the group and the date', () => {
+  it('builds the creation body with the group and the date and nothing else', () => {
     const built = buildCreateAnnotation(filled(), CONTEXT);
-    expect(built).toMatchObject({
+    expect(built).toEqual({
       ok: true,
-      data: { ...CONTEXT, areaId: AREA, eventType: 'grupo', students: ['Sofía', 'Matías'] },
+      data: { ...CONTEXT, areaId: AREA, description: 'Sofía y Matías trabajaron en equipo.' },
     });
   });
 
-  it('asks for the subject, the type and the description', () => {
+  it('asks for the class and the description', () => {
     const built = buildCreateAnnotation(emptyAnnotationValues(), CONTEXT);
     expect(built.ok).toBe(false);
     if (!built.ok) {
-      expect(Object.keys(built.errors).sort()).toEqual(['areaId', 'description', 'eventType']);
+      expect(Object.keys(built.errors).sort()).toEqual(['areaId', 'description']);
     }
   });
 
-  it('requires actions for an aspect to improve and rejects full names of students', () => {
-    const toImprove = buildCreateAnnotation({ ...filled(), eventType: 'mejorar' }, CONTEXT);
-    expect(toImprove.ok).toBe(false);
-    if (!toImprove.ok) {
-      expect(toImprove.errors.actions).toMatch(/a mejorar/);
-    }
-    const names = buildCreateAnnotation({ ...filled(), students: 'Pedro 1023456789' }, CONTEXT);
-    expect(names.ok).toBe(false);
-    if (!names.ok) {
-      expect(names.errors.students).toBeDefined();
-      expect(JSON.stringify(names.errors)).not.toContain('1023456789');
+  it('rejects a description over the limit', () => {
+    const built = buildCreateAnnotation({ ...filled(), description: 'x'.repeat(1501) }, CONTEXT);
+    expect(built.ok).toBe(false);
+    if (!built.ok) {
+      expect(built.errors.description).toBeDefined();
     }
   });
 
@@ -65,18 +51,6 @@ describe('annotation form', () => {
       original,
     );
     expect(changed).toEqual({ ok: true, data: { description: 'Nueva descripción' } });
-  });
-
-  it('checks the actions rule on the resulting annotation, not only on the patch', () => {
-    const original = makeAnnotation({ eventType: 'grupo', actions: null });
-    const built = buildAnnotationChanges(
-      { ...valuesFromAnnotation(original), eventType: 'mejorar' },
-      original,
-    );
-    expect(built.ok).toBe(false);
-    if (!built.ok) {
-      expect(built.errors.actions).toBeDefined();
-    }
   });
 
   it('maps the 400 errors of the API to the fields of the form', () => {
