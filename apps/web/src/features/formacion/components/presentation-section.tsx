@@ -1,10 +1,11 @@
 'use client';
 
 import { PPTX_CONTENT_TYPE, type TeacherModule } from '@gns/shared';
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ApiError } from '@/shared/api';
 import { LoadError, Loading, useRemote } from '@/shared/data';
+import { DeckFrame, PDF_CONTENT_TYPE, PdfDeck } from '@/shared/presentation';
 import { Button, ButtonLink, StatusBadge } from '@/shared/ui';
 
 import { getModuleFileUrl } from '../api/route';
@@ -21,27 +22,13 @@ const ideasOf = (slide: Slide): string[] =>
     .filter((line) => line.length > 0);
 
 /**
- * Visor de diapositivas con «Anterior», «Siguiente» y «Diapositiva n de m». Al mostrar la última
- * se marca la presentación como revisada, una sola vez por visita. Un fallo de la marca se
- * muestra con reintento.
+ * Marca de «presentación revisada»: se envía una sola vez por visita y un fallo se muestra con
+ * reintento. La comparten el visor de diapositivas y el de PDF.
  */
-function SlideDeck({
-  title,
-  slides,
-  viewed,
-  onMark,
-}: {
-  title: string;
-  slides: Slide[];
-  viewed: boolean;
-  onMark: () => Promise<ApiError | null>;
-}) {
-  const [index, setIndex] = useState(0);
+function useReviewMark(onMark: () => Promise<ApiError | null>) {
   const [error, setError] = useState<ApiError | null>(null);
   const [marking, setMarking] = useState(false);
   const sent = useRef(false);
-  const last = slides.length - 1;
-  const slide = slides[index];
 
   async function mark() {
     setMarking(true);
@@ -55,73 +42,80 @@ function SlideDeck({
     markRef.current = mark;
   });
 
-  useEffect(() => {
-    if (index === last && !viewed && !sent.current) {
+  /** Marca la primera vez que se llama; las siguientes no hacen nada. */
+  const markOnce = useCallback(() => {
+    if (!sent.current) {
       sent.current = true;
       void markRef.current();
     }
-  }, [index, last, viewed]);
+  }, []);
 
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === 'ArrowRight') {
-      setIndex((current) => Math.min(last, current + 1));
-    } else if (event.key === 'ArrowLeft') {
-      setIndex((current) => Math.max(0, current - 1));
+  return { error, marking, mark, markOnce };
+}
+
+/**
+ * Visor de diapositivas sobre el marco común (flechas, «Anterior», «Siguiente», «Diapositiva n de
+ * m» y pantalla completa). Al mostrar la última se marca la presentación como revisada.
+ */
+function SlideDeck({
+  title,
+  slides,
+  viewed,
+  onMark,
+}: {
+  title: string;
+  slides: Slide[];
+  viewed: boolean;
+  onMark: () => Promise<ApiError | null>;
+}) {
+  const [index, setIndex] = useState(0);
+  const { error, marking, mark, markOnce } = useReviewMark(onMark);
+  const last = slides.length - 1;
+  const slide = slides[index];
+
+  useEffect(() => {
+    if (index === last && !viewed) {
+      markOnce();
     }
-  }
+  }, [index, last, viewed, markOnce]);
 
   if (!slide) {
     return null;
   }
   return (
-    <div
-      className={styles.deck}
-      tabIndex={0}
-      role="group"
-      aria-label="Presentación sugerida; usa las flechas del teclado para avanzar"
-      onKeyDown={onKeyDown}
+    <DeckFrame
+      name={title}
+      index={index}
+      total={slides.length}
+      counterLabel={`Diapositiva ${index + 1} de ${slides.length}`}
+      onGo={setIndex}
+      below={
+        <>
+          {viewed ? (
+            <div className={styles.actions}>
+              <StatusBadge tone="success">Presentación revisada</StatusBadge>
+            </div>
+          ) : null}
+          {error ? <MarkError error={error} busy={marking} onRetry={() => void mark()} /> : null}
+        </>
+      }
     >
-      <article className={styles.slide} aria-live="polite">
-        <div className={styles.slideHead}>
-          <span>{title}</span>
-          <span>{`${index + 1} / ${slides.length}`}</span>
-        </div>
-        <h3 className={styles.slideTitle}>{slide.title ?? `Diapositiva ${index + 1}`}</h3>
-        <ul className={styles.slideIdeas}>
-          {ideasOf(slide).map((idea) => (
-            <li key={idea}>{idea}</li>
-          ))}
-        </ul>
-        <span className={styles.slideBar} aria-hidden="true" />
-      </article>
-      <div className={styles.controls}>
-        <Button
-          variant="outline"
-          size="sm"
-          startIcon="volver"
-          disabled={index === 0}
-          onClick={() => setIndex(index - 1)}
-        >
-          Anterior
-        </Button>
-        <span className={styles.count}>{`Diapositiva ${index + 1} de ${slides.length}`}</span>
-        <Button
-          variant="secondary"
-          size="sm"
-          endIcon="siguiente"
-          disabled={index === last}
-          onClick={() => setIndex(index + 1)}
-        >
-          Siguiente
-        </Button>
-      </div>
-      {viewed ? (
-        <div className={styles.actions}>
-          <StatusBadge tone="success">Presentación revisada</StatusBadge>
-        </div>
-      ) : null}
-      {error ? <MarkError error={error} busy={marking} onRetry={() => void mark()} /> : null}
-    </div>
+      {(fullscreen) => (
+        <article className={fullscreen ? `${styles.slide} ${styles.slideFull}` : styles.slide}>
+          <div className={styles.slideHead}>
+            <span>{title}</span>
+            <span>{`${index + 1} / ${slides.length}`}</span>
+          </div>
+          <h3 className={styles.slideTitle}>{slide.title ?? `Diapositiva ${index + 1}`}</h3>
+          <ul className={styles.slideIdeas}>
+            {ideasOf(slide).map((idea) => (
+              <li key={idea}>{idea}</li>
+            ))}
+          </ul>
+          <span className={styles.slideBar} aria-hidden="true" />
+        </article>
+      )}
+    </DeckFrame>
   );
 }
 
@@ -165,16 +159,8 @@ function PptxDownload({ module, name }: { module: TeacherModule; name: string })
   );
 }
 
-/** PDF o imagen dentro de la plataforma, con la URL de visualización pedida al abrir. */
-function InlineFile({
-  module,
-  name,
-  image,
-}: {
-  module: TeacherModule;
-  name: string;
-  image: boolean;
-}) {
+/** Imagen dentro de la plataforma, con la URL de visualización pedida al abrir. */
+function ImageFile({ module, name }: { module: TeacherModule; name: string }) {
   const { state, reload } = useRemote(
     () => getModuleFileUrl(module.id, 'presentacion'),
     `presentation-url:${module.id}`,
@@ -188,17 +174,74 @@ function InlineFile({
       <LoadError error={state.error} title="No pudimos preparar la presentación" onRetry={reload} />
     );
   }
-  const { url } = state.data;
-  if (image) {
-    // La URL firmada es de otro origen y caduca: `next/image` no aporta nada aquí.
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img className={styles.image} src={url} alt={`Presentación: ${name}`} />;
-  }
-  return <iframe className={styles.frame} src={url} title={`Presentación: ${name}`} />;
+  // La URL firmada es de otro origen y caduca: `next/image` no aporta nada aquí.
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={styles.image} src={state.data.url} alt={`Presentación: ${name}`} />;
 }
 
-/** Archivo de la presentación: PDF o imagen dentro de la plataforma; PPTX como descarga. */
-function FilePresentation({ module }: { module: TeacherModule }) {
+/**
+ * PDF como diapositivas. Si es la presentación del módulo (`markable`), llegar a la última página
+ * la marca como revisada y, si el visor falla, queda la marca manual; como material complementario
+ * de unas diapositivas no marca nada (esa marca la da el visor de diapositivas).
+ */
+function PdfPresentation({
+  module,
+  name,
+  fileId,
+  viewed,
+  onMark,
+  markable,
+}: {
+  module: TeacherModule;
+  name: string;
+  fileId: string;
+  viewed: boolean;
+  onMark: () => Promise<ApiError | null>;
+  markable: boolean;
+}) {
+  const { error, marking, mark, markOnce } = useReviewMark(onMark);
+  return (
+    <>
+      <PdfDeck
+        name={name}
+        sourceKey={`presentation:${module.id}:${fileId}`}
+        fetchUrl={() => getModuleFileUrl(module.id, 'presentacion')}
+        onLastPage={markable && !viewed ? markOnce : undefined}
+        errorExtra={
+          markable ? (
+            <MarkControls
+              viewed={viewed}
+              label="Marcar como revisada"
+              doneLabel="Presentación revisada"
+              onMark={onMark}
+            />
+          ) : undefined
+        }
+      />
+      {markable && viewed ? (
+        <div className={styles.actions}>
+          <StatusBadge tone="success">Presentación revisada</StatusBadge>
+        </div>
+      ) : null}
+      {markable && error ? (
+        <MarkError error={error} busy={marking} onRetry={() => void mark()} />
+      ) : null}
+    </>
+  );
+}
+
+/** Archivo de la presentación: PDF como diapositivas, imagen en la plataforma y PPTX como descarga. */
+function FilePresentation({
+  module,
+  viewed,
+  onMark,
+  markable,
+}: {
+  module: TeacherModule;
+  viewed: boolean;
+  onMark: () => Promise<ApiError | null>;
+  markable: boolean;
+}) {
   const file = module.presentationFile;
   if (!file) {
     return null;
@@ -207,7 +250,19 @@ function FilePresentation({ module }: { module: TeacherModule }) {
   if (file.contentType === PPTX_CONTENT_TYPE) {
     return <PptxDownload module={module} name={name} />;
   }
-  return <InlineFile module={module} name={name} image={file.contentType.startsWith('image/')} />;
+  if (file.contentType.startsWith('image/')) {
+    return <ImageFile module={module} name={name} />;
+  }
+  return (
+    <PdfPresentation
+      module={module}
+      name={name}
+      fileId={file.id}
+      viewed={viewed}
+      onMark={onMark}
+      markable={markable}
+    />
+  );
 }
 
 /** Sección «Presentación sugerida»: diapositivas, archivo o enlace, con su marca de revisada. */
@@ -221,6 +276,9 @@ export function PresentationSection({
   const viewed = module.progress.presentationViewedAt !== null;
   const hasSlides = module.slides.length > 0;
   const hasMaterial = module.presentationFile !== null || module.presentationUrl !== null;
+  // Un PDF se marca solo al llegar al final (y, si falla, con su propia marca manual); el resto
+  // de materiales, con el botón de siempre.
+  const isPdf = module.presentationFile?.contentType === PDF_CONTENT_TYPE;
 
   return (
     <>
@@ -230,7 +288,14 @@ export function PresentationSection({
       {hasMaterial ? (
         <div className={hasSlides ? styles.complement : undefined}>
           {hasSlides ? <p className={styles.text}>Material complementario</p> : null}
-          {module.presentationFile ? <FilePresentation module={module} /> : null}
+          {module.presentationFile ? (
+            <FilePresentation
+              module={module}
+              viewed={viewed}
+              onMark={onMark}
+              markable={!hasSlides}
+            />
+          ) : null}
           {module.presentationUrl ? (
             <div className={styles.actions}>
               <ButtonLink
@@ -243,7 +308,7 @@ export function PresentationSection({
               </ButtonLink>
             </div>
           ) : null}
-          {!hasSlides ? (
+          {!hasSlides && !isPdf ? (
             <MarkControls
               viewed={viewed}
               label="Marcar como revisada"

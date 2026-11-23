@@ -60,5 +60,11 @@ export default defineConfig({
       testMatch: /role-protection\.spec\.ts/,
       dependencies: ['ingreso', 'setup'],
     },
+    // Al final: sube un PDF al módulo 8 y lo recorre; no debe alterar los conteos de los demás.
+    {
+      name: 'presentation',
+      testMatch: /presentation\.spec\.ts/,
+      dependencies: ['setup', 'training', 'accessibility', 'consult'],
+    },
   ],
 });

@@ -25,15 +25,6 @@
   border-radius: var(--radius-lg);
 }
 
-.frame {
-  display: block;
-  width: 100%;
-  height: min(70vh, 40rem);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
 .image {
   display: block;
   width: 100%;
@@ -51,15 +42,6 @@
 }
 
 /* ---------- Diapositivas ---------- */
-.deck {
-  border-radius: var(--radius-lg);
-}
-
-.deck:focus-visible {
-  outline: var(--focus-width) solid var(--focus);
-  outline-offset: var(--focus-offset);
-}
-
 /* La diapositiva es una «hoja» clara en ambos temas, como en el tablero. */
 .slide {
   position: relative;
@@ -121,19 +103,9 @@
   );
 }
 
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-}
-
-.count {
-  color: var(--muted);
-  font-size: var(--text-sm);
-  font-variant-numeric: tabular-nums;
+/* En pantalla completa la diapositiva conserva su proporción dentro de la altura disponible. */
+.slideFull {
+  width: min(100%, calc((100svh - 9rem) * 16 / 9));
 }
 
 @media (max-width: 600px) {
