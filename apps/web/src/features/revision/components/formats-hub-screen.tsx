@@ -36,21 +36,23 @@ export function ReviewFormatsHubScreen() {
             : 'Revisa las planeaciones, los diarios de campo (F-PA-05) y las anotaciones del observador de tus grados, y consulta los del resto del colegio.'
         }
       />
-      {overview.state.status === 'error' ? (
-        <LoadError
-          error={overview.state.error}
-          title="No pudimos cargar las cifras"
-          onRetry={overview.reload}
-        />
-      ) : null}
-      {viewer.isAdministrator
-        ? (data?.uncovered ?? []).map((grade) => (
-            <Notice key={grade.id} tone="warning" title="Grado sin coordinadora">
-              {`${grade.name} no tiene coordinadora: sus registros enviados no tienen quién los revise. Asígnale una en `}
-              <Link href={paths.grades}>Grados y áreas</Link>.
-            </Notice>
-          ))
-        : null}
+      <div className={styles.notices}>
+        {overview.state.status === 'error' ? (
+          <LoadError
+            error={overview.state.error}
+            title="No pudimos cargar las cifras"
+            onRetry={overview.reload}
+          />
+        ) : null}
+        {viewer.isAdministrator
+          ? (data?.uncovered ?? []).map((grade) => (
+              <Notice key={grade.id} tone="warning" title="Grado sin coordinadora">
+                {`${grade.name} no tiene coordinadora: sus registros enviados no tienen quién los revise. Asígnale una en `}
+                <Link href={paths.grades}>Grados y áreas</Link>.
+              </Notice>
+            ))
+          : null}
+      </div>
       <ul className={styles.grid}>
         {cards.map((card) => (
           <li key={card.id}>

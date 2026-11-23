@@ -84,7 +84,7 @@ Contexto completo: `CONTEXTO_Plataforma_GNS.md`. Tareas en orden:
 Todos se ejecutan desde la raíz del repositorio.
 
 - `pnpm install` — Instalar dependencias; al terminar compila `@gns/shared` (necesario para el lint con tipos).
-- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`) y el frontend Next.js (`apps/web`, puerto 3001; la API usa el 3000 y el frontend la lee de `NEXT_PUBLIC_API_URL`, que se copia de `apps/web/.env.example` a `apps/web/.env.local`). La página de muestra del sistema de diseño está en `/muestra`.
+- `pnpm dev` — Desarrollo: arranca la API en modo observación (recarga ante cambios en `apps/api/src`) y el frontend Next.js (`apps/web`, puerto 3001; la API usa el 3000 y el frontend la lee de `NEXT_PUBLIC_API_URL`, que se copia de `apps/web/.env.example` a `apps/web/.env.local`; `NEXT_PUBLIC_SITE_URL` es opcional y fija la URL pública para la vista previa de enlaces). La página de muestra del sistema de diseño está en `/muestra`.
 - `pnpm build` — Build de todo el monorepo con Turborepo.
 - `pnpm lint` — ESLint + Prettier (solo comprobación); también corre en el hook de pre-commit sobre los archivos en stage.
 - `pnpm format` — Aplica el formato de Prettier.
