@@ -1,11 +1,34 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Doc-modulo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
-<style>body{margin:0}</style>
+<style>body{margin:0}
+/* v51 · Visor de PDF como diapositivas, pantalla completa y estados de carga y error */
+.fo-pdf{outline:none;display:flex;flex-direction:column}
+.fo-pdf-stage{display:grid;place-items:center;max-height:70svh;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#E9ECF3;padding:10px}
+.fo-pdf-page{display:flex;flex-direction:column;background:#fff;color:#16203A;aspect-ratio:4/3;max-width:100%;max-height:calc(70svh - 22px);width:min(100%,640px);box-shadow:0 1px 2px rgba(16,24,40,.12),0 10px 24px -12px rgba(16,24,40,.4);padding:clamp(14px,4%,34px);position:relative}
+.fo-pdf-page .fo-sl-h{color:#C8102E}
+.fo-pdf-page h3{font-family:var(--display);font-size:clamp(16px,3vw,26px);color:#14254F;margin:clamp(6px,2%,16px) 0 clamp(6px,1.6%,12px)}
+.fo-pdf-page p{margin:0;font-size:clamp(12px,1.75vw,16px);line-height:1.45}
+.fo-pdf-page .fo-sl-f{height:8px}
+.fo-pdf-acc{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.fo-pdf-estado{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:26px 16px;border-radius:14px;border:1px dashed var(--line);background:var(--bg);color:var(--fg)}
+.fo-pdf-estado b{font-size:15px}
+.fo-pdf-estado p{margin:0;font-size:13.5px;color:var(--muted);max-width:46ch}
+.fo-pdf-barra{width:min(280px,100%);height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+.fo-pdf-barra span{display:block;height:100%;background:var(--rojo)}
+.fo-compl{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.fo-compl h3{margin:0 0 4px;font-size:16px}
+.fo-deck.full,.fo-pdf.full{background:var(--bg);padding:14px;justify-content:center;gap:10px}
+.fo-deck.full .fo-stage,.fo-pdf.full .fo-pdf-stage{max-height:calc(100svh - 130px)}
+@media (max-width:600px){.fo-pdf-stage{padding:6px}.fo-pdf-page{aspect-ratio:3/4;max-height:calc(70svh - 14px)}.fo-ctl{gap:8px}.fo-pdf-acc .btn{flex:1 1 auto;justify-content:center}}
+</style>
 <link rel="stylesheet" href="../assets/gns-premium.css"></head><body>
 
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ampliar" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"></path></symbol>
+  <symbol id="i-reducir" viewBox="0 0 24 24"><path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"></path></symbol>
+  <symbol id="i-descargar" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path></symbol>
   <symbol id="i-pantalla" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></symbol>
   <symbol id="i-luna" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path></symbol>
   <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></symbol>
@@ -81,6 +104,26 @@
               <div style="display:flex;flex-direction:column;gap:6px;align-items:center;flex:1;min-width:120px"><div class="fo-dots"><button type="button" aria-label="Diapositiva 1"></button><button type="button" aria-current="true" aria-label="Diapositiva 2"></button><button type="button" aria-label="Diapositiva 3"></button><button type="button" aria-label="Diapositiva 4"></button><button type="button" aria-label="Diapositiva 5"></button></div><span class="fo-cont">Diapositiva 2 de 5</span></div>
               <button type="button" class="btn azul sm">Siguiente ›</button>
             </div>
+          </div>
+          <div class="fo-pdf-acc"><button type="button" class="btn lin sm"><svg class="i" aria-hidden="true"><use href="#i-ampliar"></use></svg>Pantalla completa</button></div>
+
+          <div class="fo-compl">
+            <h3>Material complementario</h3>
+            <p class="hint" style="margin:0 0 10px">Presentación en PDF: <b>Propuesta-pedagogica.pdf</b>. Cambia de página con los botones o las flechas del teclado.</p>
+            <div class="fo-pdf" tabindex="0" role="group" aria-label="Presentación: Propuesta-pedagogica.pdf; usa las flechas del teclado para avanzar">
+              <div class="fo-pdf-stage"><div class="fo-pdf-page" role="img" aria-label="Página 1 de 12 de Propuesta-pedagogica.pdf"><div class="fo-sl-h"><span>Propuesta pedagógica</span><span>1</span></div><h3>El modelo pedagógico GNS</h3><p>Aprendemos investigando, interactuando, creando y presentando. Cada clase parte de un problema real y termina en un producto.</p><div class="fo-sl-f"></div></div></div>
+              <div class="fo-ctl">
+                <button type="button" class="btn lin sm" disabled>‹ Anterior</button>
+                <span class="fo-cont" role="status" aria-live="polite" style="flex:1">Página 1 de 12</span>
+                <button type="button" class="btn azul sm">Siguiente ›</button>
+              </div>
+              <div class="fo-pdf-acc"><button type="button" class="btn lin sm"><svg class="i" aria-hidden="true"><use href="#i-ampliar"></use></svg>Pantalla completa</button><button type="button" class="btn lin sm"><svg class="i" aria-hidden="true"><use href="#i-descargar"></use></svg>Descargar PDF</button></div>
+            </div>
+            <p class="hint" style="margin:14px 0 6px"><b>Estado de carga</b> (mientras se prepara el PDF):</p>
+            <div class="fo-pdf-estado" role="status"><b>Preparando la presentación…</b><div class="fo-pdf-barra" role="progressbar" aria-label="Descarga de la presentación" aria-valuemin="0" aria-valuemax="100" aria-valuenow="45"><span style="width:45%"></span></div><p>45 %</p></div>
+            <p class="hint" style="margin:14px 0 6px"><b>Estado de error</b> (PDF dañado, con contraseña o sin conexión):</p>
+            <div class="fo-pdf-estado" role="alert"><b>No pudimos abrir el PDF</b><p>El archivo parece dañado. Puedes descargarlo para verlo en tu equipo.</p><div class="fo-pdf-acc" style="justify-content:center;margin:0"><button type="button" class="btn lin sm">Reintentar</button><button type="button" class="btn lin sm"><svg class="i" aria-hidden="true"><use href="#i-descargar"></use></svg>Descargar PDF</button><button type="button" class="btn sm"><svg class="i" aria-hidden="true"><use href="#i-check"></use></svg>Marcar como revisada</button></div></div>
+            <p class="hint" style="margin:14px 0 6px"><b>Pantalla completa</b>: la página ocupa el máximo posible, los controles siguen abajo y el botón pasa a «Salir de pantalla completa».</p>
           </div>
         </div>
 

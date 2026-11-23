@@ -5,6 +5,7 @@ import { PPTX_CONTENT_TYPE, VideoSource, type ModuleFilePurpose } from '@gns/sha
 import { useState } from 'react';
 
 import { LoadError, Loading, useRemote } from '@/shared/data';
+import { PDF_CONTENT_TYPE, PdfDeck } from '@/shared/presentation';
 import {
   ButtonLink,
   Card,
@@ -64,7 +65,31 @@ function VideoFile({
   );
 }
 
+/** PDF con el mismo visor del docente, sin marcar progreso; imagen y PPTX, con su enlace. */
 function PresentationFile({
+  moduleId,
+  fileId,
+  name,
+  contentType,
+}: {
+  moduleId: string;
+  fileId: string;
+  name: string | null;
+  contentType: string;
+}) {
+  if (contentType === PDF_CONTENT_TYPE) {
+    return (
+      <PdfDeck
+        name={name ?? 'Presentación'}
+        sourceKey={`gestion-formacion:preview-pdf:${moduleId}:${fileId}`}
+        fetchUrl={() => fileUrl(moduleId, 'presentacion')}
+      />
+    );
+  }
+  return <PresentationLink moduleId={moduleId} fileId={fileId} contentType={contentType} />;
+}
+
+function PresentationLink({
   moduleId,
   fileId,
   contentType,
@@ -235,6 +260,7 @@ export function PreviewStep({ editor, number }: StepProps) {
             <PresentationFile
               moduleId={detail.id}
               fileId={detail.presentationFile.id}
+              name={detail.presentationFile.name}
               contentType={detail.presentationFile.contentType}
             />
           ) : null}

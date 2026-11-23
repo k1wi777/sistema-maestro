@@ -68,6 +68,21 @@ export const ACTORS = {
     'administracion.gns.consult',
     true,
   ),
+  // Presentación en PDF (`presentation.spec.ts`): sesiones propias de Elena (edita un módulo de la
+  // inducción) y de Andrés (lo recorre como docente); ambos ya aceptaron el aviso en sus primeras
+  // sesiones, que `setup` ingresa antes.
+  presentationCoordinator: actor(
+    'elena.ravassa',
+    'Elena Ravassa',
+    'elena.ravassa.presentation',
+    true,
+  ),
+  presentationTeacher: actor(
+    'andres.penaverde',
+    'Andrés Peñaverde',
+    'andres.penaverde.presentation',
+    true,
+  ),
   // Ingresa por la interfaz en `ingreso.spec.ts`, que guarda su sesión para `role-protection`.
   signInTeacher: actor('valeria.montenueva', 'Valeria Montenueva'),
 } as const;
@@ -86,6 +101,8 @@ export const SETUP_ACTORS: readonly Actor[] = [
   ACTORS.catalogAdmin,
   ACTORS.accessibilityAdmin,
   ACTORS.consultAdmin,
+  ACTORS.presentationCoordinator,
+  ACTORS.presentationTeacher,
 ];
 
 /** Marcador único por ejecución para los textos que escriben los recorridos (R12). */

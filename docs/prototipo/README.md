@@ -1,4 +1,4 @@
-# Tablero de diseño GNS (v50)
+# Tablero de diseño GNS (v51)
 
 Referencia visual y funcional aprobada de la Plataforma GNS. Es un conjunto de
 pantallas HTML estáticas con datos demo (nombres y correos inventados, dominio
@@ -20,9 +20,9 @@ desde Google Fonts: es solo del tablero, la app las sirve desde su propio domini
 | `assets/` | `gns-premium.css` (hoja consolidada con todas las capas), las capas por separado y el escudo (`.webp`). |
 | `fuentes-tablero/` | Fuentes originales del tablero (`*.dc.html`) de las que salen las pantallas, y `canvas.json`, el índice del artefacto (páginas, posición y alto de cada tablero). |
 
-## Qué trae la v50
+## Qué trae la v51
 
-Suma la **vista de administración** (`Ad-*`: Formatos en consulta, Bitácora de actividad, Docentes y asignaciones con "Usuarios y roles", y Grados y áreas, que pasan de coordinación a administración) y separa las tres vistas: ya no hay "Cambiar de vista" y `Main` es el formulario de ingreso. Coordinación **revisa** los registros de sus grados y **consulta** los del resto del colegio ("Solo consulta"). Los docentes pueden **descartar borradores** nunca enviados (planeación, observador y anotación del diario), y todas las barras laterales traen el **selector de tema** con iconos (Claro, Oscuro, Sistema). La v49 había adaptado el diario al formato F-PA-05.
+Suma el **visor de PDF como diapositivas** en `Doc-modulo` (material complementario con página, Anterior/Siguiente, contador «Página N de M», pantalla completa, descarga y los estados de carga y error) y en la vista previa del editor (`Co-editor-modulo`, paso 6, sin marcar revisada), y el botón de **pantalla completa** del visor de diapositivas. La v50 sumó la **vista de administración** (`Ad-*`: Formatos en consulta, Bitácora de actividad, Docentes y asignaciones con "Usuarios y roles", y Grados y áreas, que pasan de coordinación a administración) y separa las tres vistas: ya no hay "Cambiar de vista" y `Main` es el formulario de ingreso. Coordinación **revisa** los registros de sus grados y **consulta** los del resto del colegio ("Solo consulta"). Los docentes pueden **descartar borradores** nunca enviados (planeación, observador y anotación del diario), y todas las barras laterales traen el **selector de tema** con iconos (Claro, Oscuro, Sistema). La v49 había adaptado el diario al formato F-PA-05.
 
 Roles por vista, usuarios, descarte de borradores y selector de tema son diseño de la épica #112: aún no están programados en la app.
 

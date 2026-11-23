@@ -33,10 +33,12 @@ import {
   LifeBuoy,
   Lock,
   LogOut,
+  Maximize,
   Medal,
   Megaphone,
   MessageCircle,
   MessageSquare,
+  Minimize,
   Monitor,
   Moon,
   NotepadText,
@@ -99,6 +101,8 @@ export const OPEN_STROKE_ICONS = {
   enviar: Send,
   puntos: Ellipsis,
   papelera: Trash2,
+  ampliar: Maximize,
+  reducir: Minimize,
 } satisfies Record<string, IconComponent>;
 
 export const FILLABLE_ICONS = {
