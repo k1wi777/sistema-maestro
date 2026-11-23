@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter, Josefin_Sans, Plus_Jakarta_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { env } from '@/shared/config/env';
 import { SessionProvider } from '@/shared/session';
 import { THEME_INIT_SCRIPT } from '@/shared/ui';
 import '@/shared/ui/styles/tokens.css';
@@ -29,9 +30,25 @@ const bodyFont = Inter({
   display: 'swap',
 });
 
+const SITE_DESCRIPTION = 'Plataforma institucional de George Noble School.';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(env.siteUrl),
+  applicationName: PRODUCT_NAME,
   title: { default: PRODUCT_NAME, template: `%s · ${PRODUCT_NAME}` },
-  description: 'Plataforma institucional de George Noble School.',
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    locale: 'es_CO',
+    siteName: PRODUCT_NAME,
+    title: PRODUCT_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: PRODUCT_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {
