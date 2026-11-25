@@ -1,7 +1,45 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Co-planeaciones</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
-<style>body{margin:0}</style>
+<style>body{margin:0}
+/* v52 · Cuenta: usuario, tema, cerrar sesión y enlaces legales en un solo bloque */
+aside .cuenta-zona{margin-top:auto}
+.cuenta-zona{display:flex;flex-direction:column;gap:10px}
+.cuenta{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.cuenta-u{display:flex;gap:10px;align-items:center;min-width:0}
+.cuenta-u .av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;font-weight:600;font-size:12px;flex:none}
+.cuenta-u div{min-width:0}
+.cuenta-u b{display:block;color:#fff;font-weight:600;font-size:13.5px;line-height:1.25;overflow-wrap:anywhere}
+.cuenta-u small{display:block;color:var(--nav-tenue);font-size:12.5px;line-height:1.3}
+.cuenta hr{border:0;border-top:1px solid rgba(255,255,255,.12);margin:0}
+.cuenta-tema{display:flex;align-items:center;justify-content:center}
+.tema-radios{display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.tema-radios button{display:grid;place-items:center;width:40px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:rgba(255,255,255,.72);cursor:pointer}
+.tema-radios button:hover{background:rgba(255,255,255,.1);color:#fff}
+.tema-radios button[aria-checked="true"]{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+.cuenta-salir{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:9px 12px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.cuenta-salir:hover{background:rgba(255,255,255,.1)}
+.cuenta-salir:focus-visible,.tema-radios button:focus-visible,.cuenta-btn:focus-visible,nav.legal a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+nav.legal{font-size:12px;line-height:1.6;color:var(--nav-tenue)}
+nav.legal a{color:var(--nav-tenue);text-decoration:none}
+nav.legal a:hover{text-decoration:underline;text-underline-offset:2px}
+.cuenta-btn{display:none;align-items:center;gap:6px;min-height:40px;padding:4px 10px 4px 5px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:600;font-size:12px;cursor:pointer}
+.cuenta-btn .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:12px;font-weight:600}
+.cuenta-btn svg.i{width:16px;height:16px}
+.cuenta-btn[aria-expanded="true"] svg.i{transform:rotate(180deg)}
+@media (pointer:coarse){.tema-radios button{width:44px;height:44px}.cuenta-btn{min-height:44px}}
+@media (max-width:860px){
+  .cuenta-btn{display:inline-flex}
+  aside .cuenta-zona{display:none;margin-top:0;position:absolute;top:calc(100% + 6px);right:max(12px,env(safe-area-inset-right,0px));width:min(21rem,calc(100vw - 24px));box-sizing:border-box;z-index:30;padding:10px;border-radius:14px;background:var(--nav-1);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 40px -12px rgba(0,0,0,.6)}
+  aside .cuenta-zona.abierta{display:flex}
+}
+/* v52 · Filas clicables: toda la fila abre el registro; el enlace de «Acción» sigue siendo el único control para teclado y lectores */
+.fila-ver{cursor:pointer}
+.fila-ver:hover > *{background:rgba(31,61,138,.025)}
+.fila-ver:focus-within > *{background:var(--azul-suave)}
+.fila-ver:focus-within > :first-child{box-shadow:inset 3px 0 0 var(--azul)}
+.fila-ver a.btn{text-decoration:none}
+</style>
 <link rel="stylesheet" href="../assets/gns-premium.css"></head><body>
 
 <div class="app">
@@ -18,9 +56,9 @@
   <symbol id="i-gente" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"></circle><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"></path><circle cx="17" cy="9" r="2.5"></circle><path d="M17 14c2.5 0 4 1.8 4 4.5"></path></symbol>
   <symbol id="i-grafica" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"></path></symbol><symbol id="i-comentario" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></symbol><symbol id="i-lapiz" viewBox="0 0 24 24"><path d="M21.17 6.81a2.83 2.83 0 0 0-4-4L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol><symbol id="i-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></symbol><symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol><symbol id="i-volver" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></symbol>
-</svg>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol></svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cuenta-btn" aria-expanded="false" aria-controls="panel-cuenta" aria-label="MR, cuenta y opciones"><span class="av" aria-hidden="true">MR</span><svg class="i" aria-hidden="true"><use href="#i-chevron"></use></svg></button></div>
     <nav class="menu menu-adm" aria-label="Coordinación académica">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
@@ -30,10 +68,10 @@
       <button type="button"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
-    <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
-    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
-    <button type="button" class="priv-link">Tratamiento de datos personales</button>
+    <div class="cuenta-zona" id="panel-cuenta">
+      <div class="cuenta"><div class="cuenta-u"><span class="av" aria-hidden="true">MR</span><div><b>Marcela Rojas</b><small>Coordinación académica</small></div></div><hr><div class="cuenta-tema"><div class="tema-radios" role="radiogroup" aria-label="Tema de la plataforma"><button type="button" role="radio" aria-label="Claro" title="Claro" aria-checked="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" role="radio" aria-label="Oscuro" title="Oscuro" aria-checked="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" role="radio" aria-label="Sistema" title="Sistema" aria-checked="true" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div></div><button type="button" class="cuenta-salir"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button></div>
+      <nav class="legal" aria-label="Documentos legales"><a href="Aviso-datos.html">Política de tratamiento de la información</a> <span aria-hidden="true">·</span> <a href="#">Términos de uso</a></nav>
+    </div>
   </aside>
   <main>
     <div class="cont">
@@ -59,13 +97,13 @@
             <label>Periodo<select><option>Todos</option><option>Periodo 1</option><option>Periodo 2</option><option>Periodo 3</option></select></label>
             <label>Docente<input type="search" placeholder="Nombre"></label></div>
           <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Planeaciones de los docentes</caption><thead><tr><th>Docente</th><th>Asignatura y tema</th><th>Grado</th><th class="c">Periodo</th><th>Enviada</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
-            <tr><td><b>Laura Méndez</b></td><td><b>Pre-ciencias</b><br><small>¿Qué atrae el imán?</small></td><td>Transition</td><td class="c">1</td><td>7 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
-            <tr><td><b>Camila Torres</b></td><td><b>English (CLIL)</b><br><small>Family time</small></td><td>Kinder</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
-            <tr><td><b>Diego Herrera</b></td><td><b>Lengua Castellana</b><br><small>Cuentos y rimas</small></td><td>Transition</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
-            <tr><td><b>Andrés Ruiz</b></td><td><b>Tecnología e Informática</b><br><small>Mi primer robot de cartón</small></td><td>Kinder</td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
-            <tr><td><b>Laura Méndez</b></td><td><b>English (CLIL), Dimensión comunicativa</b><br><small>Sweet Home: my family</small></td><td>Transition</td><td class="c">1</td><td>3 nov 2026</td><td><span class="estado e-observaciones">Con observaciones</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
-            <tr><td><b>Julián Castro</b></td><td><b>Música</b><br><small>Ritmo con el cuerpo</small></td><td>Transition</td><td class="c">1</td><td>30 oct 2026</td><td><span class="estado e-revisada">Revisada</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
-            <tr><td><b>Sofía Marquesina</b></td><td><b>Dimensión cognitiva</b><br><small>Contamos con material</small></td><td>Kinder</td><td class="c">1</td><td>—</td><td><span class="estado e-borrador">Borrador</span></td><td><button type="button" class="btn lin sm">Abrir</button></td></tr>
+            <tr class="fila-ver"><td><b>Laura Méndez</b></td><td><b>Pre-ciencias</b><br><small>¿Qué atrae el imán?</small></td><td>Transition</td><td class="c">1</td><td>7 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Laura Méndez, Transition, Pre-ciencias">Revisar</a></td></tr>
+            <tr class="fila-ver"><td><b>Camila Torres</b></td><td><b>English (CLIL)</b><br><small>Family time</small></td><td>Kinder</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Camila Torres, Kinder, English (CLIL)">Revisar</a></td></tr>
+            <tr class="fila-ver"><td><b>Diego Herrera</b></td><td><b>Lengua Castellana</b><br><small>Cuentos y rimas</small></td><td>Transition</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Diego Herrera, Transition, Lengua Castellana">Revisar</a></td></tr>
+            <tr class="fila-ver"><td><b>Andrés Ruiz</b></td><td><b>Tecnología e Informática</b><br><small>Mi primer robot de cartón</small></td><td>Kinder</td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Andrés Ruiz, Kinder, Tecnología e Informática">Revisar</a></td></tr>
+            <tr class="fila-ver"><td><b>Laura Méndez</b></td><td><b>English (CLIL), Dimensión comunicativa</b><br><small>Sweet Home: my family</small></td><td>Transition</td><td class="c">1</td><td>3 nov 2026</td><td><span class="estado e-observaciones">Con observaciones</span></td><td><a href="Co-revision.html" class="btn lin sm" aria-label="Abrir planeación de Laura Méndez, Transition, English (CLIL), Dimensión comunicativa">Abrir</a></td></tr>
+            <tr class="fila-ver"><td><b>Julián Castro</b></td><td><b>Música</b><br><small>Ritmo con el cuerpo</small></td><td>Transition</td><td class="c">1</td><td>30 oct 2026</td><td><span class="estado e-revisada">Revisada</span></td><td><a href="Co-revision.html" class="btn lin sm" aria-label="Abrir planeación de Julián Castro, Transition, Música">Abrir</a></td></tr>
+            <tr class="fila-ver"><td><b>Sofía Marquesina</b></td><td><b>Dimensión cognitiva</b><br><small>Contamos con material</small></td><td>Kinder</td><td class="c">1</td><td>—</td><td><span class="estado e-borrador">Borrador</span></td><td><a href="Co-revision.html" class="btn lin sm" aria-label="Abrir planeación de Sofía Marquesina, Kinder, Dimensión cognitiva">Abrir</a></td></tr>
           </tbody></table></div></div>
         <div class="bloque"><div class="bloque-h"><h2>Cumplimiento de entregas en tus grados · Periodo 1</h2><span class="hint">Elige un periodo en los filtros para cambiarlo.</span></div>
           <div class="fo-tabla-w"><table><thead><tr><th>Docente</th><th class="c">Entregadas</th><th>Avance</th><th>Pendientes</th></tr></thead><tbody>
@@ -83,11 +121,11 @@
             <label>Periodo<select><option>Todos</option><option>Periodo 1</option><option>Periodo 2</option><option>Periodo 3</option></select></label>
             <label>Docente<input type="search" placeholder="Nombre"></label></div>
           <div class="fo-tabla-w"><table><caption class="hint" style="text-align:left;padding:0 0 6px">Planeaciones de todo el colegio</caption><thead><tr><th>Docente</th><th>Asignatura y tema</th><th>Grado</th><th class="c">Periodo</th><th>Enviada</th><th>Estado</th><th>Acción</th></tr></thead><tbody>
-            <tr><td><b>Laura Méndez</b></td><td><b>Pre-ciencias</b><br><small>¿Qué atrae el imán?</small></td><td>Transition</td><td class="c">1</td><td>7 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
-            <tr><td><b>Valeria Montenueva</b></td><td><b>English (CLIL)</b><br><small>Colors around me</small></td><td>Red<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Revisa: Elena Ravassa</small></td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
-            <tr><td><b>Camila Torres</b></td><td><b>English (CLIL)</b><br><small>Family time</small></td><td>Kinder</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
-            <tr><td><b>Julián Casaverde</b></td><td><b>Lengua Castellana</b><br><small>Mis primeras palabras</small></td><td>First Grade<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Sin coordinadora</small></td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn lin sm">Ver</button></td></tr>
-            <tr><td><b>Andrés Ruiz</b></td><td><b>Tecnología e Informática</b><br><small>Mi primer robot de cartón</small></td><td>Kinder</td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><button type="button" class="btn sm">Revisar</button></td></tr>
+            <tr class="fila-ver"><td><b>Laura Méndez</b></td><td><b>Pre-ciencias</b><br><small>¿Qué atrae el imán?</small></td><td>Transition</td><td class="c">1</td><td>7 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Laura Méndez, Transition, Pre-ciencias">Revisar</a></td></tr>
+            <tr class="fila-ver"><td><b>Valeria Montenueva</b></td><td><b>English (CLIL)</b><br><small>Colors around me</small></td><td>Red<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Revisa: Elena Ravassa</small></td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn lin sm" aria-label="Ver planeación de Valeria Montenueva, Red, English (CLIL)">Ver</a></td></tr>
+            <tr class="fila-ver"><td><b>Camila Torres</b></td><td><b>English (CLIL)</b><br><small>Family time</small></td><td>Kinder</td><td class="c">1</td><td>6 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Camila Torres, Kinder, English (CLIL)">Revisar</a></td></tr>
+            <tr class="fila-ver"><td><b>Julián Casaverde</b></td><td><b>Lengua Castellana</b><br><small>Mis primeras palabras</small></td><td>First Grade<br><span class="co-tag" style="margin:2px 0 0;display:inline-block">Solo consulta</span> <small class="hint">Sin coordinadora</small></td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn lin sm" aria-label="Ver planeación de Julián Casaverde, First Grade, Lengua Castellana">Ver</a></td></tr>
+            <tr class="fila-ver"><td><b>Andrés Ruiz</b></td><td><b>Tecnología e Informática</b><br><small>Mi primer robot de cartón</small></td><td>Kinder</td><td class="c">1</td><td>5 nov 2026</td><td><span class="estado e-enviada">Pendiente de revisión</span></td><td><a href="Co-revision.html" class="btn sm" aria-label="Revisar planeación de Andrés Ruiz, Kinder, Tecnología e Informática">Revisar</a></td></tr>
           </tbody></table></div>
           <p class="hint" style="margin:8px 0 0">Las cifras de arriba siguen contando solo tus grados.</p></div>
       </section>
