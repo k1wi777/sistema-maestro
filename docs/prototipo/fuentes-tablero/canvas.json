@@ -43,7 +43,7 @@
     },
     "Aviso-datos.dc.html": {
       "expand": "fill",
-      "h": 980,
+      "h": 2100,
       "page": "ingreso",
       "title": "02 · Aviso de tratamiento de datos",
       "w": 1280,
@@ -132,7 +132,7 @@
     },
     "Co-planes.dc.html": {
       "expand": "fill",
-      "h": 1660,
+      "h": 5700,
       "is_interactive": true,
       "page": "coordinacion",
       "title": "23 · Planes de formación",
@@ -258,7 +258,7 @@
       "title": "08 · Planeación · lista y nueva",
       "w": 1280,
       "x": 0,
-      "y": 2940
+      "y": 3080
     },
     "Doc-progreso.dc.html": {
       "expand": "fill",
@@ -282,7 +282,7 @@
     },
     "Doc-ruta.dc.html": {
       "expand": "fill",
-      "h": 2580,
+      "h": 2960,
       "is_interactive": true,
       "page": "docente",
       "title": "03 · Plan de formación · ruta de módulos",
@@ -325,6 +325,14 @@
       "w": 480,
       "x": 2720,
       "y": 9140
+    },
+    "n-filas-clicables": {
+      "page": "coordinacion",
+      "size": "m",
+      "text": "Toda la fila abre el registro (igual que su acción). El enlace de la columna Acción sigue siendo el control para teclado y lectores. Igual en 20, 17 (observadores) y 27 de administración.",
+      "w": 480,
+      "x": 1360,
+      "y": 2960
     },
     "n-ingreso-vistas": {
       "page": "ingreso",

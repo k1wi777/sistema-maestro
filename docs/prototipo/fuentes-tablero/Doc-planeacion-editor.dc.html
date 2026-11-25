@@ -11,7 +11,39 @@
 <helmet>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
-<style>body{margin:0}</style>
+<style>body{margin:0}
+/* v52 · Cuenta: usuario, tema, cerrar sesión y enlaces legales en un solo bloque */
+aside .cuenta-zona{margin-top:auto}
+.cuenta-zona{display:flex;flex-direction:column;gap:10px}
+.cuenta{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.cuenta-u{display:flex;gap:10px;align-items:center;min-width:0}
+.cuenta-u .av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;font-weight:600;font-size:12px;flex:none}
+.cuenta-u div{min-width:0}
+.cuenta-u b{display:block;color:#fff;font-weight:600;font-size:13.5px;line-height:1.25;overflow-wrap:anywhere}
+.cuenta-u small{display:block;color:var(--nav-tenue);font-size:12.5px;line-height:1.3}
+.cuenta hr{border:0;border-top:1px solid rgba(255,255,255,.12);margin:0}
+.cuenta-tema{display:flex;align-items:center;justify-content:center}
+.tema-radios{display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.tema-radios button{display:grid;place-items:center;width:40px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:rgba(255,255,255,.72);cursor:pointer}
+.tema-radios button:hover{background:rgba(255,255,255,.1);color:#fff}
+.tema-radios button[aria-checked="true"]{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+.cuenta-salir{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:9px 12px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.cuenta-salir:hover{background:rgba(255,255,255,.1)}
+.cuenta-salir:focus-visible,.tema-radios button:focus-visible,.cuenta-btn:focus-visible,nav.legal a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+nav.legal{font-size:12px;line-height:1.6;color:var(--nav-tenue)}
+nav.legal a{color:var(--nav-tenue);text-decoration:none}
+nav.legal a:hover{text-decoration:underline;text-underline-offset:2px}
+.cuenta-btn{display:none;align-items:center;gap:6px;min-height:40px;padding:4px 10px 4px 5px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:600;font-size:12px;cursor:pointer}
+.cuenta-btn .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:12px;font-weight:600}
+.cuenta-btn svg.i{width:16px;height:16px}
+.cuenta-btn[aria-expanded="true"] svg.i{transform:rotate(180deg)}
+@media (pointer:coarse){.tema-radios button{width:44px;height:44px}.cuenta-btn{min-height:44px}}
+@media (max-width:860px){
+  .cuenta-btn{display:inline-flex}
+  aside .cuenta-zona{display:none;margin-top:0;position:absolute;top:calc(100% + 6px);right:max(12px,env(safe-area-inset-right,0px));width:min(21rem,calc(100vw - 24px));box-sizing:border-box;z-index:30;padding:10px;border-radius:14px;background:var(--nav-1);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 40px -12px rgba(0,0,0,.6)}
+  aside .cuenta-zona.abierta{display:flex}
+}
+</style>
 </helmet>
 <div class="app">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -31,18 +63,18 @@
   <symbol id="i-externo" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path></symbol>
   <symbol id="i-volver" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"></path></symbol>
   <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"></path><path d="M10 17l-5-5 5-5M5 12h11"></path></symbol>
-<symbol id="i-acuerdo" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"></path><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"></path><path d="m21 3 1 11h-2"></path><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"></path><path d="M3 4h8"></path></symbol><symbol id="i-idea" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6M10 22h4"></path></symbol><symbol id="i-comentario" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></symbol><symbol id="i-puntos" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="19" cy="12" r="1.2"></circle></symbol><symbol id="i-candado" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></symbol><symbol id="i-capas" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></symbol><symbol id="i-lapiz" viewBox="0 0 24 24"><path d="M21.17 6.81a2.83 2.83 0 0 0-4-4L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol><symbol id="i-siguiente" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></symbol></svg>
+<symbol id="i-acuerdo" viewBox="0 0 24 24"><path d="m11 17 2 2a1 1 0 1 0 3-3"></path><path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.47.28a2 2 0 0 0 1.42.25L21 4"></path><path d="m21 3 1 11h-2"></path><path d="M3 3 2 14l6.5 6.5a1 1 0 1 0 3-3"></path><path d="M3 4h8"></path></symbol><symbol id="i-idea" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"></path><path d="M9 18h6M10 22h4"></path></symbol><symbol id="i-comentario" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></symbol><symbol id="i-puntos" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"></circle><circle cx="12" cy="12" r="1.2"></circle><circle cx="19" cy="12" r="1.2"></circle></symbol><symbol id="i-candado" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></symbol><symbol id="i-capas" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path></symbol><symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"></path></symbol><symbol id="i-lapiz" viewBox="0 0 24 24"><path d="M21.17 6.81a2.83 2.83 0 0 0-4-4L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"></path><path d="m15 5 4 4"></path></symbol><symbol id="i-siguiente" viewBox="0 0 24 24"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></symbol><symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol></svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Panel Docente</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="/_blob/e1ea58c2f0ffcb60b71179a93c6cc1a8" alt=""></div><div><b>Panel Docente</b><small>George Noble School · Montería</small></div></div><button type="button" class="cuenta-btn" aria-expanded="false" aria-controls="panel-cuenta" aria-label="LM, cuenta y opciones"><span class="av" aria-hidden="true">LM</span><svg class="i" aria-hidden="true"><use href="#i-chevron"></use></svg></button></div>
     <nav class="menu menu-doc" aria-label="Secciones del panel">
       <button type="button"><svg class="i"><use href="#i-ruta"></use></svg><span class="num">1</span>Plan de formación</button>
       <button type="button" aria-current="page"><svg class="i"><use href="#i-form"></use></svg><span class="num">2</span>Formatos</button>
       <button type="button" class="menu-as"><svg class="i"><use href="#i-chat"></use></svg><span class="num">3</span>Asistente GNS</button>
     </nav>
-    <div class="quien"><span class="av">LM</span><span><b>Laura Méndez</b><br>Docente · Transition</span></div>
-    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
-    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
-    <button type="button" class="priv-link">Tratamiento de datos personales</button>
+    <div class="cuenta-zona" id="panel-cuenta">
+      <div class="cuenta"><div class="cuenta-u"><span class="av" aria-hidden="true">LM</span><div><b>Laura Méndez</b><small>Docente · Transition</small></div></div><hr><div class="cuenta-tema"><div class="tema-radios" role="radiogroup" aria-label="Tema de la plataforma"><button type="button" role="radio" aria-label="Claro" title="Claro" aria-checked="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" role="radio" aria-label="Oscuro" title="Oscuro" aria-checked="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" role="radio" aria-label="Sistema" title="Sistema" aria-checked="true" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div></div><button type="button" class="cuenta-salir"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button></div>
+      <nav class="legal" aria-label="Documentos legales"><a href="Aviso-datos.dc.html">Política de tratamiento de la información</a> <span aria-hidden="true">·</span> <a href="#">Términos de uso</a></nav>
+    </div>
   </aside>
   <main>
     <div class="cont">
