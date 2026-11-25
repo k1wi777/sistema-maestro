@@ -13,6 +13,8 @@ import { formatDateTime } from '@/shared/format/dates';
 import {
   Button,
   Card,
+  EmptyState,
+  FilterBar,
   Notice,
   PageContainer,
   PageHeader,
@@ -135,8 +137,9 @@ export function FaqAdminScreen() {
               El Asistente GNS responde solo con estas preguntas y respuestas. Una pregunta
               desactivada deja de aparecer para los docentes, pero se conserva.
             </p>
-            <div className={styles.filters}>
+            <FilterBar label="Filtros de las preguntas">
               <Select
+                size="sm"
                 label="Categoría"
                 placeholder="Todas las categorías"
                 options={CATEGORY_OPTIONS}
@@ -154,7 +157,7 @@ export function FaqAdminScreen() {
                   onChange={(status) => setFilters((current) => ({ ...current, status }))}
                 />
               </div>
-            </div>
+            </FilterBar>
             {faqs.state.status === 'loading' ? <Loading>Cargando las preguntas…</Loading> : null}
             {faqs.state.status === 'error' ? (
               <LoadError
@@ -165,11 +168,11 @@ export function FaqAdminScreen() {
             ) : null}
             {faqs.state.status === 'ready' ? (
               groups.length === 0 ? (
-                <p className={styles.empty}>
+                <EmptyState>
                   {faqs.state.data.length === 0
                     ? 'Aún no hay preguntas programadas.'
                     : 'Ninguna pregunta cumple estos filtros.'}
-                </p>
+                </EmptyState>
               ) : (
                 groups.map((group) => (
                   <section key={group.category} aria-label={group.category}>
@@ -234,7 +237,7 @@ export function FaqAdminScreen() {
             ) : null}
             {pending.state.status === 'ready' ? (
               pending.state.data.length === 0 ? (
-                <p className={styles.empty}>No hay preguntas sin respuesta pendientes.</p>
+                <EmptyState>No hay preguntas sin respuesta pendientes.</EmptyState>
               ) : (
                 <ul className={styles.rows}>
                   {pending.state.data.map((question) => (

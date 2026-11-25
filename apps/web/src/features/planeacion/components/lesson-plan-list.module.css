@@ -7,16 +7,8 @@
 .filters {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--space-4);
-}
-
-.selects {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
-  gap: var(--space-4);
-  width: 100%;
-  max-width: 40rem;
 }
 
 .count {

@@ -13,8 +13,8 @@ export interface SelectOption {
 
 export interface SelectProps
   extends
-    Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id' | 'required' | 'children'>,
-    Pick<FieldProps, 'label' | 'help' | 'error' | 'required' | 'inline'> {
+    Omit<SelectHTMLAttributes<HTMLSelectElement>, 'id' | 'required' | 'children' | 'size'>,
+    Pick<FieldProps, 'label' | 'help' | 'error' | 'required' | 'inline' | 'size'> {
   options: SelectOption[];
   /** Opción inicial sin valor (p. ej. «Selecciona un grado»). */
   placeholder?: string;
@@ -36,18 +36,19 @@ export function Select({
   error,
   required,
   inline,
+  size,
   options,
   placeholder,
   className,
   ...rest
 }: SelectProps) {
   return (
-    <Field label={label} help={help} error={error} required={required} inline={inline}>
+    <Field label={label} help={help} error={error} required={required} inline={inline} size={size}>
       {(fieldProps) => (
         <select
           {...rest}
           {...fieldProps}
-          className={cx(control.control, control.select, className)}
+          className={cx(control.control, control.select, size === 'sm' && control.small, className)}
         >
           {placeholder ? <option value="">{placeholder}</option> : null}
           {options

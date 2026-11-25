@@ -39,6 +39,10 @@ export interface MatchState {
   final: GameResult | null;
   best: BestAttempt | null;
   notice: MatchNotice | null;
+  /** Pareja del último intento fallido (hasta la siguiente selección): da la señal visual del error. */
+  lastMiss: { conceptToken: string; factToken: string } | null;
+  /** Puntos que ganó la última unión acertada (0 si falló). */
+  gain: number;
   /** Cuenta de avisos: cada uno se anuncia aunque el texto sea el mismo que el anterior. */
   noticeSeq: number;
   errorMessage: string | null;
@@ -76,6 +80,8 @@ export function initialMatchState(best: BestAttempt | null): MatchState {
     final: null,
     best,
     notice: null,
+    lastMiss: null,
+    gain: 0,
     noticeSeq: 0,
     errorMessage: null,
     retry: null,
@@ -115,10 +121,11 @@ function withSelection(state: MatchState, concept: string | null, fact: string |
       concept,
       fact,
       pending: { conceptToken: concept, factToken: fact },
+      lastMiss: null,
       seq: state.seq + 1,
     };
   }
-  return { ...state, concept, fact };
+  return { ...state, concept, fact, lastMiss: null };
 }
 
 function applyStep(state: MatchState, step: ActivityGameStep): MatchState {
@@ -152,6 +159,8 @@ function applyStep(state: MatchState, step: ActivityGameStep): MatchState {
     pending: null,
     overBy: null,
     notice: null,
+    lastMiss: null,
+    gain: 0,
     errorMessage: null,
     retry: null,
   };
@@ -214,6 +223,10 @@ export function matchReducer(state: MatchState, event: MatchEvent): MatchState {
         concept: null,
         fact: null,
         points: result.totalPoints,
+        gain: result.correct ? Math.max(0, result.totalPoints - state.points) : 0,
+        lastMiss: result.correct
+          ? null
+          : { conceptToken: pending.conceptToken, factToken: pending.factToken },
         streak: result.streak,
         connectedConcepts: result.correct
           ? [...state.connectedConcepts, pending.conceptToken]

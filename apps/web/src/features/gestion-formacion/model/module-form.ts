@@ -123,7 +123,7 @@ function fieldError(field: ModuleFormField, raw: string): string | null {
         ? tooLong(MODULE_FIELD_MAX_LENGTH.summary)
         : null;
     case 'sectionId':
-      return text === '' ? 'Elige la parte del plan.' : null;
+      return text === '' ? 'Elige la sección del plan.' : null;
     case 'approvalThreshold': {
       const value = integerOf(text);
       return value === null || value > 100 ? PERCENT_ERROR : null;
@@ -249,8 +249,6 @@ export function mapModuleApiErrors(errors: { field: string; reason: string }[] |
 export interface NewModuleValues {
   number: string;
   title: string;
-  /** Solo en el plan General: la parte del plan donde nace el módulo. */
-  sectionId: string;
 }
 
 export type NewModuleErrors = Partial<Record<keyof NewModuleValues, string>>;
@@ -258,8 +256,8 @@ export type NewModuleErrors = Partial<Record<keyof NewModuleValues, string>>;
 export type NewModuleResult =
   { ok: true; input: CreateTrainingModuleInput } | { ok: false; errors: NewModuleErrors };
 
-/** Número, título y (si hace falta) parte: lo único que pide «Nuevo módulo». */
-export function validateNewModule(values: NewModuleValues, needsSection: boolean): NewModuleResult {
+/** Número y título: lo único que pide «Nuevo módulo» (la sección ya viene fijada). */
+export function validateNewModule(values: NewModuleValues): NewModuleResult {
   const errors: NewModuleErrors = {};
   if (normalize(values.number) === '') {
     errors.number = 'Escribe el número del módulo.';
@@ -272,9 +270,6 @@ export function validateNewModule(values: NewModuleValues, needsSection: boolean
   const titleError = fieldError('title', values.title);
   if (titleError) {
     errors.title = titleError;
-  }
-  if (needsSection && normalize(values.sectionId) === '') {
-    errors.sectionId = 'Elige la parte del plan.';
   }
   if (Object.keys(errors).length > 0) {
     return { ok: false, errors };

@@ -149,7 +149,7 @@ function EditorBody({ initial }: { initial: EditorData }) {
     const props = { editor, number: EDITOR_STEP_IDS.indexOf(id) + 1 };
     switch (id) {
       case 'datos':
-        return <DataStep {...props} isGeneral={isGeneral} />;
+        return <DataStep {...props} />;
       case 'video':
         return <VideoStep {...props} />;
       case 'desafio':

@@ -11,6 +11,8 @@ import {
   Checkbox,
   DataTable,
   Dialog,
+  EmptyState,
+  FilterBar,
   FormatCard,
   Icon,
   Notice,
@@ -20,6 +22,7 @@ import {
   RecordCard,
   SegmentedFilter,
   Select,
+  StatStrip,
   StatusBadge,
   Stepper,
   StepSummary,
@@ -76,6 +79,7 @@ const OPEN_ICONS: OpenStrokeIconName[] = [
   'externo',
   'enviar',
   'anular',
+  'bitacora',
 ];
 
 const FILLABLE_ICON_NAMES: FillableIconName[] = [
@@ -84,7 +88,6 @@ const FILLABLE_ICON_NAMES: FillableIconName[] = [
   'chat',
   'piar',
   'gente',
-  'bitacora',
   'guardar',
   'lapiz',
   'estrella',
@@ -148,6 +151,7 @@ export function Showcase() {
         title="Muestra de componentes"
         description="Todos los componentes de la plataforma con datos demo. Cambia el tema para verlos en claro y oscuro."
         actions={<ThemeToggle />}
+        back={{ href: '/muestra', label: 'Volver a la muestra' }}
       />
 
       <div className={styles.stack}>
@@ -202,6 +206,9 @@ export function Showcase() {
             </Button>
             <Button variant="secondary">Secundario</Button>
             <Button variant="outline">Contorno</Button>
+            <Button variant="ghost" startIcon="volver">
+              Fantasma
+            </Button>
             <Button variant="primary" disabled>
               Deshabilitado
             </Button>
@@ -353,6 +360,69 @@ export function Showcase() {
           </div>
         </Card>
 
+        <Card title="Indicadores">
+          <div className={styles.stackTight}>
+            <StatStrip
+              label="Indicadores de ejemplo"
+              items={[
+                { key: 'pend', icon: 'historial', value: 7, label: 'Pendientes de revisión' },
+                { key: 'obs', icon: 'comentario', value: 3, label: 'Con observaciones' },
+                { key: 'rev', icon: 'check', value: 18, label: 'Revisadas' },
+              ]}
+            />
+            <StatStrip
+              neutral
+              label="Indicadores seleccionables"
+              items={[
+                {
+                  key: 'todas',
+                  icon: 'plan',
+                  value: 28,
+                  label: 'Todas',
+                  selected: filter === 'todas',
+                  onSelect: () => setFilter('todas'),
+                },
+                {
+                  key: 'borrador',
+                  icon: 'lapiz',
+                  value: 6,
+                  label: 'Borradores',
+                  selected: filter === 'borrador',
+                  onSelect: () => setFilter('borrador'),
+                },
+                {
+                  key: 'enviada',
+                  icon: 'enviar',
+                  value: 11,
+                  label: 'Enviadas',
+                  selected: filter === 'enviada',
+                  onSelect: () => setFilter('enviada'),
+                },
+              ]}
+            />
+          </div>
+        </Card>
+
+        <Card title="Barra de filtros y estado vacío">
+          <div className={styles.stackTight}>
+            <FilterBar label="Filtros de ejemplo">
+              <Select
+                size="sm"
+                label="Grado"
+                placeholder="Todos los grados"
+                options={[
+                  { value: '5a', label: 'Quinto A' },
+                  { value: '6b', label: 'Sexto B' },
+                ]}
+              />
+              <TextInput size="sm" type="search" label="Buscar" placeholder="Nombre del docente" />
+            </FilterBar>
+            <EmptyState icon="plan" title="Aún no hay planeaciones">
+              Cuando los docentes envíen planeaciones aparecerán aquí.
+            </EmptyState>
+          </div>
+        </Card>
+
         <Card title="Tabla de datos">
           <DataTable<DemoTeacher>
             embedded
@@ -392,6 +462,16 @@ export function Showcase() {
             options={FILTER_OPTIONS}
             value={filter}
             onChange={(value) => setFilter(value as FilterValue)}
+          />
+          <SegmentedFilter
+            appearance="underline"
+            label="Alcance de ejemplo"
+            options={[
+              { value: 'todas', label: 'Mis grados' },
+              { value: 'borrador', label: 'Todo el colegio' },
+            ]}
+            value={filter === 'todas' ? 'todas' : 'borrador'}
+            onChange={setFilter}
           />
           <SegmentedFilter
             multiple

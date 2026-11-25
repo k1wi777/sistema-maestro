@@ -18,19 +18,37 @@ export interface FieldProps {
   required?: boolean;
   /** Etiqueta en línea (junto al control), p. ej. para filtros. */
   inline?: boolean;
+  /** `sm`: etiqueta compacta en mayúsculas para las barras de filtros. */
+  size?: 'sm';
   className?: string;
   children: (control: FieldControlProps) => ReactNode;
 }
 
 /** Une etiqueta, ayuda y error con el control mediante `htmlFor` y `aria-describedby`. */
-export function Field({ label, help, error, required, inline, className, children }: FieldProps) {
+export function Field({
+  label,
+  help,
+  error,
+  required,
+  inline,
+  size,
+  className,
+  children,
+}: FieldProps) {
   const id = useId();
   const helpId = help ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [errorId, helpId].filter(Boolean).join(' ') || undefined;
 
   return (
-    <div className={cx(styles.field, inline && styles.inline, className)}>
+    <div
+      className={cx(
+        styles.field,
+        inline && styles.inline,
+        size === 'sm' && styles.small,
+        className,
+      )}
+    >
       <label htmlFor={id} className={styles.label}>
         {label}
         {required ? (

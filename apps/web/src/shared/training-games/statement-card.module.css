@@ -15,7 +15,20 @@
   box-shadow: 0 10px 30px -14px var(--game-black-6);
   color: var(--game-ink);
   outline: 4px solid transparent;
-  transition: outline-color 0.2s;
+  transition:
+    outline-color var(--dur-base),
+    transform var(--dur-slow),
+    opacity var(--dur-slow);
+}
+
+/* Al responder, la carta se inclina hacia Verdad (derecha) o Mito (izquierda); el contorno sigue
+   diciendo si acertó */
+.leanRight {
+  transform: translateX(10px) rotate(1.5deg);
+}
+
+.leanLeft {
+  transform: translateX(-10px) rotate(-1.5deg);
 }
 
 .card p {
@@ -78,7 +91,7 @@
   cursor: pointer;
   font-size: var(--text-lg);
   font-weight: var(--weight-semibold);
-  transition: transform 0.1s;
+  transition: transform var(--dur-fast);
 }
 
 .choice:hover:not(:disabled) {
@@ -111,6 +124,11 @@
   .card,
   .choice {
     transition: none;
+  }
+
+  .leanRight,
+  .leanLeft {
+    transform: none;
   }
 
   .choice:hover:not(:disabled) {

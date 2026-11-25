@@ -27,7 +27,7 @@ type PlainIconProps = BaseIconProps & { name: IconName; fill?: 'none' };
 export type IconProps = OpenStrokeIconProps | FillableIconProps | PlainIconProps;
 
 const STROKE_WIDTH = 1.75;
-const FILL_OPACITY: Record<IconFill, number> = { none: 0, tone: 0.28, solid: 1 };
+const FILL_OPACITY: Record<IconFill, number> = { none: 0, tone: 0.38, solid: 1 };
 
 export function Icon({ name, size = 20, label, fill = 'none', className, style }: IconProps) {
   const Glyph = ICONS[name];

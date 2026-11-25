@@ -32,16 +32,6 @@
   display: none;
 }
 
-.empty {
-  margin: 0;
-  padding: var(--space-4);
-  color: var(--muted);
-  text-align: center;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
 .cards {
   display: flex;
   flex-direction: column;
@@ -56,10 +46,9 @@
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
-  background: var(--surface);
+  background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-1);
+  border-radius: var(--radius-md);
   overflow-wrap: anywhere;
 }
 

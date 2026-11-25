@@ -9,7 +9,7 @@ import {
 import { useEffect, useState } from 'react';
 
 import { useSession } from '@/shared/session';
-import { Button, Notice, SegmentedFilter, Select, TextInput } from '@/shared/ui';
+import { Button, FilterBar, Notice, SegmentedFilter, Select, TextInput } from '@/shared/ui';
 
 import { setSharedActivityFavorite } from '../api/shared-activities';
 import { readyOr, useActivityCatalogs } from '../hooks/use-activity-catalogs';
@@ -133,9 +133,10 @@ export function RepositoryPanel() {
         </Button>
       </div>
 
-      <div className={styles.filters}>
+      <FilterBar label="Filtros del repositorio">
         <div className={styles.search}>
           <TextInput
+            size="sm"
             label="Buscar"
             type="search"
             maxLength={100}
@@ -146,6 +147,7 @@ export function RepositoryPanel() {
           />
         </div>
         <Select
+          size="sm"
           label="Nivel"
           placeholder="Todos los niveles"
           options={levelOptions}
@@ -153,6 +155,7 @@ export function RepositoryPanel() {
           onChange={(event) => update({ nivel: event.target.value, grado: null, rincon: null })}
         />
         <Select
+          size="sm"
           label="Grado"
           placeholder="Todos"
           options={gradeOptions}
@@ -161,6 +164,7 @@ export function RepositoryPanel() {
           onChange={(event) => update({ grado: event.target.value })}
         />
         <Select
+          size="sm"
           label="Área"
           placeholder="Todas las áreas"
           options={areaOptions}
@@ -168,6 +172,7 @@ export function RepositoryPanel() {
           onChange={(event) => update({ area: event.target.value })}
         />
         <Select
+          size="sm"
           label="Rincón o zona"
           placeholder="Todos los rincones"
           options={cornerOptions}
@@ -175,13 +180,14 @@ export function RepositoryPanel() {
           onChange={(event) => update({ rincon: event.target.value })}
         />
         <Select
+          size="sm"
           label="Tipo"
           placeholder="Todos los tipos"
           options={ACTIVITY_TYPE_OPTIONS}
           value={activityType ?? ''}
           onChange={(event) => update({ tipo: event.target.value })}
         />
-      </div>
+      </FilterBar>
       <div className={styles.quick}>
         <SegmentedFilter
           multiple

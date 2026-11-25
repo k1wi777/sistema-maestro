@@ -20,6 +20,7 @@ export function InboxScopeFilter({ grades, scope, onChange }: InboxScopeFilterPr
   ];
   return (
     <SegmentedFilter
+      appearance="underline"
       label="Ver registros de"
       options={options}
       value={scope}

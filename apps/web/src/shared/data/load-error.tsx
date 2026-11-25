@@ -30,8 +30,8 @@ export function LoadError({
 /** Aviso de carga que lectores de pantalla anuncian al aparecer. */
 export function Loading({ children }: { children: string }) {
   return (
-    <Notice tone="info">
-      <span aria-busy="true">{children}</span>
-    </Notice>
+    <p role="status" aria-busy="true" className={styles.loading}>
+      {children}
+    </p>
   );
 }

@@ -6,7 +6,7 @@ import type { IconName } from '../icons/registry';
 import styles from './Button.module.css';
 import { cx } from './cx';
 
-export type ButtonVariant = 'primary' | 'danger' | 'secondary' | 'outline' | 'void';
+export type ButtonVariant = 'primary' | 'danger' | 'secondary' | 'outline' | 'ghost' | 'void';
 export type ButtonSize = 'md' | 'sm';
 
 interface ButtonLookProps {

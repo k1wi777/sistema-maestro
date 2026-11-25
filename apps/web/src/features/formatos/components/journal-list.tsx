@@ -11,6 +11,7 @@ import {
   ButtonLink,
   Notice,
   RecordCard,
+  FilterBar,
   SegmentedFilter,
   Select,
   StatusBadge,
@@ -155,14 +156,16 @@ export function JournalList() {
         onChange={(value) => update({ estado: value === ALL ? null : value })}
       />
       {groups.length > 1 ? (
-        <Select
-          label="Grupo"
-          inline
-          placeholder="Todos mis grupos"
-          options={groups.map((entry) => ({ value: entry.group.id, label: entry.group.name }))}
-          value={groupId ?? ''}
-          onChange={(event) => update({ grupo: event.target.value || null })}
-        />
+        <FilterBar label="Filtros de los diarios" compact>
+          <Select
+            size="sm"
+            label="Grupo"
+            placeholder="Todos mis grupos"
+            options={groups.map((entry) => ({ value: entry.group.id, label: entry.group.name }))}
+            value={groupId ?? ''}
+            onChange={(event) => update({ grupo: event.target.value || null })}
+          />
+        </FilterBar>
       ) : null}
 
       {list.status === 'loading' ? <Loading>Cargando tus diarios…</Loading> : null}

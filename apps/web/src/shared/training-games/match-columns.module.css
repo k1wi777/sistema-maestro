@@ -35,7 +35,7 @@
   cursor: pointer;
   font-size: var(--text-sm);
   text-align: left;
-  transition: transform 0.08s;
+  transition: transform var(--dur-fast);
 }
 
 .concept {
@@ -70,6 +70,31 @@
   box-shadow: 0 0 0 4px var(--game-streak);
 }
 
+/* Unión fallida: fondo de error y sacudida de 0,35 s; el aviso por texto sigue en la región viva */
+.wrong,
+.wrong:disabled {
+  background: linear-gradient(180deg, var(--game-bad-top), var(--game-bad-bottom));
+  color: var(--on-solid);
+  animation: shake var(--dur-slow) both;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
 .connected,
 .connected:disabled {
   background: linear-gradient(180deg, var(--game-ok-top), var(--game-ok-bottom));
@@ -88,6 +113,12 @@
   .concept,
   .fact {
     transition: none;
+  }
+
+  /* Sin sacudida: queda el fondo de error, fijo */
+  .wrong,
+  .wrong:disabled {
+    animation: none;
   }
 
   .concept:hover:not(:disabled),

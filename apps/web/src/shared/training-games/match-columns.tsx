@@ -9,6 +9,9 @@ export interface MatchColumnsProps {
   connectedFacts?: readonly string[];
   selectedConcept?: string | null;
   selectedFact?: string | null;
+  /** Pareja de la última unión fallida: sacude y pinta de error esos dos botones un instante. */
+  wrongConcept?: string | null;
+  wrongFact?: string | null;
   /** Se puede tocar ahora (si no, los botones quedan con `aria-disabled`). */
   interactive?: boolean;
   /** Vista previa: todos los botones deshabilitados. */
@@ -25,6 +28,8 @@ export function MatchColumns({
   connectedFacts = [],
   selectedConcept = null,
   selectedFact = null,
+  wrongConcept = null,
+  wrongFact = null,
   interactive = true,
   disabled = false,
   onSelectConcept,
@@ -36,13 +41,14 @@ export function MatchColumns({
         {concepts.map((item) => {
           const connected = connectedConcepts.includes(item.token);
           const selected = selectedConcept === item.token;
+          const wrong = wrongConcept === item.token;
           return (
             <li key={item.token}>
               <button
                 type="button"
                 className={`${styles.concept} ${selected ? styles.selected : ''} ${
                   connected ? styles.connected : ''
-                }`}
+                } ${wrong ? styles.wrong : ''}`}
                 disabled={connected || disabled}
                 aria-disabled={!connected && !interactive ? true : undefined}
                 aria-pressed={connected ? undefined : selected}
@@ -60,13 +66,14 @@ export function MatchColumns({
         {facts.map((item) => {
           const connected = connectedFacts.includes(item.token);
           const selected = selectedFact === item.token;
+          const wrong = wrongFact === item.token;
           return (
             <li key={item.token}>
               <button
                 type="button"
                 className={`${styles.fact} ${selected ? styles.selected : ''} ${
                   connected ? styles.connected : ''
-                }`}
+                } ${wrong ? styles.wrong : ''}`}
                 disabled={connected || disabled}
                 aria-disabled={!connected && !interactive ? true : undefined}
                 aria-pressed={connected ? undefined : selected}

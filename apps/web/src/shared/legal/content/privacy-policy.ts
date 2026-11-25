@@ -13,11 +13,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: 'Responsable del tratamiento',
       blocks: [
         paragraph(
-          `${school.displayName} (nombre legal: `,
-          school.legalName,
-          '), identificado con NIT ',
-          school.nit,
-          ', es el responsable del tratamiento de los datos personales que se registran en la Plataforma GNS.',
+          `${school.legalName}, identificado con NIT ${school.nit}, es el responsable del tratamiento de los datos personales que se registran en la Plataforma GNS.`,
         ),
         list(
           `Dirección: ${school.address}.`,

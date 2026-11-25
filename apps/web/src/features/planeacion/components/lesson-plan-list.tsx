@@ -10,6 +10,7 @@ import {
   ButtonLink,
   Notice,
   RecordCard,
+  FilterBar,
   SegmentedFilter,
   Select,
   StatusBadge,
@@ -132,8 +133,9 @@ export function LessonPlanList() {
           value={status ?? ALL}
           onChange={(value) => update({ estado: value === ALL ? null : value })}
         />
-        <div className={styles.selects}>
+        <FilterBar label="Filtros de las planeaciones">
           <Select
+            size="sm"
             label="Periodo"
             placeholder="Todos los periodos"
             options={periodOptions}
@@ -142,6 +144,7 @@ export function LessonPlanList() {
             onChange={(event) => update({ periodo: event.target.value })}
           />
           <Select
+            size="sm"
             label="Grado"
             placeholder="Todos los grados"
             options={gradeOptions}
@@ -150,6 +153,7 @@ export function LessonPlanList() {
             onChange={(event) => update({ grado: event.target.value })}
           />
           <Select
+            size="sm"
             label="Dimensión o asignatura"
             placeholder="Todas las dimensiones y asignaturas"
             options={areaOptions}
@@ -157,7 +161,7 @@ export function LessonPlanList() {
             disabled={areaOptions.length === 0}
             onChange={(event) => update({ area: event.target.value })}
           />
-        </div>
+        </FilterBar>
       </div>
 
       {list.status === 'loading' ? <Loading>Cargando tus planeaciones…</Loading> : null}

@@ -9,13 +9,8 @@ import { MODULE_FIELD_MAX_LENGTH } from '../../model/module-form';
 import styles from './steps.module.css';
 import type { StepProps } from './step-types';
 
-interface DataStepProps extends StepProps {
-  /** Solo el plan General se divide en partes que se pueden cambiar. */
-  isGeneral: boolean;
-}
-
-/** Paso «Datos del módulo»: número, título, descripción, parte, umbral y segundos por pregunta. */
-export function DataStep({ editor, number, isGeneral }: DataStepProps) {
+/** Paso «Datos del módulo»: número, título, descripción, sección, umbral y segundos por pregunta. */
+export function DataStep({ editor, number }: StepProps) {
   const { detail, draft, errors, tree } = editor;
   const threshold = /^\d+$/.test(draft.approvalThreshold.trim())
     ? Number(draft.approvalThreshold.trim())
@@ -57,10 +52,10 @@ export function DataStep({ editor, number, isGeneral }: DataStepProps) {
             onChange={(event) => editor.setField('summary', event.target.value)}
           />
         </div>
-        {isGeneral ? (
+        {tree.sections.length > 1 ? (
           <div className={styles.full}>
             <Select
-              label="Parte del plan"
+              label="Sección del plan"
               options={tree.sections.map((section) => ({
                 value: section.id,
                 label: section.title,

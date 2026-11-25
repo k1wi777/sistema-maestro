@@ -18,14 +18,8 @@
   color: var(--muted);
 }
 
-.filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-  gap: var(--space-4);
-}
-
 .search {
-  grid-column: 1 / -1;
+  flex-basis: 100% !important;
 }
 
 .live:empty {
