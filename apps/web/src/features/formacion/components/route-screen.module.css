@@ -46,7 +46,7 @@
   height: 100%;
   background: var(--red);
   border-radius: var(--radius-pill);
-  transition: width 0.4s;
+  transition: width var(--dur-slow);
 }
 
 .percent {
@@ -88,13 +88,56 @@
   font-size: var(--text-xl);
 }
 
+/* Cada sección es un hito sobre una línea discontinua con nodo rojo */
 .part {
+  position: relative;
   margin-bottom: var(--space-6);
+  padding-left: 2.75rem;
+}
+
+.part::before {
+  content: '';
+  position: absolute;
+  top: 0.5rem;
+  bottom: calc(-1 * var(--space-6));
+  left: 13px;
+  border-left: 2px dashed var(--line-strong);
+}
+
+.part:last-child::before {
+  bottom: 0;
 }
 
 .partTitle {
+  position: relative;
   color: var(--heading);
   font-size: var(--text-lg);
+}
+
+.partTitle::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -2.75rem;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--red);
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: 0 0 0 5px var(--bg);
+  transform: translateY(-50%);
+}
+
+.partTitle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(-2.75rem + 10px);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  transform: translateY(-50%);
 }
 
 .partSubtitle {

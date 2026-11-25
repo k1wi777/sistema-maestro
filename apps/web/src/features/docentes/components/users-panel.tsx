@@ -11,6 +11,7 @@ import {
   Card,
   DataTable,
   Dialog,
+  FilterBar,
   Notice,
   Select,
   StatusBadge,
@@ -191,43 +192,48 @@ export function UsersPanel({
           Solo administración crea usuarios y asigna roles: nadie se registra solo. Un usuario no se
           borra, se desactiva.
         </p>
-        <form className={styles.filters} role="search" onSubmit={applySearch}>
-          <TextInput
-            label="Buscar"
-            type="search"
-            placeholder="Nombre o correo"
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-          />
-          <Select
-            label="Rol"
-            placeholder="Todos los roles"
-            options={ROLE_OPTIONS}
-            value={filters.role ?? ''}
-            onChange={(event) =>
-              setFilters((current) => ({
-                ...current,
-                role: (event.target.value || undefined) as UserFilters['role'],
-              }))
-            }
-          />
-          <Select
-            label="Estado"
-            placeholder="Todos los estados"
-            options={STATUS_OPTIONS}
-            value={filters.status ?? ''}
-            onChange={(event) =>
-              setFilters((current) => ({
-                ...current,
-                status: (event.target.value || undefined) as UserFilters['status'],
-              }))
-            }
-          />
-          <div className={styles.search}>
-            <Button type="submit" variant="outline">
-              Buscar
-            </Button>
-          </div>
+        <form role="search" onSubmit={applySearch}>
+          <FilterBar label="Filtros de los usuarios">
+            <TextInput
+              size="sm"
+              label="Buscar"
+              type="search"
+              placeholder="Nombre o correo"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+            <Select
+              size="sm"
+              label="Rol"
+              placeholder="Todos los roles"
+              options={ROLE_OPTIONS}
+              value={filters.role ?? ''}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  role: (event.target.value || undefined) as UserFilters['role'],
+                }))
+              }
+            />
+            <Select
+              size="sm"
+              label="Estado"
+              placeholder="Todos los estados"
+              options={STATUS_OPTIONS}
+              value={filters.status ?? ''}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  status: (event.target.value || undefined) as UserFilters['status'],
+                }))
+              }
+            />
+            <div className={styles.search}>
+              <Button type="submit" variant="outline" size="sm">
+                Buscar
+              </Button>
+            </div>
+          </FilterBar>
         </form>
 
         {list.status === 'loading' ? <Loading>Cargando los usuarios…</Loading> : null}

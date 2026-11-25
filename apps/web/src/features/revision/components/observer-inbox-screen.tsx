@@ -6,14 +6,7 @@ import { useMemo } from 'react';
 import { useQueryParams } from '@/shared/data';
 import { myGrades, type CatalogGradeScope } from '@/shared/records';
 import { useView } from '@/shared/shell';
-import {
-  ButtonLink,
-  Notice,
-  PageContainer,
-  PageHeader,
-  Select,
-  type SelectOption,
-} from '@/shared/ui';
+import { Notice, PageContainer, PageHeader, Select, type SelectOption } from '@/shared/ui';
 
 import { useInboxViewer } from '../hooks/use-inbox-viewer';
 import { useNoteInbox } from '../hooks/use-format-inbox';
@@ -85,11 +78,7 @@ export function ObserverInboxScreen() {
             ? 'Anotaciones del observador del estudiante de todo el colegio, solo para consulta: la revisión es de la coordinadora de cada grado.'
             : 'Revisa las anotaciones del observador de tus grados: devuélvelas con observaciones o apruébalas con tu firma. Las de los demás grados solo las consultas.'
         }
-        actions={
-          <ButtonLink href={paths.hub} variant="outline" startIcon="volver">
-            Formatos
-          </ButtonLink>
-        }
+        back={{ href: paths.hub, label: 'Volver a Formatos' }}
       />
       <InboxList
         list={list}
@@ -102,6 +91,8 @@ export function ObserverInboxScreen() {
           showReviewer,
         })}
         getRowKey={(note) => note.id}
+        getRowHref={(note) => `${paths.observers}/${note.id}${vista ? `?vista=${vista}` : ''}`}
+        title="Anotaciones del observador"
         status={status}
         onStatusChange={(value) => update({ estado: value })}
         loading="Cargando las anotaciones…"
@@ -121,17 +112,20 @@ export function ObserverInboxScreen() {
                 onChange={(value) => update({ vista: vistaParam(value) })}
               />
             ) : null}
-            {viewer.isAdministrator ? (
-              <Select
-                label="Coordinadora"
-                placeholder="Todas"
-                options={coordinatorOptions}
-                value={chosenCoordinator ?? ''}
-                disabled={coordinatorOptions.length === 1}
-                onChange={(event) => update({ coordinatorId: event.target.value })}
-              />
-            ) : null}
           </>
+        }
+        filters={
+          viewer.isAdministrator ? (
+            <Select
+              size="sm"
+              label="Coordinadora"
+              placeholder="Todas"
+              options={coordinatorOptions}
+              value={chosenCoordinator ?? ''}
+              disabled={coordinatorOptions.length === 1}
+              onChange={(event) => update({ coordinatorId: event.target.value })}
+            />
+          ) : undefined
         }
         intro={
           <Notice tone={priority ? 'warning' : 'info'}>

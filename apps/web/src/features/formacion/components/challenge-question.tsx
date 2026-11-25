@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, type CSSProperties } from 'react';
 
 import { Icon } from '@/shared/ui';
 
-import { gameFrame as styles } from '@/shared/training-games';
+import { FloatingGain, gameFrame as styles } from '@/shared/training-games';
 
 import { useCountdown } from '../hooks/use-countdown';
 import type { ChallengeState } from '../model/challenge';
@@ -240,6 +240,12 @@ export function ChallengeQuestion({
         <span className={styles.points}>
           <span aria-hidden="true">{`${state.points} pts`}</span>
           <span className="sr-only">{`${state.points} puntos`}</span>
+          <FloatingGain
+            key={state.seq}
+            amount={
+              state.phase === 'answered' && state.result?.correct ? state.result.pointsGained : 0
+            }
+          />
         </span>
         <span className={styles.streak}>
           <Icon name="llama" size={15} fill="solid" />

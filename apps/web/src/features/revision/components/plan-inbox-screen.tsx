@@ -19,13 +19,17 @@ import { useView } from '@/shared/shell';
 import {
   Button,
   ButtonLink,
+  Card,
   DataTable,
+  FilterBar,
   Notice,
   PageContainer,
   PageHeader,
   Select,
+  StatStrip,
   StatusBadge,
   type DataTableColumn,
+  type IconName,
   type SelectOption,
 } from '@/shared/ui';
 
@@ -36,6 +40,7 @@ import {
   usePlanList,
 } from '../hooks/use-plan-inbox';
 import {
+  INDICATOR_STATUSES,
   hasActiveFilters,
   planFiltersFromParams,
   planFiltersToQuery,
@@ -47,7 +52,6 @@ import { useInboxViewer } from '../hooks/use-inbox-viewer';
 import { useRevisionPaths } from '../hooks/use-revision-paths';
 import { CompliancePanel } from './compliance-panel';
 import { ReviewerText, StatusWithConsult } from './consult-cells';
-import { InboxIndicators } from './inbox-indicators';
 import { InboxScopeFilter } from './inbox-scope-filter';
 import styles from './plan-inbox-screen.module.css';
 
@@ -60,6 +64,22 @@ function PeriodCell({ number }: { number: number }) {
     </>
   );
 }
+
+const INDICATOR_LABELS: Record<RecordStatus, string> = {
+  borrador: 'Borradores',
+  enviada: 'Pendientes de revisión',
+  observaciones: 'Con observaciones',
+  revisada: 'Revisadas',
+  anulado: 'Anuladas',
+};
+
+const INDICATOR_ICONS: Record<RecordStatus, IconName> = {
+  borrador: 'lapiz',
+  enviada: 'bitacora',
+  observaciones: 'comentario',
+  revisada: 'check',
+  anulado: 'anular',
+};
 
 interface ColumnContext {
   /** Query con los filtros activos (y la vista) para volver a la bandeja desde la planeación. */
@@ -254,11 +274,7 @@ export function PlanInboxScreen() {
             ? 'Planeaciones de todo el colegio, solo para consulta: la revisión es de la coordinadora de cada grado.'
             : 'Revisa las planeaciones de tus grados: apruébalas, ajústalas o devuélvelas con observaciones. Las de los demás grados solo las consultas.'
         }
-        actions={
-          <ButtonLink href={paths.hub} variant="outline" startIcon="volver">
-            Formatos
-          </ButtonLink>
-        }
+        back={{ href: paths.hub, label: 'Volver a Formatos' }}
       />
       <div className={styles.root}>
         {noGrades ? (
@@ -284,97 +300,129 @@ export function PlanInboxScreen() {
             Aprobaste la planeación. No quedan más planeaciones enviadas por revisar.
           </Notice>
         ) : null}
-        <InboxIndicators
-          remote={indicators}
-          active={filters.status}
-          onSelect={(status) => update({ status, aviso: null })}
-        />
-        <div className={styles.filters}>
-          <Select
-            label="Estado"
-            placeholder="Todos los estados"
-            options={statusOptions}
-            value={filters.status ?? ''}
-            onChange={(event) => update({ status: event.target.value, aviso: null })}
+        {indicators.state.status === 'error' ? (
+          <LoadError
+            error={indicators.state.error}
+            title="No pudimos cargar los indicadores"
+            onRetry={indicators.reload}
           />
-          <Select
-            label="Grado"
-            placeholder="Todos los grados"
-            options={gradeOptions}
-            value={filters.gradeId ?? ''}
-            disabled={gradeOptions.length === 0}
-            onChange={(event) => update({ gradeId: event.target.value, aviso: null })}
+        ) : (
+          <StatStrip
+            label="Indicadores de revisión"
+            neutral={viewer.isAdministrator}
+            items={INDICATOR_STATUSES.map((status) => {
+              const counts = indicators.state.status === 'ready' ? indicators.state.data : null;
+              return {
+                key: status,
+                icon: INDICATOR_ICONS[status],
+                value: counts ? counts[status] : '…',
+                busy: counts === null,
+                label: `${INDICATOR_LABELS[status]}${viewer.isCoordinator ? ' en tus grados' : ''}`,
+                selected: filters.status === status,
+                onSelect: () =>
+                  update({ status: filters.status === status ? null : status, aviso: null }),
+              };
+            })}
           />
-          <Select
-            label="Asignatura"
-            placeholder="Todas las asignaturas"
-            options={areaOptions}
-            value={filters.areaId ?? ''}
-            disabled={areaOptions.length === 0}
-            onChange={(event) => update({ areaId: event.target.value, aviso: null })}
-          />
-          <Select
-            label="Periodo"
-            placeholder="Todos los periodos"
-            options={periodOptions}
-            value={filters.periodId ?? ''}
-            disabled={periodOptions.length === 0}
-            onChange={(event) => update({ periodId: event.target.value, aviso: null })}
-          />
-          {viewer.isAdministrator ? (
+        )}
+        <Card title="Planeaciones de los docentes" className={styles.panel}>
+          <FilterBar label="Filtros de las planeaciones">
             <Select
-              label="Coordinadora"
-              placeholder="Todas"
-              options={coordinatorOptions}
-              value={filters.coordinatorId ?? ''}
-              disabled={coordinatorOptions.length === 1}
-              onChange={(event) => update({ coordinatorId: event.target.value, aviso: null })}
+              size="sm"
+              label="Estado"
+              placeholder="Todos los estados"
+              options={statusOptions}
+              value={filters.status ?? ''}
+              onChange={(event) => update({ status: event.target.value, aviso: null })}
+            />
+            <Select
+              size="sm"
+              label="Grado"
+              placeholder="Todos los grados"
+              options={gradeOptions}
+              value={filters.gradeId ?? ''}
+              disabled={gradeOptions.length === 0}
+              onChange={(event) => update({ gradeId: event.target.value, aviso: null })}
+            />
+            <Select
+              size="sm"
+              label="Asignatura"
+              placeholder="Todas las asignaturas"
+              options={areaOptions}
+              value={filters.areaId ?? ''}
+              disabled={areaOptions.length === 0}
+              onChange={(event) => update({ areaId: event.target.value, aviso: null })}
+            />
+            <Select
+              size="sm"
+              label="Periodo"
+              placeholder="Todos los periodos"
+              options={periodOptions}
+              value={filters.periodId ?? ''}
+              disabled={periodOptions.length === 0}
+              onChange={(event) => update({ periodId: event.target.value, aviso: null })}
+            />
+            {viewer.isAdministrator ? (
+              <Select
+                size="sm"
+                label="Coordinadora"
+                placeholder="Todas"
+                options={coordinatorOptions}
+                value={filters.coordinatorId ?? ''}
+                disabled={coordinatorOptions.length === 1}
+                onChange={(event) => update({ coordinatorId: event.target.value, aviso: null })}
+              />
+            ) : null}
+            <Select
+              size="sm"
+              label="Docente"
+              placeholder="Todos los docentes"
+              options={teacherOptions}
+              value={filters.teacherId ?? ''}
+              disabled={teacherOptions.length === 0}
+              onChange={(event) => update({ teacherId: event.target.value, aviso: null })}
+            />
+          </FilterBar>
+
+          {list.status === 'loading' ? <Loading>Cargando las planeaciones…</Loading> : null}
+          {list.status === 'error' && list.error ? (
+            <LoadError
+              error={list.error}
+              title="No pudimos cargar las planeaciones"
+              onRetry={list.reload}
             />
           ) : null}
-          <Select
-            label="Docente"
-            placeholder="Todos los docentes"
-            options={teacherOptions}
-            value={filters.teacherId ?? ''}
-            disabled={teacherOptions.length === 0}
-            onChange={(event) => update({ teacherId: event.target.value, aviso: null })}
-          />
-        </div>
-
-        {list.status === 'loading' ? <Loading>Cargando las planeaciones…</Loading> : null}
-        {list.status === 'error' && list.error ? (
-          <LoadError
-            error={list.error}
-            title="No pudimos cargar las planeaciones"
-            onRetry={list.reload}
-          />
-        ) : null}
-        {list.status === 'ready' ? (
-          <>
-            <p className={styles.count} role="status">
-              {list.totalItems === 1 ? '1 planeación' : `${list.totalItems} planeaciones`}
-            </p>
-            <DataTable
-              caption="Planeaciones de los docentes"
-              columns={columns}
-              rows={list.items}
-              getRowKey={(plan) => plan.id}
-              emptyMessage={
-                hasActiveFilters(filters)
-                  ? 'Ninguna planeación cumple estos filtros. Cambia o quita alguno para ver más.'
-                  : 'Aún no hay planeaciones.'
-              }
-            />
-            {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
-            {list.hasMore ? (
-              <div className={styles.more}>
-                <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
-                  {list.loadingMore ? 'Cargando…' : 'Cargar más'}
-                </Button>
-              </div>
-            ) : null}
-          </>
-        ) : null}
+          {list.status === 'ready' ? (
+            <>
+              <p className={styles.count} role="status">
+                {list.totalItems === 1 ? '1 planeación' : `${list.totalItems} planeaciones`}
+              </p>
+              <DataTable
+                embedded
+                caption="Planeaciones de los docentes"
+                columns={columns}
+                getRowHref={(plan) =>
+                  `${paths.plans}/${plan.id}${backQuery ? `?${backQuery}` : ''}`
+                }
+                rows={list.items}
+                getRowKey={(plan) => plan.id}
+                emptyMessage={
+                  hasActiveFilters(filters)
+                    ? 'Ninguna planeación cumple estos filtros. Cambia o quita alguno para ver más.'
+                    : 'Aún no hay planeaciones.'
+                }
+              />
+              {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
+              {list.hasMore ? (
+                <div className={styles.more}>
+                  <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
+                    {list.loadingMore ? 'Cargando…' : 'Cargar más'}
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </Card>
 
         <CompliancePanel
           remote={compliance}

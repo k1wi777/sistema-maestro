@@ -189,6 +189,7 @@
 }
 
 .points {
+  position: relative;
   margin-left: auto;
   padding: 4px 12px;
   background: var(--on-solid);
@@ -305,12 +306,17 @@
   font-weight: var(--weight-semibold);
   text-align: left;
   transition:
-    transform 0.12s,
-    box-shadow 0.12s,
-    filter 0.2s;
+    transform var(--dur-fast),
+    box-shadow var(--dur-fast),
+    filter var(--dur-base),
+    opacity var(--dur-base);
 }
 
 .tile:hover:not(:disabled) {
+  box-shadow:
+    inset 0 1px 0 var(--game-white-22),
+    inset 0 -4px 0 var(--game-black-18),
+    0 16px 26px -12px var(--game-black-6);
   transform: translateY(-2px);
 }
 
@@ -646,5 +652,36 @@
   .tile:hover:not(:disabled),
   .play:hover {
     transform: none;
+  }
+}
+
+/* «+N» flotante junto al marcador: sube 24 px y se desvanece en 0,9 s */
+.floatGain {
+  position: absolute;
+  top: -2px;
+  right: 6px;
+  color: var(--game-streak);
+  font-size: var(--text-base);
+  font-weight: var(--weight-bold);
+  pointer-events: none;
+  animation: floatUp 0.9s var(--ease-out) forwards;
+}
+
+@keyframes floatUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+}
+
+/* Con movimiento reducido no se anima ni se pinta: el puntaje queda en el marcador */
+@media (prefers-reduced-motion: reduce) {
+  .floatGain {
+    display: none;
   }
 }

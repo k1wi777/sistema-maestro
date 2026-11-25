@@ -6,6 +6,8 @@ import { useMemo, useState } from 'react';
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
 import {
   Button,
+  Card,
+  FilterBar,
   Notice,
   PageContainer,
   PageHeader,
@@ -89,84 +91,93 @@ export function AuditLogScreen() {
             {exporter.error.message}
           </Notice>
         ) : null}
-        <div className={styles.filters}>
-          <Select
-            label="Usuario"
-            placeholder="Todos los usuarios"
-            options={userOptions}
-            value={filters.userId ?? ''}
-            onChange={(event) => update({ userId: event.target.value })}
-          />
-          <Select
-            label="Rol"
-            placeholder="Todos los roles"
-            options={ROLE_OPTIONS}
-            value={filters.role ?? ''}
-            onChange={(event) => update({ role: event.target.value })}
-          />
-          <Select
-            label="Tipo"
-            placeholder="Todos los tipos"
-            options={TYPE_OPTIONS}
-            value={filters.type ?? ''}
-            onChange={(event) => update({ type: event.target.value })}
-          />
-          <TextInput
-            label="Desde"
-            type="date"
-            value={filters.from ?? ''}
-            onChange={(event) => update({ from: event.target.value })}
-          />
-          <TextInput
-            label="Hasta"
-            type="date"
-            value={filters.to ?? ''}
-            error={rangeError ?? undefined}
-            onChange={(event) => update({ to: event.target.value })}
-          />
-        </div>
-        {hasActiveAuditFilters(filters) ? (
-          <div>
-            <Button
-              variant="outline"
+        <Card title="Movimientos de la plataforma" className={styles.panel}>
+          <FilterBar label="Filtros de la bitácora">
+            <Select
               size="sm"
-              onClick={() => update({ userId: null, role: null, type: null, from: null, to: null })}
-            >
-              Quitar los filtros
-            </Button>
-          </div>
-        ) : null}
-
-        {list.status === 'loading' ? <Loading>Cargando los movimientos…</Loading> : null}
-        {list.status === 'error' && list.error ? (
-          <LoadError
-            error={list.error}
-            title="No pudimos cargar la bitácora"
-            onRetry={list.reload}
-          />
-        ) : null}
-        {list.status === 'ready' && rangeError === null ? (
-          <>
-            <AuditLogList
-              entries={list.items}
-              emptyMessage={
-                hasActiveAuditFilters(filters)
-                  ? 'Ningún movimiento cumple estos filtros. Cambia o quita alguno para ver más.'
-                  : 'Aún no hay movimientos.'
-              }
-              onOpen={(entry) => setOpenId(entry.id)}
-              onFilterUser={(userId) => update({ userId })}
+              label="Usuario"
+              placeholder="Todos los usuarios"
+              options={userOptions}
+              value={filters.userId ?? ''}
+              onChange={(event) => update({ userId: event.target.value })}
             />
-            {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
-            {list.hasMore ? (
-              <div className={styles.more}>
-                <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
-                  {list.loadingMore ? 'Cargando…' : 'Cargar más'}
-                </Button>
-              </div>
-            ) : null}
-          </>
-        ) : null}
+            <Select
+              size="sm"
+              label="Rol"
+              placeholder="Todos los roles"
+              options={ROLE_OPTIONS}
+              value={filters.role ?? ''}
+              onChange={(event) => update({ role: event.target.value })}
+            />
+            <Select
+              size="sm"
+              label="Tipo"
+              placeholder="Todos los tipos"
+              options={TYPE_OPTIONS}
+              value={filters.type ?? ''}
+              onChange={(event) => update({ type: event.target.value })}
+            />
+            <TextInput
+              size="sm"
+              label="Desde"
+              type="date"
+              value={filters.from ?? ''}
+              onChange={(event) => update({ from: event.target.value })}
+            />
+            <TextInput
+              size="sm"
+              label="Hasta"
+              type="date"
+              value={filters.to ?? ''}
+              error={rangeError ?? undefined}
+              onChange={(event) => update({ to: event.target.value })}
+            />
+          </FilterBar>
+          {hasActiveAuditFilters(filters) ? (
+            <div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  update({ userId: null, role: null, type: null, from: null, to: null })
+                }
+              >
+                Quitar los filtros
+              </Button>
+            </div>
+          ) : null}
+
+          {list.status === 'loading' ? <Loading>Cargando los movimientos…</Loading> : null}
+          {list.status === 'error' && list.error ? (
+            <LoadError
+              error={list.error}
+              title="No pudimos cargar la bitácora"
+              onRetry={list.reload}
+            />
+          ) : null}
+          {list.status === 'ready' && rangeError === null ? (
+            <>
+              <AuditLogList
+                entries={list.items}
+                emptyMessage={
+                  hasActiveAuditFilters(filters)
+                    ? 'Ningún movimiento cumple estos filtros. Cambia o quita alguno para ver más.'
+                    : 'Aún no hay movimientos.'
+                }
+                onOpen={(entry) => setOpenId(entry.id)}
+                onFilterUser={(userId) => update({ userId })}
+              />
+              {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
+              {list.hasMore ? (
+                <div className={styles.more}>
+                  <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
+                    {list.loadingMore ? 'Cargando…' : 'Cargar más'}
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </Card>
       </div>
       <AuditDetailDialog id={openId} onClose={() => setOpenId(null)} />
     </PageContainer>

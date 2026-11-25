@@ -5,7 +5,7 @@ import { useEffect, useRef, type KeyboardEvent } from 'react';
 
 import { Icon } from '@/shared/ui';
 
-import { gameFrame as challenge, StatementCard } from '@/shared/training-games';
+import { FloatingGain, gameFrame as challenge, StatementCard } from '@/shared/training-games';
 
 import { useCountdown } from '../hooks/use-countdown';
 import { useTrueOrMythGame } from '../hooks/use-true-or-myth-game';
@@ -114,6 +114,7 @@ function StatementView({
         <Hearts lives={state.lives} max={Math.max(maxLives, state.lives)} />
         <span className={challenge.points} aria-label={`${state.points} puntos`}>
           {`${state.points} pts`}
+          <FloatingGain key={state.seq} amount={graded?.correct ? graded.pointsGained : 0} />
         </span>
         <span className={challenge.streak} aria-label={`Racha de ${state.streak}`}>
           <Icon name="llama" size={15} fill="solid" />
@@ -127,6 +128,7 @@ function StatementView({
         text={statement.text}
         remaining={remaining}
         graded={graded ? (graded.correct ? 'ok' : 'bad') : null}
+        chosen={state.chosen}
         open={open}
         mythRef={mythRef}
         onChoose={handlers.choose}

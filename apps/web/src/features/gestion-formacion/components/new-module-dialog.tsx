@@ -3,7 +3,7 @@
 import type { TrainingPlanTree } from '@gns/shared';
 import { useState, type FormEvent } from 'react';
 
-import { Button, Dialog, Notice, Select, TextInput } from '@/shared/ui';
+import { Button, Dialog, Notice, TextInput } from '@/shared/ui';
 
 import { createModuleInPlan, type CreatedModule } from '../hooks/use-plans';
 import {
@@ -18,6 +18,8 @@ import styles from './new-module-dialog.module.css';
 
 interface NewModuleDialogProps {
   option: PlanOption;
+  /** Sección donde nace el módulo (fija, solo se muestra); `null` si el área aún no tiene plan. */
+  section: { id: string; title: string } | null;
   tree: TrainingPlanTree | null;
   /** Se llama con el módulo creado (la pantalla abre su editor). */
   onCreated: (created: CreatedModule) => void;
@@ -27,23 +29,23 @@ interface NewModuleDialogProps {
 }
 
 /**
- * Pide solo número, título y, en el plan General, la parte. Para un área sin plan crea antes el plan
- * y su parte única sin pedir más datos. Se monta solo mientras está abierto y conserva lo escrito
- * cuando la API rechaza el envío.
+ * Pide solo número y título: la sección donde nace el módulo viene fijada por el botón que lo abrió.
+ * Para un área sin plan crea antes el plan y su sección única sin pedir más datos. Se monta solo
+ * mientras está abierto y conserva lo escrito cuando la API rechaza el envío.
  */
 export function NewModuleDialog({
   option,
+  section,
   tree,
   onCreated,
   onPartial,
   onClose,
 }: NewModuleDialogProps) {
-  const needsSection = option.area === null;
-  const sections = tree?.sections ?? [];
   const [values, setValues] = useState<NewModuleValues>(() => ({
-    number: suggestNextNumber(sections.flatMap((section) => section.modules.map((m) => m.number))),
+    number: suggestNextNumber(
+      (tree?.sections ?? []).flatMap((item) => item.modules.map((m) => m.number)),
+    ),
     title: '',
-    sectionId: needsSection ? (sections[0]?.id ?? '') : '',
   }));
   const [errors, setErrors] = useState<NewModuleErrors>({});
   const [failure, setFailure] = useState<string | null>(null);
@@ -57,19 +59,14 @@ export function NewModuleDialog({
   async function submit(event: FormEvent) {
     event.preventDefault();
     setFailure(null);
-    const validation = validateNewModule(values, needsSection);
+    const validation = validateNewModule(values);
     if (!validation.ok) {
       setErrors(validation.errors);
       return;
     }
     setErrors({});
     setBusy(true);
-    const result = await createModuleInPlan(
-      option,
-      tree,
-      needsSection ? values.sectionId : null,
-      validation.input,
-    );
+    const result = await createModuleInPlan(option, tree, section?.id ?? null, validation.input);
     setBusy(false);
     if (result.ok) {
       onCreated(result.data);
@@ -122,6 +119,12 @@ export function NewModuleDialog({
             {failure}
           </Notice>
         ) : null}
+        {section ? (
+          <p className={styles.section}>
+            <span className={styles.sectionLabel}>Sección</span>
+            <strong>{section.title}</strong>
+          </p>
+        ) : null}
         <TextInput
           label="Número"
           required
@@ -140,17 +143,6 @@ export function NewModuleDialog({
           autoComplete="off"
           onChange={(event) => change('title', event.target.value)}
         />
-        {needsSection ? (
-          <Select
-            label="Parte del plan"
-            required
-            placeholder="Elige la parte"
-            options={sections.map((section) => ({ value: section.id, label: section.title }))}
-            value={values.sectionId}
-            error={errors.sectionId}
-            onChange={(event) => change('sectionId', event.target.value)}
-          />
-        ) : null}
       </form>
     </Dialog>
   );

@@ -90,7 +90,14 @@ export function AssistantChat({ conversation }: { conversation: Conversation }) 
         )}
         {busy ? (
           <Bot>
-            <p className={styles.thinking}>Buscando la respuesta…</p>
+            <div role="status" className={styles.thinking}>
+              <span className="sr-only">Buscando la respuesta…</span>
+              <span className={styles.dots} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            </div>
           </Bot>
         ) : null}
         <div ref={endRef} />

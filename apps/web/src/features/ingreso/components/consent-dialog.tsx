@@ -13,7 +13,13 @@ import {
 import { useSession } from '@/shared/session';
 import { Button, Checkbox, Icon, Notice } from '@/shared/ui';
 
-import { missingConsentMessage, type ConsentChecks } from '../missing-consent';
+import {
+  allChecked,
+  missingConsentMessage,
+  someChecked,
+  toggleAll,
+  type ConsentChecks,
+} from '../missing-consent';
 import styles from './consent-dialog.module.css';
 
 const NOTHING_CHECKED: ConsentChecks = { policy: false, authorization: false, terms: false };
@@ -106,6 +112,16 @@ export function ConsentDialog() {
           ) : null}
           <fieldset className={styles.checks}>
             <legend className="sr-only">Confirmaciones requeridas</legend>
+            <div className={`${styles.check} ${styles.all}`}>
+              <Checkbox
+                label="Marcar todo"
+                checked={allChecked(CONSENT_BOXES, checked)}
+                indeterminate={someChecked(CONSENT_BOXES, checked)}
+                disabled={saving}
+                onChange={() => setChecked((previous) => toggleAll(CONSENT_BOXES, previous))}
+              />
+            </div>
+            <hr className={styles.separator} />
             {CONSENT_BOXES.map((box) => (
               <div key={box.key} className={styles.check}>
                 <Checkbox

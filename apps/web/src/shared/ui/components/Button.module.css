@@ -19,10 +19,10 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background 0.15s,
-    border-color 0.15s,
-    box-shadow 0.15s,
-    transform 0.1s;
+    background var(--dur-fast),
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast),
+    transform var(--dur-fast);
 }
 
 .button:hover:not(:disabled, [aria-disabled='true']) {
@@ -72,6 +72,19 @@
 .outline:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--bg);
   border-color: var(--muted);
+}
+
+/* Sin caja: enlaces de apoyo como «Volver» (texto atenuado, tarjeta al pasar el puntero) */
+.ghost {
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+
+.ghost:hover:not(:disabled, [aria-disabled='true']) {
+  background: var(--bg);
+  border-color: var(--line);
+  color: var(--fg);
 }
 
 /* Enlace de anulación: texto rojo sin caja, alineado a la izquierda de una barra */

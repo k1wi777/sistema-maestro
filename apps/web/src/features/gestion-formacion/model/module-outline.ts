@@ -53,21 +53,14 @@ export function trackingByModule(
 }
 
 export interface ModuleGroup {
-  /** `null` en un plan de área: sus módulos se listan sin encabezado de parte. */
-  section: Pick<TrainingSectionWithModules, 'id' | 'title' | 'subtitle'> | null;
+  section: Pick<TrainingSectionWithModules, 'id' | 'title' | 'subtitle'>;
   modules: TrainingModuleOutline[];
 }
 
 /**
- * Los módulos de un plan en el orden de la API. El plan General se agrupa por parte (las partes
- * vacías no se muestran); en un plan de área se listan todos juntos.
+ * Las secciones de un plan en el orden de la API, todas: también las vacías y las de los planes de
+ * área, porque coordinación crea módulos desde cada una. Un plan sin secciones da una lista vacía.
  */
-export function moduleGroups(tree: TrainingPlanTree, byPart: boolean): ModuleGroup[] {
-  if (byPart) {
-    return tree.sections
-      .filter((section) => section.modules.length > 0)
-      .map((section) => ({ section, modules: section.modules }));
-  }
-  const modules = tree.sections.flatMap((section) => section.modules);
-  return modules.length > 0 ? [{ section: null, modules }] : [];
+export function moduleGroups(tree: TrainingPlanTree): ModuleGroup[] {
+  return tree.sections.map((section) => ({ section, modules: section.modules }));
 }

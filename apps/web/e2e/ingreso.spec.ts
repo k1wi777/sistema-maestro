@@ -29,15 +29,37 @@ test('ingreso con aviso de datos: sin aceptarlo no se ve ninguna sección proteg
   await expect(page.getByRole('heading', { level: 1, name: 'Planeación GNS' })).toHaveCount(0);
   await expect(page.getByRole('navigation', { name: 'Panel Docente' })).toHaveCount(0);
 
-  // Hay que marcar las tres casillas.
+  // «Marcar todo» y las tres confirmaciones: hay que marcar las tres (4 casillas en total).
   const boxes = await notice.getByRole('checkbox').all();
-  expect(boxes).toHaveLength(3);
-  for (const box of boxes.slice(0, 2)) {
+  expect(boxes).toHaveLength(4);
+  const markAll = notice.getByRole('checkbox', { name: 'Marcar todo' });
+  const isMixed = () =>
+    markAll.evaluate((box) => (box as unknown as { indeterminate: boolean }).indeterminate);
+  await expect(markAll).not.toBeChecked();
+  expect(await isMixed()).toBe(false);
+
+  const [, ...confirmations] = boxes;
+  for (const box of confirmations.slice(0, 2)) {
     await box.check();
   }
+  // Con solo algunas marcadas, «Marcar todo» queda en estado mixto y aceptar sigue bloqueado.
+  expect(await isMixed()).toBe(true);
   await expect(accept).toBeDisabled();
-  await boxes[2]?.check();
+
+  await markAll.check();
+  for (const box of confirmations) {
+    await expect(box).toBeChecked();
+  }
+  expect(await isMixed()).toBe(false);
   await expect(accept).toBeEnabled();
+
+  // Volver a pulsarla desmarca todo; marcar casillas no registra nada (solo «Acepto y continuar»).
+  await markAll.uncheck();
+  for (const box of confirmations) {
+    await expect(box).not.toBeChecked();
+  }
+  await expect(accept).toBeDisabled();
+  await expect(page).toHaveURL(/\/ingreso\?volver=/);
 
   await acceptDataNotice(page);
   // `volver` lleva a la planeación que se había pedido.

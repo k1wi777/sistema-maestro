@@ -134,6 +134,27 @@
   background: var(--blue-soft);
 }
 
+/* «Marcar todo»: borde discontinuo; mixto con tinte azul suave; separador antes de las tres casillas */
+.all {
+  border-style: dashed;
+  border-color: var(--line-strong);
+}
+
+.all:has(input:checked) {
+  border-style: dashed;
+}
+
+.all:has(input:indeterminate) {
+  background: var(--blue-soft);
+  border-color: var(--blue);
+}
+
+.separator {
+  margin: 2px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
 .note {
   margin: 0;
   color: var(--muted);

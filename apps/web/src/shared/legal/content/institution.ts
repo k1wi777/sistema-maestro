@@ -1,10 +1,11 @@
 import { pending, type PendingValue } from './pending';
 
-/** Datos del colegio confirmados (PEI y sitio web) y los que siguen pendientes. */
+/** Datos del colegio confirmados (PEI, sitio web y el propio colegio) y los que siguen pendientes. */
 export interface Institution {
   /** Nombre con el que la plataforma identifica al colegio. */
   readonly displayName: string;
-  readonly legalName: PendingValue;
+  /** Nombre legal confirmado por el colegio. */
+  readonly legalName: string;
   readonly nit: string;
   readonly address: string;
   readonly phones: string;
@@ -18,7 +19,7 @@ export interface Institution {
 
 export const INSTITUTION: Institution = {
   displayName: 'George Noble School',
-  legalName: pending('legal-name'),
+  legalName: 'George Noble School',
   nit: '900.358.305-3',
   address: 'Carrera 6 # 78-70, barrio Sevilla, Montería',
   phones: '7818321 y 7854810',

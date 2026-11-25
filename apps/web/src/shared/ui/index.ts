@@ -13,7 +13,9 @@ export {
 export { Card, type CardProps } from './components/Card';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
 export { DataTable, type DataTableColumn, type DataTableProps } from './components/DataTable';
+export { EmptyState, type EmptyStateProps } from './components/EmptyState';
 export { Dialog, type DialogProps } from './components/Dialog';
+export { FilterBar, type FilterBarProps } from './components/FilterBar';
 export { FormatCard, type FormatCardProps } from './components/FormatCard';
 export { Field, type FieldControlProps, type FieldProps } from './components/Field';
 export { IconPicker, type IconPickerProps } from './components/IconPicker';
@@ -28,6 +30,7 @@ export {
   type SegmentedOption,
 } from './components/SegmentedFilter';
 export { Select, type SelectOption, type SelectProps } from './components/Select';
+export { StatStrip, type StatItem, type StatStripProps } from './components/StatStrip';
 export { StatusBadge, type StatusBadgeProps, type StatusTone } from './components/StatusBadge';
 export { StepSummary, type StepSummaryItem, type StepSummaryProps } from './components/StepSummary';
 export {

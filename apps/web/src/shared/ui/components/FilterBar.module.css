@@ -1,0 +1,27 @@
+/* Barra de herramientas gris del tablero v52 (`.co-filtros`) */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  padding: var(--space-3) 0.875rem;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.bar > * {
+  flex: 1 1 13.75rem;
+  min-width: 0;
+}
+
+.compact > * {
+  flex: 0 1 20rem;
+}
+
+@media (max-width: 480px) {
+  .bar > *,
+  .compact > * {
+    flex-basis: 100%;
+  }
+}

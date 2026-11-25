@@ -68,8 +68,25 @@
   border-bottom: 0;
 }
 
+.table tbody tr > * {
+  transition: background var(--dur-fast);
+}
+
 .table tbody tr:hover > * {
   background: var(--on-surface-hover);
+}
+
+/* Fila clicable: la mano, y mientras su enlace «Acción» tiene el foco, fondo y barra izquierda */
+.table tbody tr[data-clickable='true'] {
+  cursor: pointer;
+}
+
+.table tbody tr[data-clickable='true']:focus-within > * {
+  background: var(--blue-soft);
+}
+
+.table tbody tr[data-clickable='true']:focus-within > :first-child {
+  box-shadow: inset 3px 0 0 var(--blue);
 }
 
 /* Primera columna: la que identifica la fila */
@@ -81,9 +98,4 @@
 .numeric {
   text-align: right !important;
   font-variant-numeric: tabular-nums;
-}
-
-.empty {
-  color: var(--muted);
-  text-align: center !important;
 }

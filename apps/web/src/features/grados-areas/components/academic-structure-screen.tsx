@@ -7,6 +7,7 @@ import { LoadError, Loading } from '@/shared/data';
 import {
   Button,
   DataTable,
+  FilterBar,
   Notice,
   PageContainer,
   PageHeader,
@@ -226,8 +227,9 @@ function AreasPanel({
   return (
     <>
       <div className={styles.toolbar}>
-        <div className={styles.filters}>
+        <FilterBar label="Filtros de las áreas" className={styles.filters}>
           <Select
+            size="sm"
             label="Tipo"
             value={filter.type}
             placeholder="Todos"
@@ -240,13 +242,14 @@ function AreasPanel({
             }
           />
           <Select
+            size="sm"
             label="Nivel"
             value={filter.levelId}
             placeholder="Todos"
             options={structure.levels.map((level) => ({ value: level.id, label: level.name }))}
             onChange={(event) => setFilter({ ...filter, levelId: event.target.value })}
           />
-        </div>
+        </FilterBar>
         <Button onClick={onNew}>Nueva área</Button>
       </div>
       <DataTable

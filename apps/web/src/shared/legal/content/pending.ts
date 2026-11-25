@@ -4,8 +4,6 @@
  * `docs/legal/pendientes.md`; una prueba comprueba que ambos listados coinciden.
  */
 export const LEGAL_PENDING = {
-  'legal-name':
-    'nombre legal exacto del colegio (George’s Noble School o George Noble School), por confirmar',
   'claims-area': 'área responsable de atender las consultas y los reclamos, por confirmar',
   'effective-date': 'fecha de vigencia del documento, por confirmar',
   processors:

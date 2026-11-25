@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { ACTORS } from './support/actors';
+import { ACTORS, runMarker } from './support/actors';
 import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
 import { openAs, type ActorPage } from './support/browser';
 
@@ -154,5 +154,70 @@ test.describe('Presentación en PDF: recorrido del docente', () => {
     await expectAccessible(page, 'docente · módulo con PDF a 375 px', ['light']);
     await page.setViewportSize(DESKTOP);
     await page.emulateMedia({ colorScheme: null });
+  });
+});
+
+// Secciones del plan (#130): coordinación crea una sección en el plan General, la ve vacía con su
+// «Nuevo módulo» y crea un módulo desde ella. Va aquí, al final, porque escribe en el plan General.
+const marker = runMarker();
+const NEW_SECTION = `Sección ${marker}`;
+const EXISTING_SECTION = 'Parte I · Fundamentos y filosofía';
+
+test.describe('Planes de formación: secciones', () => {
+  let coordinator: ActorPage;
+
+  test.beforeAll(async ({ browser }) => {
+    coordinator = await openAs(browser, ACTORS.presentationCoordinator);
+  });
+
+  test.afterAll(async () => {
+    await coordinator.context.close();
+  });
+
+  test('un título repetido se rechaza en el diálogo y conserva lo escrito', async () => {
+    const { page } = coordinator;
+    await page.goto('/coordinacion/planes');
+    await expect(page.getByRole('heading', { level: 2, name: EXISTING_SECTION })).toBeVisible();
+    await page.getByRole('button', { name: 'Crear nueva sección' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Crear nueva sección' });
+    const typed = `  ${EXISTING_SECTION.toUpperCase()}  `;
+    await dialog.getByLabel(/^Título/).fill(typed);
+    await dialog.getByRole('button', { name: 'Crear sección' }).click();
+    await expect(dialog.getByText('Ya hay una sección con ese título en este plan.')).toBeVisible();
+    await expect(dialog.getByLabel(/^Título/)).toHaveValue(typed);
+    await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await expect(dialog).toBeHidden();
+  });
+
+  test('crea una sección: queda al final, vacía, anunciada y con el foco en su título', async () => {
+    const { page } = coordinator;
+    await page.getByRole('button', { name: 'Crear nueva sección' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Crear nueva sección' });
+    await dialog.getByLabel(/^Título/).fill(NEW_SECTION);
+    await dialog.getByLabel(/^Subtítulo/).fill('Una sección de prueba');
+    await dialog.getByRole('button', { name: 'Crear sección' }).click();
+    await expect(dialog).toBeHidden();
+
+    await expect(page.getByRole('status').filter({ hasText: NEW_SECTION })).toBeVisible();
+    const title = page.getByRole('heading', { level: 2, name: NEW_SECTION });
+    await expect(title).toBeVisible();
+    await expect(title).toBeFocused();
+    const section = page.getByRole('region', { name: NEW_SECTION });
+    await expect(section.getByText('Una sección de prueba')).toBeVisible();
+    await expect(section.getByText(/Esta sección está vacía/)).toBeVisible();
+    // Es la última del plan.
+    const headings = await page.getByRole('heading', { level: 2 }).allTextContents();
+    expect(headings.at(-1)).toBe(NEW_SECTION);
+  });
+
+  test('«Nuevo módulo» de la sección fija la sección y pide solo número y título', async () => {
+    const { page } = coordinator;
+    await page.getByRole('button', { name: `Nuevo módulo en la sección ${NEW_SECTION}` }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nuevo módulo' });
+    await expect(dialog.getByText(NEW_SECTION, { exact: true })).toBeVisible();
+    await expect(dialog.getByRole('combobox')).toHaveCount(0);
+    await dialog.getByLabel(/^Título/).fill(`Módulo ${marker}`);
+    await dialog.getByRole('button', { name: 'Crear y editar' }).click();
+    await expect(page).toHaveURL(/\/coordinacion\/planes\/modulos\/[0-9a-f-]{36}$/);
   });
 });

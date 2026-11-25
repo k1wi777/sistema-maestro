@@ -103,6 +103,8 @@ export const OPEN_STROKE_ICONS = {
   papelera: Trash2,
   ampliar: Maximize,
   reducir: Minimize,
+  // Reloj: sus manecillas son trazo abierto; con relleno quedaría un círculo liso.
+  bitacora: Clock,
 } satisfies Record<string, IconComponent>;
 
 export const FILLABLE_ICONS = {
@@ -113,7 +115,6 @@ export const FILLABLE_ICONS = {
   comentario: MessageSquare,
   piar: PiarIcon,
   gente: Users,
-  bitacora: Clock,
   guardar: Save,
   lapiz: Pencil,
   estrella: Star,

@@ -109,8 +109,8 @@
   line-height: 1.25;
   text-decoration: none;
   transition:
-    background 0.15s,
-    color 0.15s;
+    background var(--dur-fast),
+    color var(--dur-fast);
 }
 
 a.item:hover {
@@ -156,11 +156,6 @@ a.item:hover {
   display: none;
 }
 
-/* El selector de la barra solo existe en celular; en escritorio vive en el pie del menú. */
-.barTheme {
-  display: none;
-}
-
 .panel {
   order: 3;
   margin-top: auto;
@@ -172,6 +167,23 @@ a.item:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+/* Bloque translúcido: usuario, tema y cierre de sesión */
+.accountCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--on-solid-card);
+  border: 1px solid var(--on-solid-card-line);
+  border-radius: 12px;
+}
+
+.divider {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--on-solid-card-line);
 }
 
 .who {
@@ -207,15 +219,11 @@ a.item:hover {
   overflow-wrap: anywhere;
 }
 
-.actions {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
 .action {
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 100%;
   gap: var(--space-2);
   min-height: var(--control-height-sm);
   padding: var(--space-2) var(--space-3);
@@ -224,8 +232,8 @@ a.item:hover {
   background: var(--on-solid-hover);
   color: var(--on-solid);
   font-size: var(--text-sm);
-  text-align: left;
   text-decoration: none;
+  transition: background var(--dur-fast);
 }
 
 .action:hover {
@@ -234,6 +242,7 @@ a.item:hover {
 
 .theme {
   display: flex;
+  justify-content: center;
 }
 
 .legal {
@@ -289,22 +298,12 @@ a.item:hover {
     min-width: 0;
   }
 
-  /* Falta ancho con tres iconos de tema: el nombre de la vista se recorta con elipsis. */
+  /* La barra solo lleva marca y cuenta; el nombre de la vista se recorta con elipsis si no cabe. */
   .brandText b,
   .brandText small {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .barTheme {
-    display: flex;
-    flex: none;
-  }
-
-  /* Un solo selector visible: el del panel de la cuenta se oculta en celular. */
-  .theme {
-    display: none;
   }
 
   .toggle {

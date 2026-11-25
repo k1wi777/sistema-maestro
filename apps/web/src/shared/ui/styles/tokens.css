@@ -101,6 +101,12 @@
   --on-solid-active: rgb(255 255 255 / 0.16);
   --brand-accent-on-dark: #ff5a6e;
   --overlay: rgb(10 18 40 / 0.62);
+  /* Selector de tema sobre la barra de marca: pista translúcida y opción elegida con borde (≥ 3:1) */
+  --on-solid-track: rgb(255 255 255 / 0.08);
+  --on-solid-selected: rgb(255 255 255 / 0.18);
+  --on-solid-selected-border: rgb(255 255 255 / 0.45);
+  --on-solid-card: rgb(255 255 255 / 0.06);
+  --on-solid-card-line: rgb(255 255 255 / 0.12);
 
   /* Colores por rol del tema: lo que cambia entre claro y oscuro */
   --action: var(--navy);
@@ -150,6 +156,15 @@
   --shadow-2: 0 1px 2px rgb(16 24 40 / 0.04), 0 6px 16px -6px rgb(16 24 40 / 0.08);
   --shadow-3: 0 2px 4px rgb(16 24 40 / 0.04), 0 18px 36px -14px rgb(16 24 40 / 0.2);
   --shadow-float: 0 4px 10px -2px rgb(16 24 40 / 0.08), 0 24px 48px -16px rgb(16 24 40 / 0.28);
+
+  /* Movimiento: toda transición usa estos tokens; con movimiento reducido pasan a cero */
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 350ms;
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --lift-1: -1px;
+  --lift-2: -2px;
+  --nudge: 3px;
 
   /* Foco: contorno, sin halos */
   --focus-width: 2px;
@@ -235,6 +250,17 @@
   --shadow-2: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 16px -4px rgb(0 0 0 / 0.35);
   --shadow-3: 0 16px 36px -12px rgb(0 0 0 / 0.6);
   --shadow-float: 0 4px 10px -2px rgb(0 0 0 / 0.4), 0 24px 48px -16px rgb(0 0 0 / 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --lift-1: 0px;
+    --lift-2: 0px;
+    --nudge: 0px;
+  }
 }
 
 /*

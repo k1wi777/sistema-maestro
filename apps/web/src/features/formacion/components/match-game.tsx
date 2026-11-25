@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import { Icon } from '@/shared/ui';
 
-import { gameFrame as challenge, MatchColumns } from '@/shared/training-games';
+import { FloatingGain, gameFrame as challenge, MatchColumns } from '@/shared/training-games';
 
 import { useCountdown } from '../hooks/use-countdown';
 import { useMatchGame } from '../hooks/use-match-game';
@@ -119,6 +119,7 @@ function MatchBoard({
         </span>
         <span className={challenge.points} aria-label={`${state.points} puntos`}>
           {`${state.points} pts`}
+          <FloatingGain key={state.noticeSeq} amount={state.gain} />
         </span>
         <span className={challenge.streak} aria-label={`Racha de ${state.streak}`}>
           <Icon name="llama" size={15} fill="solid" />
@@ -142,6 +143,8 @@ function MatchBoard({
         connectedFacts={state.connectedFacts}
         selectedConcept={state.concept}
         selectedFact={state.fact}
+        wrongConcept={state.lastMiss?.conceptToken ?? null}
+        wrongFact={state.lastMiss?.factToken ?? null}
         interactive={interactive}
         onSelectConcept={handlers.selectConcept}
         onSelectFact={handlers.selectFact}

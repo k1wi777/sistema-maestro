@@ -25,6 +25,9 @@
   line-height: 1.25;
   text-align: center;
   text-wrap: balance;
+  transition:
+    color var(--dur-fast),
+    border-color var(--dur-fast);
 }
 
 .tab:hover {

@@ -166,9 +166,21 @@ test.describe('Accesibilidad: vista docente', () => {
     await page.goto('/docente/formatos');
     await settled(page);
 
+    // Un solo selector, dentro del bloque de la cuenta: sin el texto «Tema», con los enlaces legales
+    // debajo del bloque y «Cerrar sesión» dentro de él.
+    await expect(group).toHaveCount(1);
+    const aside = page.getByRole('complementary');
+    await expect(aside.getByText('Tema', { exact: true })).toHaveCount(0);
+    await expect(aside.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible();
+    await expect(aside.getByRole('navigation', { name: 'Documentos legales' })).toBeVisible();
+
     for (const width of [1280, 375]) {
       await page.setViewportSize({ width, height: 720 });
-      await expect(group).toHaveCount(1);
+      if (width === 375) {
+        // En celular la barra solo lleva la marca y el botón de la cuenta: el selector está en el panel.
+        await expect(group).toBeHidden();
+        await page.getByRole('button', { name: /cuenta y opciones$/ }).click();
+      }
       await expect(group).toBeVisible();
       await expect(group.getByRole('radio')).toHaveText(['Claro', 'Oscuro', 'Sistema']);
       await expect(group.getByRole('radio', { name: 'Sistema' })).toBeChecked();
@@ -311,6 +323,25 @@ test.describe('Accesibilidad: vista de coordinación', () => {
     await page.getByRole('dialog').getByRole('button', { name: 'Cerrar', exact: true }).click();
     await expect(page.getByRole('dialog')).toBeHidden();
     await visit(page, '/coordinacion/planes', 'coordinación · planes');
+    await page.getByRole('button', { name: 'Crear nueva sección' }).click();
+    await expect(page.getByRole('dialog', { name: 'Crear nueva sección' })).toBeVisible();
+    await audit(page, 'coordinación · diálogo de nueva sección');
+    await page
+      .getByRole('dialog', { name: 'Crear nueva sección' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await page
+      .getByRole('button', { name: /^Nuevo módulo en la sección / })
+      .first()
+      .click();
+    await expect(page.getByRole('dialog', { name: 'Nuevo módulo' })).toBeVisible();
+    await audit(page, 'coordinación · diálogo de nuevo módulo');
+    await page
+      .getByRole('dialog', { name: 'Nuevo módulo' })
+      .getByRole('button', { name: 'Cancelar', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).toBeHidden();
     await openFirst(
       page,
       page.getByRole('link', { name: /^(Editar|Abrir|Ver)\b/ }),

@@ -13,6 +13,11 @@
   min-width: 0;
 }
 
+.back {
+  margin: 0 0 var(--space-2) calc(-1 * var(--space-3));
+  color: var(--muted);
+}
+
 .context {
   display: inline-flex;
   align-items: center;

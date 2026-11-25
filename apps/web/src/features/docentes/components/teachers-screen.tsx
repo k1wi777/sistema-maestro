@@ -10,7 +10,9 @@ import type { User } from '@gns/shared';
 import {
   Button,
   ButtonLink,
+  Card,
   DataTable,
+  FilterBar,
   Notice,
   PageContainer,
   PageHeader,
@@ -167,24 +169,30 @@ export function TeachersScreen() {
               asignación.
             </Notice>
           )}
-          <TextInput
-            label="Buscar docente"
-            type="search"
-            placeholder="Nombre"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <DataTable
-            caption="Docentes del año lectivo"
-            columns={columns}
-            rows={visible}
-            getRowKey={(teacher) => teacher.id}
-            emptyMessage={
-              search.trim() === ''
-                ? 'Aún no hay docentes con asignaciones en este año.'
-                : 'Ningún docente coincide con la búsqueda.'
-            }
-          />
+          <Card title="Docentes del año lectivo" className={styles.panel}>
+            <FilterBar label="Buscar docente" compact>
+              <TextInput
+                size="sm"
+                label="Buscar docente"
+                type="search"
+                placeholder="Nombre"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </FilterBar>
+            <DataTable
+              embedded
+              caption="Docentes del año lectivo"
+              columns={columns}
+              rows={visible}
+              getRowKey={(teacher) => teacher.id}
+              emptyMessage={
+                search.trim() === ''
+                  ? 'Aún no hay docentes con asignaciones en este año.'
+                  : 'Ningún docente coincide con la búsqueda.'
+              }
+            />
+          </Card>
         </>
       ) : null}
     </>

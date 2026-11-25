@@ -15,7 +15,9 @@ import {
 import {
   Button,
   ButtonLink,
+  Card,
   DataTable,
+  FilterBar,
   SegmentedFilter,
   StatusBadge,
   type DataTableColumn,
@@ -122,6 +124,10 @@ interface InboxListProps<T> {
   caption: string;
   columns: DataTableColumn<T>[];
   getRowKey: (row: T) => string;
+  /** Destino de la fila (la fila entera abre el registro). */
+  getRowHref?: (row: T) => string;
+  /** Título de la tarjeta de la bandeja. */
+  title: string;
   status: RecordStatus | undefined;
   onStatusChange: (status: string | null) => void;
   loading: string;
@@ -129,8 +135,10 @@ interface InboxListProps<T> {
   count: (total: number) => string;
   /** Aviso sobre el orden de la lista. */
   intro?: ReactNode;
-  /** Selector de alcance («Mis grados» / «Todo el colegio») y filtros propios, sobre el de estado. */
+  /** Selector de alcance («Mis grados» / «Todo el colegio») y avisos, sobre la tarjeta. */
   toolbar?: ReactNode;
+  /** Filtros propios (con `size="sm"`), en la barra gris bajo los chips de estado. */
+  filters?: ReactNode;
 }
 
 /** Filtro por estado y tabla con «Cargar más» comunes a las bandejas de diarios y observadores. */
@@ -139,6 +147,8 @@ export function InboxList<T>({
   caption,
   columns,
   getRowKey,
+  getRowHref,
+  title,
   status,
   onStatusChange,
   loading,
@@ -146,47 +156,53 @@ export function InboxList<T>({
   count,
   intro,
   toolbar,
+  filters,
 }: InboxListProps<T>) {
   return (
     <div className={styles.list}>
       {intro}
       {toolbar}
-      <SegmentedFilter
-        label="Filtrar por estado"
-        options={STATUS_OPTIONS}
-        value={status ?? ALL}
-        onChange={(value) => onStatusChange(value === ALL ? null : value)}
-      />
-      {list.status === 'loading' ? <Loading>{loading}</Loading> : null}
-      {list.status === 'error' && list.error ? (
-        <LoadError error={list.error} title={loadError} onRetry={list.reload} />
-      ) : null}
-      {list.status === 'ready' ? (
-        <>
-          <p className={styles.count} role="status">
-            {count(list.totalItems)}
-          </p>
-          <DataTable
-            caption={caption}
-            columns={columns}
-            rows={list.items}
-            getRowKey={getRowKey}
-            emptyMessage={
-              status
-                ? 'Ningún registro cumple este filtro. Elige otro estado para ver más.'
-                : 'Aún no hay registros.'
-            }
-          />
-          {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
-          {list.hasMore ? (
-            <div className={styles.more}>
-              <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
-                {list.loadingMore ? 'Cargando…' : 'Cargar más'}
-              </Button>
-            </div>
-          ) : null}
-        </>
-      ) : null}
+      <Card title={title} className={styles.panel}>
+        <SegmentedFilter
+          label="Filtrar por estado"
+          options={STATUS_OPTIONS}
+          value={status ?? ALL}
+          onChange={(value) => onStatusChange(value === ALL ? null : value)}
+        />
+        {filters ? <FilterBar label="Filtros de la bandeja">{filters}</FilterBar> : null}
+        {list.status === 'loading' ? <Loading>{loading}</Loading> : null}
+        {list.status === 'error' && list.error ? (
+          <LoadError error={list.error} title={loadError} onRetry={list.reload} />
+        ) : null}
+        {list.status === 'ready' ? (
+          <>
+            <p className={styles.count} role="status">
+              {count(list.totalItems)}
+            </p>
+            <DataTable
+              embedded
+              caption={caption}
+              getRowHref={getRowHref}
+              columns={columns}
+              rows={list.items}
+              getRowKey={getRowKey}
+              emptyMessage={
+                status
+                  ? 'Ningún registro cumple este filtro. Elige otro estado para ver más.'
+                  : 'Aún no hay registros.'
+              }
+            />
+            {list.error ? <LoadError error={list.error} onRetry={list.loadMore} /> : null}
+            {list.hasMore ? (
+              <div className={styles.more}>
+                <Button variant="outline" disabled={list.loadingMore} onClick={list.loadMore}>
+                  {list.loadingMore ? 'Cargando…' : 'Cargar más'}
+                </Button>
+              </div>
+            ) : null}
+          </>
+        ) : null}
+      </Card>
     </div>
   );
 }

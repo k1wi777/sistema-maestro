@@ -9,6 +9,7 @@ export function StatementCard({
   text,
   remaining,
   graded,
+  chosen = null,
   open,
   mythRef,
   onChoose,
@@ -18,6 +19,8 @@ export function StatementCard({
   remaining: number;
   /** Resultado de la respuesta: pinta el borde de la tarjeta. */
   graded: 'ok' | 'bad' | null;
+  /** Lo que respondió el docente (`true` verdad, `false` mito): la tarjeta se inclina hacia ese lado. */
+  chosen?: boolean | null;
   /** Se puede responder ahora. */
   open: boolean;
   mythRef?: Ref<HTMLButtonElement>;
@@ -28,6 +31,8 @@ export function StatementCard({
       <div
         className={`${styles.card} ${graded === 'ok' ? styles.cardOk : ''} ${
           graded === 'bad' ? styles.cardBad : ''
+        } ${graded && chosen === true ? styles.leanRight : ''} ${
+          graded && chosen === false ? styles.leanLeft : ''
         }`}
       >
         <span className={styles.kind}>¿Verdad o mito?</span>

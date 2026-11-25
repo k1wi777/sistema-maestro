@@ -1,6 +1,7 @@
 // API pública de las piezas de juego compartidas por la vista del docente y la vista previa de
 // coordinación. Importa solo desde '@/shared/training-games'.
 export { default as gameFrame } from './game-frame.module.css';
+export { FloatingGain } from './floating-gain';
 export { MatchColumns, type MatchColumnsProps } from './match-columns';
 export { Passport, type PassportCard } from './passport';
 export {
