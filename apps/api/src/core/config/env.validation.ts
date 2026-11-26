@@ -33,6 +33,12 @@ export const envSchema = z
     CORS_ORIGINS: corsOrigins,
     RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().min(1).max(3600).default(60),
     RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().min(1).max(10000).default(100),
+    // Solo se define si hay proxies de confianza delante de la API, y debe coincidir con cuántos son.
+    // Sin valor (o vacía) la API no confía en `X-Forwarded-For`.
+    TRUST_PROXY: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.coerce.number().int().min(0).max(5).optional(),
+    ),
     LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
     JWT_ACCESS_SECRET: secret,
     ACCESS_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).max(60).default(15),
@@ -113,6 +119,7 @@ const INVALID_VALUE_REASONS: Record<EnvKey, string> = {
     'debe ser una lista separada por comas de orígenes http(s)://host[:puerto], sin ruta ni barra final',
   RATE_LIMIT_WINDOW_SECONDS: 'debe ser un entero entre 1 y 3600',
   RATE_LIMIT_MAX_REQUESTS: 'debe ser un entero entre 1 y 10000',
+  TRUST_PROXY: 'debe ser un entero entre 0 y 5 (número de proxies de confianza delante de la API)',
   LOG_LEVEL: `debe ser ${LOG_LEVELS.join(', ')}`,
   JWT_ACCESS_SECRET: `debe tener al menos ${MIN_SECRET_LENGTH} caracteres`,
   ACCESS_TOKEN_TTL_MINUTES: 'debe ser un entero entre 1 y 60',

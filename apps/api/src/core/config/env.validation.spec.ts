@@ -288,6 +288,26 @@ describe('validateEnv', () => {
     });
   });
 
+  describe('TRUST_PROXY', () => {
+    it.each([
+      ['ausente', undefined, undefined],
+      ['vacía', '', undefined],
+      ['0', '0', 0],
+      ['1', '1', 1],
+      ['5', '5', 5],
+    ])('con valor %s devuelve %s', (_name, value, expected) => {
+      expect(validateEnv({ ...BASE, TRUST_PROXY: value }).TRUST_PROXY).toBe(expected);
+    });
+
+    it.each(['true', 'abc', '-1', '1.5', '6'])('rechaza %s sin mostrar el valor', (value) => {
+      const message = errorMessageOf({ ...BASE, TRUST_PROXY: value });
+      expect(message).toContain(
+        '- TRUST_PROXY: debe ser un entero entre 0 y 5 (número de proxies de confianza delante de la API)',
+      );
+      expect(message).not.toContain(`: ${value}`);
+    });
+  });
+
   describe('DATA_POLICY_VERSION', () => {
     it('is required', () => {
       expect(errorMessageOf({ ...BASE, DATA_POLICY_VERSION: undefined })).toContain(

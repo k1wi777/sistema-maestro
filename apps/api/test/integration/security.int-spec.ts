@@ -106,3 +106,53 @@ describe('límite de peticiones', () => {
     expect(res.headers['cache-control']).toBe('no-store');
   });
 });
+
+describe('IP del cliente detrás de un proxy', () => {
+  const forwarded = (app: INestApplication, ip: string) =>
+    request(app.getHttpServer() as Server)
+      .get('/faq-example')
+      .set('X-Forwarded-For', ip);
+
+  describe('con TRUST_PROXY=1', () => {
+    let app: INestApplication;
+
+    beforeAll(async () => {
+      app = await createTestApp({ config: { RATE_LIMIT_MAX_REQUESTS: 2, TRUST_PROXY: 1 } });
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('cuenta el límite por la IP reenviada, cada una por separado', async () => {
+      await forwarded(app, '203.0.113.10').expect(200);
+      await forwarded(app, '203.0.113.10').expect(200);
+      await forwarded(app, '203.0.113.10').expect(429);
+      await forwarded(app, '203.0.113.20').expect(200);
+    });
+
+    it('usa la entrada más a la derecha: lo que escribe el cliente a la izquierda se ignora', async () => {
+      await forwarded(app, '198.51.100.1, 203.0.113.30').expect(200);
+      await forwarded(app, '198.51.100.2, 203.0.113.30').expect(200);
+      await forwarded(app, '198.51.100.3, 203.0.113.30').expect(429);
+    });
+  });
+
+  describe('sin TRUST_PROXY', () => {
+    let app: INestApplication;
+
+    beforeAll(async () => {
+      app = await createTestApp({ config: { RATE_LIMIT_MAX_REQUESTS: 2 } });
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('ignora X-Forwarded-For: todas las peticiones cuentan por la IP del socket', async () => {
+      await forwarded(app, '203.0.113.10').expect(200);
+      await forwarded(app, '203.0.113.10').expect(200);
+      await forwarded(app, '203.0.113.20').expect(429);
+    });
+  });
+});
