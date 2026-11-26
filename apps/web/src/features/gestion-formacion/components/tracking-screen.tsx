@@ -4,10 +4,12 @@ import { UserRole, type PlanTracking, type TrainingPlanSummary } from '@gns/shar
 import { useMemo, useState } from 'react';
 
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { CERTIFICATE_VERIFICATION_PATH } from '@/shared/legal';
 import { useSession } from '@/shared/session';
 import { useView } from '@/shared/shell';
 import {
   Button,
+  ButtonLink,
   Card,
   FilterBar,
   Notice,
@@ -162,14 +164,26 @@ function TrackingBody({ plans }: { plans: TrainingPlanSummary[] }) {
         title="Avance en la formación"
         description="Progreso de cada docente por plan y módulo. Descarga el seguimiento cuando lo necesites."
         actions={
-          <Button
-            variant="secondary"
-            startIcon="bajar"
-            disabled={planId === null || exporter.busy}
-            onClick={() => void exporter.start()}
-          >
-            {exporter.busy ? 'Descargando…' : 'Descargar CSV'}
-          </Button>
+          <>
+            <ButtonLink
+              variant="outline"
+              endIcon="externo"
+              href={CERTIFICATE_VERIFICATION_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Verificar un certificado
+              <span className="sr-only"> (se abre en otra pestaña)</span>
+            </ButtonLink>
+            <Button
+              variant="secondary"
+              startIcon="bajar"
+              disabled={planId === null || exporter.busy}
+              onClick={() => void exporter.start()}
+            >
+              {exporter.busy ? 'Descargando…' : 'Descargar CSV'}
+            </Button>
+          </>
         }
       />
       <div className={styles.root}>

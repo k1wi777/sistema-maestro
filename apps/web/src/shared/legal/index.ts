@@ -14,4 +14,4 @@ export {
 export { PRIVACY_POLICY } from './content/privacy-policy';
 export { TERMS_OF_USE } from './content/terms-of-use';
 export { LEGAL_DOCUMENTS_VERSION } from './content/version';
-export { PRIVACY_POLICY_PATH, TERMS_OF_USE_PATH } from './routes';
+export { CERTIFICATE_VERIFICATION_PATH, PRIVACY_POLICY_PATH, TERMS_OF_USE_PATH } from './routes';
