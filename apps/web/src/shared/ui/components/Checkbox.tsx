@@ -1,4 +1,6 @@
-import { useId, type InputHTMLAttributes } from 'react';
+'use client';
+
+import { useEffect, useId, useRef, type InputHTMLAttributes } from 'react';
 
 import { Icon } from '../icons/Icon';
 import { cx } from './cx';
@@ -11,10 +13,17 @@ export interface CheckboxProps extends Omit<
   label: string;
   help?: string;
   error?: string;
+  /** Estado mixto (p. ej. «Marcar todo» con solo algunas marcadas); se anuncia como «mixto». */
+  indeterminate?: boolean;
 }
 
-export function Checkbox({ label, help, error, className, ...rest }: CheckboxProps) {
+export function Checkbox({ label, help, error, indeterminate, className, ...rest }: CheckboxProps) {
   const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  // `indeterminate` solo existe como propiedad del DOM, no como atributo.
+  useEffect(() => {
+    if (inputRef.current) inputRef.current.indeterminate = indeterminate ?? false;
+  }, [indeterminate]);
   const helpId = help ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
   const describedBy = [errorId, helpId].filter(Boolean).join(' ') || undefined;
@@ -24,6 +33,7 @@ export function Checkbox({ label, help, error, className, ...rest }: CheckboxPro
       <div className={styles.row}>
         <input
           {...rest}
+          ref={inputRef}
           id={id}
           type="checkbox"
           className={styles.box}

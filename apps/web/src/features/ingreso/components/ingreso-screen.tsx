@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
-import { INSTITUTION, LegalLinks } from '@/shared/legal';
+import { CERTIFICATE_VERIFICATION_PATH, INSTITUTION, LegalLinks } from '@/shared/legal';
 import {
   REASON_PARAM,
   RETURN_PARAM,
@@ -84,7 +84,7 @@ function Footer() {
       <p>© {INSTITUTION.displayName} · Montería</p>
       <LegalLinks />
       <p>
-        <Link href="/verificar">Verificar un certificado</Link>
+        <Link href={CERTIFICATE_VERIFICATION_PATH}>Verificar un certificado</Link>
       </p>
     </footer>
   );

@@ -1,7 +1,12 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useRouter } from 'next/navigation';
+import type { MouseEvent, ReactNode } from 'react';
 
 import { cx } from './cx';
+import { EmptyState } from './EmptyState';
 import styles from './DataTable.module.css';
+import { INTERACTIVE_SELECTOR, rowClickAction } from './row-click';
 
 export interface DataTableColumn<Row> {
   key: string;
@@ -23,6 +28,12 @@ export interface DataTableProps<Row> {
   /** Dentro de un `Card`: sin segunda tarjeta, a sangre con el padding del bloque. */
   embedded?: boolean;
   emptyMessage?: string;
+  /**
+   * Destino de la fila: todo clic primario en ella navega (Ctrl/Cmd o clic central, en pestaña
+   * nueva). Solo para filas con una acción; el enlace de la fila sigue siendo su único punto de
+   * tabulación y su nombre accesible, por eso la fila no lleva `tabindex` ni rol.
+   */
+  getRowHref?: (row: Row) => string;
   className?: string;
 }
 
@@ -35,8 +46,31 @@ export function DataTable<Row>({
   getRowKey,
   embedded = false,
   emptyMessage = 'No hay registros para mostrar.',
+  getRowHref,
   className,
 }: DataTableProps<Row>) {
+  const router = useRouter();
+
+  function onRowClick(event: MouseEvent<HTMLTableRowElement>, href: string) {
+    const target = event.target instanceof Element ? event.target : null;
+    const hit = target?.closest(INTERACTIVE_SELECTOR) ?? null;
+    const action = rowClickAction({
+      button: event.button,
+      ctrlKey: event.ctrlKey,
+      metaKey: event.metaKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      onInteractive: hit !== null && event.currentTarget.contains(hit),
+      selectedText: window.getSelection()?.toString() ?? '',
+    });
+    if (action === 'navigate') router.push(href);
+    else if (action === 'new-tab') window.open(href, '_blank', 'noopener');
+  }
+
+  if (rows.length === 0) {
+    return <EmptyState className={className}>{emptyMessage}</EmptyState>;
+  }
+
   return (
     <div className={cx(styles.wrapper, embedded && styles.embedded, className)}>
       <div className={styles.scroller} tabIndex={0} role="region" aria-label={caption}>
@@ -59,33 +93,30 @@ export function DataTable<Row>({
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className={styles.empty}>
-                  {emptyMessage}
-                </td>
+            {rows.map((row) => (
+              <tr
+                key={getRowKey(row)}
+                data-clickable={getRowHref ? 'true' : undefined}
+                onClick={getRowHref ? (event) => onRowClick(event, getRowHref(row)) : undefined}
+                onAuxClick={getRowHref ? (event) => onRowClick(event, getRowHref(row)) : undefined}
+              >
+                {columns.map((column, index) =>
+                  index === 0 ? (
+                    <th
+                      key={column.key}
+                      scope="row"
+                      className={cx(styles.rowHeader, column.numeric && styles.numeric)}
+                    >
+                      {column.render(row)}
+                    </th>
+                  ) : (
+                    <td key={column.key} className={cx(column.numeric && styles.numeric)}>
+                      {column.render(row)}
+                    </td>
+                  ),
+                )}
               </tr>
-            ) : (
-              rows.map((row) => (
-                <tr key={getRowKey(row)}>
-                  {columns.map((column, index) =>
-                    index === 0 ? (
-                      <th
-                        key={column.key}
-                        scope="row"
-                        className={cx(styles.rowHeader, column.numeric && styles.numeric)}
-                      >
-                        {column.render(row)}
-                      </th>
-                    ) : (
-                      <td key={column.key} className={cx(column.numeric && styles.numeric)}>
-                        {column.render(row)}
-                      </td>
-                    ),
-                  )}
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>

@@ -10,14 +10,54 @@
   box-shadow: var(--shadow-1);
   list-style: none;
   transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
+    border-color var(--dur-base),
+    box-shadow var(--dur-base),
+    transform var(--dur-base);
 }
 
 .card:hover,
 .card:focus-within {
   border-color: var(--line-strong);
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--shadow-3);
+  transform: translateY(var(--lift-2));
+}
+
+/* El módulo en curso se resalta con un anillo; el pendiente se atenúa. El estado también va en
+   texto (la insignia), así que ninguno depende solo de estos estilos. */
+.card[data-state='en_curso'] {
+  border-color: var(--heading);
+  box-shadow:
+    0 0 0 3px var(--blue-soft),
+    var(--shadow-2);
+}
+
+.card[data-state='pendiente'] {
+  background: var(--bg);
+  box-shadow: none;
+}
+
+.card[data-state='pendiente']:hover,
+.card[data-state='pendiente']:focus-within {
+  box-shadow: var(--shadow-3);
+}
+
+.continue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  color: var(--red);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.continueArrow {
+  transition: transform var(--dur-base);
+}
+
+.card:hover .continueArrow,
+.card:focus-within .continueArrow {
+  transform: translateX(var(--nudge));
 }
 
 .top {

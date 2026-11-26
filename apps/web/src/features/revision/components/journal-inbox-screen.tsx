@@ -18,11 +18,14 @@ import { useView } from '@/shared/shell';
 import {
   Button,
   ButtonLink,
+  Card,
   DataTable,
+  FilterBar,
   Notice,
   PageContainer,
   PageHeader,
   Select,
+  StatStrip,
   StatusBadge,
   TextInput,
   type DataTableColumn,
@@ -36,7 +39,6 @@ import { coordinatorFilter, noGradesMessage, resolveScope, vistaParam } from '..
 import { ReviewerText, StatusWithConsult } from './consult-cells';
 import { InboxScopeFilter } from './inbox-scope-filter';
 import styles from './inbox-list.module.css';
-import filterStyles from './journal-inbox.module.css';
 
 interface ColumnContext {
   path: string;
@@ -174,18 +176,9 @@ export function JournalInboxScreen() {
   });
   const statuses = scopeData?.unrestricted ? ADMIN_STATUSES : COORDINATOR_STATUSES;
 
-  const figure = (label: string, value: number, filter: JournalStatus) => (
-    <Button
-      key={filter}
-      variant={status === filter ? 'primary' : 'outline'}
-      aria-pressed={status === filter}
-      className={filterStyles.figure}
-      onClick={() => update({ estado: status === filter ? null : filter })}
-    >
-      <span className={filterStyles.figureValue}>{value}</span>
-      <span>{label}</span>
-    </Button>
-  );
+  const inYourGrades = viewer.isCoordinator ? ' en tus grados' : '';
+  const toggle = (filter: JournalStatus) => () =>
+    update({ estado: status === filter ? null : filter });
 
   return (
     <PageContainer>
@@ -197,11 +190,7 @@ export function JournalInboxScreen() {
             ? 'Diarios de campo de todo el colegio, solo para consulta: la revisión es de la coordinadora de cada grado.'
             : 'Revisa los diarios de tus grados con las anotaciones de todos sus docentes: devuélvelos con observaciones o apruébalos con tu firma. Los demás los consultas.'
         }
-        actions={
-          <ButtonLink href={paths.hub} variant="outline" startIcon="volver">
-            Formatos
-          </ButtonLink>
-        }
+        back={{ href: paths.hub, label: 'Volver a Formatos' }}
       />
       <div className={styles.list}>
         {scope.state.status === 'error' ? (
@@ -230,25 +219,43 @@ export function JournalInboxScreen() {
           </Notice>
         ) : null}
         {scopeData ? (
-          <div className={filterStyles.figures} role="group" aria-label="Diarios por estado">
-            {figure('Pendientes de revisión', scopeData.counts.submitted, JournalStatus.Submitted)}
-            {figure(
-              'Con observaciones',
-              scopeData.counts.changesRequested,
-              JournalStatus.ChangesRequested,
-            )}
-            {figure('Revisados', scopeData.counts.reviewed, JournalStatus.Reviewed)}
-          </div>
+          <StatStrip
+            label="Diarios por estado"
+            neutral={viewer.isAdministrator}
+            items={[
+              {
+                key: JournalStatus.Submitted,
+                icon: 'bitacora',
+                value: scopeData.counts.submitted,
+                label: `Pendientes de revisión${inYourGrades}`,
+                selected: status === JournalStatus.Submitted,
+                onSelect: toggle(JournalStatus.Submitted),
+              },
+              {
+                key: JournalStatus.ChangesRequested,
+                icon: 'comentario',
+                value: scopeData.counts.changesRequested,
+                label: `Con observaciones${inYourGrades}`,
+                selected: status === JournalStatus.ChangesRequested,
+                onSelect: toggle(JournalStatus.ChangesRequested),
+              },
+              {
+                key: JournalStatus.Reviewed,
+                icon: 'check',
+                value: scopeData.counts.reviewed,
+                label: `Revisados${inYourGrades}`,
+                selected: status === JournalStatus.Reviewed,
+                onSelect: toggle(JournalStatus.Reviewed),
+              },
+            ]}
+          />
         ) : null}
 
         {
-          <>
-            <form
-              className={filterStyles.filters}
-              aria-label="Filtros de los diarios"
-              onSubmit={(event) => event.preventDefault()}
-            >
+          <Card title="Diarios de los grupos" className={styles.panel}>
+            <FilterBar label="Filtros de los diarios">
               <Select
+                size="sm"
                 label="Estado"
                 placeholder="Todos los estados"
                 options={statuses.map((value) => ({
@@ -259,6 +266,7 @@ export function JournalInboxScreen() {
                 onChange={(event) => update({ estado: event.target.value || null })}
               />
               <Select
+                size="sm"
                 label="Grado"
                 placeholder={inboxScope === 'mine' ? 'Todos mis grados' : 'Todos los grados'}
                 options={gradeChoices.map((grade) => ({
@@ -269,6 +277,7 @@ export function JournalInboxScreen() {
                 onChange={(event) => update({ grado: event.target.value || null, grupo: null })}
               />
               <Select
+                size="sm"
                 label="Grupo"
                 placeholder="Todos"
                 options={groups.map((group) => ({ value: group.id, label: group.name }))}
@@ -276,18 +285,20 @@ export function JournalInboxScreen() {
                 onChange={(event) => update({ grupo: event.target.value || null })}
               />
               <TextInput
+                size="sm"
                 label="Desde"
                 type="date"
                 value={from ?? ''}
                 onChange={(event) => update({ desde: event.target.value || null })}
               />
               <TextInput
+                size="sm"
                 label="Hasta"
                 type="date"
                 value={to ?? ''}
                 onChange={(event) => update({ hasta: event.target.value || null })}
               />
-            </form>
+            </FilterBar>
 
             {list.status === 'loading' ? <Loading>Cargando los diarios de campo…</Loading> : null}
             {list.status === 'error' && list.error ? (
@@ -303,8 +314,11 @@ export function JournalInboxScreen() {
                   {list.totalItems === 1 ? '1 diario' : `${list.totalItems} diarios`}
                 </p>
                 <DataTable
+                  embedded
                   caption="Diarios de los grupos"
-                  showCaption
+                  getRowHref={(journal) =>
+                    `${paths.journals}/${journal.id}${vista ? `?vista=${vista}` : ''}`
+                  }
                   columns={journalColumns({
                     path: paths.journals,
                     query: vista ? `vista=${vista}` : '',
@@ -326,7 +340,7 @@ export function JournalInboxScreen() {
                 ) : null}
               </>
             ) : null}
-          </>
+          </Card>
         }
       </div>
     </PageContainer>

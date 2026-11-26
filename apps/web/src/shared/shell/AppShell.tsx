@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
 import { initialsOf, useSession, type ProtectedRoute } from '@/shared/session';
-import { Icon, ThemeToggle } from '@/shared/ui';
+import { Icon } from '@/shared/ui';
 
 import { AccountPanel } from './AccountPanel';
 import { ViewContext } from './view-context';
@@ -70,9 +70,6 @@ export function AppShell({ view, children }: AppShellProps) {
                 <b>{config.title}</b>
                 <small>George Noble School · Montería</small>
               </div>
-            </div>
-            <div className={styles.barTheme}>
-              <ThemeToggle />
             </div>
             <button
               type="button"

@@ -14,3 +14,10 @@
   display: flex;
   justify-content: center;
 }
+
+/* Tarjeta de la bandeja: filtros, conteo y tabla a todo el ancho */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}

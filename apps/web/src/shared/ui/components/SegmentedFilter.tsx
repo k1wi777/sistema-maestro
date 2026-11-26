@@ -26,6 +26,11 @@ interface BaseProps<Value extends string> {
    * el navegador lo pueda traducir) y a `title` para el tooltip. Exige `icon` en cada opción.
    */
   iconOnly?: boolean;
+  /**
+   * `pill` (por defecto): píldora gris; `underline`: pestañas con subrayado rojo (la misma
+   * semántica, porque filtra la misma lista); `onBrand`: translúcido sobre la barra de marca.
+   */
+  appearance?: 'pill' | 'underline' | 'onBrand';
 }
 
 interface SingleProps<Value extends string> extends BaseProps<Value> {
@@ -47,7 +52,7 @@ export type SegmentedFilterProps<Value extends string> = SingleProps<Value> | Mu
  * selección sigue al foco). Selección múltiple: botones con `aria-pressed`.
  */
 export function SegmentedFilter<Value extends string>(props: SegmentedFilterProps<Value>) {
-  const { label, options, className, iconOnly } = props;
+  const { label, options, className, iconOnly, appearance = 'pill' } = props;
   const refs = useRef(new Map<Value, HTMLButtonElement>());
 
   function onKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
@@ -74,7 +79,13 @@ export function SegmentedFilter<Value extends string>(props: SegmentedFilterProp
     <div
       role={props.multiple ? 'group' : 'radiogroup'}
       aria-label={label}
-      className={cx(styles.group, iconOnly && styles.iconOnly, className)}
+      className={cx(
+        styles.group,
+        appearance === 'underline' && styles.underline,
+        appearance === 'onBrand' && styles.onBrand,
+        iconOnly && styles.iconOnly,
+        className,
+      )}
     >
       {options.map((option, index) => {
         const selected = props.multiple

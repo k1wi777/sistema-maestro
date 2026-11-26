@@ -61,6 +61,47 @@ test.describe('Solo consulta', () => {
     ).toHaveCount(0);
   });
 
+  test('coordinación: la fila entera abre el registro y su enlace «Acción» conserva el nombre', async () => {
+    const { page, context } = coordinator;
+    await page.goto('/coordinacion/formatos/planeaciones');
+    await settled(page, 'Planeaciones');
+
+    const row = page
+      .getByRole('row')
+      .filter({ has: page.getByRole('link', { name: /^(Revisar|Ver|Abrir) planeación de / }) })
+      .first();
+    await expect(row).toBeVisible();
+    await expect(
+      row.getByRole('link', { name: /^(Revisar|Ver|Abrir) planeación de .+/ }),
+    ).toHaveCount(1);
+
+    // Ctrl + clic en cualquier celda abre el registro en una pestaña nueva y la bandeja se queda.
+    const [popup] = await Promise.all([
+      context.waitForEvent('page'),
+      row.getByRole('rowheader').click({ modifiers: ['Control'] }),
+    ]);
+    await popup.waitForLoadState();
+    expect(popup.url()).toMatch(/\/coordinacion\/formatos\/planeaciones\/[0-9a-f-]{36}/);
+    await popup.close();
+    await expect(page).toHaveURL(/\/coordinacion\/formatos\/planeaciones$/);
+
+    // Clic primario en una celda: navega al mismo destino que el enlace.
+    await row.getByRole('rowheader').click();
+    await expect(page).toHaveURL(/\/coordinacion\/formatos\/planeaciones\/[0-9a-f-]{36}/);
+  });
+
+  test('administración: la bitácora y las tablas con varias acciones por fila no son clicables', async () => {
+    const { page } = admin;
+    await page.goto('/administracion/formatos/planeaciones');
+    await settled(page, 'Planeaciones');
+    await expect(page.locator('tbody tr[data-clickable="true"]').first()).toBeVisible();
+
+    await page.goto('/administracion/bitacora');
+    await settled(page, 'Bitácora de actividad');
+    await expect(page.getByRole('table', { name: 'Movimientos de la bitácora' })).toBeVisible();
+    await expect(page.locator('tr[data-clickable="true"]')).toHaveCount(0);
+  });
+
   test('coordinación: «Mis grados» y «Todo el colegio», con las ajenas en solo consulta', async () => {
     const { page } = coordinator;
     await page.goto('/coordinacion/formatos/planeaciones');

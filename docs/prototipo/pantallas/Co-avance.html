@@ -1,7 +1,39 @@
 <!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Co-avance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Josefin+Sans:wght@600;700&amp;family=Plus+Jakarta+Sans:wght@500;600;700;800&amp;display=swap">
-<style>body{margin:0}</style>
+<style>body{margin:0}
+/* v52 · Cuenta: usuario, tema, cerrar sesión y enlaces legales en un solo bloque */
+aside .cuenta-zona{margin-top:auto}
+.cuenta-zona{display:flex;flex-direction:column;gap:10px}
+.cuenta{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12)}
+.cuenta-u{display:flex;gap:10px;align-items:center;min-width:0}
+.cuenta-u .av{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center;font-weight:600;font-size:12px;flex:none}
+.cuenta-u div{min-width:0}
+.cuenta-u b{display:block;color:#fff;font-weight:600;font-size:13.5px;line-height:1.25;overflow-wrap:anywhere}
+.cuenta-u small{display:block;color:var(--nav-tenue);font-size:12.5px;line-height:1.3}
+.cuenta hr{border:0;border-top:1px solid rgba(255,255,255,.12);margin:0}
+.cuenta-tema{display:flex;align-items:center;justify-content:center}
+.tema-radios{display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14)}
+.tema-radios button{display:grid;place-items:center;width:40px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:rgba(255,255,255,.72);cursor:pointer}
+.tema-radios button:hover{background:rgba(255,255,255,.1);color:#fff}
+.tema-radios button[aria-checked="true"]{background:rgba(255,255,255,.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+.cuenta-salir{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;background:transparent;border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:10px;padding:9px 12px;font:inherit;font-weight:600;font-size:13px;cursor:pointer}
+.cuenta-salir:hover{background:rgba(255,255,255,.1)}
+.cuenta-salir:focus-visible,.tema-radios button:focus-visible,.cuenta-btn:focus-visible,nav.legal a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+nav.legal{font-size:12px;line-height:1.6;color:var(--nav-tenue)}
+nav.legal a{color:var(--nav-tenue);text-decoration:none}
+nav.legal a:hover{text-decoration:underline;text-underline-offset:2px}
+.cuenta-btn{display:none;align-items:center;gap:6px;min-height:40px;padding:4px 10px 4px 5px;border-radius:99px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.08);color:#fff;font:inherit;font-weight:600;font-size:12px;cursor:pointer}
+.cuenta-btn .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:12px;font-weight:600}
+.cuenta-btn svg.i{width:16px;height:16px}
+.cuenta-btn[aria-expanded="true"] svg.i{transform:rotate(180deg)}
+@media (pointer:coarse){.tema-radios button{width:44px;height:44px}.cuenta-btn{min-height:44px}}
+@media (max-width:860px){
+  .cuenta-btn{display:inline-flex}
+  aside .cuenta-zona{display:none;margin-top:0;position:absolute;top:calc(100% + 6px);right:max(12px,env(safe-area-inset-right,0px));width:min(21rem,calc(100vw - 24px));box-sizing:border-box;z-index:30;padding:10px;border-radius:14px;background:var(--nav-1);border:1px solid rgba(255,255,255,.14);box-shadow:0 16px 40px -12px rgba(0,0,0,.6)}
+  aside .cuenta-zona.abierta{display:flex}
+}
+</style>
 <link rel="stylesheet" href="../assets/gns-premium.css"></head><body>
 
 <div class="app">
@@ -15,11 +47,12 @@
   <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></symbol>
   <symbol id="i-salir" viewBox="0 0 24 24"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5M5 12h11"/></symbol>
   <symbol id="i-bitacora" viewBox="0 0 24 24"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-externo" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
   <symbol id="i-gente" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14c2.5 0 4 1.8 4 4.5"/></symbol>
   <symbol id="i-grafica" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
-<symbol id="i-estrella" viewBox="0 0 24 24"><path d="M11.52 2.3a.53.53 0 0 1 .95 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.76a.53.53 0 0 1 .3.9l-3.74 3.63a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.87L2.16 9.8a.53.53 0 0 1 .29-.9l5.17-.76a2.12 2.12 0 0 0 1.6-1.16z"/></symbol><symbol id="i-medalla" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol><symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol></svg>
+<symbol id="i-estrella" viewBox="0 0 24 24"><path d="M11.52 2.3a.53.53 0 0 1 .95 0l2.31 4.68a2.12 2.12 0 0 0 1.6 1.16l5.16.76a.53.53 0 0 1 .3.9l-3.74 3.63a2.12 2.12 0 0 0-.61 1.88l.88 5.14a.53.53 0 0 1-.77.56l-4.62-2.43a2.12 2.12 0 0 0-1.97 0L6.4 21.01a.53.53 0 0 1-.77-.56l.88-5.14a2.12 2.12 0 0 0-.61-1.87L2.16 9.8a.53.53 0 0 1 .29-.9l5.17-.76a2.12 2.12 0 0 0 1.6-1.16z"/></symbol><symbol id="i-medalla" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.48 12.89 17 22l-5-3-5 3 1.52-9.11"/></symbol><symbol id="i-grados" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"></rect><rect x="13" y="4" width="7" height="7" rx="1.5"></rect><rect x="4" y="13" width="7" height="7" rx="1.5"></rect><rect x="13" y="13" width="7" height="7" rx="1.5"></rect></symbol><symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol></svg>
   <aside>
-    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cambiar arriba" aria-label="Cerrar sesión"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg></button></div>
+    <div class="marca"><div style="display:flex;gap:10px;align-items:center"><div class="sello"><img src="../assets/e1ea58c2f0ffcb60b71179a93c6cc1a8.webp" alt=""></div><div><b>Coordinación académica</b><small>George Noble School · Montería</small></div></div><button type="button" class="cuenta-btn" aria-expanded="false" aria-controls="panel-cuenta" aria-label="MR, cuenta y opciones"><span class="av" aria-hidden="true">MR</span><svg class="i" aria-hidden="true"><use href="#i-chevron"></use></svg></button></div>
     <nav class="menu menu-adm" aria-label="Coordinación académica">
       <div class="menu-titulo">Seguimiento</div>
       <button type="button"><svg class="i"><use href="#i-form"></use></svg>Formatos</button>
@@ -29,10 +62,10 @@
       <button type="button" aria-current="page"><svg class="i"><use href="#i-grafica"></use></svg>Avance en la formación</button>
       <button type="button"><svg class="i"><use href="#i-chat"></use></svg>Asistente</button>
     </nav>
-    <div class="quien"><span class="av">MR</span><span><b>Marcela Rojas</b><br>Coordinación académica</span></div>
-    <div role="group" aria-label="Tema de la plataforma" style="display:flex;gap:2px;padding:3px;border-radius:10px;background:rgba(255,255,255,.08);align-self:flex-start"><button type="button" aria-label="Claro" title="Claro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" aria-label="Oscuro" title="Oscuro" aria-pressed="false" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:transparent"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" aria-label="Sistema" title="Sistema" aria-pressed="true" style="display:grid;place-items:center;width:44px;height:36px;border:0;border-radius:8px;color:#fff;cursor:pointer;background:rgba(255,255,255,.2)"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div>
-    <button type="button" class="cambiar abajo"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button>
-    <button type="button" class="priv-link">Tratamiento de datos personales</button>
+    <div class="cuenta-zona" id="panel-cuenta">
+      <div class="cuenta"><div class="cuenta-u"><span class="av" aria-hidden="true">MR</span><div><b>Marcela Rojas</b><small>Coordinación académica</small></div></div><hr><div class="cuenta-tema"><div class="tema-radios" role="radiogroup" aria-label="Tema de la plataforma"><button type="button" role="radio" aria-label="Claro" title="Claro" aria-checked="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-sol"></use></svg></button><button type="button" role="radio" aria-label="Oscuro" title="Oscuro" aria-checked="false" tabindex="-1"><svg class="i" aria-hidden="true"><use href="#i-luna"></use></svg></button><button type="button" role="radio" aria-label="Sistema" title="Sistema" aria-checked="true" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-pantalla"></use></svg></button></div></div><button type="button" class="cuenta-salir"><svg class="i" aria-hidden="true"><use href="#i-salir"></use></svg>Cerrar sesión</button></div>
+      <nav class="legal" aria-label="Documentos legales"><a href="Aviso-datos.html">Política de tratamiento de la información</a> <span aria-hidden="true">·</span> <a href="#">Términos de uso</a></nav>
+    </div>
   </aside>
   <main>
     <div class="cont">
@@ -41,7 +74,8 @@
           <div class="eyebrow">Coordinación académica</div>
           <h1>Avance en la formación</h1>
           <p>Progreso de cada docente por plan y módulo. Exporta el seguimiento cuando lo necesites.</p>
-        </div></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><a class="btn lin sm" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Verificar un certificado<svg class="i" aria-hidden="true"><use href="#i-externo"></use></svg></a></div></div>
         <div class="co-kpis"><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gente"></use></svg></span><b>6</b><span>docentes en el plan</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-grafica"></use></svg></span><b>31%</b><span>avance general</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-medalla"></use></svg></span><b>0</b><span>terminaron toda la ruta</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-estrella"></use></svg></span><b>81%</b><span>promedio en los desafíos</span></div><div class="co-kpi"><span class="kpi-ic" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-ruta"></use></svg></span><b>9</b><span>módulos en el plan de inducción</span></div></div>
         <div class="bloque">
           <div class="bloque-h"><h2>Avance por docente en la formación</h2><button type="button" class="btn sec sm">Descargar CSV</button></div>

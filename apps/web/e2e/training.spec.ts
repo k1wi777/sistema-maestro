@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { ACTORS } from './support/actors';
+import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
 import { openAs, type ActorPage } from './support/browser';
 import { playChallengeToTheEnd } from './support/challenge';
 
@@ -76,6 +77,55 @@ test.describe('Formación: Desafío GNS y certificado', () => {
       await expect(page.getByText('Certificado válido')).toBeVisible();
       await expect(page.getByText(ACTORS.trainingTeacher.name)).toBeVisible();
       await expect(page.getByText(MODULE_TITLE)).toBeVisible();
+      await expectAccessible(page, '/verificar con un certificado válido');
+      await page.setViewportSize({ width: 375, height: 720 });
+      await expectNoHorizontalScroll(page, '/verificar con un certificado válido a 375 px');
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('un código con formato correcto que no existe avisa que no hay certificado', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext();
+    try {
+      const page = await context.newPage();
+      await page.goto('/verificar');
+      await page.getByLabel('Código del certificado').fill('AAAA-AAAA-AAAA-AAAA');
+      await page.getByRole('button', { name: 'Verificar' }).click();
+      await expect(page.getByText('No encontramos un certificado con ese código')).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+});
+
+test.describe('Avance en la formación: acceso a la verificación', () => {
+  test('coordinación abre /verificar en una pestaña nueva desde Avance', async ({ browser }) => {
+    const { context, page } = await openAs(browser, ACTORS.consultCoordinator);
+    try {
+      await page.goto('/coordinacion/avance');
+      const link = page.getByRole('link', { name: /Verificar un certificado/ });
+      await expect(link).toHaveAttribute('href', '/verificar');
+      await expect(link).toHaveAttribute('target', '_blank');
+      const [opened] = await Promise.all([context.waitForEvent('page'), link.click()]);
+      await expect(opened).toHaveURL(/\/verificar$/);
+      await expect(
+        opened.getByRole('heading', { level: 1, name: 'Verificar un certificado' }),
+      ).toBeVisible();
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('administración ve el mismo acceso en su Avance', async ({ browser }) => {
+    const { context, page } = await openAs(browser, ACTORS.consultAdmin);
+    try {
+      await page.goto('/administracion/avance');
+      const link = page.getByRole('link', { name: /Verificar un certificado/ });
+      await expect(link).toHaveAttribute('href', '/verificar');
+      await expect(link).toHaveAttribute('target', '_blank');
     } finally {
       await context.close();
     }

@@ -1,11 +1,11 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
 import { useView } from '@/shared/shell';
-import { Button, Notice, PageContainer, PageHeader, Select } from '@/shared/ui';
+import { Button, EmptyState, Icon, Notice, PageContainer, PageHeader, Select } from '@/shared/ui';
 
 import {
   useModuleActions,
@@ -25,7 +25,13 @@ import {
 import { ModuleActionDialog } from './module-action-dialog';
 import { ModuleRow } from './module-row';
 import { NewModuleDialog } from './new-module-dialog';
+import { NewSectionDialog } from './new-section-dialog';
 import styles from './plans-screen.module.css';
+
+interface NewModuleTarget {
+  /** Sección fija; `null` en un área sin plan (el módulo crea plan y sección). */
+  section: { id: string; title: string } | null;
+}
 
 interface PendingWithdraw {
   id: string;
@@ -50,21 +56,30 @@ function PlansView({
   const view = usePlanView(option?.plan?.id ?? null);
   const actions = useModuleActions(view.refresh);
 
-  const [creating, setCreating] = useState(false);
+  const [creating, setCreating] = useState<NewModuleTarget | null>(null);
+  const [creatingSection, setCreatingSection] = useState(false);
+  const [createdSection, setCreatedSection] = useState<{ id: string; title: string } | null>(null);
   const [withdrawing, setWithdrawing] = useState<PendingWithdraw | null>(null);
 
   const viewData = view.state.status === 'ready' ? view.state.data : null;
   const tracking = viewData?.tracking ?? null;
   const totals = useMemo(() => trackingByModule(tracking), [tracking]);
-  const groups = useMemo(
-    () => (viewData && option ? moduleGroups(viewData.tree, option.area === null) : []),
-    [viewData, option],
-  );
+  const groups = useMemo(() => (viewData ? moduleGroups(viewData.tree) : []), [viewData]);
+
+  // Tras crear una sección y recargar el plan, el foco pasa a su título (el botón que la creó ya no existe).
+  const focusId = createdSection?.id ?? null;
+  const hasFocusTarget = groups.some((group) => group.section.id === focusId);
+  useEffect(() => {
+    if (focusId !== null && hasFocusTarget) {
+      document.getElementById(`section-title-${focusId}`)?.focus();
+    }
+  }, [focusId, hasFocusTarget]);
 
   function choose(key: string) {
     const next = optionByKey(options, key);
     if (next) {
       actions.clearFeedback();
+      setCreatedSection(null);
       update(optionToParams(next));
     }
   }
@@ -82,16 +97,7 @@ function PlansView({
       <PageHeader
         context={shell.title}
         title="Planes de formación"
-        description="Organiza los planes por área en partes y módulos, y decide qué se publica."
-        actions={
-          <Button
-            startIcon="mas"
-            disabled={option === null || view.state.status === 'loading'}
-            onClick={() => setCreating(true)}
-          >
-            Nuevo módulo
-          </Button>
-        }
+        description="Organiza los planes por área en secciones y módulos, y decide qué se publica."
       />
       <div className={styles.root}>
         <Select
@@ -114,6 +120,11 @@ function PlansView({
             {actions.feedback.text}
           </Notice>
         ) : null}
+        {createdSection ? (
+          <Notice tone="success">
+            {`Sección «${createdSection.title}» creada al final del plan. Agrégale un módulo con su botón «Nuevo módulo».`}
+          </Notice>
+        ) : null}
         {viewData?.trackingError ? (
           <Notice tone="warning" title="No pudimos cargar el avance de los docentes">
             La lista se muestra sin los totales de «terminados» y «en curso».{' '}
@@ -133,32 +144,65 @@ function PlansView({
             title="No pudimos cargar el plan"
             onRetry={view.reload}
           />
-        ) : groups.length === 0 ? (
-          <div className={styles.empty}>
-            <p>
-              {option.plan === null
-                ? `${option.area?.name ?? 'Esta área'} todavía no tiene plan de formación.`
-                : 'Este plan todavía no tiene módulos.'}
-            </p>
-            <p>
-              Crea el primer módulo: nace en borrador y los docentes lo verán cuando lo publiques.
-            </p>
-          </div>
+        ) : option.plan === null ? (
+          <EmptyState
+            icon="plan"
+            title={`${option.area?.name ?? 'Esta área'} todavía no tiene plan de formación`}
+            action={
+              <Button startIcon="mas" onClick={() => setCreating({ section: null })}>
+                Nuevo módulo
+              </Button>
+            }
+          >
+            Crea el primer módulo: nace en borrador y los docentes lo verán cuando lo publiques.
+          </EmptyState>
         ) : (
           viewData && (
             <div className={styles.groups}>
+              {groups.length === 0 ? (
+                <EmptyState icon="plan" title="Este plan todavía no tiene secciones">
+                  Crea la primera sección para organizar sus módulos.
+                </EmptyState>
+              ) : null}
               {groups.map((group) => (
-                <section key={group.section?.id ?? 'modules'} className={styles.group}>
-                  {group.section ? (
-                    <header className={styles.groupHeader}>
-                      <h2 className={styles.groupTitle}>{group.section.title}</h2>
+                <section
+                  key={group.section.id}
+                  className={styles.group}
+                  aria-labelledby={`section-title-${group.section.id}`}
+                >
+                  <header className={styles.groupHeader}>
+                    <div className={styles.groupText}>
+                      <h2
+                        id={`section-title-${group.section.id}`}
+                        tabIndex={-1}
+                        className={styles.groupTitle}
+                      >
+                        {group.section.title}
+                      </h2>
                       {group.section.subtitle ? (
                         <p className={styles.groupSubtitle}>{group.section.subtitle}</p>
                       ) : null}
-                    </header>
-                  ) : (
-                    <h2 className="sr-only">Módulos del plan</h2>
-                  )}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      startIcon="mas"
+                      context={`en la sección ${group.section.title}`}
+                      onClick={() =>
+                        setCreating({
+                          section: { id: group.section.id, title: group.section.title },
+                        })
+                      }
+                    >
+                      Nuevo módulo
+                    </Button>
+                  </header>
+                  {group.modules.length === 0 ? (
+                    <p className={styles.sectionEmpty}>
+                      Esta sección está vacía. Los docentes no la ven hasta que tenga un módulo
+                      publicado.
+                    </p>
+                  ) : null}
                   <div className={styles.modules}>
                     {group.modules.map((module) => (
                       <ModuleRow
@@ -182,6 +226,14 @@ function PlansView({
                   </div>
                 </section>
               ))}
+              <button
+                type="button"
+                className={styles.newSection}
+                onClick={() => setCreatingSection(true)}
+              >
+                <Icon name="mas" size={18} />
+                Crear nueva sección
+              </button>
             </div>
           )
         )}
@@ -190,12 +242,25 @@ function PlansView({
       {creating && option ? (
         <NewModuleDialog
           option={option}
+          section={creating.section}
           tree={viewData?.tree ?? null}
-          onClose={() => setCreating(false)}
+          onClose={() => setCreating(null)}
           onPartial={reloadCatalog}
           onCreated={(created) => {
-            setCreating(false);
+            setCreating(null);
             router.push(`${shell.path}/planes/modulos/${created.moduleId}`);
+          }}
+        />
+      ) : null}
+      {creatingSection && viewData ? (
+        <NewSectionDialog
+          planId={viewData.tree.plan.id}
+          existingTitles={viewData.tree.sections.map((item) => item.title)}
+          onClose={() => setCreatingSection(false)}
+          onCreated={(section) => {
+            setCreatingSection(false);
+            setCreatedSection({ id: section.id, title: section.title });
+            void view.refresh();
           }}
         />
       ) : null}
@@ -211,7 +276,7 @@ function PlansView({
   );
 }
 
-/** «Planes de formación» (`/coordinacion/planes`): lista por parte con acciones según el estado. */
+/** «Planes de formación» (`/coordinacion/planes`): lista por sección con acciones según el estado. */
 export function PlansScreen() {
   const catalog = usePlansCatalog();
 

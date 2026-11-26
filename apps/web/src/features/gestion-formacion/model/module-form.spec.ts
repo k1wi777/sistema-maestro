@@ -108,7 +108,7 @@ describe('buildModulePatch', () => {
     });
   });
 
-  it('cambiar de parte envía sectionId', () => {
+  it('cambiar de sección envía sectionId', () => {
     const next = '00000000-0000-4000-8000-000000000999';
     expect(buildModulePatch(saved, { ...saved, sectionId: next }, DATA_STEP_FIELDS)).toMatchObject({
       kind: 'patch',
@@ -118,21 +118,20 @@ describe('buildModulePatch', () => {
 });
 
 describe('validateNewModule', () => {
-  it('pide número y título, y la parte solo cuando hace falta', () => {
-    const missing = validateNewModule({ number: '', title: '', sectionId: '' }, true);
+  it('pide número y título', () => {
+    const missing = validateNewModule({ number: '', title: '' });
     expect(missing).toEqual({
       ok: false,
       errors: {
         number: 'Escribe el número del módulo.',
         title: 'Escribe el título del módulo.',
-        sectionId: 'Elige la parte del plan.',
       },
     });
-    expect(validateNewModule({ number: '1', title: 'Hola', sectionId: '' }, false).ok).toBe(true);
+    expect(validateNewModule({ number: '1', title: 'Hola' }).ok).toBe(true);
   });
 
   it('arma el cuerpo con los valores por defecto de la API', () => {
-    const result = validateNewModule({ number: ' 3 ', title: ' Rutinas ', sectionId: 'x' }, false);
+    const result = validateNewModule({ number: ' 3 ', title: ' Rutinas ' });
     expect(result).toMatchObject({
       ok: true,
       input: { number: '3', title: 'Rutinas', summary: null, approvalThreshold: 80 },
@@ -140,7 +139,7 @@ describe('validateNewModule', () => {
   });
 
   it('el número admite hasta 4 caracteres', () => {
-    const result = validateNewModule({ number: '12345', title: 'x', sectionId: '' }, false);
+    const result = validateNewModule({ number: '12345', title: 'x' });
     expect(result.ok === false && result.errors.number).toContain('4');
   });
 });

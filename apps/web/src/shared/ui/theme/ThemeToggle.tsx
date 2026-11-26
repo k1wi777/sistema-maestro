@@ -26,8 +26,13 @@ function readServerChoice(): ThemeChoice {
   return 'system';
 }
 
+interface ThemeToggleProps {
+  /** `onBrand`: translúcido sobre la barra de marca del menú lateral (sin rótulo visible). */
+  appearance?: 'pill' | 'onBrand';
+}
+
 /** Selector de tema de solo iconos: grupo de opción única con flechas, Inicio y Fin. */
-export function ThemeToggle() {
+export function ThemeToggle({ appearance = 'pill' }: ThemeToggleProps) {
   // En el servidor no hay preferencia: se asume «sistema» y el cliente la corrige al hidratar.
   const choice = useSyncExternalStore(subscribe, readThemeChoice, readServerChoice);
 
@@ -36,6 +41,7 @@ export function ThemeToggle() {
       label="Tema de la plataforma"
       options={THEME_OPTIONS}
       iconOnly
+      appearance={appearance}
       value={choice}
       onChange={(next) => {
         applyThemeChoice(next);

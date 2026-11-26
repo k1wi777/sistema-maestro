@@ -1,4 +1,4 @@
-import type { TeacherModuleSummary } from '@gns/shared';
+import { TeacherModuleState, type TeacherModuleSummary } from '@gns/shared';
 import Link from 'next/link';
 
 import { Icon, StatusBadge } from '@/shared/ui';
@@ -15,7 +15,7 @@ export function ModuleCard({ module }: { module: TeacherModuleSummary }) {
   const chips = moduleChips(module);
 
   return (
-    <li className={styles.card}>
+    <li className={styles.card} data-state={module.state}>
       <div className={styles.top}>
         <span className={styles.number}>
           {module.number === null ? 'Módulo' : `Módulo ${module.number}`}
@@ -28,6 +28,12 @@ export function ModuleCard({ module }: { module: TeacherModuleSummary }) {
         </Link>
       </h4>
       {module.summary ? <p className={styles.summary}>{module.summary}</p> : null}
+      {module.state === TeacherModuleState.InProgress ? (
+        <p className={styles.continue} aria-hidden="true">
+          Continuar
+          <Icon name="flecha" size={16} className={styles.continueArrow} />
+        </p>
+      ) : null}
       {chips.length > 0 ? (
         <ul className={styles.chips} aria-label="Contenidos del módulo">
           {chips.map((chip) => (

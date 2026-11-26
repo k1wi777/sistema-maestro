@@ -1,11 +1,25 @@
 'use client';
 
-import type { PlanTracking, TrainingPlanSummary } from '@gns/shared';
+import { UserRole, type PlanTracking, type TrainingPlanSummary } from '@gns/shared';
 import { useMemo, useState } from 'react';
 
 import { LoadError, Loading, useQueryParams } from '@/shared/data';
+import { CERTIFICATE_VERIFICATION_PATH } from '@/shared/legal';
+import { useSession } from '@/shared/session';
 import { useView } from '@/shared/shell';
-import { Button, Card, Notice, PageContainer, PageHeader, Select, TextInput } from '@/shared/ui';
+import {
+  Button,
+  ButtonLink,
+  Card,
+  FilterBar,
+  Notice,
+  PageContainer,
+  PageHeader,
+  Select,
+  StatStrip,
+  TextInput,
+  type IconName,
+} from '@/shared/ui';
 
 import { usePlanTracking, useTrackingExport, useTrackingPlans } from '../hooks/use-plan-tracking';
 import { moduleTitleWithNumber } from '../model/labels';
@@ -15,34 +29,44 @@ import { ModuleDetail } from './module-detail';
 import { TrackingMatrix } from './tracking-matrix';
 import styles from './tracking-screen.module.css';
 
-function Indicators({ tracking }: { tracking: PlanTracking }) {
+function Indicators({ tracking, neutral }: { tracking: PlanTracking; neutral: boolean }) {
   const indicators = trackingIndicators(tracking);
-  const items = [
-    { label: 'docentes en el plan', value: String(indicators.teachers) },
+  const items: { key: string; icon: IconName; label: string; value: string }[] = [
     {
+      key: 'teachers',
+      icon: 'gente',
+      label: 'docentes en el plan',
+      value: String(indicators.teachers),
+    },
+    {
+      key: 'overall',
+      icon: 'grafica',
       label: 'avance general',
       value: indicators.overallPercent === null ? '—' : `${indicators.overallPercent}%`,
     },
-    { label: 'terminaron todos los módulos', value: String(indicators.finishedAll) },
     {
+      key: 'finished',
+      icon: 'check',
+      label: 'terminaron todos los módulos',
+      value: String(indicators.finishedAll),
+    },
+    {
+      key: 'score',
+      icon: 'estrella',
       label: 'promedio en los desafíos',
       value: indicators.averageScore === null ? '—' : `${indicators.averageScore}%`,
     },
-    { label: 'módulos publicados', value: String(indicators.modules) },
+    {
+      key: 'modules',
+      icon: 'plan',
+      label: 'módulos publicados',
+      value: String(indicators.modules),
+    },
   ];
-  return (
-    <dl className={styles.indicators}>
-      {items.map((item) => (
-        <div key={item.label} className={styles.indicator}>
-          <dt className={styles.indicatorLabel}>{item.label}</dt>
-          <dd className={styles.indicatorValue}>{item.value}</dd>
-        </div>
-      ))}
-    </dl>
-  );
+  return <StatStrip label="Indicadores del avance" neutral={neutral} items={items} />;
 }
 
-function PlanTrackingView({ planId }: { planId: string }) {
+function PlanTrackingView({ planId, neutral }: { planId: string; neutral: boolean }) {
   const tracking = usePlanTracking(planId);
   const { params, update } = useQueryParams();
   const [query, setQuery] = useState('');
@@ -74,10 +98,11 @@ function PlanTrackingView({ planId }: { planId: string }) {
           El avance aparece cuando publicas módulos del plan y los docentes empiezan a recorrerlos.
         </Notice>
       ) : null}
-      <Indicators tracking={data} />
+      <Indicators tracking={data} neutral={neutral} />
       <Card title="Avance por docente en la formación">
-        <div className={styles.filters}>
+        <FilterBar label="Filtros del avance" className={styles.filters}>
           <Select
+            size="sm"
             label="Módulo"
             value={moduleId}
             placeholder="Todos los módulos (vista general)"
@@ -88,13 +113,14 @@ function PlanTrackingView({ planId }: { planId: string }) {
             onChange={(event) => update({ modulo: event.target.value })}
           />
           <TextInput
+            size="sm"
             label="Buscar docente"
             type="search"
             value={query}
             autoComplete="off"
             onChange={(event) => setQuery(event.target.value)}
           />
-        </div>
+        </FilterBar>
         <TrackingMatrix tracking={data} query={query} />
         <p className={styles.note}>
           Aparecen los docentes que tienen este plan en su ruta del año vigente.
@@ -113,6 +139,9 @@ function PlanTrackingView({ planId }: { planId: string }) {
 
 function TrackingBody({ plans }: { plans: TrainingPlanSummary[] }) {
   const view = useView();
+  const { state } = useSession();
+  const isAdministrator =
+    state.status === 'authenticated' && state.user.role === UserRole.Administrator;
   const { params, update } = useQueryParams();
   const options = useMemo(() => {
     const areas = new Map<string, string>();
@@ -135,14 +164,26 @@ function TrackingBody({ plans }: { plans: TrainingPlanSummary[] }) {
         title="Avance en la formación"
         description="Progreso de cada docente por plan y módulo. Descarga el seguimiento cuando lo necesites."
         actions={
-          <Button
-            variant="secondary"
-            startIcon="bajar"
-            disabled={planId === null || exporter.busy}
-            onClick={() => void exporter.start()}
-          >
-            {exporter.busy ? 'Descargando…' : 'Descargar CSV'}
-          </Button>
+          <>
+            <ButtonLink
+              variant="outline"
+              endIcon="externo"
+              href={CERTIFICATE_VERIFICATION_PATH}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Verificar un certificado
+              <span className="sr-only"> (se abre en otra pestaña)</span>
+            </ButtonLink>
+            <Button
+              variant="secondary"
+              startIcon="bajar"
+              disabled={planId === null || exporter.busy}
+              onClick={() => void exporter.start()}
+            >
+              {exporter.busy ? 'Descargando…' : 'Descargar CSV'}
+            </Button>
+          </>
         }
       />
       <div className={styles.root}>
@@ -157,15 +198,16 @@ function TrackingBody({ plans }: { plans: TrainingPlanSummary[] }) {
           </Notice>
         ) : (
           <>
-            <div className={styles.planSelect}>
+            <FilterBar label="Plan de formación" compact>
               <Select
+                size="sm"
                 label="Plan de formación"
                 value={option.key}
                 options={options.map((item) => ({ value: item.key, label: item.label }))}
                 onChange={(event) => update({ plan: event.target.value, modulo: null })}
               />
-            </div>
-            <PlanTrackingView key={option.key} planId={option.key} />
+            </FilterBar>
+            <PlanTrackingView key={option.key} planId={option.key} neutral={isAdministrator} />
           </>
         )}
       </div>

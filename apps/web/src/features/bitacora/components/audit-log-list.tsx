@@ -3,7 +3,7 @@
 import type { AuditLogEntry } from '@gns/shared';
 
 import { formatDateTime } from '@/shared/format/dates';
-import { Button, DataTable, StatusBadge, type DataTableColumn } from '@/shared/ui';
+import { Button, DataTable, EmptyState, StatusBadge, type DataTableColumn } from '@/shared/ui';
 
 import { auditRoleLabel, auditTypeLabel } from '../model/labels';
 import styles from './audit-log-list.module.css';
@@ -88,6 +88,7 @@ export function AuditLogList({ entries, emptyMessage, onOpen, onFilterUser }: Au
   return (
     <>
       <DataTable
+        embedded
         caption="Movimientos de la bitácora"
         className={styles.tableView}
         columns={columns}
@@ -97,7 +98,7 @@ export function AuditLogList({ entries, emptyMessage, onOpen, onFilterUser }: Au
       />
       <div className={styles.cardView}>
         {entries.length === 0 ? (
-          <p className={styles.empty}>{emptyMessage}</p>
+          <EmptyState>{emptyMessage}</EmptyState>
         ) : (
           <ul className={styles.cards} aria-label="Movimientos de la bitácora">
             {entries.map((entry) => (

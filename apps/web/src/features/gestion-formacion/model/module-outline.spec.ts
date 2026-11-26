@@ -36,20 +36,23 @@ describe('moduleGroups', () => {
     section(3, [outline(3)], 'Práctica'),
   ]);
 
-  it('en el plan General agrupa por parte y omite las partes vacías', () => {
-    const groups = moduleGroups(tree, true);
-    expect(groups.map((group) => group.section?.title)).toEqual(['Fundamentos', 'Práctica']);
-    expect(groups[0]?.modules).toHaveLength(2);
+  it('lista todas las secciones en orden, también las vacías', () => {
+    const groups = moduleGroups(tree);
+    expect(groups.map((group) => group.section.title)).toEqual([
+      'Fundamentos',
+      'Parte 2',
+      'Práctica',
+    ]);
+    expect(groups.map((group) => group.modules.length)).toEqual([2, 0, 1]);
   });
 
-  it('en un plan de área lista todo junto sin encabezado', () => {
-    const groups = moduleGroups(tree, false);
+  it('un plan de área con una sola sección trae su encabezado', () => {
+    const groups = moduleGroups(planTree([section(1, [outline(1)], 'Módulos del área')]));
     expect(groups).toHaveLength(1);
-    expect(groups[0]?.section).toBeNull();
-    expect(groups[0]?.modules.map((module) => module.number)).toEqual(['1', '2', '3']);
+    expect(groups[0]?.section.title).toBe('Módulos del área');
   });
 
-  it('sin módulos no hay grupos', () => {
-    expect(moduleGroups(planTree([section(1, [])]), false)).toEqual([]);
+  it('sin secciones no hay grupos', () => {
+    expect(moduleGroups(planTree([]))).toEqual([]);
   });
 });

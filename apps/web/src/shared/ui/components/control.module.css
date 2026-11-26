@@ -10,6 +10,9 @@
   font-size: var(--text-base);
   line-height: 1.5;
   box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--dur-fast),
+    box-shadow var(--dur-fast);
 }
 
 .control::placeholder {
@@ -59,8 +62,15 @@
   background-repeat: no-repeat;
 }
 
+/* Controles de las barras de filtros: 36 px y 13,5 px, como el tablero */
+.small {
+  min-height: var(--control-height-sm);
+  font-size: 0.84375rem;
+}
+
 @media (pointer: coarse) {
-  .control {
+  .control,
+  .small {
     min-height: 2.75rem;
   }
 }

@@ -4,4 +4,4 @@
  * `DATA_POLICY_VERSION` de la API (`apps/api/.env.example` y el entorno de despliegue): la
  * API exige entonces aceptar de nuevo y el aviso se bloquea mientras las dos no coincidan.
  */
-export const LEGAL_DOCUMENTS_VERSION = '2026-4';
+export const LEGAL_DOCUMENTS_VERSION = '2026-5';

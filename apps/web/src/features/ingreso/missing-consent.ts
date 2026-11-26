@@ -22,3 +22,19 @@ export function missingConsentMessage(
       : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`;
   return `Falta marcar: ${list}.`;
 }
+
+/** Todas las casillas marcadas. */
+export function allChecked(boxes: readonly ConsentBox[], checked: ConsentChecks): boolean {
+  return boxes.every((box) => checked[box.key]);
+}
+
+/** Solo algunas marcadas (ni ninguna ni todas): el estado mixto de «Marcar todo». */
+export function someChecked(boxes: readonly ConsentBox[], checked: ConsentChecks): boolean {
+  return boxes.some((box) => checked[box.key]) && !allChecked(boxes, checked);
+}
+
+/** «Marcar todo»: si ya están todas las desmarca; si falta alguna, las marca todas. */
+export function toggleAll(boxes: readonly ConsentBox[], checked: ConsentChecks): ConsentChecks {
+  const next = !allChecked(boxes, checked);
+  return { ...checked, ...Object.fromEntries(boxes.map((box) => [box.key, next])) };
+}
