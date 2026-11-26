@@ -4,6 +4,7 @@ import { CertificateKind, type CertificateSummary } from '@gns/shared';
 import Link from 'next/link';
 
 import { formatDateTime } from '@/shared/format/dates';
+import { CERTIFICATE_VERIFICATION_PATH } from '@/shared/legal';
 import { Card } from '@/shared/ui';
 
 import type { CertificateDownload } from '../hooks/use-certificate-download';
@@ -12,7 +13,7 @@ import type { RouteCertificate } from '../model/progress';
 import { CertificateDownloadButton } from './certificate-download-button';
 import styles from './certificates-panel.module.css';
 
-export const VERIFY_HREF = '/verificar';
+export const VERIFY_HREF = CERTIFICATE_VERIFICATION_PATH;
 
 export const verifyHref = (code: string): string =>
   `${VERIFY_HREF}?codigo=${encodeURIComponent(code)}`;

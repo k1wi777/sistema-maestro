@@ -2,23 +2,41 @@
 
 import { useState, type SyntheticEvent } from 'react';
 
-import { useQueryParams } from '@/shared/data';
+import { Loading, useQueryParams } from '@/shared/data';
 import { formatDateTime } from '@/shared/format/dates';
-import { Button, Card, Notice, PageContainer, PageHeader, TextInput } from '@/shared/ui';
+import {
+  Button,
+  Card,
+  EmptyState,
+  Icon,
+  Notice,
+  PageContainer,
+  PageHeader,
+  StatusBadge,
+  TextInput,
+} from '@/shared/ui';
 
 import { useCertificateVerification } from '../hooks/use-certificate-verification';
 import { CERTIFICATE_KIND_LABEL } from '../model/labels';
 import type { VerificationOutcome } from '../model/verification';
 import styles from './verification-screen.module.css';
 
-function Outcome({ outcome, onRetry }: { outcome: VerificationOutcome; onRetry: () => void }) {
+interface OutcomeProps {
+  outcome: VerificationOutcome;
+  code: string;
+  onRetry: () => void;
+}
+
+function Outcome({ outcome, code, onRetry }: OutcomeProps) {
   switch (outcome.status) {
-    case 'loading':
+    case 'idle':
       return (
-        <Notice tone="info">
-          <span aria-busy="true">Verificando el código…</span>
-        </Notice>
+        <EmptyState icon="candado" title="El resultado aparece aquí">
+          Escribe el código y pulsa Verificar para ver a quién pertenece el certificado.
+        </EmptyState>
       );
+    case 'loading':
+      return <Loading>Verificando el código…</Loading>;
     case 'not_found':
       return (
         <Notice tone="warning" title="No encontramos un certificado con ese código">
@@ -35,18 +53,27 @@ function Outcome({ outcome, onRetry }: { outcome: VerificationOutcome; onRetry: 
       return (
         <Notice tone="error" title="No pudimos verificar el código">
           <p>{outcome.message}</p>
-          <p>
+          <div className={styles.retry}>
             <Button variant="outline" size="sm" onClick={onRetry}>
               Reintentar
             </Button>
-          </p>
+          </div>
         </Notice>
       );
     case 'found': {
       const { data } = outcome;
       return (
-        <Card title="Certificado válido">
+        <section className={styles.valid}>
+          <header className={styles.validHeader}>
+            <Icon name="check" size={20} className={styles.validIcon} />
+            <h2 className={styles.validTitle}>Certificado válido</h2>
+            <StatusBadge tone="success">Auténtico</StatusBadge>
+          </header>
           <dl className={styles.facts}>
+            <div>
+              <dt>Código</dt>
+              <dd className={styles.code}>{code}</dd>
+            </div>
             <div>
               <dt>Nombre del docente</dt>
               <dd>{data.teacherName}</dd>
@@ -70,7 +97,7 @@ function Outcome({ outcome, onRetry }: { outcome: VerificationOutcome; onRetry: 
               <dd>{formatDateTime(data.issuedAt)}</dd>
             </div>
           </dl>
-        </Card>
+        </section>
       );
     }
     default:
@@ -107,23 +134,26 @@ export function CertificateVerificationScreen() {
         title="Verificar un certificado"
         description="Escribe el código que aparece en el certificado para comprobar que es auténtico."
       />
-      <form className={styles.form} onSubmit={onSubmit} noValidate>
-        <TextInput
-          label="Código del certificado"
-          help="Tiene la forma XXXX-XXXX-XXXX-XXXX."
-          name="codigo"
-          autoComplete="off"
-          autoCapitalize="characters"
-          spellCheck={false}
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-        />
-        <Button type="submit" disabled={code.trim() === '' || outcome.status === 'loading'}>
-          Verificar
-        </Button>
-      </form>
+      <Card className={styles.formCard}>
+        <form className={styles.form} onSubmit={onSubmit} noValidate>
+          <TextInput
+            className={styles.codeInput}
+            label="Código del certificado"
+            help="Tiene la forma XXXX-XXXX-XXXX-XXXX."
+            name="codigo"
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+          />
+          <Button type="submit" disabled={code.trim() === '' || outcome.status === 'loading'}>
+            Verificar
+          </Button>
+        </form>
+      </Card>
       <div className={styles.result} aria-live="polite">
-        <Outcome outcome={outcome} onRetry={() => void verify(lastCode)} />
+        <Outcome outcome={outcome} code={lastCode} onRetry={() => void verify(lastCode)} />
       </div>
     </PageContainer>
   );
