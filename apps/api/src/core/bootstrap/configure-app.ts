@@ -1,5 +1,6 @@
 import type { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { ApiErrorCode, type ApiErrorBody } from '@gns/shared';
@@ -69,6 +70,13 @@ export function configureApp(
   options: { accessLogStream?: DestinationStream } = {},
 ): void {
   const config = app.get<ConfigService<Env, true>>(ConfigService);
+
+  // IP real del cliente para los limitadores detrás de proxies de confianza; sin valor no se
+  // lee `X-Forwarded-For`.
+  const trustProxy = config.get('TRUST_PROXY', { infer: true });
+  if (trustProxy !== undefined) {
+    (app as NestExpressApplication).set('trust proxy', trustProxy);
+  }
 
   app.useLogger(app.get(Logger));
 
